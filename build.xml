@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+
+<project name="charaparser-unsupervised" default="compile" basedir=".">
+	<description>charaparser-unsupervised ant build</description>
+	<property name="src" value="src" />
+	<property name="test" value="test" />
+	<property name="classfiles" value="bin" />
+	<property name="lib" value="lib" />
+	<property name="jarfile" value="charaparser-unsupervised.jar" />
+	<property name="java-minimum" value="1.6" />
+
+	<!-- The init target makes sure that the prerequisite directories exist. -->
+	<target name="init">
+		<mkdir dir="${classfiles}" />
+	</target>
+
+	<path id="project.classpath">
+		<fileset dir="${lib}">
+			<include name="*" />
+		</fileset>
+	</path>
+
+	<!-- The compile target runs javac on all the java files, and saves them into  the classfiles directory  -->
+	<target name="compile" depends="init">
+		<javac srcdir="${src}" destdir="${classfiles}" debug="yes" source="${java-minimum}" target="${java-minimum}">
+			<classpath refid="project.classpath" />
+		</javac>
+	</target>
+
+	<target name="build-test" depends="compile">
+		<javac srcdir="${test}" destdir="${classfiles}" debug="yes" source="${java-minimum}" target="${java-minimum}">
+			<classpath refid="project.classpath" />
+		</javac>
+	</target>
+
+	<!-- terse FAIL or PASS -->
+	<target name="test" depends="build-test" description="Unit tests">
+		<junit fork="yes" printsummary="on" maxmemory="1024m">
+			<classpath refid="project.classpath" />
+			<batchtest>
+				<fileset dir="${test}" />
+			</batchtest>
+		</junit>
+	</target>
+
+	<!-- prints to stdout all messages -->
+	<target name="verbose-test" depends="build-test" description="Unit tests">
+		<junit fork="yes" printsummary="withOutAndErr" maxmemory="1024m">
+			<classpath refid="project.classpath" />
+		</junit>
+	</target>
+
+	<!-- set var junit.test.class.name from cmd line for example: ant runatest -Djunit.test.class.name="org.phenoscape.io.NEXUSReaderTest"-->
+	<target name="runatest" depends="build-test">
+		<junit fork="yes" printsummary="withOutAndErr" maxmemory="1024m" showoutput="true">
+			<classpath refid="project.classpath" />
+		</junit>
+	</target>
+
+	<!-- The clean target just erases the classes -->
+	<target name="clean">
+		<delete dir="${classfiles}" />
+	</target>
+
+	<!-- clean and compile everything -->
+	<target name="build-all" depends="clean,compile,build-test" />
+
+	<target name="jar" depends="compile">
+		<jar destfile="${jarfile}">
+			<fileset dir="${classfiles}" />
+		</jar>
+	</target>
+
+</project>
