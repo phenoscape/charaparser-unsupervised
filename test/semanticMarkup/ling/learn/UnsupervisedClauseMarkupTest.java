@@ -1,15 +1,13 @@
 package semanticMarkup.ling.learn;
 
-public class test {
+import org.junit.Test;
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+public class UnsupervisedClauseMarkupTest {
+	
+	@Test
+	public void testUnsupervisedClauseMarkup() {
 		String str = "Users/nescent/Phenoscape/TEST2/target/descriptions";
 		UnsupervisedClauseMarkup t = new UnsupervisedClauseMarkup(str,"biocreative2012","plain","test");
-		
 		t.populatesents();
 		
 		/*
@@ -26,6 +24,7 @@ public class test {
 		t.getWordsToRoles();
 		t.getHeuristicNouns();
 		t.getTermCategories();*/
+		
 	}
 
 }
