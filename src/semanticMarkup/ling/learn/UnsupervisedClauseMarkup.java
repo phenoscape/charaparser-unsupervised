@@ -1,8 +1,11 @@
 package semanticMarkup.ling.learn;
 
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public class UnsupervisedClauseMarkup {
+public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	//directory of /descriptions folder
 	private String desDir = "";
@@ -88,58 +91,70 @@ public class UnsupervisedClauseMarkup {
 		System.out.println("Reading sentences:\n");
 	}
 
-	/*
-	public void learn() {
+	
+	public void learn(List<Treatment> treatments) {
 		System.out.println("Method: learn\n");
 	}
 
-	public void getSentences() {
+	public Map<Treatment, List<String>> getSentences() {
 		System.out.println("Method: getSentences\n");
+		return null;
 	}
 
-	public void getSentencesForOrganStateMarker() {
+	public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
 		System.out.println("Method: getSentencesForOrganStateMarker\n");
+		return null;
 	}
 
-	public void getAdjNouns() {
+	public List<String> getAdjNouns() {
 		System.out.println("Method: getAdjNouns\n");
+		return null;
 	}
-
-	public void getAdjNounsSent() {
+	
+	public Map<String, String> getAdjNounSent(){
 		System.out.println("Method: getAdjNounsSent\n");
+		return null;
 	}
 
-	public void getSentenceTags() {
+	public Set<String> getBracketTags() {
+		System.out.println("Method: getAdjNounsSent\n");
+		return null;
+	}
+
+	public Set<String> getWordRoleTags() {
 		System.out.println("Method: getSentenceTags\n");
+		return null;
 	}
 
-	public void getBracketTags() {
+	public Map<String, Set<String>> getWordToSources() {
 		System.out.println("Method: getBracketTags\n");
+		return null;
 	}
 
-	public void getWordRoleTags() {
-		System.out.println("Method: getWordRoleTags\n");
-	}
-
-	public void getWordToSources() {
-		System.out.println("Method: getRoleToSources\n");
-	}
-
-	public void getRoleToWords() {
+	public Map<String, Set<String>> getRoleToWords() {
 		System.out.println("Method: getRoleToWords\n");
+		return null;
+		
 	}
 
-	public void getWordsToRoles() {
+	public Map<String, Set<String>> getWordsToRoles() {
 		System.out.println("Method: getWordsToRoles\n");
+		return null;
 	}
 
-	public void getHeuristicNouns() {
+	public Map<String, String> getHeuristicNouns() {
 		System.out.println("Method: getHeuristicNouns\n");
+		return null;
 	}
 
-	public void getTermCategories() {
+	public Map<Treatment, List<String>> getSentenceTags(){
 		System.out.println("Method: getTermCategories\n");
+		return null;
 	}
-	*/
+
+	public Map<String, Set<String>> getTermCategories(){
+		System.out.println("Method: getTermCategories\n");
+		return null;
+	}
 
 }

@@ -1,5 +1,11 @@
 package semanticMarkup.ling.learn;
 
+import java.util.ArrayList;
+//import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 public class test {
 
 	/**
@@ -12,12 +18,15 @@ public class test {
 		
 		t.populatesents();
 		
-		/*
-		t.learn();
+		List<Treatment> l_test = new ArrayList<Treatment>();
+		//Map<String, String> m_test = new HashMap<String,String>();
+		
+		
+		t.learn(l_test);
 		t.getSentences();
 		t.getSentencesForOrganStateMarker();
 		t.getAdjNouns();
-		t.getAdjNounsSent();
+		t.getAdjNounSent();
 		t.getSentenceTags();
 		t.getBracketTags();
 		t.getWordRoleTags();
@@ -25,7 +34,6 @@ public class test {
 		t.getRoleToWords();
 		t.getWordsToRoles();
 		t.getHeuristicNouns();
-		t.getTermCategories();*/
+		t.getTermCategories();
 	}
-
 }
