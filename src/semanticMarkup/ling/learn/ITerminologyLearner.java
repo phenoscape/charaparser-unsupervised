@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import semanticMarkup.core.Treatment;
+
 /**
  * For a better explanation of what is to be returned see PerlTerminologyLearner in combination with the perl code
  * @author rodenhausen
