@@ -8,16 +8,16 @@ import java.util.Set;
 
 import semanticMarkup.core.Treatment;
 
-public class test {
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+import org.junit.Test;
+
+
+public class UnsupervisedClauseMarkupTest {
+	
+	@Test
+	public void testUnsupervisedClauseMarkup() {
 		String str = "Users/nescent/Phenoscape/TEST2/target/descriptions";
 		UnsupervisedClauseMarkup t = new UnsupervisedClauseMarkup(str,"biocreative2012","plain","test");
-		
 		t.populatesents();
 		
 		List<Treatment> l_test = new ArrayList<Treatment>();
@@ -36,6 +36,9 @@ public class test {
 		t.getRoleToWords();
 		t.getWordsToRoles();
 		t.getHeuristicNouns();
+
 		t.getTermCategories();
+
+
 	}
 }
