@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -41,13 +43,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private int DECISIONID = 0;
 	private String PROPERNOUNS = "propernouns"; //EOL
 	
-	private Hashtable WNNUMBER =new Hashtable(); //word->(p|s)
-	private Hashtable WNSINGULAR = new Hashtable();//word->singular
-	private Hashtable WNPOS = new Hashtable();   //word->POSs
-	private Hashtable WNPOSRECORDS = new Hashtable();
+	private Hashtable<String,String> WNNUMBER =new Hashtable(); //word->(p|s)
+	private Hashtable<String,String> WNSINGULAR = new Hashtable();//word->singular
+	private Hashtable<String,String> WNPOS = new Hashtable();   //word->POSs
+	private Hashtable<String,String> WNPOSRECORDS = new Hashtable();
 	private String NEWDESCRIPTION =""; //record the index of sentences that ends a description
-	private Hashtable WORDS = new Hashtable();
-	private Hashtable PLURALS = new Hashtable();
+	private Hashtable<String,String> WORDS = new Hashtable();
+	private Hashtable<String,String> PLURALS = new Hashtable();
 	
 	private String StringNUMBERS = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
 	//the following two patterns are used in mySQL rlike
@@ -89,12 +91,19 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		System.out.println(String.format("%s", this.prefix));
 	}
 	
-	public void populatesents() {
-		System.out.println("Reading sentences:\n");
+	public boolean populatesents() {
+		System.out.println("Reading sentences:\n");		
+
+		SentenceLoader sentLoader = new SentenceLoader(this.desDir);
+		sentLoader.load();
+		sentLoader.getUnknownWordList();
+		
+		return true;						
 	}
 
 	
 	public void learn(List<Treatment> treatments) {
+		//TODO: Implement the unsupervised algorithm here!
 		System.out.println("Method: learn\n");
 	}
 
