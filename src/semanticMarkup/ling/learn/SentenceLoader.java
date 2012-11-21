@@ -9,14 +9,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class FileLoader {
-
+	
 	private String dir;
 	private int count=0;
 	
 	private List<String>  fileNameList = new LinkedList<String>();
 	private List<Integer> typeList = new ArrayList<Integer>();
 	private List<String>  textList = new LinkedList<String>();
-		
+	
 	public FileLoader(String d) {
 		this.dir = d;
 	}
@@ -25,8 +25,8 @@ public class FileLoader {
 		System.out.println("Reading sentences:\n");		
 		File myDir = new File(this.dir);
 		File[] contents = myDir.listFiles();
-
-
+		
+		
 		this.count=contents.length;
 		for (int i = 0; i < count; i++) {
 			File f = contents[i];
@@ -36,7 +36,7 @@ public class FileLoader {
 			//System.out.println(type);
 			String s2 = this.dir+"/"+f.getName();
 			//System.out.println(s2); 
-
+			
 			File file = new File(s2);
 			BufferedReader reader = null;
 			String text = null;
@@ -94,7 +94,7 @@ public class FileLoader {
 	public List<String> getUnknownWordList()
 	{
 		List<String> unknownList = new LinkedList();
-
+		
 		for (int i=0;i<textList.size();i++) {
 			//System.out.println(i);
 			//System.out.println(sentList.get(i));
@@ -114,5 +114,5 @@ public class FileLoader {
 		
 		return unknownList;
 	}
-
+	
 }
