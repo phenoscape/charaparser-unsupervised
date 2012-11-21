@@ -8,15 +8,16 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class SentenceLoader {
+public class FileLoader {
 
 	private String dir;
-	List<String>  fileNameList = new LinkedList<String>();
-	List<Integer> typeList = new ArrayList<Integer>();
-	List<String>  sentList = new LinkedList<String>();
+	private int count=0;
 	
-	
-	public SentenceLoader(String d) {
+	private List<String>  fileNameList = new LinkedList<String>();
+	private List<Integer> typeList = new ArrayList<Integer>();
+	private List<String>  textList = new LinkedList<String>();
+		
+	public FileLoader(String d) {
 		this.dir = d;
 	}
 	
@@ -26,8 +27,8 @@ public class SentenceLoader {
 		File[] contents = myDir.listFiles();
 
 
-		
-		for (int i = 0; i < contents.length; i++) {
+		this.count=contents.length;
+		for (int i = 0; i < count; i++) {
 			File f = contents[i];
 			//System.out.println(f.getName() + ": " + f.length());
 			String name = f.getName();
@@ -51,7 +52,7 @@ public class SentenceLoader {
 			
 			fileNameList.add(name);
 			typeList.add(type);
-			sentList.add(text);			
+			textList.add(text);			
 		}
 		
 		//for (int i=0;i<fileNameList.size();i++) {
@@ -63,7 +64,7 @@ public class SentenceLoader {
 	
 	//determine if a file contains a character statement or a character state(description) statement, by the file name
 	//0-character, 1-description
-	public int getType(String fileName) {
+	private int getType(String fileName) {
 		//System.out.println(fileName);
 		fileName = fileName.replaceAll(".*\\.xml_","");//remove pdf.xml
 		fileName = fileName.replaceAll("[^_]","");//remove all non_ charaters
@@ -74,18 +75,34 @@ public class SentenceLoader {
 			return 0;
 	}
 	
+	public List<String> getFileNameList() {
+		return this.fileNameList;
+	}
+	
+	public List<Integer> getTypeList() {
+		return this.typeList;
+	}
+	
+	public List<String> getTextList() {
+		return this.textList;
+	}
+	
+	public int getCount() {
+		return this.count;
+	}
+	
 	public List<String> getUnknownWordList()
 	{
 		List<String> unknownList = new LinkedList();
 
-		for (int i=0;i<sentList.size();i++) {
+		for (int i=0;i<textList.size();i++) {
 			//System.out.println(i);
 			//System.out.println(sentList.get(i));
 			//System.out.println(fileNameList.get(i));
-			if (sentList.get(i)!= null) {
+			if (textList.get(i)!= null) {
 				//System.out.println(sentList.get(i).length());
 				//System.out.println("\n");
-				String[] tokenList = ((sentList.get(i)).toLowerCase()).split("\\s");
+				String[] tokenList = ((textList.get(i)).toLowerCase()).split("\\s");
 				for (int x=0; x<tokenList.length; x++) {
 					//System.out.println(i);
 					//System.out.println(tokenList.length);
