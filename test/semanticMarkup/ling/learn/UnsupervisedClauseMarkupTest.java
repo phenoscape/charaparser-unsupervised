@@ -11,7 +11,7 @@ import java.util.Set;
 
 import semanticMarkup.core.Treatment;
 import semanticMarkup.ling.learn.UnsupervisedClauseMarkup;
-import semanticMarkup.ling.learn.SentenceLoader;
+import semanticMarkup.ling.learn.FileLoader;
 
 public class UnsupervisedClauseMarkupTest {
 	
@@ -35,7 +35,7 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("Result", null, tester.getWordToSources());
 		assertEquals("Result", true, tester.populatesents());
 		
-		SentenceLoader sentLoader = new SentenceLoader(str);
+		FileLoader sentLoader = new FileLoader(str);
 		sentLoader.load();
 		sentLoader.getUnknownWordList();
 		//assertEquals("Result", 1, sentLoader.GetType("Buckup_1998.xml_5c157037-01e4-4d48-8014-b1ebfc9dc120_8210ee00-8026-4fd9-974f-2f4cf6ce389f.txt"));

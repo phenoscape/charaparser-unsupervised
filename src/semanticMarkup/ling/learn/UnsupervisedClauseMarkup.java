@@ -94,7 +94,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public boolean populatesents() {
 		System.out.println("Reading sentences:\n");		
 
-		SentenceLoader sentLoader = new SentenceLoader(this.desDir);
+		FileLoader sentLoader = new FileLoader(this.desDir);
 		sentLoader.load();
 		sentLoader.getUnknownWordList();
 		
