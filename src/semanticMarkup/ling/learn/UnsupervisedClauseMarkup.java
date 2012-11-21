@@ -3,9 +3,12 @@ package semanticMarkup.ling.learn;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import semanticMarkup.core.Treatment;
 
@@ -94,13 +97,75 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public boolean populatesents() {
 		System.out.println("Reading sentences:\n");		
 
-		FileLoader sentLoader = new FileLoader(this.desDir);
-		sentLoader.load();
-		sentLoader.getUnknownWordList();
+		FileLoader fileLoader = new FileLoader(this.desDir);
+		if (!fileLoader.load())
+			return false;
+		//fileLoader.getUnknownWordList();
 		
+		List<String>  fileNameList = fileLoader.getFileNameList();
+		List<Integer> typeList = fileLoader.getTypeList();
+		List<String>  textList = fileLoader.getTextList();
+		
+		String text;
+		for (int i=0;i<fileLoader.getCount();i++) {
+			text = textList.get(i); 
+			if (text!= null) {
+
+				text = text.replaceAll("[\"']", ""); //
+				text = text.replaceAll("\\s*-\\s*to\\s+", " to "); //plano - to
+				text = text.replaceAll("[-_]+shaped", "-shaped"); //				
+				text = text.replaceAll("&lt;i&gt;","<i>"); //unhide <i>
+				text = text.replaceAll("&lt;/i&gt;", "</i>"); //unhide </i>, these will be used by characterHeuristics to collect taxon names
+				text = text.replaceAll("^\\s*\\d+[a-z].\\s*", ""); //remove 2a. (key marks)
+				String original = text;
+				text = text.replaceAll("&[;#\\w\\d]+;", " "); //remove HTML entities
+				text = text.replaceAll(" & ", " and "); //
+				//TODO: Dongye
+			  	//$text = hideBrackets($text);#implemented in DeHyphenAFolder.java
+				text = text.replaceAll("_", "-"); //_ to -
+				text = text.replaceAll("", ""); //
+				Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(text);
+				if (matcher1.lookingAt()) {
+					text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
+				}
+				//absent;blade => absent; blade
+				Matcher matcher2 = Pattern.compile("(\\w)([:;\\.])(\\w)").matcher(text);
+				if (matcher2.lookingAt()) {
+					text = text.replaceAll("\\w[:;\\.]\\w", matcher2.group(1)+matcher2.group(2)+" "+matcher2.group(3));
+				}								
+				//1 . 5 => 1.5
+				Matcher matcher3 = Pattern.compile("(\\d\\s*\\.)\\s+(\\d)").matcher(text);
+				if (matcher3.lookingAt()) {
+					text = text.replaceAll("\\d\\s*\\.\\s+\\d", matcher3.group(1)+matcher3.group(2));
+				}					
+			  	//diam . =>diam.
+				Matcher matcher4 = Pattern.compile("(\\sdiam)\\s+(\\.)").matcher(text);
+				if (matcher4.lookingAt()) {
+					text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)+matcher4.group(2));
+				}			
+				
+			  	//ca . =>ca.
+				Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(text);
+				if (matcher5.lookingAt()) {
+					text = text.replaceAll("\\sca\\s+\\.", matcher5.group(1)+matcher5.group(2));
+				}					
+				//
+				Matcher matcher6 = Pattern.compile("(\\d\\s+(cm|mm|dm|m)\\s*)\\.(\\s+[^A-Z])").matcher(text);
+				if (matcher6.lookingAt()) {
+					text = text.replaceAll("\\d\\s+cm|mm|dm|m\\s*\\.\\s+[^A-Z]", matcher6.group(1)+"\\[DOT\\]"+matcher6.group(3));
+				}				
+				
+				String[] tokenList = (text.toLowerCase()).split("\\s");
+				for (int x=0; x<tokenList.length; x++) {
+					//System.out.println(i);
+					//System.out.println(tokenList.length);
+					System.out.println(tokenList[x]);
+					//unknownList.add(tokenList[x]);
+				}
+			}	
+		}		
 		return true;						
 	}
-
 	
 	public void learn(List<Treatment> treatments) {
 		//TODO: Implement the unsupervised algorithm here!

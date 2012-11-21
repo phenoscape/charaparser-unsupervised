@@ -95,7 +95,7 @@ public class FileLoader {
 	{
 		List<String> unknownList = new LinkedList();
 		
-		for (int i=0;i<textList.size();i++) {
+		for (int i=0;i<count;i++) {
 			//System.out.println(i);
 			//System.out.println(sentList.get(i));
 			//System.out.println(fileNameList.get(i));
