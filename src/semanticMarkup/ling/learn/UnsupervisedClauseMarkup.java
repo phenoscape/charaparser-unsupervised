@@ -1,6 +1,10 @@
 package semanticMarkup.ling.learn;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -9,6 +13,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import opennlp.tools.sentdetect.SentenceDetectorME;
+import opennlp.tools.sentdetect.SentenceModel;
+import opennlp.tools.util.InvalidFormatException;
 
 import semanticMarkup.core.Treatment;
 
@@ -94,6 +102,64 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		System.out.println(String.format("%s", this.prefix));
 	}
 	
+	// replace '.', '?', ';', ':', '!' within brackets by some special markers,
+	// to avoid split within brackets during sentence segmentation
+	public String hideBrackets(String text) {
+		String hide = "";
+		int lRound = 0;
+		int lSquare = 0;
+		int lCurly = 0;
+
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+			switch (c) {
+			case '(':
+				lRound++;
+				hide = hide + c;
+				break;
+			case ')':
+				lRound--;
+				hide = hide + c;
+				break;
+			case '[':
+				lSquare++;
+				hide = hide + c;
+				break;
+			case ']':
+				lSquare--;
+				hide = hide + c;
+				break;
+			case '{':
+				lCurly++;
+				hide = hide + c;
+				break;
+			case '}':
+				lCurly--;
+				hide = hide + c;
+				break;
+			default:
+				if (lRound + lSquare + lCurly > 0) {
+					if (c == '.') {
+						hide = hide + "[DOT] ";
+					} else if (c == '?') {
+						hide = hide + "[QST] ";
+					} else if (c == ';') {
+						hide = hide + "[SQL] ";
+					} else if (c == ':') {
+						hide = hide + "[QLN] ";
+					} else if (c == '!') {
+						hide = hide + "[EXM] ";
+					} else {
+						hide = hide + c;
+					}
+				} else {
+					hide = hide + c;
+				}
+			}
+		}
+		return hide;
+	}
+
 	public boolean populatesents() {
 		System.out.println("Reading sentences:\n");		
 
@@ -110,58 +176,171 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		for (int i=0;i<fileLoader.getCount();i++) {
 			text = textList.get(i); 
 			if (text!= null) {
+				//
+				text = text.replaceAll("[\"']", "");
+				
+				//plano - to
+				text = text.replaceAll("\\s*-\\s*to\\s+", " to "); 
+				
+				//
+				text = text.replaceAll("[-_]+shaped", "-shaped");	
+				
+				//unhide <i>
+				text = text.replaceAll("&lt;i&gt;", "<i>");
 
-				text = text.replaceAll("[\"']", ""); //
-				text = text.replaceAll("\\s*-\\s*to\\s+", " to "); //plano - to
-				text = text.replaceAll("[-_]+shaped", "-shaped"); //				
-				text = text.replaceAll("&lt;i&gt;","<i>"); //unhide <i>
-				text = text.replaceAll("&lt;/i&gt;", "</i>"); //unhide </i>, these will be used by characterHeuristics to collect taxon names
-				text = text.replaceAll("^\\s*\\d+[a-z].\\s*", ""); //remove 2a. (key marks)
+				// unhide </i>, these will be used by characterHeuristics to
+				// collect taxon names
+				text = text.replaceAll("&lt;/i&gt;", "</i>");
+
+				// remove 2a. (key marks)
+				text = text.replaceAll("^\\s*\\d+[a-z].\\s*", ""); 
+				
+				//store text at this point in original
 				String original = text;
-				text = text.replaceAll("&[;#\\w\\d]+;", " "); //remove HTML entities
-				text = text.replaceAll(" & ", " and "); //
-				//TODO: Dongye
-			  	//$text = hideBrackets($text);#implemented in DeHyphenAFolder.java
-				text = text.replaceAll("_", "-"); //_ to -
+				
+				//remove HTML entities
+				text = text.replaceAll("&[;#\\w\\d]+;", " "); 
+				
+				//
+				text = text.replaceAll(" & ", " and ");
+				
+				// replace '.', '?', ';', ':', '!' within brackets by some
+				// special markers, to avoid split within brackets during
+				// sentence segmentation
+				// System.out.println("Before Hide: "+text);
+			  	text = hideBrackets(text);
+			  	//System.out.println("After Hide: "+text+"\n");
+			  	
+				text = text.replaceAll("_", "-"); // _ to -
 				text = text.replaceAll("", ""); //
-				Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(text);
+				
+				//
+				Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(
+						text);
 				if (matcher1.lookingAt()) {
 					text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
 				}
-				//absent;blade => absent; blade
-				Matcher matcher2 = Pattern.compile("(\\w)([:;\\.])(\\w)").matcher(text);
+				
+				// absent;blade => absent; blade
+				Matcher matcher2 = Pattern.compile("(\\w)([:;\\.])(\\w)")
+						.matcher(text);
 				if (matcher2.lookingAt()) {
-					text = text.replaceAll("\\w[:;\\.]\\w", matcher2.group(1)+matcher2.group(2)+" "+matcher2.group(3));
-				}								
-				//1 . 5 => 1.5
-				Matcher matcher3 = Pattern.compile("(\\d\\s*\\.)\\s+(\\d)").matcher(text);
+					text = text.replaceAll("\\w[:;\\.]\\w", matcher2.group(1)
+							+ matcher2.group(2) + " " + matcher2.group(3));
+				}
+				
+				// 1 . 5 => 1.5
+				Matcher matcher3 = Pattern.compile("(\\d\\s*\\.)\\s+(\\d)")
+						.matcher(text);
 				if (matcher3.lookingAt()) {
-					text = text.replaceAll("\\d\\s*\\.\\s+\\d", matcher3.group(1)+matcher3.group(2));
-				}					
-			  	//diam . =>diam.
-				Matcher matcher4 = Pattern.compile("(\\sdiam)\\s+(\\.)").matcher(text);
+					text = text.replaceAll("\\d\\s*\\.\\s+\\d",
+							matcher3.group(1) + matcher3.group(2));
+				}
+				
+				// diam . =>diam.
+				Matcher matcher4 = Pattern.compile("(\\sdiam)\\s+(\\.)")
+						.matcher(text);
 				if (matcher4.lookingAt()) {
-					text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)+matcher4.group(2));
-				}			
-				
-			  	//ca . =>ca.
-				Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(text);
+					text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)
+							+ matcher4.group(2));
+				}
+
+				// ca . =>ca.
+				Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(
+						text);
 				if (matcher5.lookingAt()) {
-					text = text.replaceAll("\\sca\\s+\\.", matcher5.group(1)+matcher5.group(2));
-				}					
-				//
-				Matcher matcher6 = Pattern.compile("(\\d\\s+(cm|mm|dm|m)\\s*)\\.(\\s+[^A-Z])").matcher(text);
-				if (matcher6.lookingAt()) {
-					text = text.replaceAll("\\d\\s+cm|mm|dm|m\\s*\\.\\s+[^A-Z]", matcher6.group(1)+"\\[DOT\\]"+matcher6.group(3));
-				}				
+					text = text.replaceAll("\\sca\\s+\\.", matcher5.group(1)
+							+ matcher5.group(2));
+				}
 				
-				String[] tokenList = (text.toLowerCase()).split("\\s");
-				for (int x=0; x<tokenList.length; x++) {
+				//
+				Matcher matcher6 = Pattern.compile(
+						"(\\d\\s+(cm|mm|dm|m)\\s*)\\.(\\s+[^A-Z])").matcher(
+						text);
+				if (matcher6.lookingAt()) {
+					text = text
+							.replaceAll(
+									"\\d\\s+cm|mm|dm|m\\s*\\.\\s+[^A-Z]",
+									matcher6.group(1) + "\\[DOT\\]"
+											+ matcher6.group(3));
+				}
+
+				//use Apache OpenNLP to do sentence segmentation
+				String sentences[] = {};
+				try {
+					InputStream modelIn = new FileInputStream(
+							//add to be replaced by a relative path
+							"/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-sent.bin");
+							//"../../../../../../res/en-sent.bin");
+					File myDir = new File("../");
+					File[] contents = myDir.listFiles();
+
+					SentenceModel model;
+					try {
+						model = new SentenceModel(modelIn);
+						SentenceDetectorME sentenceDetector = new SentenceDetectorME(
+								model);
+						sentences = sentenceDetector.sentDetect(text);
+					} catch (InvalidFormatException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				System.out.println("Text: "+text);
+				
+				//my @sentcopy = ();
+				//my @validindex = ();
+				int index = 0; 
+				//for each sentence, do some operations 
+				for (int j=0;j<sentences.length;j++) {					
+					System.out.println("Sentence "+j+": "+sentences[j]);
+					
+					//TODO: Dongye
+					//Do something for this sentence:
+					//may have fewer than $N words
+					//if(!/\w+/){next;}
+					//push(@validindex, $i);
+					//s#\[\s*DOT\s*\]#.#g;
+					//s#\[\s*QST\s*\]#?#g;
+					//s#\[\s*SQL\s*\]#;#g;
+					//s#\[\s*QLN\s*\]#:#g;
+					//s#\[\s*EXM\s*\]#!#g;
+					//push(@sentcopy, $_);
+
+					//remove bracketed text from sentence (keep those in originalsent);
+					//this step will not be able to remove nested brackets, such as (petioles (2-)4-8 cm).
+					//nested brackets will be removed after threedsent step in POSTagger4StanfordParser.java
+			  		//s#\([^()]*?[a-zA-Z][^()]*?\)# #g;  #remove (.a.)
+			  		//s#\[[^\]\[]*?[a-zA-Z][^\]\[]*?\]# #g;  #remove [.a.]
+			  		//s#{[^{}]*?[a-zA-Z][^{}]*?}# #g; #remove {.a.}
+			    	
+					//s#\s*[-]+\s*([a-z])#_ $1#g;					#to fix basi- and hypobranchial 	
+					//s#(\W)# $1 #g;                            #add space around nonword char
+
+			    	//s#\s+# #g;                                #multiple spaces => 1 space
+			    	//s#^\s*##;                                 #trim
+			    	//s#\s*$##;                                 #trim
+
+			    	//tr/A-Z/a-z/;                              #all to lower case
+			    	//getallwords($_);
+			    	index++;
+				}
+				System.out.println("\n");
+				//String[] tokenList = (text.toLowerCase()).split("\\s");
+				//for (int x=0; x<tokenList.length; x++) {
 					//System.out.println(i);
 					//System.out.println(tokenList.length);
-					System.out.println(tokenList[x]);
+					//System.out.println(tokenList[x]);
 					//unknownList.add(tokenList[x]);
-				}
+				//}
+
 			}	
 		}		
 		return true;						
