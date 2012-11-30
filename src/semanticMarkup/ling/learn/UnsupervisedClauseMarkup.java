@@ -296,7 +296,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				System.out.println("Text: "+text);
 				
 				//my @sentcopy = ();
+				List<String> sentcopy= new LinkedList<String>();
 				//my @validindex = ();
+				List<Integer> validindex= new LinkedList<Integer>();
 				int index = 0; 
 				//for each sentence, do some operations 
 				for (int j=0;j<sentences.length;j++) {					
@@ -306,22 +308,49 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					//Do something for this sentence:
 					//may have fewer than $N words
 					//if(!/\w+/){next;}
+					if (!sentences[j].matches("\\w+")) {
+						continue;
+					}
 					//push(@validindex, $i);
+					validindex.add(j);
+					//restore "." from "[DOT]"
 					//s#\[\s*DOT\s*\]#.#g;
+					sentences[j]=sentences[j].replaceAll("\\[\\s*DOT\\s*\\]", ".");
+					//restore "?" from "[QST]"
 					//s#\[\s*QST\s*\]#?#g;
+					sentences[j]=sentences[j].replaceAll("\\[\\s*QST\\s*\\]", "?");
+					//restore ";" from "[SQL]"
 					//s#\[\s*SQL\s*\]#;#g;
+					sentences[j]=sentences[j].replaceAll("\\[\\s*SQL\\s*\\]", ";");
+					//restore ":" from "[QLN]"
 					//s#\[\s*QLN\s*\]#:#g;
+					sentences[j]=sentences[j].replaceAll("\\[\\s*QLN\\s*\\]", ":");
+					//restore "." from "[DOT]"
 					//s#\[\s*EXM\s*\]#!#g;
+					sentences[j]=sentences[j].replaceAll("\\[\\s*EXM\\s*\\]", "!");
 					//push(@sentcopy, $_);
+					sentcopy.add(sentences[j]);
 
 					//remove bracketed text from sentence (keep those in originalsent);
 					//this step will not be able to remove nested brackets, such as (petioles (2-)4-8 cm).
 					//nested brackets will be removed after threedsent step in POSTagger4StanfordParser.java
-			  		//s#\([^()]*?[a-zA-Z][^()]*?\)# #g;  #remove (.a.)
-			  		//s#\[[^\]\[]*?[a-zA-Z][^\]\[]*?\]# #g;  #remove [.a.]
-			  		//s#{[^{}]*?[a-zA-Z][^{}]*?}# #g; #remove {.a.}
-			    	
-					//s#\s*[-]+\s*([a-z])#_ $1#g;					#to fix basi- and hypobranchial 	
+					
+					//remove (.a.)
+			  		//s#\([^()]*?[a-zA-Z][^()]*?\)# #g;
+					sentences[j]=sentences[j].replaceAll("\\([^()]*?[a-zA-Z][^()]*?\\)", " ");
+					
+					//remove [.a.]
+			  		//s#\[[^\]\[]*?[a-zA-Z][^\]\[]*?\]# #g;  
+					sentences[j]=sentences[j].replaceAll("\\[[^\\]\\[]*?[a-zA-Z][^\\]\\[]*?\\]", " ");
+					
+					//remove {.a.}
+			  		//s#{[^{}]*?[a-zA-Z][^{}]*?}# #g; 
+					sentences[j]=sentences[j].replaceAll("{[^{}]*?[a-zA-Z][^{}]*?}", " ");
+					
+					//to fix basi- and hypobranchial
+					//s#\s*[-]+\s*([a-z])#_ $1#g;		
+					//sentences[j]=sentences[j].replaceAll("{[^{}]*?[a-zA-Z][^{}]*?}", " ");
+					
 					//s#(\W)# $1 #g;                            #add space around nonword char
 
 			    	//s#\s+# #g;                                #multiple spaces => 1 space
