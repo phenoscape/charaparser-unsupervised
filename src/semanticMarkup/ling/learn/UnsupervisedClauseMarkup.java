@@ -11,11 +11,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
+import opennlp.tools.tokenize.Tokenizer;
+import opennlp.tools.tokenize.TokenizerME;
+import opennlp.tools.tokenize.TokenizerModel;
 import opennlp.tools.util.InvalidFormatException;
 
 import semanticMarkup.core.Treatment;
@@ -172,6 +176,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		List<Integer> typeList = fileLoader.getTypeList();
 		List<String>  textList = fileLoader.getTextList();
 		
+		Set<String> unknownWordSet = new TreeSet();
+		
 		String text;
 		for (int i=0;i<fileLoader.getCount();i++) {
 			text = textList.get(i); 
@@ -308,7 +314,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					//Do something for this sentence:
 					//may have fewer than $N words
 					//if(!/\w+/){next;}
-					if (!sentences[j].matches("\\w+")) {
+					System.out.println(sentences[j]);
+					//if (!sentences[j].matches("\\w+")) {
+					if (!sentences[j].matches("^.*\\w+.*$")){
 						continue;
 					}
 					//push(@validindex, $i);
@@ -345,23 +353,80 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					
 					//remove {.a.}
 			  		//s#{[^{}]*?[a-zA-Z][^{}]*?}# #g; 
-					sentences[j]=sentences[j].replaceAll("{[^{}]*?[a-zA-Z][^{}]*?}", " ");
+					sentences[j]=sentences[j].replaceAll("\\{[^{}]*?[a-zA-Z][^{}]*?\\}", " ");
 					
-					//to fix basi- and hypobranchial
-					//s#\s*[-]+\s*([a-z])#_ $1#g;		
-					//sentences[j]=sentences[j].replaceAll("{[^{}]*?[a-zA-Z][^{}]*?}", " ");
+					// to fix basi- and hypobranchial
+					// s#\s*[-]+\s*([a-z])#_ $1#g;
+					Matcher matcher7 = Pattern.compile("\\s*[-]+\\s*([a-z])")
+							.matcher(sentences[j]);
+					if (matcher7.lookingAt()) {
+						sentences[j] = sentences[j].replaceAll(
+								"\\s*[-]+\\s*[a-z]", "_ " + matcher7.group(1));
+					}
+
+					// add space around nonword char
+					//s#(\W)# $1 #g;
+					Matcher matcher8 = Pattern.compile("(\\W)")
+							.matcher(sentences[j]);
+					if (matcher8.lookingAt()) {
+						sentences[j] = sentences[j].replaceAll(
+								"\\W", " "+matcher7.group(1)+" ");
+					}
 					
-					//s#(\W)# $1 #g;                            #add space around nonword char
-
-			    	//s#\s+# #g;                                #multiple spaces => 1 space
-			    	//s#^\s*##;                                 #trim
-			    	//s#\s*$##;                                 #trim
-
-			    	//tr/A-Z/a-z/;                              #all to lower case
+					//multiple spaces => 1 space
+					//s#\s+# #g; 
+					sentences[j]=sentences[j].replaceAll("\\s+"," ");
+					
+					//trim
+					//s#^\s*##;
+					sentences[j]=sentences[j].replaceAll("^\\s*","");
+					
+					//trim
+					//s#\s*$##;
+					sentences[j]=sentences[j].replaceAll("\\s*$","");
+					
+					//all to lower case
+					sentences[j]=sentences[j].toLowerCase();
+					
 			    	//getallwords($_);
+					
+					
+					// first tokenize this sentence
+					InputStream modelIn;
+					try {
+						modelIn = new FileInputStream("/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-token.bin");
+						TokenizerModel model = new TokenizerModel(modelIn);
+						Tokenizer tokenizer = new TokenizerME(model);
+						//System.out.println(sentences[j]);
+						String tokens[] = tokenizer.tokenize(sentences[j]);
+						for (int i1=0;i1<tokens.length;i1++) {
+							unknownWordSet.add(tokens[i1]);
+						}
+				
+						//System.out.println(tokens[0]);
+
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (InvalidFormatException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+
+					
+					
+					
 			    	index++;
 				}
-				System.out.println("\n");
+				
+				for (int j=0;j<validindex.size();j++) {
+					this.SENTID++;
+				}
+				System.out.println( "Total sentences = "+SENTID);
 				//String[] tokenList = (text.toLowerCase()).split("\\s");
 				//for (int x=0; x<tokenList.length; x++) {
 					//System.out.println(i);
@@ -373,6 +438,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}	
 		}		
 		return true;						
+	}
+	
+	public void addheuristicsnouns() {
+		;
 	}
 	
 	public void learn(List<Treatment> treatments) {
