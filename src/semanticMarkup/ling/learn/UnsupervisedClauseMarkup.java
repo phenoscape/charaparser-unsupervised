@@ -6,7 +6,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +25,7 @@ import opennlp.tools.tokenize.TokenizerModel;
 import opennlp.tools.util.InvalidFormatException;
 
 import semanticMarkup.core.Treatment;
+import semanticMarkup.knowledge.lib.WordNetAPI;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
@@ -69,7 +72,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private String StringNUMBERS = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
 	//the following two patterns are used in mySQL rlike
 	private String StringPREFIX ="ab|ad|bi|deca|de|dis|di|dodeca|endo|end|e|hemi|hetero|hexa|homo|infra|inter|ir|macro|mega|meso|micro|mid|mono|multi|ob|octo|over|penta|poly|postero|post|ptero|pseudo|quadri|quinque|semi|sub|sur|syn|tetra|tri|uni|un|xero|[a-z0-9]+_";
-	private String StringSUFFIX ="er|est|fid|form|ish|less|like|ly|merous|most|shaped"; // 3_nerved, )_nerved, dealt with in subroutine
+	private String SUFFIX ="er|est|fid|form|ish|less|like|ly|merous|most|shaped"; // 3_nerved, )_nerved, dealt with in subroutine
 	private String StringFORBIDDEN ="to|and|or|nor"; //words in this list can not be treated as boundaries "to|a|b" etc.
 	private String StringPRONOUN ="all|each|every|some|few|individual|both|other";
 	private String StringCHARACTER ="lengths|length|lengthed|width|widths|widthed|heights|height|character|characters|distribution|distributions|outline|outlines|profile|profiles|feature|features|form|forms|mechanism|mechanisms|nature|natures|shape|shapes|shaped|size|sizes|sized";//remove growth, for growth line. check 207, 3971
@@ -89,6 +92,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	private String IGNOREPTN ="(IGNOREPTN)"; //disabled
 	private String stop = "state|page|fig|"+"a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
+	
+	
+	//List to store all unknown words
+	List<String> unknownWordList = new ArrayList<String>();
+	Set<String> unknownWordSet = new TreeSet<String>();
+	Map<String,String> unknownWordTagMap = new HashMap<String,String>();
 
 	//DNGYE_TODO
 
@@ -176,7 +185,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		List<Integer> typeList = fileLoader.getTypeList();
 		List<String>  textList = fileLoader.getTextList();
 		
-		Set<String> unknownWordSet = new TreeSet();
+		//Set<String> unknownWordSet = new TreeSet<String>();
 		
 		String text;
 		for (int i=0;i<fileLoader.getCount();i++) {
@@ -426,7 +435,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				for (int j=0;j<validindex.size();j++) {
 					this.SENTID++;
 				}
-				System.out.println( "Total sentences = "+SENTID);
+
 				//String[] tokenList = (text.toLowerCase()).split("\\s");
 				//for (int x=0; x<tokenList.length; x++) {
 					//System.out.println(i);
@@ -436,11 +445,84 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				//}
 
 			}	
-		}		
-		return true;						
+
+		}
+		// copy all unkown words from unknownWordSet into unknownWordList, set
+		// the tags in the unknownWordTagList be 0 (0 - unknown)
+		Iterator<String> unknownWordIterator = unknownWordSet.iterator();
+		// ensure unknownWordList and unknownWordTagList have enough capacity to
+		// hold the words and tags
+		((ArrayList) this.unknownWordList)
+				.ensureCapacity(unknownWordSet.size());
+		//((HashMap) this.unknownWordTagMap).ensureCapacity(unknownWordSet
+		//		.size());
+		while (unknownWordIterator.hasNext()) {
+			String unknownWord=unknownWordIterator.next();
+			unknownWordList.add(unknownWord);
+			unknownWordTagMap.put(unknownWord, "unknown");
+		}
+		System.out.println("Total sentences = " + SENTID);
+		return true;
 	}
 	
 	public void addheuristicsnouns() {
+		;
+	}
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//suffix: -fid(adj), -form (adj), -ish(adj),  -less(adj), -like (adj)),  -merous(adj), -most(adj), -shaped(adj), -ous(adj)
+	//        -ly (adv), -er (advj), -est (advj),
+	//foreach unknownword in unknownwords table
+	//   seperate root and suffix
+	//   if root is a word in WN or unknownwords table
+	//   make the unknowword a "b" boundary
+	
+	//suffix is defined in global variable SUFFIX
+	public void posbysuffix() {
+		String pattern="^[a-z_]+("+this.SUFFIX+")\\$";
+		for (int i=0;i<this.unknownWordList.size();i++) {
+			String unknownWord = "anteriorly";//this.unknownWordList.get(i);
+			String unknownWordTag = this.unknownWordTagMap.get(unknownWord);
+			// the tag of this word is unknown
+			if (unknownWordTag.equals("unknown")) {
+				
+				
+				String p="(.*?)("+this.SUFFIX+")$";
+				Matcher matcher = Pattern.compile("(.*?)("+this.SUFFIX+")$")
+						.matcher(unknownWord);
+				
+
+				
+				boolean f = matcher.matches();
+				f=true;
+				
+				
+				//if (unknownWord.equals(arg0))
+				if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
+						&& matcher.matches()) {
+					String prefix = matcher.group(1);
+					if (this.unknownWordSet.contains(matcher.group(1))) {
+						unknownWordTagMap.put(unknownWord, "b");
+					}
+				}
+			}
+			String result = this.unknownWordTagMap.get("anteriorly");
+			System.out.println(result);
+i++;			
+		}
+		System.out.println(1);
+		
+		//test WordNet API
+		try {
+			WordNetAPI mywn = new WordNetAPI("anteriorly",false);
+			mywn.isAdverb("anteriorly");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	public void markupbypattern() {
 		;
 	}
 	
@@ -493,7 +575,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public Map<String, Set<String>> getWordsToRoles() {
 		System.out.println("Method: getWordsToRoles\n");
 		return null;
-	}
+	}  
 
 	public Map<String, String> getHeuristicNouns() {
 		System.out.println("Method: getHeuristicNouns\n");
