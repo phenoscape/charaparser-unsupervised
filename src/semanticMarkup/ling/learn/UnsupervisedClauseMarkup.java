@@ -1,11 +1,31 @@
 package semanticMarkup.ling.learn;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import opennlp.tools.sentdetect.SentenceDetectorME;
+import opennlp.tools.sentdetect.SentenceModel;
+import opennlp.tools.tokenize.Tokenizer;
+import opennlp.tools.tokenize.TokenizerME;
+import opennlp.tools.tokenize.TokenizerModel;
+import opennlp.tools.util.InvalidFormatException;
 
 import semanticMarkup.core.Treatment;
+import semanticMarkup.knowledge.lib.WordNetAPI;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
@@ -41,18 +61,18 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private int DECISIONID = 0;
 	private String PROPERNOUNS = "propernouns"; //EOL
 	
-	private Hashtable WNNUMBER =new Hashtable(); //word->(p|s)
-	private Hashtable WNSINGULAR = new Hashtable();//word->singular
-	private Hashtable WNPOS = new Hashtable();   //word->POSs
-	private Hashtable WNPOSRECORDS = new Hashtable();
+	private Hashtable<String,String> WNNUMBER =new Hashtable(); //word->(p|s)
+	private Hashtable<String,String> WNSINGULAR = new Hashtable();//word->singular
+	private Hashtable<String,String> WNPOS = new Hashtable();   //word->POSs
+	private Hashtable<String,String> WNPOSRECORDS = new Hashtable();
 	private String NEWDESCRIPTION =""; //record the index of sentences that ends a description
-	private Hashtable WORDS = new Hashtable();
-	private Hashtable PLURALS = new Hashtable();
+	private Hashtable<String,String> WORDS = new Hashtable();
+	private Hashtable<String,String> PLURALS = new Hashtable();
 	
 	private String StringNUMBERS = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
 	//the following two patterns are used in mySQL rlike
 	private String StringPREFIX ="ab|ad|bi|deca|de|dis|di|dodeca|endo|end|e|hemi|hetero|hexa|homo|infra|inter|ir|macro|mega|meso|micro|mid|mono|multi|ob|octo|over|penta|poly|postero|post|ptero|pseudo|quadri|quinque|semi|sub|sur|syn|tetra|tri|uni|un|xero|[a-z0-9]+_";
-	private String StringSUFFIX ="er|est|fid|form|ish|less|like|ly|merous|most|shaped"; // 3_nerved, )_nerved, dealt with in subroutine
+	private String SUFFIX ="er|est|fid|form|ish|less|like|ly|merous|most|shaped"; // 3_nerved, )_nerved, dealt with in subroutine
 	private String StringFORBIDDEN ="to|and|or|nor"; //words in this list can not be treated as boundaries "to|a|b" etc.
 	private String StringPRONOUN ="all|each|every|some|few|individual|both|other";
 	private String StringCHARACTER ="lengths|length|lengthed|width|widths|widthed|heights|height|character|characters|distribution|distributions|outline|outlines|profile|profiles|feature|features|form|forms|mechanism|mechanisms|nature|natures|shape|shapes|shaped|size|sizes|sized";//remove growth, for growth line. check 207, 3971
@@ -72,6 +92,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	private String IGNOREPTN ="(IGNOREPTN)"; //disabled
 	private String stop = "state|page|fig|"+"a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
+	
+	
+	//List to store all unknown words
+	List<String> unknownWordList = new ArrayList<String>();
+	Set<String> unknownWordSet = new TreeSet<String>();
+	Map<String,String> unknownWordTagMap = new HashMap<String,String>();
 
 	//DNGYE_TODO
 
@@ -89,12 +115,419 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		System.out.println(String.format("%s", this.prefix));
 	}
 	
-	public void populatesents() {
-		System.out.println("Reading sentences:\n");
+	// replace '.', '?', ';', ':', '!' within brackets by some special markers,
+	// to avoid split within brackets during sentence segmentation
+	public String hideBrackets(String text) {
+		String hide = "";
+		int lRound = 0;
+		int lSquare = 0;
+		int lCurly = 0;
+
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+			switch (c) {
+			case '(':
+				lRound++;
+				hide = hide + c;
+				break;
+			case ')':
+				lRound--;
+				hide = hide + c;
+				break;
+			case '[':
+				lSquare++;
+				hide = hide + c;
+				break;
+			case ']':
+				lSquare--;
+				hide = hide + c;
+				break;
+			case '{':
+				lCurly++;
+				hide = hide + c;
+				break;
+			case '}':
+				lCurly--;
+				hide = hide + c;
+				break;
+			default:
+				if (lRound + lSquare + lCurly > 0) {
+					if (c == '.') {
+						hide = hide + "[DOT] ";
+					} else if (c == '?') {
+						hide = hide + "[QST] ";
+					} else if (c == ';') {
+						hide = hide + "[SQL] ";
+					} else if (c == ':') {
+						hide = hide + "[QLN] ";
+					} else if (c == '!') {
+						hide = hide + "[EXM] ";
+					} else {
+						hide = hide + c;
+					}
+				} else {
+					hide = hide + c;
+				}
+			}
+		}
+		return hide;
 	}
 
+	public boolean populatesents() {
+		System.out.println("Reading sentences:\n");		
+
+		FileLoader fileLoader = new FileLoader(this.desDir);
+		if (!fileLoader.load())
+			return false;
+		//fileLoader.getUnknownWordList();
+		
+		List<String>  fileNameList = fileLoader.getFileNameList();
+		List<Integer> typeList = fileLoader.getTypeList();
+		List<String>  textList = fileLoader.getTextList();
+		
+		//Set<String> unknownWordSet = new TreeSet<String>();
+		
+		String text;
+		for (int i=0;i<fileLoader.getCount();i++) {
+			text = textList.get(i); 
+			if (text!= null) {
+				//
+				text = text.replaceAll("[\"']", "");
+				
+				//plano - to
+				text = text.replaceAll("\\s*-\\s*to\\s+", " to "); 
+				
+				//
+				text = text.replaceAll("[-_]+shaped", "-shaped");	
+				
+				//unhide <i>
+				text = text.replaceAll("&lt;i&gt;", "<i>");
+
+				// unhide </i>, these will be used by characterHeuristics to
+				// collect taxon names
+				text = text.replaceAll("&lt;/i&gt;", "</i>");
+
+				// remove 2a. (key marks)
+				text = text.replaceAll("^\\s*\\d+[a-z].\\s*", ""); 
+				
+				//store text at this point in original
+				String original = text;
+				
+				//remove HTML entities
+				text = text.replaceAll("&[;#\\w\\d]+;", " "); 
+				
+				//
+				text = text.replaceAll(" & ", " and ");
+				
+				// replace '.', '?', ';', ':', '!' within brackets by some
+				// special markers, to avoid split within brackets during
+				// sentence segmentation
+				// System.out.println("Before Hide: "+text);
+			  	text = hideBrackets(text);
+			  	//System.out.println("After Hide: "+text+"\n");
+			  	
+				text = text.replaceAll("_", "-"); // _ to -
+				text = text.replaceAll("", ""); //
+				
+				//
+				Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(
+						text);
+				if (matcher1.lookingAt()) {
+					text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
+				}
+				
+				// absent;blade => absent; blade
+				Matcher matcher2 = Pattern.compile("(\\w)([:;\\.])(\\w)")
+						.matcher(text);
+				if (matcher2.lookingAt()) {
+					text = text.replaceAll("\\w[:;\\.]\\w", matcher2.group(1)
+							+ matcher2.group(2) + " " + matcher2.group(3));
+				}
+				
+				// 1 . 5 => 1.5
+				Matcher matcher3 = Pattern.compile("(\\d\\s*\\.)\\s+(\\d)")
+						.matcher(text);
+				if (matcher3.lookingAt()) {
+					text = text.replaceAll("\\d\\s*\\.\\s+\\d",
+							matcher3.group(1) + matcher3.group(2));
+				}
+				
+				// diam . =>diam.
+				Matcher matcher4 = Pattern.compile("(\\sdiam)\\s+(\\.)")
+						.matcher(text);
+				if (matcher4.lookingAt()) {
+					text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)
+							+ matcher4.group(2));
+				}
+
+				// ca . =>ca.
+				Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(
+						text);
+				if (matcher5.lookingAt()) {
+					text = text.replaceAll("\\sca\\s+\\.", matcher5.group(1)
+							+ matcher5.group(2));
+				}
+				
+				//
+				Matcher matcher6 = Pattern.compile(
+						"(\\d\\s+(cm|mm|dm|m)\\s*)\\.(\\s+[^A-Z])").matcher(
+						text);
+				if (matcher6.lookingAt()) {
+					text = text
+							.replaceAll(
+									"\\d\\s+cm|mm|dm|m\\s*\\.\\s+[^A-Z]",
+									matcher6.group(1) + "\\[DOT\\]"
+											+ matcher6.group(3));
+				}
+
+				//use Apache OpenNLP to do sentence segmentation
+				String sentences[] = {};
+				try {
+					InputStream modelIn = new FileInputStream(
+							//add to be replaced by a relative path
+							"/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-sent.bin");
+							//"../../../../../../res/en-sent.bin");
+					File myDir = new File("../");
+					File[] contents = myDir.listFiles();
+
+					SentenceModel model;
+					try {
+						model = new SentenceModel(modelIn);
+						SentenceDetectorME sentenceDetector = new SentenceDetectorME(
+								model);
+						sentences = sentenceDetector.sentDetect(text);
+					} catch (InvalidFormatException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				System.out.println("Text: "+text);
+				
+				//my @sentcopy = ();
+				List<String> sentcopy= new LinkedList<String>();
+				//my @validindex = ();
+				List<Integer> validindex= new LinkedList<Integer>();
+				int index = 0; 
+				//for each sentence, do some operations 
+				for (int j=0;j<sentences.length;j++) {					
+					System.out.println("Sentence "+j+": "+sentences[j]);
+					
+					//TODO: Dongye
+					//Do something for this sentence:
+					//may have fewer than $N words
+					//if(!/\w+/){next;}
+					System.out.println(sentences[j]);
+					//if (!sentences[j].matches("\\w+")) {
+					if (!sentences[j].matches("^.*\\w+.*$")){
+						continue;
+					}
+					//push(@validindex, $i);
+					validindex.add(j);
+					//restore "." from "[DOT]"
+					//s#\[\s*DOT\s*\]#.#g;
+					sentences[j]=sentences[j].replaceAll("\\[\\s*DOT\\s*\\]", ".");
+					//restore "?" from "[QST]"
+					//s#\[\s*QST\s*\]#?#g;
+					sentences[j]=sentences[j].replaceAll("\\[\\s*QST\\s*\\]", "?");
+					//restore ";" from "[SQL]"
+					//s#\[\s*SQL\s*\]#;#g;
+					sentences[j]=sentences[j].replaceAll("\\[\\s*SQL\\s*\\]", ";");
+					//restore ":" from "[QLN]"
+					//s#\[\s*QLN\s*\]#:#g;
+					sentences[j]=sentences[j].replaceAll("\\[\\s*QLN\\s*\\]", ":");
+					//restore "." from "[DOT]"
+					//s#\[\s*EXM\s*\]#!#g;
+					sentences[j]=sentences[j].replaceAll("\\[\\s*EXM\\s*\\]", "!");
+					//push(@sentcopy, $_);
+					sentcopy.add(sentences[j]);
+
+					//remove bracketed text from sentence (keep those in originalsent);
+					//this step will not be able to remove nested brackets, such as (petioles (2-)4-8 cm).
+					//nested brackets will be removed after threedsent step in POSTagger4StanfordParser.java
+					
+					//remove (.a.)
+			  		//s#\([^()]*?[a-zA-Z][^()]*?\)# #g;
+					sentences[j]=sentences[j].replaceAll("\\([^()]*?[a-zA-Z][^()]*?\\)", " ");
+					
+					//remove [.a.]
+			  		//s#\[[^\]\[]*?[a-zA-Z][^\]\[]*?\]# #g;  
+					sentences[j]=sentences[j].replaceAll("\\[[^\\]\\[]*?[a-zA-Z][^\\]\\[]*?\\]", " ");
+					
+					//remove {.a.}
+			  		//s#{[^{}]*?[a-zA-Z][^{}]*?}# #g; 
+					sentences[j]=sentences[j].replaceAll("\\{[^{}]*?[a-zA-Z][^{}]*?\\}", " ");
+					
+					// to fix basi- and hypobranchial
+					// s#\s*[-]+\s*([a-z])#_ $1#g;
+					Matcher matcher7 = Pattern.compile("\\s*[-]+\\s*([a-z])")
+							.matcher(sentences[j]);
+					if (matcher7.lookingAt()) {
+						sentences[j] = sentences[j].replaceAll(
+								"\\s*[-]+\\s*[a-z]", "_ " + matcher7.group(1));
+					}
+
+					// add space around nonword char
+					//s#(\W)# $1 #g;
+					Matcher matcher8 = Pattern.compile("(\\W)")
+							.matcher(sentences[j]);
+					if (matcher8.lookingAt()) {
+						sentences[j] = sentences[j].replaceAll(
+								"\\W", " "+matcher7.group(1)+" ");
+					}
+					
+					//multiple spaces => 1 space
+					//s#\s+# #g; 
+					sentences[j]=sentences[j].replaceAll("\\s+"," ");
+					
+					//trim
+					//s#^\s*##;
+					sentences[j]=sentences[j].replaceAll("^\\s*","");
+					
+					//trim
+					//s#\s*$##;
+					sentences[j]=sentences[j].replaceAll("\\s*$","");
+					
+					//all to lower case
+					sentences[j]=sentences[j].toLowerCase();
+					
+			    	//getallwords($_);
+					
+					
+					// first tokenize this sentence
+					InputStream modelIn;
+					try {
+						modelIn = new FileInputStream("/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-token.bin");
+						TokenizerModel model = new TokenizerModel(modelIn);
+						Tokenizer tokenizer = new TokenizerME(model);
+						//System.out.println(sentences[j]);
+						String tokens[] = tokenizer.tokenize(sentences[j]);
+						for (int i1=0;i1<tokens.length;i1++) {
+							unknownWordSet.add(tokens[i1]);
+						}
+				
+						//System.out.println(tokens[0]);
+
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (InvalidFormatException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+
+					
+					
+					
+			    	index++;
+				}
+				
+				for (int j=0;j<validindex.size();j++) {
+					this.SENTID++;
+				}
+
+				//String[] tokenList = (text.toLowerCase()).split("\\s");
+				//for (int x=0; x<tokenList.length; x++) {
+					//System.out.println(i);
+					//System.out.println(tokenList.length);
+					//System.out.println(tokenList[x]);
+					//unknownList.add(tokenList[x]);
+				//}
+
+			}	
+
+		}
+		// copy all unkown words from unknownWordSet into unknownWordList, set
+		// the tags in the unknownWordTagList be 0 (0 - unknown)
+		Iterator<String> unknownWordIterator = unknownWordSet.iterator();
+		// ensure unknownWordList and unknownWordTagList have enough capacity to
+		// hold the words and tags
+		((ArrayList) this.unknownWordList)
+				.ensureCapacity(unknownWordSet.size());
+		//((HashMap) this.unknownWordTagMap).ensureCapacity(unknownWordSet
+		//		.size());
+		while (unknownWordIterator.hasNext()) {
+			String unknownWord=unknownWordIterator.next();
+			unknownWordList.add(unknownWord);
+			unknownWordTagMap.put(unknownWord, "unknown");
+		}
+		System.out.println("Total sentences = " + SENTID);
+		return true;
+	}
+	
+	public void addheuristicsnouns() {
+		;
+	}
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//suffix: -fid(adj), -form (adj), -ish(adj),  -less(adj), -like (adj)),  -merous(adj), -most(adj), -shaped(adj), -ous(adj)
+	//        -ly (adv), -er (advj), -est (advj),
+	//foreach unknownword in unknownwords table
+	//   seperate root and suffix
+	//   if root is a word in WN or unknownwords table
+	//   make the unknowword a "b" boundary
+	
+	//suffix is defined in global variable SUFFIX
+	public void posbysuffix() {
+		String pattern="^[a-z_]+("+this.SUFFIX+")\\$";
+		for (int i=0;i<this.unknownWordList.size();i++) {
+			String unknownWord = "anteriorly";//this.unknownWordList.get(i);
+			String unknownWordTag = this.unknownWordTagMap.get(unknownWord);
+			// the tag of this word is unknown
+			if (unknownWordTag.equals("unknown")) {
+				
+				
+				String p="(.*?)("+this.SUFFIX+")$";
+				Matcher matcher = Pattern.compile("(.*?)("+this.SUFFIX+")$")
+						.matcher(unknownWord);
+				
+
+				
+				boolean f = matcher.matches();
+				f=true;
+				
+				
+				//if (unknownWord.equals(arg0))
+				if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
+						&& matcher.matches()) {
+					String prefix = matcher.group(1);
+					if (this.unknownWordSet.contains(matcher.group(1))) {
+						unknownWordTagMap.put(unknownWord, "b");
+					}
+				}
+			}
+			String result = this.unknownWordTagMap.get("anteriorly");
+			System.out.println(result);
+i++;			
+		}
+		System.out.println(1);
+		
+		//test WordNet API
+		try {
+			WordNetAPI mywn = new WordNetAPI("anteriorly",false);
+			mywn.isAdverb("anteriorly");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	public void markupbypattern() {
+		;
+	}
 	
 	public void learn(List<Treatment> treatments) {
+		//TODO: Implement the unsupervised algorithm here!
 		System.out.println("Method: learn\n");
 	}
 
@@ -142,7 +575,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public Map<String, Set<String>> getWordsToRoles() {
 		System.out.println("Method: getWordsToRoles\n");
 		return null;
-	}
+	}  
 
 	public Map<String, String> getHeuristicNouns() {
 		System.out.println("Method: getHeuristicNouns\n");
