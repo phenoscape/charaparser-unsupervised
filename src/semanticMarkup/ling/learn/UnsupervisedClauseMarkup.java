@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -174,6 +175,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public boolean populatesents() {
+		
+		boolean debug=false;
+		
 		System.out.println("Reading sentences:\n");		
 
 		FileLoader fileLoader = new FileLoader(this.desDir);
@@ -308,7 +312,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					e.printStackTrace();
 				}
 				
-				System.out.println("Text: "+text);
+				if (debug) System.out.println("Text: "+text);
 				
 				//my @sentcopy = ();
 				List<String> sentcopy= new LinkedList<String>();
@@ -317,13 +321,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				int index = 0; 
 				//for each sentence, do some operations 
 				for (int j=0;j<sentences.length;j++) {					
-					System.out.println("Sentence "+j+": "+sentences[j]);
+					if (debug) System.out.println("Sentence "+j+": "+sentences[j]);
 					
 					//TODO: Dongye
 					//Do something for this sentence:
 					//may have fewer than $N words
 					//if(!/\w+/){next;}
-					System.out.println(sentences[j]);
+					if (debug) System.out.println(sentences[j]);
 					//if (!sentences[j].matches("\\w+")) {
 					if (!sentences[j].matches("^.*\\w+.*$")){
 						continue;
@@ -432,7 +436,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			    	index++;
 				}
 				
-				for (int j=0;j<validindex.size();j++) {
+				for 
+				(int j=0;j<validindex.size();j++) {
+					
 					this.SENTID++;
 				}
 
@@ -478,50 +484,183 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	//   make the unknowword a "b" boundary
 	
 	//suffix is defined in global variable SUFFIX
-	public void posbysuffix() {
-		String pattern="^[a-z_]+("+this.SUFFIX+")\\$";
+	public void posbysuffix() throws IOException {
+		//String pattern="^[a-z_]+("+this.SUFFIX+")\\$";
 		for (int i=0;i<this.unknownWordList.size();i++) {
-			String unknownWord = "anteriorly";//this.unknownWordList.get(i);
+			//String unknownWord = "anteriorly";
+			String unknownWord=this.unknownWordList.get(i);
 			String unknownWordTag = this.unknownWordTagMap.get(unknownWord);
 			// the tag of this word is unknown
-			if (unknownWordTag.equals("unknown")) {
-				
-				
+			if (unknownWordTag.equals("unknown")) {								
 				String p="(.*?)("+this.SUFFIX+")$";
 				Matcher matcher = Pattern.compile("(.*?)("+this.SUFFIX+")$")
-						.matcher(unknownWord);
-				
-
-				
-				boolean f = matcher.matches();
-				f=true;
-				
-				
+						.matcher(unknownWord);					
 				//if (unknownWord.equals(arg0))
 				if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
 						&& matcher.matches()) {
 					String prefix = matcher.group(1);
-					if (this.unknownWordSet.contains(matcher.group(1))) {
+					//if (this.unknownWordSet.contains(matcher.group(1))) {
+					if (this.containSuffix(unknownWord, matcher.group(1), matcher.group(2))) {
 						unknownWordTagMap.put(unknownWord, "b");
+						System.out.println("posbysuffix set $unknownword a boundary word\n");
 					}
 				}
 			}
 			String result = this.unknownWordTagMap.get("anteriorly");
-			System.out.println(result);
-i++;			
+			System.out.println(result);		
 		}
-		System.out.println(1);
 		
+		/*
 		//test WordNet API
-		try {
-			WordNetAPI mywn = new WordNetAPI("anteriorly",false);
-			mywn.isAdverb("anteriorly");
+		try {			
+			//System.getenv("WNHOME") does not work
+			//String wnhome = System.getenv("WNHOME"); 
+			//String path = wnhome + File.separator + "dict"; 
+			//URL url = new URL("file", null, path);
+			WordNetAPI mywn = new WordNetAPI("/Users/nescent/Phenoscape/WordNet-3.0/dict",false);
+			boolean test = mywn.isAdverb("happy");
+			System.out.println(test);
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 		
+		/*$pattern = "^[._.][a-z]+"; #, _nerved
+		$sth = $dbh->prepare("select word from ".$prefix."_unknownwords where word rlike '$pattern' and flag= 'unknown'");
+		$sth->execute() or print STDOUT "$sth->errstr\n";
+		while(($unknownword) = $sth->fetchrow_array()){
+			update($unknownword, "b", "*", "wordpos", 0);
+			print "posbysuffix set $unknownword a boundary word\n" if $debug;
+		}*/
+		
+		for (int i=0;i<this.unknownWordList.size();i++) {
+			String unknownWord=this.unknownWordList.get(i);
+			String unknownWordTag = this.unknownWordTagMap.get(unknownWord);
+			String pattern = "^[._.][a-z]+"; //, _nerved
+			if (unknownWordTag.equals("unknown")) {
+				if (unknownWord.matches(pattern)) {
+					unknownWordTagMap.put(unknownWord, "b");
+					System.out.println("posbysuffix set $unknownword a boundary word\n");
+				}			
+			}
+		}
 	}
+	
+	//return 0 or 1 depending on if the word contains the suffix as the suffix
+	public boolean containSuffix(String word, String base, String suffix) throws IOException {
+		boolean flag=false; // return value
+		boolean wordInWN=false; // if this word is in WordNet
+		boolean baseInWN=false;
+		WordNetAPI myWN = new WordNetAPI("/Users/nescent/Phenoscape/WordNet-3.0/dict",false);
+		
+		
+		//$base =~ s#_##g; #cup_shaped
+		//$wnoutputword = `wn $word -over`;
+	  	//if ($wnoutputword !~/\w/){#word not in WN
+		//	$wordinwn = 0;
+	  	//}else{ 	#found $word in WN:
+	  	//	$wnoutputword =~ s#\n# #g;
+	  	//	$wordinwn = 1;
+	  	//}
+	  	
+	  	
+	  	base.replaceAll("_", ""); // cup_shaped
+	  	
+	  	//check word
+	  	if (myWN.contains(word)) {
+	  		wordInWN = false; // word not in WordNet
+	  	}
+	  	else {
+	  		//$wnoutputword =~ s#\n# #g;
+	  		wordInWN = true;
+	  	}
+	  	
+	  	//check base
+	  	if (myWN.contains(base)) {
+	  		baseInWN = true;
+	  	}
+	  	else {
+	  		//$wnoutputbase =~ s#\n# #g;
+	  		baseInWN = false;
+	  	}
+			
+	  	
+		/*if($suffix eq "ly"){#if WN pos is adv, return 1: e.g. ly, or if $base is in unknownwords table
+				if($wordinwn){
+					if($wnoutputword =~/Overview of adv $word/){
+						return 1;;
+					}
+				}
+				$sth = $dbh->prepare("select word from ".$prefix."_unknownwords where word = '$base'");
+				$sth->execute() or print STDOUT "$sth->errstr\n";
+				return 1 if $sth->rows > 0;
+			}
+			*/
+		
+		// if WN pos is adv, return 1: e.g. ly, or if $base is in unknownwords table
+		if (suffix.equals("ly")) {
+			if (wordInWN) {
+				//if($wnoutputword =~/Overview of adv $word/){
+				if (myWN.isAdjective(word)) {
+					return true;
+				}
+			}
+			// if the word is in unknown word set, return true
+			if (this.unknownWordTagMap.containsKey(base)) {
+				return true;
+			}
+		}
+	
+		
+		//elsif($suffix eq "er" || $suffix eq "est"){#if WN recognize superlative, comparative adjs, return 1: e.g. er, est
+		//		if($wordinwn){
+		//			if($wnoutputword =~/Overview of adj (\w+)/){#$word = softer, $1 = soft vs. $word=$1=neuter
+		//				return 1 if $word=~/^$1\w+/;
+		//			}
+		//		}
+		//	}
+		
+		//if WN recognize superlative, comparative adjs, return 1: e.g. er, est
+		else if (suffix.equals("er") || suffix.equals("est")) {
+			if (wordInWN) {
+				//if($wnoutputword =~/Overview of adj (\w+)/){#$word = softer, $1 = soft vs. $word=$1=neuter
+				//$word = softer, $1 = soft vs. $word=$1=neuter
+				if (myWN.isAdjective(word)) {
+					return true;
+				}
+				//return 1 if $word=~/^$1\w+/;
+			}
+		}
+		
+		/*else{#if $base is in WN or unknownwords table, or if $word has sole pos adj in WN, return 1: e.g. scalelike
+				if($baseinwn){return 1;}
+				if($wnoutputword =~/Overview of adj/ && $wnoutputword !~/Overview of .*? Overview of/){
+					return 1;;
+				}
+				$sth = $dbh->prepare("select word from ".$prefix."_unknownwords where word = '$base'");
+				$sth->execute() or print STDOUT "$sth->errstr\n";
+				return 1 if $sth->rows > 0;
+			}*/
+		
+		//if $base is in WN or unknownwords table, or if $word has sole pos adj in WN, return 1: e.g. scalelike
+		else {
+			if (baseInWN) {
+				return true;
+			}
+			if (myWN.isAdjective(word)) {
+				return true;
+			}
+			if (this.unknownWordTagMap.containsKey(base)) {
+				return true;
+			}			
+		}
+	
+		return flag;
+	}
+	
+	
 	public void markupbypattern() {
 		;
 	}
