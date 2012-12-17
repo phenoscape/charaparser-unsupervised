@@ -99,6 +99,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	List<String> unknownWordList = new ArrayList<String>();
 	Set<String> unknownWordSet = new TreeSet<String>();
 	Map<String,String> unknownWordTagMap = new HashMap<String,String>();
+	
+	//Table sentence
+	List<String> sentence = new ArrayList<String>();
+	List<String> originalSent = new ArrayList<String>();
+	List<String> tag = new ArrayList<String>();
+	List<String> modifier = new ArrayList<String>();
 
 	//DNGYE_TODO
 
@@ -439,6 +445,68 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				for 
 				(int j=0;j<validindex.size();j++) {
 					
+					String line = sentences[validindex.get(j)];
+					String oline= sentcopy.get(validindex.get(j));
+					
+					//handle line first
+					//remove all ' to avoid escape problems
+					//$line =~ s#'# #g;
+					line.replaceAll("\'", " ");
+					
+					//then handle oline
+			    	//$oline =~ s#(\d)\s*\[\s*DOT\s*\]\s*(\d)#$1.$2#g;
+					Matcher matcher = Pattern.compile("(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)")
+							.matcher(oline);
+					if (matcher.lookingAt()) {
+						oline = oline.replaceAll(
+								"(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)",matcher.group(1)+matcher.group(2));
+					}
+				
+					//s#\[\s*DOT\s*\]#.#g;
+					oline=oline.replaceAll("\\[\\s*DOT\\s*\\]", ".");
+					//restore "?" from "[QST]"
+					//s#\[\s*QST\s*\]#?#g;
+					oline=oline.replaceAll("\\[\\s*QST\\s*\\]", "?");
+					//restore ";" from "[SQL]"
+					//s#\[\s*SQL\s*\]#;#g;
+					oline=oline.replaceAll("\\[\\s*SQL\\s*\\]", ";");
+					//restore ":" from "[QLN]"
+					//s#\[\s*QLN\s*\]#:#g;
+					oline=oline.replaceAll("\\[\\s*QLN\\s*\\]", ":");
+					//restore "." from "[DOT]"
+					//s#\[\s*EXM\s*\]#!#g;
+					oline=oline.replaceAll("\\[\\s*EXM\\s*\\]", "!");	
+					//$oline =~ s#'# #g;
+					oline=oline.replaceAll("\'", " ");
+					
+					
+			    	//if(length($oline) >=2000 ){#EOL
+			    	//	$oline = $line;
+			    	//}
+					
+					if (oline.length()>=2000) { //EOL
+						oline=line;
+					}
+					
+					
+
+					
+					
+					
+					
+					
+					
+					
+					
+			    	
+			    						
+					
+					
+					this.sentence.add(line);
+					this.originalSent.add(oline);
+					this.tag.add("");
+					this.modifier.add("");
+					
 					this.SENTID++;
 				}
 
@@ -453,7 +521,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}	
 
 		}
-		// copy all unkown words from unknownWordSet into unknownWordList, set
+		// copy all unknown words from unknownWordSet into unknownWordList, set
 		// the tags in the unknownWordTagList be 0 (0 - unknown)
 		Iterator<String> unknownWordIterator = unknownWordSet.iterator();
 		// ensure unknownWordList and unknownWordTagList have enough capacity to
@@ -578,7 +646,17 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	  	}
 	  	
 	  	//check base
-	  	if (myWN.contains(base)) {
+	  	System.out.println(base.length());
+	    System.out.println("Word: "+word);
+	  	System.out.println("Base: "+base);
+	  	System.out.println("Suffix: "+suffix);
+	  	
+	  	//this if statement is added by Dongye
+	  	if (base.length()==0) {
+	  		return true;
+	  	}
+	  	
+	  	if (myWN.contains(base)) {	  		
 	  		baseInWN = true;
 	  	}
 	  	else {
@@ -662,7 +740,48 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	
 	public void markupbypattern() {
-		;
+		System.out.println("markupbypattern start");
+		int cap=this.sentence.size();
+		//((ArrayList)this.tag).ensureCapacity(cap);
+		//((ArrayList)this.modifier).ensureCapacity(cap);
+		for (int i=0;i<this.originalSent.size();i++) {
+			//case 1
+			if (this.originalSent.get(i).matches("^x=.*")) {
+				tag.set(i, "chromosome");
+				modifier.set(i, "");
+			}
+			//case 2
+			else if (this.originalSent.get(i).matches("^2n=.*")) {
+				tag.set(i, "chromosome");
+				modifier.set(i, "");
+			}
+			//case 3
+			else if (this.originalSent.get(i).matches("^x .*")) {
+				tag.set(i, "chromosome");
+				modifier.set(i, "");
+			}
+			//case 4
+			else if (this.originalSent.get(i).matches("^2n .*")) {
+				tag.set(i, "chromosome");
+				modifier.set(i, "");
+			}
+			//case 5
+			else if (this.originalSent.get(i).matches("^2 n.*")) {
+				tag.set(i, "chromosome");
+				modifier.set(i, "");
+			}
+			//case 6
+			else if (this.originalSent.get(i).matches("^fl.*")) {
+				tag.set(i, "flowerTime");
+				modifier.set(i, "");
+			}
+			//case 7
+			else if (this.originalSent.get(i).matches("^fr.*")) {
+				tag.set(i, "flowerTime");
+				modifier.set(i, "");
+			}
+		}
+		System.out.println("markupbypattern end");
 	}
 	
 	public void learn(List<Treatment> treatments) {
@@ -732,3 +851,4 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 }
+	
