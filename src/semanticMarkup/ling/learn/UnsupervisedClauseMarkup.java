@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -70,18 +71,18 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private Hashtable<String,String> WORDS = new Hashtable();
 	private Hashtable<String,String> PLURALS = new Hashtable();
 	
-	private String StringNUMBERS = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
+	private String NUMBERS = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
 	//the following two patterns are used in mySQL rlike
-	private String StringPREFIX ="ab|ad|bi|deca|de|dis|di|dodeca|endo|end|e|hemi|hetero|hexa|homo|infra|inter|ir|macro|mega|meso|micro|mid|mono|multi|ob|octo|over|penta|poly|postero|post|ptero|pseudo|quadri|quinque|semi|sub|sur|syn|tetra|tri|uni|un|xero|[a-z0-9]+_";
+	private String PREFIX ="ab|ad|bi|deca|de|dis|di|dodeca|endo|end|e|hemi|hetero|hexa|homo|infra|inter|ir|macro|mega|meso|micro|mid|mono|multi|ob|octo|over|penta|poly|postero|post|ptero|pseudo|quadri|quinque|semi|sub|sur|syn|tetra|tri|uni|un|xero|[a-z0-9]+_";
 	private String SUFFIX ="er|est|fid|form|ish|less|like|ly|merous|most|shaped"; // 3_nerved, )_nerved, dealt with in subroutine
-	private String StringFORBIDDEN ="to|and|or|nor"; //words in this list can not be treated as boundaries "to|a|b" etc.
-	private String StringPRONOUN ="all|each|every|some|few|individual|both|other";
-	private String StringCHARACTER ="lengths|length|lengthed|width|widths|widthed|heights|height|character|characters|distribution|distributions|outline|outlines|profile|profiles|feature|features|form|forms|mechanism|mechanisms|nature|natures|shape|shapes|shaped|size|sizes|sized";//remove growth, for growth line. check 207, 3971
-	private String StringPREPOSITION ="above|across|after|along|around|as|at|before|below|beneath|between|beyond|by|during|for|from|in|into|near|of|off|on|onto|out|outside|over|than|throught|throughout|toward|towards|up|upward|with|without";
-	private String StringTAGS = "";
-	private String StringPLENDINGS = "[^aeiou]ies|i|ia|(x|ch|sh)es|ves|ices|ae|s";
-	private String StringCLUSTERSTRINGS = "group|groups|clusters|cluster|arrays|array|series|fascicles|fascicle|pairs|pair|rows|number|numbers|\\d+";
-	private String StringSUBSTRUCTURESTRINGS = "part|parts|area|areas|portion|portions";
+	private String FORBIDDEN ="to|and|or|nor"; //words in this list can not be treated as boundaries "to|a|b" etc.
+	private String PRONOUN ="all|each|every|some|few|individual|both|other";
+	private String CHARACTER ="lengths|length|lengthed|width|widths|widthed|heights|height|character|characters|distribution|distributions|outline|outlines|profile|profiles|feature|features|form|forms|mechanism|mechanisms|nature|natures|shape|shapes|shaped|size|sizes|sized";//remove growth, for growth line. check 207, 3971
+	private String PREPOSITION ="above|across|after|along|around|as|at|before|below|beneath|between|beyond|by|during|for|from|in|into|near|of|off|on|onto|out|outside|over|than|throught|throughout|toward|towards|up|upward|with|without";
+	private String TAGS = "";
+	private String PLENDINGS = "[^aeiou]ies|i|ia|(x|ch|sh)es|ves|ices|ae|s";
+	private String CLUSTERSTRINGS = "group|groups|clusters|cluster|arrays|array|series|fascicles|fascicle|pairs|pair|rows|number|numbers|\\d+";
+	private String SUBSTRUCTURESTRINGS = "part|parts|area|areas|portion|portions";
 	private String mptn = "((?:[mbq][,&]*)*(?:m|b|q(?=[pon])))";//grouped #may contain q but not the last m, unless it is followed by a p
 	private String nptn = "((?:[nop][,&]*)*[nop])"; //grouped #must present, no q allowed
 	
@@ -92,9 +93,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private String ANDORPTN = "^(?:"+SEGANDORPTN+"[,&]+)*"+SEGANDORPTN+bptn;
 	
 	private String IGNOREPTN ="(IGNOREPTN)"; //disabled
-	private String stop = "state|page|fig|"+"a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
-	
-	
+	//private String stop = "state|page|fig|"+"a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
+
+	private String STOP = "state|page|fig|"
+			+ "a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
+
 	//List to store all unknown words
 	List<String> unknownWordList = new ArrayList<String>();
 	Set<String> unknownWordSet = new TreeSet<String>();
@@ -105,6 +108,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	List<String> originalSent = new ArrayList<String>();
 	List<String> tag = new ArrayList<String>();
 	List<String> modifier = new ArrayList<String>();
+	
+	//Table wordpos
+	Map<WordPOSKey,WordPOSValue> wordPOS = new HashMap<WordPOSKey,WordPOSValue>();
 
 	//DNGYE_TODO
 
@@ -782,6 +788,45 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 		System.out.println("markupbypattern end");
+	}
+	
+	public void addStopWords() {
+		//my @stops = split(/\|/,$stop);
+		//String []temp=this.STOP.split("|");
+		ArrayList<String> stops=new ArrayList();
+		stops.addAll(Arrays.asList(this.STOP.split("\\|")));
+				//new ArrayList();
+		//for (int i=0;i<temp.length;i++) {
+		//	stops.add(temp[i]);
+		//}
+		//push(@stops, "NUM", "(", "[", "{", ")", "]", "}");
+		stops.addAll(Arrays.asList(new String[]{"NUM", "(", "[", "{", ")", "]", "}"}));
+		//String []a= {stops,"NUM", "(", "[", "{", ")", "]", "}"};
+
+		//push(@stops, "\\\\d+");
+		stops.addAll(Arrays.asList(new String[]{"\\\\d+"}));
+		
+		
+		//print "stop list:\n@stops\n" if $debug;
+		//print STDOUT "stop list:\n@stops\n";;
+		
+		System.out.println(stops);
+		System.out.println(this.FORBIDDEN);
+		
+		for (int i=0;i<stops.size();i++) {
+			String word=stops.get(i);
+			//String reg="\\b("+this.FORBIDDEN+")\\b";
+			//boolean f = word.matches(reg);
+			if (word.matches("\\b("+this.FORBIDDEN+")\\b")) {
+				continue;
+			}
+			//update(word, "b", "*", "wordpos", 0);
+			this.wordPOS.put(new WordPOSKey(word,"b"), new WordPOSValue("",1,1,null, null));
+			System.out.println("Update "+word);
+		}
+		
+		int i=0;
+		i++;
 	}
 	
 	public void learn(List<Treatment> treatments) {
