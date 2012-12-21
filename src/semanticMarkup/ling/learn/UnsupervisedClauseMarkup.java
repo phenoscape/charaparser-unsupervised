@@ -61,7 +61,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private int N = 3; //$N leading words
 	private int SENTID = 0;
 	private int DECISIONID = 0;
-	private String PROPERNOUNS = "propernouns"; //EOL
+	private String PROPERNOUN = "propernouns"; //EOL
 	
 	private Hashtable<String,String> WNNUMBER =new Hashtable(); //word->(p|s)
 	private Hashtable<String,String> WNSINGULAR = new Hashtable();//word->singular
@@ -71,7 +71,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private Hashtable<String,String> WORDS = new Hashtable();
 	private Hashtable<String,String> PLURALS = new Hashtable();
 	
-	private String NUMBERS = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
+	private String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
 	//the following two patterns are used in mySQL rlike
 	private String PREFIX ="ab|ad|bi|deca|de|dis|di|dodeca|endo|end|e|hemi|hetero|hexa|homo|infra|inter|ir|macro|mega|meso|micro|mid|mono|multi|ob|octo|over|penta|poly|postero|post|ptero|pseudo|quadri|quinque|semi|sub|sur|syn|tetra|tri|uni|un|xero|[a-z0-9]+_";
 	private String SUFFIX ="er|est|fid|form|ish|less|like|ly|merous|most|shaped"; // 3_nerved, )_nerved, dealt with in subroutine
@@ -81,8 +81,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private String PREPOSITION ="above|across|after|along|around|as|at|before|below|beneath|between|beyond|by|during|for|from|in|into|near|of|off|on|onto|out|outside|over|than|throught|throughout|toward|towards|up|upward|with|without";
 	private String TAGS = "";
 	private String PLENDINGS = "[^aeiou]ies|i|ia|(x|ch|sh)es|ves|ices|ae|s";
-	private String CLUSTERSTRINGS = "group|groups|clusters|cluster|arrays|array|series|fascicles|fascicle|pairs|pair|rows|number|numbers|\\d+";
-	private String SUBSTRUCTURESTRINGS = "part|parts|area|areas|portion|portions";
+	private String CLUSTERSTRING = "group|groups|clusters|cluster|arrays|array|series|fascicles|fascicle|pairs|pair|rows|number|numbers|\\d+";
+	private String SUBSTRUCTURESTRING = "part|parts|area|areas|portion|portions";
 	private String mptn = "((?:[mbq][,&]*)*(?:m|b|q(?=[pon])))";//grouped #may contain q but not the last m, unless it is followed by a p
 	private String nptn = "((?:[nop][,&]*)*[nop])"; //grouped #must present, no q allowed
 	
@@ -545,9 +545,135 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return true;
 	}
 	
+
 	public void addheuristicsnouns() {
 		;
 	}
+
+	
+	public void addStopWords() {
+		//my @stops = split(/\|/,$stop);
+		//String []temp=this.STOP.split("|");
+		ArrayList<String> stops=new ArrayList();
+		stops.addAll(Arrays.asList(this.STOP.split("\\|")));
+				//new ArrayList();
+		//for (int i=0;i<temp.length;i++) {
+		//	stops.add(temp[i]);
+		//}
+		//push(@stops, "NUM", "(", "[", "{", ")", "]", "}");
+		stops.addAll(Arrays.asList(new String[]{"NUM", "(", "[", "{", ")", "]", "}","\\\\d+"}));
+		//String []a= {stops,"NUM", "(", "[", "{", ")", "]", "}"};
+
+		//push(@stops, "\\\\d+");
+		//stops.addAll(Arrays.asList(new String[]{}));
+		
+		
+		//print "stop list:\n@stops\n" if $debug;
+		//print STDOUT "stop list:\n@stops\n";;
+		
+		System.out.println(stops);
+		System.out.println(this.FORBIDDEN);
+		
+		for (int i=0;i<stops.size();i++) {
+			String word=stops.get(i);
+			//String reg="\\b("+this.FORBIDDEN+")\\b";
+			//boolean f = word.matches(reg);
+			if (word.matches("\\b("+this.FORBIDDEN+")\\b")) {
+				continue;
+			}
+			//update(word, "b", "*", "wordpos", 0);
+			this.wordPOS.put(new WordPOSKey(word,"b"), new WordPOSValue("*",0,0,null, null));
+			System.out.println("Update "+word);
+		}
+	}
+	
+	public void addCharacters() {
+		ArrayList<String> chars=new ArrayList();
+		chars.addAll(Arrays.asList(this.CHARACTER.split("\\|")));
+		
+		System.out.println(chars);
+		System.out.println(this.CHARACTER);
+		
+		for (int i=0;i<chars.size();i++) {
+			String word=chars.get(i);
+			//String reg="\\b("+this.FORBIDDEN+")\\b";
+			//boolean f = word.matches(reg);
+			if (word.matches("\\b("+this.FORBIDDEN+")\\b")) {
+				continue;
+			}
+			//update(word, "b", "*", "wordpos", 0);
+			this.wordPOS.put(new WordPOSKey(word,"b"), new WordPOSValue("",0,0,null, null));
+			System.out.println("Update "+word);
+		}		
+	}
+	
+	public void addNumbers() {
+		ArrayList<String> nums=new ArrayList();
+		nums.addAll(Arrays.asList(this.NUMBER.split("\\|")));
+		
+		System.out.println(nums);
+		System.out.println(this.NUMBER);
+		
+		for (int i=0;i<nums.size();i++) {
+			String word=nums.get(i);
+			//String reg="\\b("+this.FORBIDDEN+")\\b";
+			//boolean f = word.matches(reg);
+			if (word.matches("\\b("+this.FORBIDDEN+")\\b")) {
+				continue;
+			}
+			//update(word, "b", "*", "wordpos", 0);
+			this.wordPOS.put(new WordPOSKey(word,"b"), new WordPOSValue("*",0,0,null, null));
+			System.out.println("Update "+word);
+		}	
+		this.wordPOS.put(new WordPOSKey("NUM","b"), new WordPOSValue("*",0,0,null, null));
+	}
+	
+	public void addClusterstrings() {
+		ArrayList<String> cltstrs=new ArrayList();
+		cltstrs.addAll(Arrays.asList(this.CLUSTERSTRING.split("\\|")));
+		
+		System.out.println(cltstrs);
+		System.out.println(this.CLUSTERSTRING);
+		
+		for (int i=0;i<cltstrs.size();i++) {
+			String word=cltstrs.get(i);
+			//String reg="\\b("+this.FORBIDDEN+")\\b";
+			//boolean f = word.matches(reg);
+			if (word.matches("\\b("+this.FORBIDDEN+")\\b")) {
+				continue;
+			}
+			//update(word, "b", "*", "wordpos", 0);
+			this.wordPOS.put(new WordPOSKey(word,"b"), new WordPOSValue("*",1,1,null, null));
+			System.out.println("Update "+word);
+		}
+	}
+	
+	
+	public void addpropernouns() {
+		ArrayList<String> ppnouns=new ArrayList();
+		ppnouns.addAll(Arrays.asList(this.PROPERNOUN.split("\\|")));
+		
+		System.out.println(ppnouns);
+		System.out.println(this.PROPERNOUN);
+		
+		for (int i=0;i<ppnouns.size();i++) {
+			String word=ppnouns.get(i);
+			//String reg="\\b("+this.FORBIDDEN+")\\b";
+			//boolean f = word.matches(reg);
+			if (word.matches("\\b("+this.FORBIDDEN+")\\b")) {
+				continue;
+			}
+			//update(word, "b", "*", "wordpos", 0);
+			this.wordPOS.put(new WordPOSKey(word,"z"), new WordPOSValue("*",0,0,null, null));
+			System.out.println("Update "+word);
+		}
+	}
+	
+	
+	
+	
+	
+	
 	
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//suffix: -fid(adj), -form (adj), -ish(adj),  -less(adj), -like (adj)),  -merous(adj), -most(adj), -shaped(adj), -ous(adj)
@@ -790,44 +916,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		System.out.println("markupbypattern end");
 	}
 	
-	public void addStopWords() {
-		//my @stops = split(/\|/,$stop);
-		//String []temp=this.STOP.split("|");
-		ArrayList<String> stops=new ArrayList();
-		stops.addAll(Arrays.asList(this.STOP.split("\\|")));
-				//new ArrayList();
-		//for (int i=0;i<temp.length;i++) {
-		//	stops.add(temp[i]);
-		//}
-		//push(@stops, "NUM", "(", "[", "{", ")", "]", "}");
-		stops.addAll(Arrays.asList(new String[]{"NUM", "(", "[", "{", ")", "]", "}"}));
-		//String []a= {stops,"NUM", "(", "[", "{", ")", "]", "}"};
+	
 
-		//push(@stops, "\\\\d+");
-		stops.addAll(Arrays.asList(new String[]{"\\\\d+"}));
-		
-		
-		//print "stop list:\n@stops\n" if $debug;
-		//print STDOUT "stop list:\n@stops\n";;
-		
-		System.out.println(stops);
-		System.out.println(this.FORBIDDEN);
-		
-		for (int i=0;i<stops.size();i++) {
-			String word=stops.get(i);
-			//String reg="\\b("+this.FORBIDDEN+")\\b";
-			//boolean f = word.matches(reg);
-			if (word.matches("\\b("+this.FORBIDDEN+")\\b")) {
-				continue;
-			}
-			//update(word, "b", "*", "wordpos", 0);
-			this.wordPOS.put(new WordPOSKey(word,"b"), new WordPOSValue("",1,1,null, null));
-			System.out.println("Update "+word);
-		}
-		
-		int i=0;
-		i++;
-	}
 	
 	public void learn(List<Treatment> treatments) {
 		//TODO: Implement the unsupervised algorithm here!
