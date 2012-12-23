@@ -109,8 +109,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	List<String> tag = new ArrayList<String>();
 	List<String> modifier = new ArrayList<String>();
 	
+	//Table sentence
+	List<Sentence> sentenceTable = new ArrayList<Sentence>();
+	
 	//Table wordpos
-	Map<WordPOSKey,WordPOSValue> wordPOS = new HashMap<WordPOSKey,WordPOSValue>();
+	Map<WordPOSKey,WordPOSValue> wordPOSTable = new HashMap<WordPOSKey,WordPOSValue>();
 
 	//DNGYE_TODO
 
@@ -130,60 +133,181 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	// replace '.', '?', ';', ':', '!' within brackets by some special markers,
 	// to avoid split within brackets during sentence segmentation
-	public String hideBrackets(String text) {
-		String hide = "";
-		int lRound = 0;
-		int lSquare = 0;
-		int lCurly = 0;
+	public String hideMarksInBrackets(String text) {
+		if (text != null) {
+			String hide = "";
+			int lRound = 0;
+			int lSquare = 0;
+			int lCurly = 0;
 
-		for (int i = 0; i < text.length(); i++) {
-			char c = text.charAt(i);
-			switch (c) {
-			case '(':
-				lRound++;
-				hide = hide + c;
-				break;
-			case ')':
-				lRound--;
-				hide = hide + c;
-				break;
-			case '[':
-				lSquare++;
-				hide = hide + c;
-				break;
-			case ']':
-				lSquare--;
-				hide = hide + c;
-				break;
-			case '{':
-				lCurly++;
-				hide = hide + c;
-				break;
-			case '}':
-				lCurly--;
-				hide = hide + c;
-				break;
-			default:
-				if (lRound + lSquare + lCurly > 0) {
-					if (c == '.') {
-						hide = hide + "[DOT] ";
-					} else if (c == '?') {
-						hide = hide + "[QST] ";
-					} else if (c == ';') {
-						hide = hide + "[SQL] ";
-					} else if (c == ':') {
-						hide = hide + "[QLN] ";
-					} else if (c == '!') {
-						hide = hide + "[EXM] ";
+			for (int i = 0; i < text.length(); i++) {
+				char c = text.charAt(i);
+				switch (c) {
+				case '(':
+					lRound++;
+					hide = hide + c;
+					break;
+				case ')':
+					lRound--;
+					hide = hide + c;
+					break;
+				case '[':
+					lSquare++;
+					hide = hide + c;
+					break;
+				case ']':
+					lSquare--;
+					hide = hide + c;
+					break;
+				case '{':
+					lCurly++;
+					hide = hide + c;
+					break;
+				case '}':
+					lCurly--;
+					hide = hide + c;
+					break;
+				default:
+					if (lRound + lSquare + lCurly > 0) {
+						if (c == '.') {
+							hide = hide + "[DOT] ";
+						} else if (c == '?') {
+							hide = hide + "[QST] ";
+						} else if (c == ';') {
+							hide = hide + "[SQL] ";
+						} else if (c == ':') {
+							hide = hide + "[QLN] ";
+						} else if (c == '!') {
+							hide = hide + "[EXM] ";
+						} else {
+							hide = hide + c;
+						}
 					} else {
 						hide = hide + c;
 					}
-				} else {
-					hide = hide + c;
 				}
 			}
+			return hide;
 		}
-		return hide;
+		return null;
+	}
+	
+	public String restoreMarksInBrackets(String text) {
+
+		if (text != null) {
+			// restore "." from "[DOT]"
+			// s#\[\s*DOT\s*\]#.#g;
+			text = text.replaceAll("\\[\\s*DOT\\s*\\]", ".");
+			// restore "?" from "[QST]"
+			// s#\[\s*QST\s*\]#?#g;
+			text = text.replaceAll("\\[\\s*QST\\s*\\]", "?");
+			// restore ";" from "[SQL]"
+			// s#\[\s*SQL\s*\]#;#g;
+			text = text.replaceAll("\\[\\s*SQL\\s*\\]", ";");
+			// restore ":" from "[QLN]"
+			// s#\[\s*QLN\s*\]#:#g;
+			text = text.replaceAll("\\[\\s*QLN\\s*\\]", ":");
+			// restore "." from "[DOT]"
+			// s#\[\s*EXM\s*\]#!#g;
+			text = text.replaceAll("\\[\\s*EXM\\s*\\]", "!");
+		}
+		return text;
+	}
+	
+	public String handleText(String t) {
+		String text = t;
+		if (text!= null) {
+			//
+			text = text.replaceAll("[\"']", "");
+			
+			//plano - to
+			text = text.replaceAll("\\s*-\\s*to\\s+", " to "); 
+			
+			//
+			text = text.replaceAll("[-_]+shaped", "-shaped");	
+			
+			//unhide <i>
+			text = text.replaceAll("&lt;i&gt;", "<i>");
+
+			// unhide </i>, these will be used by characterHeuristics to
+			// collect taxon names
+			text = text.replaceAll("&lt;/i&gt;", "</i>");
+
+			// remove 2a. (key marks)
+			text = text.replaceAll("^\\s*\\d+[a-z].\\s*", ""); 
+			
+			//store text at this point in original
+			String original = text;
+			
+			//remove HTML entities
+			text = text.replaceAll("&[;#\\w\\d]+;", " "); 
+			
+			//
+			text = text.replaceAll(" & ", " and ");
+			
+			// replace '.', '?', ';', ':', '!' within brackets by some
+			// special markers, to avoid split within brackets during
+			// sentence segmentation
+			// System.out.println("Before Hide: "+text);
+		  	text = hideMarksInBrackets(text);
+		  	//System.out.println("After Hide: "+text+"\n");
+		  	
+			text = text.replaceAll("_", "-"); // _ to -
+			text = text.replaceAll("", ""); //
+			
+			//
+			Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(
+					text);
+			if (matcher1.lookingAt()) {
+				text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
+			}
+			
+			// absent;blade => absent; blade
+			Matcher matcher2 = Pattern.compile("(\\w)([:;\\.])(\\w)")
+					.matcher(text);
+			if (matcher2.lookingAt()) {
+				text = text.replaceAll("\\w[:;\\.]\\w", matcher2.group(1)
+						+ matcher2.group(2) + " " + matcher2.group(3));
+			}
+			
+			// 1 . 5 => 1.5
+			Matcher matcher3 = Pattern.compile("(\\d\\s*\\.)\\s+(\\d)")
+					.matcher(text);
+			if (matcher3.lookingAt()) {
+				text = text.replaceAll("\\d\\s*\\.\\s+\\d",
+						matcher3.group(1) + matcher3.group(2));
+			}
+			
+			// diam . =>diam.
+			Matcher matcher4 = Pattern.compile("(\\sdiam)\\s+(\\.)")
+					.matcher(text);
+			if (matcher4.lookingAt()) {
+				text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)
+						+ matcher4.group(2));
+			}
+
+			// ca . =>ca.
+			Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(
+					text);
+			if (matcher5.lookingAt()) {
+				text = text.replaceAll("\\sca\\s+\\.", matcher5.group(1)
+						+ matcher5.group(2));
+			}
+			
+			//
+			Matcher matcher6 = Pattern.compile(
+					"(\\d\\s+(cm|mm|dm|m)\\s*)\\.(\\s+[^A-Z])").matcher(
+					text);
+			if (matcher6.lookingAt()) {
+				text = text
+						.replaceAll(
+								"\\d\\s+cm|mm|dm|m\\s*\\.\\s+[^A-Z]",
+								matcher6.group(1) + "\\[DOT\\]"
+										+ matcher6.group(3));
+			}
+		}
+
+		return text;
 	}
 
 	public boolean populatesents() {
@@ -207,95 +331,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		for (int i=0;i<fileLoader.getCount();i++) {
 			text = textList.get(i); 
 			if (text!= null) {
-				//
-				text = text.replaceAll("[\"']", "");
 				
-				//plano - to
-				text = text.replaceAll("\\s*-\\s*to\\s+", " to "); 
+				//process this text
+				text = this.handleText(text);
 				
-				//
-				text = text.replaceAll("[-_]+shaped", "-shaped");	
-				
-				//unhide <i>
-				text = text.replaceAll("&lt;i&gt;", "<i>");
-
-				// unhide </i>, these will be used by characterHeuristics to
-				// collect taxon names
-				text = text.replaceAll("&lt;/i&gt;", "</i>");
-
-				// remove 2a. (key marks)
-				text = text.replaceAll("^\\s*\\d+[a-z].\\s*", ""); 
-				
-				//store text at this point in original
-				String original = text;
-				
-				//remove HTML entities
-				text = text.replaceAll("&[;#\\w\\d]+;", " "); 
-				
-				//
-				text = text.replaceAll(" & ", " and ");
-				
-				// replace '.', '?', ';', ':', '!' within brackets by some
-				// special markers, to avoid split within brackets during
-				// sentence segmentation
-				// System.out.println("Before Hide: "+text);
-			  	text = hideBrackets(text);
-			  	//System.out.println("After Hide: "+text+"\n");
-			  	
-				text = text.replaceAll("_", "-"); // _ to -
-				text = text.replaceAll("", ""); //
-				
-				//
-				Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(
-						text);
-				if (matcher1.lookingAt()) {
-					text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
-				}
-				
-				// absent;blade => absent; blade
-				Matcher matcher2 = Pattern.compile("(\\w)([:;\\.])(\\w)")
-						.matcher(text);
-				if (matcher2.lookingAt()) {
-					text = text.replaceAll("\\w[:;\\.]\\w", matcher2.group(1)
-							+ matcher2.group(2) + " " + matcher2.group(3));
-				}
-				
-				// 1 . 5 => 1.5
-				Matcher matcher3 = Pattern.compile("(\\d\\s*\\.)\\s+(\\d)")
-						.matcher(text);
-				if (matcher3.lookingAt()) {
-					text = text.replaceAll("\\d\\s*\\.\\s+\\d",
-							matcher3.group(1) + matcher3.group(2));
-				}
-				
-				// diam . =>diam.
-				Matcher matcher4 = Pattern.compile("(\\sdiam)\\s+(\\.)")
-						.matcher(text);
-				if (matcher4.lookingAt()) {
-					text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)
-							+ matcher4.group(2));
-				}
-
-				// ca . =>ca.
-				Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(
-						text);
-				if (matcher5.lookingAt()) {
-					text = text.replaceAll("\\sca\\s+\\.", matcher5.group(1)
-							+ matcher5.group(2));
-				}
-				
-				//
-				Matcher matcher6 = Pattern.compile(
-						"(\\d\\s+(cm|mm|dm|m)\\s*)\\.(\\s+[^A-Z])").matcher(
-						text);
-				if (matcher6.lookingAt()) {
-					text = text
-							.replaceAll(
-									"\\d\\s+cm|mm|dm|m\\s*\\.\\s+[^A-Z]",
-									matcher6.group(1) + "\\[DOT\\]"
-											+ matcher6.group(3));
-				}
-
 				//use Apache OpenNLP to do sentence segmentation
 				String sentences[] = {};
 				try {
@@ -346,21 +385,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					}
 					//push(@validindex, $i);
 					validindex.add(j);
-					//restore "." from "[DOT]"
-					//s#\[\s*DOT\s*\]#.#g;
-					sentences[j]=sentences[j].replaceAll("\\[\\s*DOT\\s*\\]", ".");
-					//restore "?" from "[QST]"
-					//s#\[\s*QST\s*\]#?#g;
-					sentences[j]=sentences[j].replaceAll("\\[\\s*QST\\s*\\]", "?");
-					//restore ";" from "[SQL]"
-					//s#\[\s*SQL\s*\]#;#g;
-					sentences[j]=sentences[j].replaceAll("\\[\\s*SQL\\s*\\]", ";");
-					//restore ":" from "[QLN]"
-					//s#\[\s*QLN\s*\]#:#g;
-					sentences[j]=sentences[j].replaceAll("\\[\\s*QLN\\s*\\]", ":");
-					//restore "." from "[DOT]"
-					//s#\[\s*EXM\s*\]#!#g;
-					sentences[j]=sentences[j].replaceAll("\\[\\s*EXM\\s*\\]", "!");
+
+					//restore ".", "?", ";", ":", "."
+					sentences[j]=this.restoreMarksInBrackets(sentences[j]);
+					
 					//push(@sentcopy, $_);
 					sentcopy.add(sentences[j]);
 
@@ -440,10 +468,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-
-
-					
-					
 					
 			    	index++;
 				}
@@ -468,20 +492,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 								"(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)",matcher.group(1)+matcher.group(2));
 					}
 				
-					//s#\[\s*DOT\s*\]#.#g;
-					oline=oline.replaceAll("\\[\\s*DOT\\s*\\]", ".");
-					//restore "?" from "[QST]"
-					//s#\[\s*QST\s*\]#?#g;
-					oline=oline.replaceAll("\\[\\s*QST\\s*\\]", "?");
-					//restore ";" from "[SQL]"
-					//s#\[\s*SQL\s*\]#;#g;
-					oline=oline.replaceAll("\\[\\s*SQL\\s*\\]", ";");
-					//restore ":" from "[QLN]"
-					//s#\[\s*QLN\s*\]#:#g;
-					oline=oline.replaceAll("\\[\\s*QLN\\s*\\]", ":");
-					//restore "." from "[DOT]"
-					//s#\[\s*EXM\s*\]#!#g;
-					oline=oline.replaceAll("\\[\\s*EXM\\s*\\]", "!");	
+					//restore ".", "?", ";", ":", "."
+					oline=this.restoreMarksInBrackets(oline);
+					
+					
 					//$oline =~ s#'# #g;
 					oline=oline.replaceAll("\'", " ");
 					
@@ -492,26 +506,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					
 					if (oline.length()>=2000) { //EOL
 						oline=line;
-					}
-					
-					
-
-					
-					
-					
-					
-					
-					
-					
-					
-			    	
-			    						
-					
+					}	
 					
 					this.sentence.add(line);
 					this.originalSent.add(oline);
 					this.tag.add("");
 					this.modifier.add("");
+					
+					//Sentence this_sentence = new Sentence(line,oline,null,null,null,null);
+					this.sentenceTable.add(new Sentence(line,oline,null,null,null,null,null));
 					
 					this.SENTID++;
 				}
@@ -582,7 +585,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				continue;
 			}
 			//update(word, "b", "*", "wordpos", 0);
-			this.wordPOS.put(new WordPOSKey(word,"b"), new WordPOSValue("*",0,0,null, null));
+			this.wordPOSTable.put(new WordPOSKey(word,"b"), new WordPOSValue("*",0,0,null, null));
 			System.out.println("Update "+word);
 		}
 	}
@@ -602,7 +605,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				continue;
 			}
 			//update(word, "b", "*", "wordpos", 0);
-			this.wordPOS.put(new WordPOSKey(word,"b"), new WordPOSValue("",0,0,null, null));
+			this.wordPOSTable.put(new WordPOSKey(word,"b"), new WordPOSValue("",0,0,null, null));
 			System.out.println("Update "+word);
 		}		
 	}
@@ -622,10 +625,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				continue;
 			}
 			//update(word, "b", "*", "wordpos", 0);
-			this.wordPOS.put(new WordPOSKey(word,"b"), new WordPOSValue("*",0,0,null, null));
+			this.wordPOSTable.put(new WordPOSKey(word,"b"), new WordPOSValue("*",0,0,null, null));
 			System.out.println("Update "+word);
 		}	
-		this.wordPOS.put(new WordPOSKey("NUM","b"), new WordPOSValue("*",0,0,null, null));
+		this.wordPOSTable.put(new WordPOSKey("NUM","b"), new WordPOSValue("*",0,0,null, null));
 	}
 	
 	public void addClusterstrings() {
@@ -643,13 +646,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				continue;
 			}
 			//update(word, "b", "*", "wordpos", 0);
-			this.wordPOS.put(new WordPOSKey(word,"b"), new WordPOSValue("*",1,1,null, null));
+			this.wordPOSTable.put(new WordPOSKey(word,"b"), new WordPOSValue("*",1,1,null, null));
 			System.out.println("Update "+word);
 		}
 	}
 	
 	
-	public void addpropernouns() {
+	public void addProperNouns() {
 		ArrayList<String> ppnouns=new ArrayList();
 		ppnouns.addAll(Arrays.asList(this.PROPERNOUN.split("\\|")));
 		
@@ -664,7 +667,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				continue;
 			}
 			//update(word, "b", "*", "wordpos", 0);
-			this.wordPOS.put(new WordPOSKey(word,"z"), new WordPOSValue("*",0,0,null, null));
+			this.wordPOSTable.put(new WordPOSKey(word,"z"), new WordPOSValue("*",0,0,null, null));
 			System.out.println("Update "+word);
 		}
 	}
@@ -881,39 +884,66 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (this.originalSent.get(i).matches("^x=.*")) {
 				tag.set(i, "chromosome");
 				modifier.set(i, "");
+				this.sentenceTable.get(i).setTag("chromosome");
+				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 2
 			else if (this.originalSent.get(i).matches("^2n=.*")) {
 				tag.set(i, "chromosome");
 				modifier.set(i, "");
+				this.sentenceTable.get(i).setTag("chromosome");
+				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 3
 			else if (this.originalSent.get(i).matches("^x .*")) {
 				tag.set(i, "chromosome");
 				modifier.set(i, "");
+				this.sentenceTable.get(i).setTag("chromosome");
+				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 4
 			else if (this.originalSent.get(i).matches("^2n .*")) {
 				tag.set(i, "chromosome");
 				modifier.set(i, "");
+				this.sentenceTable.get(i).setTag("chromosome");
+				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 5
 			else if (this.originalSent.get(i).matches("^2 n.*")) {
 				tag.set(i, "chromosome");
 				modifier.set(i, "");
+				this.sentenceTable.get(i).setTag("chromosome");
+				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 6
 			else if (this.originalSent.get(i).matches("^fl.*")) {
 				tag.set(i, "flowerTime");
 				modifier.set(i, "");
+				this.sentenceTable.get(i).setTag("flowerTime");
+				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 7
 			else if (this.originalSent.get(i).matches("^fr.*")) {
 				tag.set(i, "flowerTime");
 				modifier.set(i, "");
+				this.sentenceTable.get(i).setTag("flowerTime");
+				this.sentenceTable.get(i).setModifier("");
 			}
 		}
 		System.out.println("markupbypattern end");
+	}
+	
+	//private String IGNOREPTN ="(IGNOREPTN)"; //disabled
+	public void markupIgnore() {
+		//$sth = $dbh->prepare("update ".$prefix."_sentence set tag = 'ignore', modifier='' where originalsent rlike '(^| )$IGNOREPTN ' ");
+		for (int i=0;i<this.sentenceTable.size();i++) {
+			String thisSent=this.sentenceTable.get(i).getOriginalSentence();
+			String p="(^| )"+this.IGNOREPTN;
+			if (thisSent.matches("(^|^ )"+this.IGNOREPTN+".?")) {
+				sentenceTable.get(i).setTag("ignore");
+				sentenceTable.get(i).setModifier("");
+			}
+		}
 	}
 	
 	
