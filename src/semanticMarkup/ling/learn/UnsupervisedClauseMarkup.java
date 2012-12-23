@@ -101,7 +101,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	//List to store all unknown words
 	List<String> unknownWordList = new ArrayList<String>();
 	Set<String> unknownWordSet = new TreeSet<String>();
-	Map<String,String> unknownWordTagMap = new HashMap<String,String>();
+	
 	
 	//Table sentence
 	List<String> sentence = new ArrayList<String>();
@@ -112,8 +112,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	//Table sentence
 	List<Sentence> sentenceTable = new ArrayList<Sentence>();
 	
+	//Table unknownwords
+	Map<String,String> unknownWordTable = new HashMap<String,String>();
+	
 	//Table wordpos
 	Map<WordPOSKey,WordPOSValue> wordPOSTable = new HashMap<WordPOSKey,WordPOSValue>();
+	
+	
 
 	//DNGYE_TODO
 
@@ -309,6 +314,61 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		return text;
 	}
+	
+	public String handleSentence(String s) {
+
+		if (s != null) {
+			String sentence = s;
+
+			// remove (.a.)
+			// s#\([^()]*?[a-zA-Z][^()]*?\)# #g;
+			sentence = sentence.replaceAll("\\([^()]*?[a-zA-Z][^()]*?\\)", " ");
+
+			// remove [.a.]
+			// s#\[[^\]\[]*?[a-zA-Z][^\]\[]*?\]# #g;
+			sentence = sentence.replaceAll(
+					"\\[[^\\]\\[]*?[a-zA-Z][^\\]\\[]*?\\]", " ");
+
+			// remove {.a.}
+			// s#{[^{}]*?[a-zA-Z][^{}]*?}# #g;
+			sentence = sentence.replaceAll("\\{[^{}]*?[a-zA-Z][^{}]*?\\}", " ");
+
+			// to fix basi- and hypobranchial
+			// s#\s*[-]+\s*([a-z])#_ $1#g;
+			Matcher matcher7 = Pattern.compile("\\s*[-]+\\s*([a-z])").matcher(
+					sentence);
+			if (matcher7.lookingAt()) {
+				sentence = sentence.replaceAll("\\s*[-]+\\s*[a-z]", "_ "
+						+ matcher7.group(1));
+			}
+
+			// add space around nonword char
+			// s#(\W)# $1 #g;
+			Matcher matcher8 = Pattern.compile("(\\W)").matcher(sentence);
+			if (matcher8.lookingAt()) {
+				sentence = sentence.replaceAll("\\W", " " + matcher7.group(1)
+						+ " ");
+			}
+
+			// multiple spaces => 1 space
+			// s#\s+# #g;
+			sentence = sentence.replaceAll("\\s+", " ");
+
+			// trim
+			// s#^\s*##;
+			sentence = sentence.replaceAll("^\\s*", "");
+
+			// trim
+			// s#\s*$##;
+			sentence = sentence.replaceAll("\\s*$", "");
+
+			// all to lower case
+			sentence = sentence.toLowerCase();
+
+			return sentence;
+		}
+		return null;
+	}
 
 	public boolean populatesents() {
 		
@@ -395,51 +455,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					//remove bracketed text from sentence (keep those in originalsent);
 					//this step will not be able to remove nested brackets, such as (petioles (2-)4-8 cm).
 					//nested brackets will be removed after threedsent step in POSTagger4StanfordParser.java
-					
-					//remove (.a.)
-			  		//s#\([^()]*?[a-zA-Z][^()]*?\)# #g;
-					sentences[j]=sentences[j].replaceAll("\\([^()]*?[a-zA-Z][^()]*?\\)", " ");
-					
-					//remove [.a.]
-			  		//s#\[[^\]\[]*?[a-zA-Z][^\]\[]*?\]# #g;  
-					sentences[j]=sentences[j].replaceAll("\\[[^\\]\\[]*?[a-zA-Z][^\\]\\[]*?\\]", " ");
-					
-					//remove {.a.}
-			  		//s#{[^{}]*?[a-zA-Z][^{}]*?}# #g; 
-					sentences[j]=sentences[j].replaceAll("\\{[^{}]*?[a-zA-Z][^{}]*?\\}", " ");
-					
-					// to fix basi- and hypobranchial
-					// s#\s*[-]+\s*([a-z])#_ $1#g;
-					Matcher matcher7 = Pattern.compile("\\s*[-]+\\s*([a-z])")
-							.matcher(sentences[j]);
-					if (matcher7.lookingAt()) {
-						sentences[j] = sentences[j].replaceAll(
-								"\\s*[-]+\\s*[a-z]", "_ " + matcher7.group(1));
-					}
-
-					// add space around nonword char
-					//s#(\W)# $1 #g;
-					Matcher matcher8 = Pattern.compile("(\\W)")
-							.matcher(sentences[j]);
-					if (matcher8.lookingAt()) {
-						sentences[j] = sentences[j].replaceAll(
-								"\\W", " "+matcher7.group(1)+" ");
-					}
-					
-					//multiple spaces => 1 space
-					//s#\s+# #g; 
-					sentences[j]=sentences[j].replaceAll("\\s+"," ");
-					
-					//trim
-					//s#^\s*##;
-					sentences[j]=sentences[j].replaceAll("^\\s*","");
-					
-					//trim
-					//s#\s*$##;
-					sentences[j]=sentences[j].replaceAll("\\s*$","");
-					
-					//all to lower case
-					sentences[j]=sentences[j].toLowerCase();
+					sentences[j]=this.handleSentence(sentences[j]);
 					
 			    	//getallwords($_);
 					
@@ -537,12 +553,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// hold the words and tags
 		((ArrayList) this.unknownWordList)
 				.ensureCapacity(unknownWordSet.size());
-		//((HashMap) this.unknownWordTagMap).ensureCapacity(unknownWordSet
+		//((HashMap) this.unknownWordTable).ensureCapacity(unknownWordSet
 		//		.size());
 		while (unknownWordIterator.hasNext()) {
 			String unknownWord=unknownWordIterator.next();
 			unknownWordList.add(unknownWord);
-			unknownWordTagMap.put(unknownWord, "unknown");
+			unknownWordTable.put(unknownWord, "unknown");
 		}
 		System.out.println("Total sentences = " + SENTID);
 		return true;
@@ -692,7 +708,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		for (int i=0;i<this.unknownWordList.size();i++) {
 			//String unknownWord = "anteriorly";
 			String unknownWord=this.unknownWordList.get(i);
-			String unknownWordTag = this.unknownWordTagMap.get(unknownWord);
+			String unknownWordTag = this.unknownWordTable.get(unknownWord);
 			// the tag of this word is unknown
 			if (unknownWordTag.equals("unknown")) {								
 				String p="(.*?)("+this.SUFFIX+")$";
@@ -704,12 +720,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					String prefix = matcher.group(1);
 					//if (this.unknownWordSet.contains(matcher.group(1))) {
 					if (this.containSuffix(unknownWord, matcher.group(1), matcher.group(2))) {
-						unknownWordTagMap.put(unknownWord, "b");
+						unknownWordTable.put(unknownWord, "b");
 						System.out.println("posbysuffix set $unknownword a boundary word\n");
 					}
 				}
 			}
-			String result = this.unknownWordTagMap.get("anteriorly");
+			String result = this.unknownWordTable.get("anteriorly");
 			System.out.println(result);		
 		}
 		
@@ -740,11 +756,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		for (int i=0;i<this.unknownWordList.size();i++) {
 			String unknownWord=this.unknownWordList.get(i);
-			String unknownWordTag = this.unknownWordTagMap.get(unknownWord);
+			String unknownWordTag = this.unknownWordTable.get(unknownWord);
 			String pattern = "^[._.][a-z]+"; //, _nerved
 			if (unknownWordTag.equals("unknown")) {
 				if (unknownWord.matches(pattern)) {
-					unknownWordTagMap.put(unknownWord, "b");
+					unknownWordTable.put(unknownWord, "b");
 					System.out.println("posbysuffix set $unknownword a boundary word\n");
 				}			
 			}
@@ -821,7 +837,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				}
 			}
 			// if the word is in unknown word set, return true
-			if (this.unknownWordTagMap.containsKey(base)) {
+			if (this.unknownWordTable.containsKey(base)) {
 				return true;
 			}
 		}
@@ -865,7 +881,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (myWN.isAdjective(word)) {
 				return true;
 			}
-			if (this.unknownWordTagMap.containsKey(base)) {
+			if (this.unknownWordTable.containsKey(base)) {
 				return true;
 			}			
 		}
