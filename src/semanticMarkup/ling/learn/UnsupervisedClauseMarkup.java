@@ -118,8 +118,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	//Table wordpos
 	Map<WordPOSKey,WordPOSValue> wordPOSTable = new HashMap<WordPOSKey,WordPOSValue>();
 	
-	
-
 	//DNGYE_TODO
 
 	public UnsupervisedClauseMarkup(String dir, String db, String lm, String p) {
@@ -139,235 +137,285 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// replace '.', '?', ';', ':', '!' within brackets by some special markers,
 	// to avoid split within brackets during sentence segmentation
 	public String hideMarksInBrackets(String text) {
-		if (text != null) {
-			String hide = "";
-			int lRound = 0;
-			int lSquare = 0;
-			int lCurly = 0;
 
-			for (int i = 0; i < text.length(); i++) {
-				char c = text.charAt(i);
-				switch (c) {
-				case '(':
-					lRound++;
-					hide = hide + c;
-					break;
-				case ')':
-					lRound--;
-					hide = hide + c;
-					break;
-				case '[':
-					lSquare++;
-					hide = hide + c;
-					break;
-				case ']':
-					lSquare--;
-					hide = hide + c;
-					break;
-				case '{':
-					lCurly++;
-					hide = hide + c;
-					break;
-				case '}':
-					lCurly--;
-					hide = hide + c;
-					break;
-				default:
-					if (lRound + lSquare + lCurly > 0) {
-						if (c == '.') {
-							hide = hide + "[DOT] ";
-						} else if (c == '?') {
-							hide = hide + "[QST] ";
-						} else if (c == ';') {
-							hide = hide + "[SQL] ";
-						} else if (c == ':') {
-							hide = hide + "[QLN] ";
-						} else if (c == '!') {
-							hide = hide + "[EXM] ";
-						} else {
-							hide = hide + c;
-						}
+		if (text == null || text == "") {
+			return text;
+		}
+
+		String hide = "";
+		int lRound = 0;
+		int lSquare = 0;
+		int lCurly = 0;
+
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+			switch (c) {
+			case '(':
+				lRound++;
+				hide = hide + c;
+				break;
+			case ')':
+				lRound--;
+				hide = hide + c;
+				break;
+			case '[':
+				lSquare++;
+				hide = hide + c;
+				break;
+			case ']':
+				lSquare--;
+				hide = hide + c;
+				break;
+			case '{':
+				lCurly++;
+				hide = hide + c;
+				break;
+			case '}':
+				lCurly--;
+				hide = hide + c;
+				break;
+			default:
+				if (lRound + lSquare + lCurly > 0) {
+					if (c == '.') {
+						hide = hide + "[DOT] ";
+					} else if (c == '?') {
+						hide = hide + "[QST] ";
+					} else if (c == ';') {
+						hide = hide + "[SQL] ";
+					} else if (c == ':') {
+						hide = hide + "[QLN] ";
+					} else if (c == '!') {
+						hide = hide + "[EXM] ";
 					} else {
 						hide = hide + c;
 					}
+				} else {
+					hide = hide + c;
 				}
 			}
-			return hide;
 		}
-		return null;
+		return hide;
+
 	}
 	
 	public String restoreMarksInBrackets(String text) {
 
-		if (text != null) {
-			// restore "." from "[DOT]"
-			// s#\[\s*DOT\s*\]#.#g;
-			text = text.replaceAll("\\[\\s*DOT\\s*\\]", ".");
-			// restore "?" from "[QST]"
-			// s#\[\s*QST\s*\]#?#g;
-			text = text.replaceAll("\\[\\s*QST\\s*\\]", "?");
-			// restore ";" from "[SQL]"
-			// s#\[\s*SQL\s*\]#;#g;
-			text = text.replaceAll("\\[\\s*SQL\\s*\\]", ";");
-			// restore ":" from "[QLN]"
-			// s#\[\s*QLN\s*\]#:#g;
-			text = text.replaceAll("\\[\\s*QLN\\s*\\]", ":");
-			// restore "." from "[DOT]"
-			// s#\[\s*EXM\s*\]#!#g;
-			text = text.replaceAll("\\[\\s*EXM\\s*\\]", "!");
+		if (text == null || text == "") {
+			return text;
 		}
+
+		// restore "." from "[DOT]"
+		// s#\[\s*DOT\s*\]#.#g;
+		text = text.replaceAll("\\[\\s*DOT\\s*\\]", ".");
+		// restore "?" from "[QST]"
+		// s#\[\s*QST\s*\]#?#g;
+		text = text.replaceAll("\\[\\s*QST\\s*\\]", "?");
+		// restore ";" from "[SQL]"
+		// s#\[\s*SQL\s*\]#;#g;
+		text = text.replaceAll("\\[\\s*SQL\\s*\\]", ";");
+		// restore ":" from "[QLN]"
+		// s#\[\s*QLN\s*\]#:#g;
+		text = text.replaceAll("\\[\\s*QLN\\s*\\]", ":");
+		// restore "." from "[DOT]"
+		// s#\[\s*EXM\s*\]#!#g;
+		text = text.replaceAll("\\[\\s*EXM\\s*\\]", "!");
+
 		return text;
 	}
-	
+
 	public String handleText(String t) {
+		
+		if (t==null || t=="") {
+			return t;
+		}
+
 		String text = t;
-		if (text!= null) {
-			//
-			text = text.replaceAll("[\"']", "");
-			
-			//plano - to
-			text = text.replaceAll("\\s*-\\s*to\\s+", " to "); 
-			
-			//
-			text = text.replaceAll("[-_]+shaped", "-shaped");	
-			
-			//unhide <i>
-			text = text.replaceAll("&lt;i&gt;", "<i>");
 
-			// unhide </i>, these will be used by characterHeuristics to
-			// collect taxon names
-			text = text.replaceAll("&lt;/i&gt;", "</i>");
+		//
+		text = text.replaceAll("[\"']", "");
 
-			// remove 2a. (key marks)
-			text = text.replaceAll("^\\s*\\d+[a-z].\\s*", ""); 
-			
-			//store text at this point in original
-			String original = text;
-			
-			//remove HTML entities
-			text = text.replaceAll("&[;#\\w\\d]+;", " "); 
-			
-			//
-			text = text.replaceAll(" & ", " and ");
-			
-			// replace '.', '?', ';', ':', '!' within brackets by some
-			// special markers, to avoid split within brackets during
-			// sentence segmentation
-			// System.out.println("Before Hide: "+text);
-		  	text = hideMarksInBrackets(text);
-		  	//System.out.println("After Hide: "+text+"\n");
-		  	
-			text = text.replaceAll("_", "-"); // _ to -
-			text = text.replaceAll("", ""); //
-			
-			//
-			Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(
-					text);
-			if (matcher1.lookingAt()) {
-				text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
-			}
-			
-			// absent;blade => absent; blade
-			Matcher matcher2 = Pattern.compile("(\\w)([:;\\.])(\\w)")
+		// plano - to
+		text = text.replaceAll("\\s*-\\s*to\\s+", " to ");
+
+		//
+		text = text.replaceAll("[-_]+shaped", "-shaped");
+
+		// unhide <i>
+		text = text.replaceAll("&lt;i&gt;", "<i>");
+
+		// unhide </i>, these will be used by characterHeuristics to
+		// collect taxon names
+		text = text.replaceAll("&lt;/i&gt;", "</i>");
+
+		// remove 2a. (key marks)
+		text = text.replaceAll("^\\s*\\d+[a-z].\\s*", "");
+
+		// store text at this point in original
+		String original = text;
+
+		// remove HTML entities
+		text = text.replaceAll("&[;#\\w\\d]+;", " ");
+
+		//
+		text = text.replaceAll(" & ", " and ");
+
+		// replace '.', '?', ';', ':', '!' within brackets by some
+		// special markers, to avoid split within brackets during
+		// sentence segmentation
+		// System.out.println("Before Hide: "+text);
+		text = hideMarksInBrackets(text);
+		// System.out.println("After Hide: "+text+"\n");
+
+		text = text.replaceAll("_", "-"); // _ to -
+		text = text.replaceAll("", ""); //
+
+		//
+		Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(text);
+		if (matcher1.lookingAt()) {
+			text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
+		}
+
+		// absent;blade => absent; blade
+		while (true) {
+			Matcher matcher2 = Pattern.compile("(^.*\\w)([:;\\.])(\\w.*$)")
 					.matcher(text);
+
 			if (matcher2.lookingAt()) {
-				text = text.replaceAll("\\w[:;\\.]\\w", matcher2.group(1)
-						+ matcher2.group(2) + " " + matcher2.group(3));
+				// text = text.replaceAll("^.*\\w[:;\\.]\\w.*",
+				// matcher2.group(1)
+				// + matcher2.group(2) + " " + matcher2.group(3));
+				text = matcher2.group(1) + matcher2.group(2) + " "
+						+ matcher2.group(3);
+			} else {
+				break;
 			}
-			
-			// 1 . 5 => 1.5
-			Matcher matcher3 = Pattern.compile("(\\d\\s*\\.)\\s+(\\d)")
-					.matcher(text);
-			if (matcher3.lookingAt()) {
-				text = text.replaceAll("\\d\\s*\\.\\s+\\d",
-						matcher3.group(1) + matcher3.group(2));
-			}
-			
-			// diam . =>diam.
-			Matcher matcher4 = Pattern.compile("(\\sdiam)\\s+(\\.)")
-					.matcher(text);
-			if (matcher4.lookingAt()) {
-				text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)
-						+ matcher4.group(2));
-			}
+		}
+		// String s1=matcher2.group(1);
+		// String s2=matcher2.group(2);
+		// String s3=matcher2.group(3);
 
-			// ca . =>ca.
-			Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(
-					text);
-			if (matcher5.lookingAt()) {
-				text = text.replaceAll("\\sca\\s+\\.", matcher5.group(1)
-						+ matcher5.group(2));
-			}
-			
-			//
-			Matcher matcher6 = Pattern.compile(
-					"(\\d\\s+(cm|mm|dm|m)\\s*)\\.(\\s+[^A-Z])").matcher(
-					text);
-			if (matcher6.lookingAt()) {
-				text = text
-						.replaceAll(
-								"\\d\\s+cm|mm|dm|m\\s*\\.\\s+[^A-Z]",
-								matcher6.group(1) + "\\[DOT\\]"
-										+ matcher6.group(3));
-			}
+		// 1 . 5 => 1.5
+		Matcher matcher3 = Pattern.compile("(\\d\\s*\\.)\\s+(\\d)").matcher(
+				text);
+		if (matcher3.lookingAt()) {
+			text = text.replaceAll("\\d\\s*\\.\\s+\\d", matcher3.group(1)
+					+ matcher3.group(2));
+		}
+
+		// diam . =>diam.
+		Matcher matcher4 = Pattern.compile("(\\sdiam)\\s+(\\.)").matcher(text);
+		if (matcher4.lookingAt()) {
+			text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)
+					+ matcher4.group(2));
+		}
+
+		// ca . =>ca.
+		Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(text);
+		if (matcher5.lookingAt()) {
+			text = text.replaceAll("\\sca\\s+\\.",
+					matcher5.group(1) + matcher5.group(2));
+		}
+
+		//
+		Matcher matcher6 = Pattern.compile(
+				"(\\d\\s+(cm|mm|dm|m)\\s*)\\.(\\s+[^A-Z])").matcher(text);
+		if (matcher6.lookingAt()) {
+			text = text.replaceAll("\\d\\s+cm|mm|dm|m\\s*\\.\\s+[^A-Z]",
+					matcher6.group(1) + "\\[DOT\\]" + matcher6.group(3));
 		}
 
 		return text;
+	}
+
+	// add space before and after all occurances of the regex in the string str
+	public String addSpace(String str, String regex) {
+		
+		if (str==null || str=="" || regex==null || regex=="") {
+			return str;
+		}
+
+		Matcher matcher = Pattern.compile("(^.*)("+regex+")(.*$)").matcher(str);
+		if (matcher.lookingAt()) {
+			str = addSpace(matcher.group(1), regex) + " " + matcher.group(2)
+					+ " " + addSpace(matcher.group(3), regex);
+			return str;
+		} else {
+			return str;
+		}
+
 	}
 	
 	public String handleSentence(String s) {
 
-		if (s != null) {
-			String sentence = s;
-
-			// remove (.a.)
-			// s#\([^()]*?[a-zA-Z][^()]*?\)# #g;
-			sentence = sentence.replaceAll("\\([^()]*?[a-zA-Z][^()]*?\\)", " ");
-
-			// remove [.a.]
-			// s#\[[^\]\[]*?[a-zA-Z][^\]\[]*?\]# #g;
-			sentence = sentence.replaceAll(
-					"\\[[^\\]\\[]*?[a-zA-Z][^\\]\\[]*?\\]", " ");
-
-			// remove {.a.}
-			// s#{[^{}]*?[a-zA-Z][^{}]*?}# #g;
-			sentence = sentence.replaceAll("\\{[^{}]*?[a-zA-Z][^{}]*?\\}", " ");
-
-			// to fix basi- and hypobranchial
-			// s#\s*[-]+\s*([a-z])#_ $1#g;
-			Matcher matcher7 = Pattern.compile("\\s*[-]+\\s*([a-z])").matcher(
-					sentence);
-			if (matcher7.lookingAt()) {
-				sentence = sentence.replaceAll("\\s*[-]+\\s*[a-z]", "_ "
-						+ matcher7.group(1));
-			}
-
-			// add space around nonword char
-			// s#(\W)# $1 #g;
-			Matcher matcher8 = Pattern.compile("(\\W)").matcher(sentence);
-			if (matcher8.lookingAt()) {
-				sentence = sentence.replaceAll("\\W", " " + matcher7.group(1)
-						+ " ");
-			}
-
-			// multiple spaces => 1 space
-			// s#\s+# #g;
-			sentence = sentence.replaceAll("\\s+", " ");
-
-			// trim
-			// s#^\s*##;
-			sentence = sentence.replaceAll("^\\s*", "");
-
-			// trim
-			// s#\s*$##;
-			sentence = sentence.replaceAll("\\s*$", "");
-
-			// all to lower case
-			sentence = sentence.toLowerCase();
-
-			return sentence;
+		if (s == null || s == "") {
+			return s;
 		}
-		return null;
+
+		String sentence = s;
+
+		// remove (.a.)
+		// s#\([^()]*?[a-zA-Z][^()]*?\)# #g;
+		sentence = sentence.replaceAll("\\([^()]*?[a-zA-Z][^()]*?\\)", " ");
+
+		// remove [.a.]
+		// s#\[[^\]\[]*?[a-zA-Z][^\]\[]*?\]# #g;
+		sentence = sentence.replaceAll("\\[[^\\]\\[]*?[a-zA-Z][^\\]\\[]*?\\]",
+				" ");
+
+		// remove {.a.}
+		// s#{[^{}]*?[a-zA-Z][^{}]*?}# #g;
+		sentence = sentence.replaceAll("\\{[^{}]*?[a-zA-Z][^{}]*?\\}", " ");
+
+		// to fix basi- and hypobranchial
+		// s#\s*[-]+\s*([a-z])#_ $1#g;
+		Matcher matcher7 = Pattern.compile("\\s*[-]+\\s*([a-z])").matcher(
+				sentence);
+		if (matcher7.lookingAt()) {
+			sentence = sentence.replaceAll("\\s*[-]+\\s*[a-z]",
+					"_ " + matcher7.group(1));
+		}
+
+		// add space around nonword char
+		// s#(\W)# $1 #g;
+		/*
+		 while (true) { 
+			 Matcher matcher8 =Pattern.compile("(^.*)(\\S\\W\\S)(.*$)").matcher( sentence); 
+			 	if (matcher8.lookingAt()) { 
+			 		//sentence = sentence.replaceAll("\\W", " "+ // matcher8.group(1) // + " "); 
+			 		sentence = matcher8.group(1) + " "+ matcher8.group(2) + " " + matcher8.group(3); 
+			 		} 
+			 	else { 
+			 		break; 
+			 		} 
+			 	}
+		 /
+		  * */
+		sentence=this.addSpace(sentence, "\\W");
+		  
+		//String [] substrings= Pattern.compile("(\\W)").split(sentence);//matcher(sentence);
+		//matcher8.replaceAll(" " + matcher8.group(1) + " ");
+		//sentence="";
+		//for (int i=0;i<substrings.length;i++) {
+		//	sentence=sentence+" "+substrings[i]+" ";
+		//}
+
+		// multiple spaces => 1 space
+		// s#\s+# #g;
+		sentence = sentence.replaceAll("\\s+", " ");
+
+		// trim
+		// s#^\s*##;
+		sentence = sentence.replaceAll("^\\s*", "");
+
+		// trim
+		// s#\s*$##;
+		sentence = sentence.replaceAll("\\s*$", "");
+
+		// all to lower case
+		sentence = sentence.toLowerCase();
+
+		return sentence;
+
 	}
 
 	public boolean populatesents() {
