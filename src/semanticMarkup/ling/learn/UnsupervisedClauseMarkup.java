@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -99,15 +100,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			+ "a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
 
 	//List to store all unknown words
-	List<String> unknownWordList = new ArrayList<String>();
-	Set<String> unknownWordSet = new TreeSet<String>();
+	//List<String> unknownWordList = new ArrayList<String>();
+	//Set<String> unknownWordSet = new TreeSet<String>();
 	
 	
 	//Table sentence
-	List<String> sentence = new ArrayList<String>();
-	List<String> originalSent = new ArrayList<String>();
-	List<String> tag = new ArrayList<String>();
-	List<String> modifier = new ArrayList<String>();
+	//List<String> sentence = new ArrayList<String>();
+	//List<String> originalSent = new ArrayList<String>();
+	//List<String> tag = new ArrayList<String>();
+	//List<String> modifier = new ArrayList<String>();
 	
 	//Table sentence
 	List<Sentence> sentenceTable = new ArrayList<Sentence>();
@@ -517,7 +518,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 						//System.out.println(sentences[j]);
 						String tokens[] = tokenizer.tokenize(sentences[j]);
 						for (int i1=0;i1<tokens.length;i1++) {
-							unknownWordSet.add(tokens[i1]);
+							//unknownWordSet.add(tokens[i1]);
+							this.unknownWordTable.put(tokens[i1], "unknown");
 						}
 				
 						//System.out.println(tokens[0]);
@@ -572,10 +574,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 						oline=line;
 					}	
 					
-					this.sentence.add(line);
-					this.originalSent.add(oline);
-					this.tag.add("");
-					this.modifier.add("");
+					//this.sentence.add(line);
+					//this.originalSent.add(oline);
+					//this.tag.add("");
+					//this.modifier.add("");
 					
 					//Sentence this_sentence = new Sentence(line,oline,null,null,null,null);
 					this.sentenceTable.add(new Sentence(line,oline,null,null,null,null,null));
@@ -596,18 +598,18 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 		// copy all unknown words from unknownWordSet into unknownWordList, set
 		// the tags in the unknownWordTagList be 0 (0 - unknown)
-		Iterator<String> unknownWordIterator = unknownWordSet.iterator();
+		//Iterator<String> unknownWordIterator = unknownWordSet.iterator();
 		// ensure unknownWordList and unknownWordTagList have enough capacity to
 		// hold the words and tags
-		((ArrayList) this.unknownWordList)
-				.ensureCapacity(unknownWordSet.size());
+		//((ArrayList) this.unknownWordList)
+		//		.ensureCapacity(unknownWordSet.size());
 		//((HashMap) this.unknownWordTable).ensureCapacity(unknownWordSet
 		//		.size());
-		while (unknownWordIterator.hasNext()) {
-			String unknownWord=unknownWordIterator.next();
-			unknownWordList.add(unknownWord);
-			unknownWordTable.put(unknownWord, "unknown");
-		}
+		//while (unknownWordIterator.hasNext()) {
+		//	String unknownWord=unknownWordIterator.next();
+		//	unknownWordList.add(unknownWord);
+		//	unknownWordTable.put(unknownWord, "unknown");
+		//}
 		System.out.println("Total sentences = " + SENTID);
 		return true;
 	}
@@ -753,10 +755,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	//suffix is defined in global variable SUFFIX
 	public void posbysuffix() throws IOException {
 		//String pattern="^[a-z_]+("+this.SUFFIX+")\\$";
-		for (int i=0;i<this.unknownWordList.size();i++) {
+		Iterator iterator=this.unknownWordTable.entrySet().iterator();
+		int i=0;
+		while (iterator.hasNext()) {
 			//String unknownWord = "anteriorly";
-			String unknownWord=this.unknownWordList.get(i);
-			String unknownWordTag = this.unknownWordTable.get(unknownWord);
+			Map.Entry<String, String> unknownWordEntry=(Map.Entry<String, String>)iterator.next();
+			String unknownWord = unknownWordEntry.getKey();
+			//String unknownWordTag = this.unknownWordTable.get(unknownWo
+			String unknownWordTag = unknownWordEntry.getValue();
 			// the tag of this word is unknown
 			if (unknownWordTag.equals("unknown")) {								
 				String p="(.*?)("+this.SUFFIX+")$";
@@ -775,6 +781,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 			String result = this.unknownWordTable.get("anteriorly");
 			System.out.println(result);		
+			i++;
 		}
 		
 		/*
@@ -802,9 +809,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			print "posbysuffix set $unknownword a boundary word\n" if $debug;
 		}*/
 		
-		for (int i=0;i<this.unknownWordList.size();i++) {
-			String unknownWord=this.unknownWordList.get(i);
-			String unknownWordTag = this.unknownWordTable.get(unknownWord);
+		i=0;
+		while (iterator.hasNext()) {
+		//for (int i=0;i<this.unknownWordList.size();i++) {
+			Map.Entry<String, String> unknownWordEntry=(Map.Entry<String, String>)iterator.next();
+			String unknownWord = unknownWordEntry.getKey();
+			String unknownWordTag = unknownWordEntry.getValue();
 			String pattern = "^[._.][a-z]+"; //, _nerved
 			if (unknownWordTag.equals("unknown")) {
 				if (unknownWord.matches(pattern)) {
@@ -812,6 +822,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					System.out.println("posbysuffix set $unknownword a boundary word\n");
 				}			
 			}
+			i++;
 		}
 	}
 	
@@ -940,56 +951,59 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	public void markupbypattern() {
 		System.out.println("markupbypattern start");
-		int cap=this.sentence.size();
+		//int cap=this.sentence.size();
+		int cap=this.sentenceTable.size();
 		//((ArrayList)this.tag).ensureCapacity(cap);
 		//((ArrayList)this.modifier).ensureCapacity(cap);
-		for (int i=0;i<this.originalSent.size();i++) {
+		//for (int i=0;i<this.originalSent.size();i++) {
+		for (int i=0;i<cap;i++) {
 			//case 1
-			if (this.originalSent.get(i).matches("^x=.*")) {
-				tag.set(i, "chromosome");
-				modifier.set(i, "");
+			//if (this.originalSent.get(i).matches("^x=.*")) {
+			if (this.sentenceTable.get(i).getOriginalSentence().matches("^x=.*")) {
+				//tag.set(i, "chromosome");
+				//modifier.set(i, "");
 				this.sentenceTable.get(i).setTag("chromosome");
 				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 2
-			else if (this.originalSent.get(i).matches("^2n=.*")) {
-				tag.set(i, "chromosome");
-				modifier.set(i, "");
+			else if (this.sentenceTable.get(i).getOriginalSentence().matches("^2n=.*")) {
+				//tag.set(i, "chromosome");
+				//modifier.set(i, "");
 				this.sentenceTable.get(i).setTag("chromosome");
 				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 3
-			else if (this.originalSent.get(i).matches("^x .*")) {
-				tag.set(i, "chromosome");
-				modifier.set(i, "");
+			else if (this.sentenceTable.get(i).getOriginalSentence().matches("^x .*")) {
+				//tag.set(i, "chromosome");
+				//modifier.set(i, "");
 				this.sentenceTable.get(i).setTag("chromosome");
 				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 4
-			else if (this.originalSent.get(i).matches("^2n .*")) {
-				tag.set(i, "chromosome");
-				modifier.set(i, "");
+			else if (this.sentenceTable.get(i).getOriginalSentence().matches("^2n .*")) {
+				//tag.set(i, "chromosome");
+				//modifier.set(i, "");
 				this.sentenceTable.get(i).setTag("chromosome");
 				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 5
-			else if (this.originalSent.get(i).matches("^2 n.*")) {
-				tag.set(i, "chromosome");
-				modifier.set(i, "");
+			else if (this.sentenceTable.get(i).getOriginalSentence().matches("^2 n.*")) {
+				//tag.set(i, "chromosome");
+				//modifier.set(i, "");
 				this.sentenceTable.get(i).setTag("chromosome");
 				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 6
-			else if (this.originalSent.get(i).matches("^fl.*")) {
-				tag.set(i, "flowerTime");
-				modifier.set(i, "");
+			else if (this.sentenceTable.get(i).getOriginalSentence().matches("^fl.*")) {
+				//tag.set(i, "flowerTime");
+				//modifier.set(i, "");
 				this.sentenceTable.get(i).setTag("flowerTime");
 				this.sentenceTable.get(i).setModifier("");
 			}
 			//case 7
-			else if (this.originalSent.get(i).matches("^fr.*")) {
-				tag.set(i, "flowerTime");
-				modifier.set(i, "");
+			else if (this.sentenceTable.get(i).getOriginalSentence().matches("^fr.*")) {
+				//tag.set(i, "flowerTime");
+				//modifier.set(i, "");
 				this.sentenceTable.get(i).setTag("flowerTime");
 				this.sentenceTable.get(i).setModifier("");
 			}
