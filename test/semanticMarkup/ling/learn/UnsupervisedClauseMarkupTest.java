@@ -78,11 +78,21 @@ public class UnsupervisedClauseMarkupTest {
 		
 		// test method handleTest
 		// null
-		assertEquals("Result", null,
-				tester.handleText(null));
+		assertEquals("Result", null, tester.handleText(null));
 		// ""
-		assertEquals("Result", "",
-				tester.handleText(""));	
+		assertEquals("Result", "", tester.handleText(""));
+		// remove "'
+		assertEquals("Result", "words word", tester.handleText("word's wo\"rd"));
+		// plano - to
+		assertEquals("Result", "word to word",
+				tester.handleText("word -to word"));
+		//
+		assertEquals("Result", "word -shaped",
+				tester.handleText("word ______shaped"));
+		// remove 2a. (key marks)
+		assertEquals("Result", "word", tester.handleText("7b. word"));
+		// remove HTML entities
+		assertEquals("Result", "word   word", tester.handleText("word &amp; word"));
 		// unhide <i>
 		assertEquals("Result", "word <i> word.",
 				tester.handleText("word &lt;i&gt; word."));
