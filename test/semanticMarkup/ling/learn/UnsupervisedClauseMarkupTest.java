@@ -76,12 +76,12 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("Result", "before (word!  word) after",
 				tester.restoreMarksInBrackets("before (word[EXM]  word) after"));
 		
-		// test method handleTest
+		// test method handleTest (Fully finished - Dongye 01/08)
 		// null
 		assertEquals("Result", null, tester.handleText(null));
 		// ""
 		assertEquals("Result", "", tester.handleText(""));
-		// remove "'
+		// remove " and '
 		assertEquals("Result", "words word", tester.handleText("word's wo\"rd"));
 		// plano - to
 		assertEquals("Result", "word to word",
@@ -89,27 +89,42 @@ public class UnsupervisedClauseMarkupTest {
 		//
 		assertEquals("Result", "word -shaped",
 				tester.handleText("word ______shaped"));
-		// remove 2a. (key marks)
-		assertEquals("Result", "word", tester.handleText("7b. word"));
-		// remove HTML entities
-		assertEquals("Result", "word   word", tester.handleText("word &amp; word"));
 		// unhide <i>
 		assertEquals("Result", "word <i> word.",
 				tester.handleText("word &lt;i&gt; word."));
 		// unhide </i>
 		assertEquals("Result", "word </i> word.",
 				tester.handleText("word &lt;/i&gt; word."));
+		// remove 2a. (key marks)
+		assertEquals("Result", "word", tester.handleText("7b. word"));
+		// remove HTML entities
+		assertEquals("Result", "word   word", tester.handleText("word &amp; word"));
 		// " & " => " and "
 		assertEquals("Result", "word and word.",
 				tester.handleText("word & word."));
 		// "_" => "-"
 		assertEquals("Result", "word-word.", 
 				tester.handleText("word_word."));
+		// absent ; => absent;
+		assertEquals("Result", "word; word; word.", 
+				tester.handleText("word ;word ;word."));
 		// absent;blade => absent; blade
 		assertEquals("Result", "word; word; word.", 
 				tester.handleText("word;word;word."));
 		assertEquals("Result", "word: word. word.", 
 				tester.handleText("word:word.word."));
+		// 1 . 5 => 1.5
+		assertEquals("Result", "word 1.5 word 384739.84 word.", 
+				tester.handleText("word 1 . 5 word 384739 . 84 word."));
+		// #diam . =>diam.
+		assertEquals("Result", "word diam. word diam. word.", 
+				tester.handleText("word diam . word diam . word."));
+		// ca . =>ca.
+		assertEquals("Result", "word ca. word ca. word.", 
+				tester.handleText("word ca . word ca . word."));
+		// cm|mm|dm|m
+		assertEquals("Result", "word 12 cm[DOT] word 376 mm[DOT] word.", 
+				tester.handleText("word 12 cm . word 376 mm. word."));		
 		
 		// test method addSpace
 		// null
@@ -124,10 +139,26 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("Result", null, tester.handleSentence(null));
 		// ""
 		assertEquals("Result", "", tester.handleSentence(""));
+		// remove (.a.)
+		assertEquals("Result", "word word word word .",
+				tester.handleSentence("word (.a.) word (a) word ( a ) word."));
+		// remove [.a.]
+		assertEquals("Result", "word word word word .",
+				tester.handleSentence("word [.a.] word [a] word [ a ] word."));
+		// remove {.a.}
+		assertEquals("Result", "word word word word .",
+				tester.handleSentence("word {.a.} word {a} word { a } word."));
+		// to fix basi- and hypobranchial 
+		assertEquals("Result", "word cup_ shaped word cup_ shaped word cup_ shaped word .",
+				tester.handleSentence("word cup --- shaped word cup-shaped word cup ---------        shaped word."));		
+		
 		// multiple spaces => 1 space
-		assertEquals("Result", "word word word .", tester.handleSentence("word  word	 word."));
+		assertEquals("Result", "word word word .",
+				tester.handleSentence("word  word	 word."));
 		// remove multipe spaces at the beginning
 		assertEquals("Result", "word word .", tester.handleSentence("  	word word."));
+		// remove multipe spaces at the rear
+		assertEquals("Result", "word word .", tester.handleSentence("word word.    "));		
 		
 	}
 }

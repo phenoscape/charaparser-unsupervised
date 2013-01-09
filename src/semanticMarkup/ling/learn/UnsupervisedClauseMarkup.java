@@ -301,16 +301,26 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		text = text.replaceAll("", ""); //
 
 		//
-		Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(text);
-		if (matcher1.lookingAt()) {
-			text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
+		//Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(text);
+		//if (matcher1.lookingAt()) {
+		//	text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
+		//}
+		
+		//absent ; => absent;
+		while (true) {
+			Matcher matcher1 = Pattern.compile("(^.*?)\\s+([:;\\.].*$)")
+					.matcher(text);
+			if (matcher1.lookingAt()) {
+				text = matcher1.group(1) + matcher1.group(2);
+			} else {
+				break;
+			}
 		}
 
 		// absent;blade => absent; blade
 		while (true) {
-			Matcher matcher2 = Pattern.compile("(^.*\\w)([:;\\.])(\\w.*$)")
+			Matcher matcher2 = Pattern.compile("(^.*?\\w)([:;\\.])(\\w.*$)")
 					.matcher(text);
-
 			if (matcher2.lookingAt()) {
 				// text = text.replaceAll("^.*\\w[:;\\.]\\w.*",
 				// matcher2.group(1)
@@ -321,44 +331,49 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				break;
 			}
 		}
-		// String s1=matcher2.group(1);
-		// String s2=matcher2.group(2);
-		// String s3=matcher2.group(3);
 
 		// 1 . 5 => 1.5
-		Matcher matcher3 = Pattern.compile("(\\d\\s*\\.)\\s+(\\d)").matcher(
-				text);
-		if (matcher3.lookingAt()) {
-			text = text.replaceAll("\\d\\s*\\.\\s+\\d", matcher3.group(1)
-					+ matcher3.group(2));
+		while (true) {
+			Matcher matcher3 = Pattern.compile("(^.*?\\d\\s*\\.)\\s+(\\d.*$)")
+					.matcher(text);
+			if (matcher3.lookingAt()) {
+				text = matcher3.group(1) + matcher3.group(2);
+			} else {
+				break;
+			}
 		}
 
+		//###NOT necessary at all, done before in "absent ; => absent;"###
 		// diam . =>diam.
-		Matcher matcher4 = Pattern.compile("(\\sdiam)\\s+(\\.)").matcher(text);
-		if (matcher4.lookingAt()) {
-			text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)
-					+ matcher4.group(2));
-		}
+		//Matcher matcher4 = Pattern.compile("(\\sdiam)\\s+(\\.)").matcher(text);
+		//if (matcher4.lookingAt()) {
+		//	text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)
+		//			+ matcher4.group(2));
+		//}
 
 		// ca . =>ca.
-		Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(text);
-		if (matcher5.lookingAt()) {
-			text = text.replaceAll("\\sca\\s+\\.",
-					matcher5.group(1) + matcher5.group(2));
-		}
+		//Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(text);
+		//if (matcher5.lookingAt()) {
+		//	text = text.replaceAll("\\sca\\s+\\.",
+		//			matcher5.group(1) + matcher5.group(2));
+		//}
 
 		//
-		Matcher matcher6 = Pattern.compile(
-				"(\\d\\s+(cm|mm|dm|m)\\s*)\\.(\\s+[^A-Z])").matcher(text);
-		if (matcher6.lookingAt()) {
-			text = text.replaceAll("\\d\\s+cm|mm|dm|m\\s*\\.\\s+[^A-Z]",
-					matcher6.group(1) + "\\[DOT\\]" + matcher6.group(3));
+		while (true) {
+			Matcher matcher6 = Pattern.compile(
+					"(^.*\\d\\s+(cm|mm|dm|m)\\s*)\\.(\\s+[^A-Z].*$)").matcher(
+					text);
+			if (matcher6.lookingAt()) {
+				text = matcher6.group(1) + "[DOT]" + matcher6.group(3);
+			} else {
+				break;
+			}
 		}
 
 		return text;
 	}
 
-	// add space before and after all occurances of the regex in the string str
+	// add space before and after all occurance of the regex in the string str
 	public String addSpace(String str, String regex) {
 
 		if (str == null || str == "" || regex == null || regex == "") {
@@ -386,25 +401,25 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String sentence = s;
 
 		// remove (.a.)
-		// s#\([^()]*?[a-zA-Z][^()]*?\)# #g;
 		sentence = sentence.replaceAll("\\([^()]*?[a-zA-Z][^()]*?\\)", " ");
 
 		// remove [.a.]
-		// s#\[[^\]\[]*?[a-zA-Z][^\]\[]*?\]# #g;
 		sentence = sentence.replaceAll("\\[[^\\]\\[]*?[a-zA-Z][^\\]\\[]*?\\]",
 				" ");
 
 		// remove {.a.}
-		// s#{[^{}]*?[a-zA-Z][^{}]*?}# #g;
 		sentence = sentence.replaceAll("\\{[^{}]*?[a-zA-Z][^{}]*?\\}", " ");
 
 		// to fix basi- and hypobranchial
 		// s#\s*[-]+\s*([a-z])#_ $1#g;
-		Matcher matcher7 = Pattern.compile("\\s*[-]+\\s*([a-z])").matcher(
-				sentence);
-		if (matcher7.lookingAt()) {
-			sentence = sentence.replaceAll("\\s*[-]+\\s*[a-z]",
-					"_ " + matcher7.group(1));
+		while (true) {
+			Matcher matcher = Pattern.compile("(^.*?)\\s*[-]+\\s*([a-z].*$)")
+					.matcher(sentence);
+			if (matcher.lookingAt()) {
+				sentence = matcher.group(1) + "_ " + matcher.group(2);
+			} else {
+				break;
+			}
 		}
 
 		// add space around nonword char
