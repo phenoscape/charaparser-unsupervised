@@ -876,14 +876,23 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 	}
 
-	// return 0 or 1 depending on if the word contains the suffix as the suffix
-	public boolean containSuffix(String word, String base, String suffix)
-			throws IOException {
+	// return false or true depending on if the word contains the suffix as the suffix
+	public boolean containSuffix(String word, String base, String suffix) {
 		boolean flag = false; // return value
 		boolean wordInWN = false; // if this word is in WordNet
 		boolean baseInWN = false;
-		WordNetAPI myWN = new WordNetAPI(
-				"/Users/nescent/Phenoscape/WordNet-3.0/dict", false);
+		WordNetAPI myWN;
+		
+		// check base
+		// this if statement is added by Dongye
+		if (base.length() == 0) {
+			return true;
+		}
+		
+		try {
+			myWN = new WordNetAPI(
+					"/Users/nescent/Phenoscape/WordNet-3.0/dict", false);
+
 
 		// $base =~ s#_##g; #cup_shaped
 		// $wnoutputword = `wn $word -over`;
@@ -895,24 +904,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// }
 
 		base.replaceAll("_", ""); // cup_shaped
-
-		// check word
+		
 		if (myWN.contains(word)) {
-			wordInWN = false; // word not in WordNet
+			wordInWN = true; // word not in WordNet
 		} else {
 			// $wnoutputword =~ s#\n# #g;
-			wordInWN = true;
-		}
-
-		// check base
-		System.out.println(base.length());
-		System.out.println("Word: " + word);
-		System.out.println("Base: " + base);
-		System.out.println("Suffix: " + suffix);
-
-		// this if statement is added by Dongye
-		if (base.length() == 0) {
-			return true;
+			
+			wordInWN = false;
 		}
 
 		if (myWN.contains(base)) {
@@ -921,15 +919,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			// $wnoutputbase =~ s#\n# #g;
 			baseInWN = false;
 		}
-
-		/*
-		 * if($suffix eq "ly"){#if WN pos is adv, return 1: e.g. ly, or if $base
-		 * is in unknownwords table if($wordinwn){ if($wnoutputword =~/Overview
-		 * of adv $word/){ return 1;; } } $sth =
-		 * $dbh->prepare("select word from "
-		 * .$prefix."_unknownwords where word = '$base'"); $sth->execute() or
-		 * print STDOUT "$sth->errstr\n"; return 1 if $sth->rows > 0; }
-		 */
 
 		// if WN pos is adv, return 1: e.g. ly, or if $base is in unknownwords
 		// table
@@ -945,16 +934,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				return true;
 			}
 		}
-
-		// elsif($suffix eq "er" || $suffix eq "est"){#if WN recognize
-		// superlative, comparative adjs, return 1: e.g. er, est
-		// if($wordinwn){
-		// if($wnoutputword =~/Overview of adj (\w+)/){#$word = softer, $1 =
-		// soft vs. $word=$1=neuter
-		// return 1 if $word=~/^$1\w+/;
-		// }
-		// }
-		// }
 
 		// if WN recognize superlative, comparative adjs, return 1: e.g. er, est
 		else if (suffix.equals("er") || suffix.equals("est")) {
@@ -982,18 +961,24 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// if $base is in WN or unknownwords table, or if $word has sole pos adj
 		// in WN, return 1: e.g. scalelike
 		else {
-			if (baseInWN) {
-				return true;
-			}
-			if (myWN.isAdjective(word)) {
+			//if (baseInWN) {
+			//	return true;
+			//}
+			if (myWN.isSoleAdj(word)) {
 				return true;
 			}
 			if (this.unknownWordTable.containsKey(base)) {
 				return true;
+				}
 			}
-		}
 
-		return flag;
+			return flag;
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	public void markupbypattern() {
@@ -1145,4 +1130,31 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return null;
 	}
 
+
+	public boolean testWN(String word) {
+		try {
+			WordNetAPI myWN = new WordNetAPI(
+					"/Users/nescent/Phenoscape/WordNet-3.0/dict", false);
+			
+			if (myWN.isNoun(word)) {
+				System.out.println(word+" is a noun");
+			}
+			if (myWN.isVerb(word)) {
+				System.out.println(word+" is a verb");
+			}
+			if (myWN.isAdjective(word)) {
+				System.out.println(word+" is a adj");
+			}
+			if (myWN.isAdverb(word)) {
+				System.out.println(word+" is a adv");
+			}			
+			
+
+			return true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+	}
 }

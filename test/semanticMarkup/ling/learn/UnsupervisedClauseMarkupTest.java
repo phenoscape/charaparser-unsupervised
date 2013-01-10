@@ -159,6 +159,18 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("Result", "word word .", tester.handleSentence("  	word word."));
 		// remove multipe spaces at the rear
 		assertEquals("Result", "word word .", tester.handleSentence("word word.    "));		
+	
+		// test method containSuffix
+		assertEquals("Result", true, tester.containSuffix("less", "", "less"));
+		assertEquals("Result", true, tester.containSuffix("cowardly", "coward", "ly"));	
+		assertEquals("Result", true, tester.containSuffix("over", "ov", "er"));	
+		assertEquals("Result", true, tester.containSuffix("fewer", "few", "er"));
+		//assertEquals("containSuffix 5", true, tester.containSuffix("cleverest", "clever", "est"));
+		//assertEquals("containSuffix 5", true, tester.containSuffix("warmest", "warm", "est"));
 		
+		assertEquals("containSuffix", true, tester.containSuffix("platform", "plat", "form"));
+		assertEquals("containSuffix", true, tester.containSuffix("scalelike", "scale", "like"));
+		
+		//assertEquals("testWN", true, tester.testWN("fewer"));
 	}
 }
