@@ -800,79 +800,43 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// make the unknowword a "b" boundary
 
 	// suffix is defined in global variable SUFFIX
-	public void posbysuffix() throws IOException {
-		// String pattern="^[a-z_]+("+this.SUFFIX+")\\$";
-		Iterator iterator = this.unknownWordTable.entrySet().iterator();
-		int i = 0;
+	public void posBySuffix() {
+		String p1="^[a-z_]+("+this.SUFFIX+")$";
+		String p2 = "^[._.][a-z]+"; // , _nerved
+		Iterator<Map.Entry<String, String>> iterator = this.unknownWordTable.entrySet().iterator();
+		
 		while (iterator.hasNext()) {
-			// String unknownWord = "anteriorly";
-			Map.Entry<String, String> unknownWordEntry = (Map.Entry<String, String>) iterator
-					.next();
+			Map.Entry<String, String> unknownWordEntry = iterator.next();
 			String unknownWord = unknownWordEntry.getKey();
-			// String unknownWordTag = this.unknownWordTable.get(unknownWo
 			String unknownWordTag = unknownWordEntry.getValue();
+			//String unknownWord = "anteriorly";
+			//String unknownWordTag = "unknown";
 			// the tag of this word is unknown
 			if (unknownWordTag.equals("unknown")) {
-				String p = "(.*?)(" + this.SUFFIX + ")$";
-				Matcher matcher = Pattern
-						.compile("(.*?)(" + this.SUFFIX + ")$").matcher(
-								unknownWord);
-				// if (unknownWord.equals(arg0))
-				if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
-						&& matcher.matches()) {
-					String prefix = matcher.group(1);
-					// if (this.unknownWordSet.contains(matcher.group(1))) {
-					if (this.containSuffix(unknownWord, matcher.group(1),
-							matcher.group(2))) {
-						unknownWordTable.put(unknownWord, "b");
-						System.out
-								.println("posbysuffix set $unknownword a boundary word\n");
+				if (unknownWord.matches(p1)) {
+					Matcher matcher = Pattern.compile(
+							"(.*?)(" + this.SUFFIX + ")$").matcher(unknownWord);
+					if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
+							&& matcher.matches()) {
+						if (this.containSuffix(unknownWord, matcher.group(1),
+								matcher.group(2))) {
+							this.wordPOSTable.put(new WordPOSKey(unknownWord,
+									"b"), new WordPOSValue("*", 0, 0, null,
+									null));
+							System.out
+									.println("posBySuffix set $unknownword a boundary word\n");
+						}
 					}
 				}
-			}
-			String result = this.unknownWordTable.get("anteriorly");
-			System.out.println(result);
-			i++;
-		}
-
-		/*
-		 * //test WordNet API try { //System.getenv("WNHOME") does not work
-		 * //String wnhome = System.getenv("WNHOME"); //String path = wnhome +
-		 * File.separator + "dict"; //URL url = new URL("file", null, path);
-		 * WordNetAPI mywn = new
-		 * WordNetAPI("/Users/nescent/Phenoscape/WordNet-3.0/dict",false);
-		 * boolean test = mywn.isAdverb("happy"); System.out.println(test);
-		 * 
-		 * } catch (IOException e) { // TODO Auto-generated catch block
-		 * e.printStackTrace(); }
-		 */
-
-		/*
-		 * $pattern = "^[._.][a-z]+"; #, _nerved $sth =
-		 * $dbh->prepare("select word from "
-		 * .$prefix."_unknownwords where word rlike '$pattern' and flag= 'unknown'"
-		 * ); $sth->execute() or print STDOUT "$sth->errstr\n";
-		 * while(($unknownword) = $sth->fetchrow_array()){ update($unknownword,
-		 * "b", "*", "wordpos", 0); print
-		 * "posbysuffix set $unknownword a boundary word\n" if $debug; }
-		 */
-
-		i = 0;
-		while (iterator.hasNext()) {
-			// for (int i=0;i<this.unknownWordList.size();i++) {
-			Map.Entry<String, String> unknownWordEntry = (Map.Entry<String, String>) iterator
-					.next();
-			String unknownWord = unknownWordEntry.getKey();
-			String unknownWordTag = unknownWordEntry.getValue();
-			String pattern = "^[._.][a-z]+"; // , _nerved
-			if (unknownWordTag.equals("unknown")) {
-				if (unknownWord.matches(pattern)) {
-					unknownWordTable.put(unknownWord, "b");
+			
+				if (unknownWord.matches(p2)) {
+					//unknownWordTable.put(unknownWord, "b");
+					this.wordPOSTable.put(new WordPOSKey(unknownWord, "b"),
+							new WordPOSValue("*", 0, 0, null, null));
 					System.out
 							.println("posbysuffix set $unknownword a boundary word\n");
 				}
 			}
-			i++;
 		}
 	}
 
@@ -925,7 +889,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (suffix.equals("ly")) {
 			if (wordInWN) {
 				// if($wnoutputword =~/Overview of adv $word/){
-				if (myWN.isAdjective(word)) {
+				if (myWN.isAdverb(word)) {
 					return true;
 				}
 			}
@@ -961,9 +925,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// if $base is in WN or unknownwords table, or if $word has sole pos adj
 		// in WN, return 1: e.g. scalelike
 		else {
-			//if (baseInWN) {
-			//	return true;
-			//}
+			if (baseInWN) {
+				return true;
+			}
 			if (myWN.isSoleAdj(word)) {
 				return true;
 			}
@@ -1155,6 +1119,21 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
+		}
+	}
+	
+	//---------------TEST Helper function----------------
+	public void printWordPOSTable() {
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = this.wordPOSTable.entrySet().iterator();
+		while (entries.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> entry = entries.next();
+			System.out.println(entry.getKey().getWord() + ", "
+					+ entry.getKey().getPOS() + ", "
+					+ entry.getValue().getRole() + ", "
+					+ entry.getValue().getCertainTye() + ", "
+					+ entry.getValue().getCertainTyl() + ", "
+					+ entry.getValue().getSavedFlag() + ", "
+					+ entry.getValue().getSavedID());
 		}
 	}
 }

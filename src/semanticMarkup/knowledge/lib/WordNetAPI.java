@@ -165,8 +165,8 @@ public class WordNetAPI implements IPOSKnowledgeBase {
 
 	public boolean isSoleAdj(String word) {
 		return (!this.isNoun(word)) 
-				& (!this.isVerb(word)) 
-				& (this.isAdjective(word))
-				& (!this.isAdverb(word));
+				&& (!this.isVerb(word)) 
+				&& (this.isAdjective(word))
+				&& (!this.isAdverb(word));
 	}
 }

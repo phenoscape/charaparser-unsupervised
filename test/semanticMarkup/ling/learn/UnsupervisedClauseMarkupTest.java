@@ -170,7 +170,5 @@ public class UnsupervisedClauseMarkupTest {
 		
 		assertEquals("containSuffix", true, tester.containSuffix("platform", "plat", "form"));
 		assertEquals("containSuffix", true, tester.containSuffix("scalelike", "scale", "like"));
-		
-		//assertEquals("testWN", true, tester.testWN("fewer"));
 	}
 }
