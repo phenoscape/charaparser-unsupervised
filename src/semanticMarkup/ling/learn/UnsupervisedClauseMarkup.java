@@ -282,7 +282,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		// this is not used any more, see perl code - Dongye
 		// store text at this point in original
-		//String original = text;
+		// String original = text;
 
 		// remove HTML entities
 		text = text.replaceAll("&[;#\\w\\d]+;", " ");
@@ -301,12 +301,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		text = text.replaceAll("", ""); //
 
 		//
-		//Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(text);
-		//if (matcher1.lookingAt()) {
-		//	text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
-		//}
-		
-		//absent ; => absent;
+		// Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(text);
+		// if (matcher1.lookingAt()) {
+		// text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
+		// }
+
+		// absent ; => absent;
 		while (true) {
 			Matcher matcher1 = Pattern.compile("(^.*?)\\s+([:;\\.].*$)")
 					.matcher(text);
@@ -343,20 +343,21 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 
-		//###NOT necessary at all, done before in "absent ; => absent;"###
+		// ###NOT necessary at all, done before in "absent ; => absent;"###
 		// diam . =>diam.
-		//Matcher matcher4 = Pattern.compile("(\\sdiam)\\s+(\\.)").matcher(text);
-		//if (matcher4.lookingAt()) {
-		//	text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)
-		//			+ matcher4.group(2));
-		//}
+		// Matcher matcher4 =
+		// Pattern.compile("(\\sdiam)\\s+(\\.)").matcher(text);
+		// if (matcher4.lookingAt()) {
+		// text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)
+		// + matcher4.group(2));
+		// }
 
 		// ca . =>ca.
-		//Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(text);
-		//if (matcher5.lookingAt()) {
-		//	text = text.replaceAll("\\sca\\s+\\.",
-		//			matcher5.group(1) + matcher5.group(2));
-		//}
+		// Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(text);
+		// if (matcher5.lookingAt()) {
+		// text = text.replaceAll("\\sca\\s+\\.",
+		// matcher5.group(1) + matcher5.group(2));
+		// }
 
 		//
 		while (true) {
@@ -801,16 +802,17 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// suffix is defined in global variable SUFFIX
 	public void posBySuffix() {
-		String p1="^[a-z_]+("+this.SUFFIX+")$";
+		String p1 = "^[a-z_]+(" + this.SUFFIX + ")$";
 		String p2 = "^[._.][a-z]+"; // , _nerved
-		Iterator<Map.Entry<String, String>> iterator = this.unknownWordTable.entrySet().iterator();
-		
+		Iterator<Map.Entry<String, String>> iterator = this.unknownWordTable
+				.entrySet().iterator();
+
 		while (iterator.hasNext()) {
 			Map.Entry<String, String> unknownWordEntry = iterator.next();
 			String unknownWord = unknownWordEntry.getKey();
 			String unknownWordTag = unknownWordEntry.getValue();
-			//String unknownWord = "anteriorly";
-			//String unknownWordTag = "unknown";
+			// String unknownWord = "anteriorly";
+			// String unknownWordTag = "unknown";
 			// the tag of this word is unknown
 			if (unknownWordTag.equals("unknown")) {
 				if (unknownWord.matches(p1)) {
@@ -828,9 +830,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 						}
 					}
 				}
-			
+
 				if (unknownWord.matches(p2)) {
-					//unknownWordTable.put(unknownWord, "b");
+					// unknownWordTable.put(unknownWord, "b");
 					this.wordPOSTable.put(new WordPOSKey(unknownWord, "b"),
 							new WordPOSValue("*", 0, 0, null, null));
 					System.out
@@ -840,99 +842,103 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 	}
 
-	// return false or true depending on if the word contains the suffix as the suffix
+	// return false or true depending on if the word contains the suffix as the
+	// suffix
 	public boolean containSuffix(String word, String base, String suffix) {
 		boolean flag = false; // return value
 		boolean wordInWN = false; // if this word is in WordNet
 		boolean baseInWN = false;
 		WordNetAPI myWN;
-		
+
 		// check base
 		// this if statement is added by Dongye
 		if (base.length() == 0) {
 			return true;
 		}
-		
+
 		try {
-			myWN = new WordNetAPI(
-					"/Users/nescent/Phenoscape/WordNet-3.0/dict", false);
+			myWN = new WordNetAPI("/Users/nescent/Phenoscape/WordNet-3.0/dict",
+					false);
 
-
-		// $base =~ s#_##g; #cup_shaped
-		// $wnoutputword = `wn $word -over`;
-		// if ($wnoutputword !~/\w/){#word not in WN
-		// $wordinwn = 0;
-		// }else{ #found $word in WN:
-		// $wnoutputword =~ s#\n# #g;
-		// $wordinwn = 1;
-		// }
-
-		base.replaceAll("_", ""); // cup_shaped
-		
-		if (myWN.contains(word)) {
-			wordInWN = true; // word not in WordNet
-		} else {
+			// $base =~ s#_##g; #cup_shaped
+			// $wnoutputword = `wn $word -over`;
+			// if ($wnoutputword !~/\w/){#word not in WN
+			// $wordinwn = 0;
+			// }else{ #found $word in WN:
 			// $wnoutputword =~ s#\n# #g;
-			
-			wordInWN = false;
-		}
+			// $wordinwn = 1;
+			// }
 
-		if (myWN.contains(base)) {
-			baseInWN = true;
-		} else {
-			// $wnoutputbase =~ s#\n# #g;
-			baseInWN = false;
-		}
+			base.replaceAll("_", ""); // cup_shaped
 
-		// if WN pos is adv, return 1: e.g. ly, or if $base is in unknownwords
-		// table
-		if (suffix.equals("ly")) {
-			if (wordInWN) {
-				// if($wnoutputword =~/Overview of adv $word/){
-				if (myWN.isAdverb(word)) {
+			if (myWN.contains(word)) {
+				wordInWN = true; // word is in WordNet
+			} else {
+				// $wnoutputword =~ s#\n# #g;
+
+				wordInWN = false;
+			}
+
+			if (myWN.contains(base)) {
+				baseInWN = true;
+			} else {
+				// $wnoutputbase =~ s#\n# #g;
+				baseInWN = false;
+			}
+
+			// if WN pos is adv, return 1: e.g. ly, or if $base is in
+			// unknownwords
+			// table
+			if (suffix.equals("ly")) {
+				if (wordInWN) {
+					// if($wnoutputword =~/Overview of adv $word/){
+					if (myWN.isAdverb(word)) {
+						return true;
+					}
+				}
+				// if the word is in unknown word set, return true
+				if (this.unknownWordTable.containsKey(base)) {
 					return true;
 				}
 			}
-			// if the word is in unknown word set, return true
-			if (this.unknownWordTable.containsKey(base)) {
-				return true;
-			}
-		}
 
-		// if WN recognize superlative, comparative adjs, return 1: e.g. er, est
-		else if (suffix.equals("er") || suffix.equals("est")) {
-			if (wordInWN) {
-				// if($wnoutputword =~/Overview of adj (\w+)/){#$word = softer,
-				// $1 = soft vs. $word=$1=neuter
-				// $word = softer, $1 = soft vs. $word=$1=neuter
-				if (myWN.isAdjective(word)) {
+			// if WN recognize superlative, comparative adjs, return 1: e.g. er,
+			// est
+			else if (suffix.equals("er") || suffix.equals("est")) {
+				if (wordInWN) {
+					// if($wnoutputword =~/Overview of adj (\w+)/){#$word =
+					// softer,
+					// $1 = soft vs. $word=$1=neuter
+					// $word = softer, $1 = soft vs. $word=$1=neuter
+					if (myWN.isAdjective(word) || myWN.isAdverb(word)) {
+						return true;
+					}
+					// return 1 if $word=~/^$1\w+/;
+				}
+			}
+
+			/*
+			 * else{#if $base is in WN or unknownwords table, or if $word has
+			 * sole pos adj in WN, return 1: e.g. scalelike if($baseinwn){return
+			 * 1;} if($wnoutputword =~/Overview of adj/ && $wnoutputword
+			 * !~/Overview of .*? Overview of/){ return 1;; } $sth =
+			 * $dbh->prepare("select word from "
+			 * .$prefix."_unknownwords where word = '$base'"); $sth->execute()
+			 * or print STDOUT "$sth->errstr\n"; return 1 if $sth->rows > 0; }
+			 */
+
+			// if $base is in WN or unknownwords table, or if $word has sole pos
+			// adj
+			// in WN, return 1: e.g. scalelike
+			else {
+				if (myWN.isSoleAdjective(word)) {
 					return true;
 				}
-				// return 1 if $word=~/^$1\w+/;
-			}
-		}
-
-		/*
-		 * else{#if $base is in WN or unknownwords table, or if $word has sole
-		 * pos adj in WN, return 1: e.g. scalelike if($baseinwn){return 1;}
-		 * if($wnoutputword =~/Overview of adj/ && $wnoutputword !~/Overview of
-		 * .*? Overview of/){ return 1;; } $sth =
-		 * $dbh->prepare("select word from "
-		 * .$prefix."_unknownwords where word = '$base'"); $sth->execute() or
-		 * print STDOUT "$sth->errstr\n"; return 1 if $sth->rows > 0; }
-		 */
-
-		// if $base is in WN or unknownwords table, or if $word has sole pos adj
-		// in WN, return 1: e.g. scalelike
-		else {
-			if (baseInWN) {
-				return true;
-			}
-			if (myWN.isSoleAdj(word)) {
-				return true;
-			}
-			if (this.unknownWordTable.containsKey(base)) {
-				return true;
+				if (baseInWN) {
+					return true;
+				}
+				if (this.unknownWordTable.containsKey(base)) {
+					return true;
 				}
 			}
 
@@ -1094,25 +1100,23 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return null;
 	}
 
-
 	public boolean testWN(String word) {
 		try {
 			WordNetAPI myWN = new WordNetAPI(
 					"/Users/nescent/Phenoscape/WordNet-3.0/dict", false);
-			
+
 			if (myWN.isNoun(word)) {
-				System.out.println(word+" is a noun");
+				System.out.println(word + " is a noun");
 			}
 			if (myWN.isVerb(word)) {
-				System.out.println(word+" is a verb");
+				System.out.println(word + " is a verb");
 			}
 			if (myWN.isAdjective(word)) {
-				System.out.println(word+" is a adj");
+				System.out.println(word + " is a adj");
 			}
 			if (myWN.isAdverb(word)) {
-				System.out.println(word+" is a adv");
-			}			
-			
+				System.out.println(word + " is a adv");
+			}
 
 			return true;
 		} catch (IOException e) {
@@ -1121,10 +1125,30 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return false;
 		}
 	}
-	
-	//---------------TEST Helper function----------------
+
+	// ---------------addHeuristicsNouns Help Function----
+	// #solve the problem: septa and septum are both s
+	// septum - Singular
+	// septa -Plural
+	// septa[s] => septa[p]
+	public String addHeuristicsNounsHelper(String oldNoun, Set<String> words) {
+		String newNoun = oldNoun;
+
+		if (oldNoun.matches("^.*a\\[s\\]$")) {
+			String noun = oldNoun.replaceAll("\\[s\\]", "");
+			System.out.println(noun);
+			if (words.contains(noun)) {
+				newNoun = noun + "[p]";
+			}
+		}
+
+		return newNoun;
+	}
+
+	// ---------------TEST Helper function----------------
 	public void printWordPOSTable() {
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = this.wordPOSTable.entrySet().iterator();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = this.wordPOSTable
+				.entrySet().iterator();
 		while (entries.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> entry = entries.next();
 			System.out.println(entry.getKey().getWord() + ", "

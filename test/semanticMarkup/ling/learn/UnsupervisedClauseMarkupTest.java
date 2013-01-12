@@ -4,6 +4,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 //import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -161,14 +162,19 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("Result", "word word .", tester.handleSentence("word word.    "));		
 	
 		// test method containSuffix
-		assertEquals("Result", true, tester.containSuffix("less", "", "less"));
-		assertEquals("Result", true, tester.containSuffix("cowardly", "coward", "ly"));	
-		assertEquals("Result", true, tester.containSuffix("over", "ov", "er"));	
-		assertEquals("Result", true, tester.containSuffix("fewer", "few", "er"));
-		//assertEquals("containSuffix 5", true, tester.containSuffix("cleverest", "clever", "est"));
-		//assertEquals("containSuffix 5", true, tester.containSuffix("warmest", "warm", "est"));
+		assertEquals("containSuffix less", true, tester.containSuffix("less", "", "less"));
+		assertEquals("containSuffix ly", true, tester.containSuffix("slightly", "slight", "ly"));	
+		assertEquals("containSuffix er", true, tester.containSuffix("fewer", "few", "er"));
+		assertEquals("containSuffix est", true, tester.containSuffix("fastest", "fast", "est"));
 		
-		assertEquals("containSuffix", true, tester.containSuffix("platform", "plat", "form"));
-		assertEquals("containSuffix", true, tester.containSuffix("scalelike", "scale", "like"));
+		assertEquals("containSuffix base is in WN", true, tester.containSuffix("platform", "plat", "form"));
+		assertEquals("containSuffix sole adj", true, tester.containSuffix("scalelike", "scale", "like"));
+		
+		// test method handleSpecialCase
+		HashSet<String> words = new HashSet<String>();		
+		words.add("septa");
+		words.add("word1");
+		words.add("septum");
+		assertEquals("addHeuristicsNouns - handleSpecialCase 1", "septa[p]", tester.addHeuristicsNounsHelper("septa[s]", words));
 	}
 }
