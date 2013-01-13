@@ -59,7 +59,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// or die DBI->errstr."\n";
 
 	private String CHECKEDWORDS = ":"; // leading three words of sentences
-	private int N = 3; // $N leading words
+	private int NUM_LEAD_WORDS = 3; // $N leading words
 	private int SENTID = 0;
 	private int DECISIONID = 0;
 	private String PROPERNOUN = "propernouns"; // EOL
@@ -462,68 +462,38 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public boolean populatesents() {
-
 		boolean debug = false;
 
 		System.out.println("Reading sentences:\n");
-
 		FileLoader fileLoader = new FileLoader(this.desDir);
 		if (!fileLoader.load())
 			return false;
-		// fileLoader.getUnknownWordList();
 
 		List<String> fileNameList = fileLoader.getFileNameList();
 		List<Integer> typeList = fileLoader.getTypeList();
 		List<String> textList = fileLoader.getTextList();
 
-		// Set<String> unknownWordSet = new TreeSet<String>();
-
 		String text;
 		for (int i = 0; i < fileLoader.getCount(); i++) {
 			text = textList.get(i);
 			if (text != null) {
-
 				// process this text
 				text = this.handleText(text);
-
 				// use Apache OpenNLP to do sentence segmentation
 				String sentences[] = {};
-				try {
-					InputStream modelIn = new FileInputStream(
-					// add to be replaced by a relative path
-							"/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-sent.bin");
-					// "../../../../../../res/en-sent.bin");
-					File myDir = new File("../");
-					File[] contents = myDir.listFiles();
-
-					SentenceModel model;
-					try {
-						model = new SentenceModel(modelIn);
-						SentenceDetectorME sentenceDetector = new SentenceDetectorME(
-								model);
-						sentences = sentenceDetector.sentDetect(text);
-					} catch (InvalidFormatException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
+				sentences = this.segmentSentence(text);
+				
+				HashMap<Integer, String> leadMap = new HashMap<Integer,String>(); 
+				
 				if (debug)
 					System.out.println("Text: " + text);
 
-				// my @sentcopy = ();
 				List<String> sentcopy = new LinkedList<String>();
-				// my @validindex = ();
 				List<Integer> validindex = new LinkedList<Integer>();
 				int index = 0;
 				// for each sentence, do some operations
 				for (int j = 0; j < sentences.length; j++) {
+					
 					if (debug)
 						System.out.println("Sentence " + j + ": "
 								+ sentences[j]);
@@ -534,25 +504,20 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					// if(!/\w+/){next;}
 					if (debug)
 						System.out.println(sentences[j]);
-					// if (!sentences[j].matches("\\w+")) {
 					if (!sentences[j].matches("^.*\\w+.*$")) {
 						continue;
 					}
-					// push(@validindex, $i);
 					validindex.add(j);
-
 					// restore ".", "?", ";", ":", "."
 					sentences[j] = this.restoreMarksInBrackets(sentences[j]);
-
 					// push(@sentcopy, $_);
 					sentcopy.add(sentences[j]);
 
 					// remove bracketed text from sentence (keep those in
-					// originalsent);
-					// this step will not be able to remove nested brackets,
-					// such as (petioles (2-)4-8 cm).
-					// nested brackets will be removed after threedsent step in
-					// POSTagger4StanfordParser.java
+					// originalsent); this step will not be able to remove 
+					// nested brackets, such as (petioles (2-)4-8 cm).
+					// nested brackets will be removed after threedsent 
+					// step in POSTagger4StanfordParser.java
 					sentences[j] = this.handleSentence(sentences[j]);
 
 					// getallwords($_);
@@ -564,15 +529,18 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 								"/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-token.bin");
 						TokenizerModel model = new TokenizerModel(modelIn);
 						Tokenizer tokenizer = new TokenizerME(model);
-						// System.out.println(sentences[j]);
 						String tokens[] = tokenizer.tokenize(sentences[j]);
 						for (int i1 = 0; i1 < tokens.length; i1++) {
-							// unknownWordSet.add(tokens[i1]);
 							this.unknownWordTable.put(tokens[i1], "unknown");
 						}
-
-						// System.out.println(tokens[0]);
-
+						String lead="";
+						int minL = tokens.length>this.NUM_LEAD_WORDS? this.NUM_LEAD_WORDS:tokens.length;
+						for (int i2=0; i2<minL;i2++) {
+							lead=lead+tokens[i2]+" ";							
+						}
+						lead=lead.replaceAll("\\s$", "");
+						//lead=lead.substring(lead.length()-1);
+						leadMap.put(j, lead);
 					} catch (FileNotFoundException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -583,12 +551,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-
 					index++;
 				}
 
 				for (int j = 0; j < validindex.size(); j++) {
-
 					String line = sentences[validindex.get(j)];
 					String oline = sentcopy.get(validindex.get(j));
 
@@ -598,7 +564,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					line.replaceAll("\'", " ");
 
 					// then handle oline
-					// $oline =~ s#(\d)\s*\[\s*DOT\s*\]\s*(\d)#$1.$2#g;
 					Matcher matcher = Pattern.compile(
 							"(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)").matcher(
 							oline);
@@ -610,39 +575,19 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 					// restore ".", "?", ";", ":", "."
 					oline = this.restoreMarksInBrackets(oline);
-
-					// $oline =~ s#'# #g;
 					oline = oline.replaceAll("\'", " ");
-
-					// if(length($oline) >=2000 ){#EOL
-					// $oline = $line;
-					// }
+					String lead = leadMap.get(j);
 
 					if (oline.length() >= 2000) { // EOL
 						oline = line;
 					}
-
-					// this.sentence.add(line);
-					// this.originalSent.add(oline);
-					// this.tag.add("");
-					// this.modifier.add("");
-
-					// Sentence this_sentence = new
-					// Sentence(line,oline,null,null,null,null);
-					this.sentenceTable.add(new Sentence(line, oline, null,
+					
+					
+					this.sentenceTable.add(new Sentence(line, oline, lead,
 							null, null, null, null));
 
 					this.SENTID++;
 				}
-
-				// String[] tokenList = (text.toLowerCase()).split("\\s");
-				// for (int x=0; x<tokenList.length; x++) {
-				// System.out.println(i);
-				// System.out.println(tokenList.length);
-				// System.out.println(tokenList[x]);
-				// unknownList.add(tokenList[x]);
-				// }
-
 			}
 
 		}
@@ -662,6 +607,35 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// }
 		System.out.println("Total sentences = " + SENTID);
 		return true;
+	}
+	
+	String[] segmentSentence(String text) {
+		String sentences[] = {};
+		
+		SentenceModel model;
+		// need to be replaced by a relative path
+		InputStream modelIn;
+		try {
+			modelIn = new FileInputStream(
+					"/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-sent.bin");				
+			// "../../../../../../res/en-sent.bin");
+			try {
+				model = new SentenceModel(modelIn);		
+				SentenceDetectorME sentenceDetector = new SentenceDetectorME(model);		
+				sentences = sentenceDetector.sentDetect(text);
+			} catch (InvalidFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return sentences;
 	}
 
 	public void addheuristicsnouns() {
