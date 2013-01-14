@@ -638,9 +638,38 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return sentences;
 	}
 
-	public void addheuristicsnouns() {
+	public void addHeuristicsNouns() {
 		;
 	}
+	
+	public ArrayList<String> getHeuristicsNouns() {
+		String N_ENDINGS = "\\w\\w(?:ist|sure)\\b";
+		String V_ENDINGS = "(?:ing)\\b";
+		String S_ENDINGS = "(?:on|is|ex|ix|um|us|a)\\b";
+		String P_ENDINGS = "(?:ia|es|ices|i|ae)\\b";
+		
+		return new ArrayList<String>();
+	}
+
+	// ---------------addHeuristicsNouns Help Function----
+	// #solve the problem: septa and septum are both s
+	// septum - Singular
+	// septa -Plural
+	// septa[s] => septa[p]
+	public String addHeuristicsNounsHelper(String oldNoun, Set<String> words) {
+		String newNoun = oldNoun;
+
+		if (oldNoun.matches("^.*a\\[s\\]$")) {
+			String noun = oldNoun.replaceAll("\\[s\\]", "");
+			System.out.println(noun);
+			if (words.contains(noun)) {
+				newNoun = noun + "[p]";
+			}
+		}
+
+		return newNoun;
+	}
+
 
 	public void addStopWords() {
 		// my @stops = split(/\|/,$stop);
@@ -1099,25 +1128,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return false;
 		}
 	}
-
-	// ---------------addHeuristicsNouns Help Function----
-	// #solve the problem: septa and septum are both s
-	// septum - Singular
-	// septa -Plural
-	// septa[s] => septa[p]
-	public String addHeuristicsNounsHelper(String oldNoun, Set<String> words) {
-		String newNoun = oldNoun;
-
-		if (oldNoun.matches("^.*a\\[s\\]$")) {
-			String noun = oldNoun.replaceAll("\\[s\\]", "");
-			System.out.println(noun);
-			if (words.contains(noun)) {
-				newNoun = noun + "[p]";
-			}
-		}
-
-		return newNoun;
-	}
+	
 
 	// ---------------TEST Helper function----------------
 	public void printWordPOSTable() {

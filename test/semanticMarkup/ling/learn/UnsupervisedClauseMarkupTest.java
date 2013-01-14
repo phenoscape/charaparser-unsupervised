@@ -170,6 +170,8 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("containSuffix base is in WN", true, tester.containSuffix("platform", "plat", "form"));
 		assertEquals("containSuffix sole adj", true, tester.containSuffix("scalelike", "scale", "like"));
 		
+		// method addHeuristicsNouns
+		// test method ???
 		// test method handleSpecialCase
 		HashSet<String> words = new HashSet<String>();		
 		words.add("septa");
