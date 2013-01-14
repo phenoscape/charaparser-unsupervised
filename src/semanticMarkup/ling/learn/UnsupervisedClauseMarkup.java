@@ -9,6 +9,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -642,13 +643,34 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		;
 	}
 	
-	public ArrayList<String> getHeuristicsNouns() {
+	public Set<String> getHeuristicsNouns(Set<String> words) {
 		String N_ENDINGS = "\\w\\w(?:ist|sure)\\b";
 		String V_ENDINGS = "(?:ing)\\b";
 		String S_ENDINGS = "(?:on|is|ex|ix|um|us|a)\\b";
 		String P_ENDINGS = "(?:ia|es|ices|i|ae)\\b";
 		
-		return new ArrayList<String>();
+		//HashSet<String> words = new HashSet<String>();
+		HashSet<String> nouns = new HashSet<String>();
+		
+		// get all words
+
+		// loop over words
+		Iterator<String> it = words.iterator();
+		while(it.hasNext()) {
+			String word = it.next();
+			// if word has N endings
+				// put word into nouns
+			// if word has S endings: w+S ending
+				// if (root + N endings exist) && (root + V ending does not exist) 
+					// put w[s] into nouns
+					// put w[p] into nouns
+			// if word has P endings: w+N ending
+				// if (root + S endings exist) && (root + V ending does not exist) 
+					// put w[p] into nouns
+					// put w[s] into nouns
+		}
+		
+		return nouns;
 	}
 
 	// ---------------addHeuristicsNouns Help Function----

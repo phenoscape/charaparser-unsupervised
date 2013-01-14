@@ -171,7 +171,7 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("containSuffix sole adj", true, tester.containSuffix("scalelike", "scale", "like"));
 		
 		// method addHeuristicsNouns
-		// test method ???
+		// test method getHeuristicsNouns
 		// test method handleSpecialCase
 		HashSet<String> words = new HashSet<String>();		
 		words.add("septa");
