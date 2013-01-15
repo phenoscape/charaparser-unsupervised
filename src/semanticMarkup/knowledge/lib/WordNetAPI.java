@@ -162,4 +162,11 @@ public class WordNetAPI implements IPOSKnowledgeBase {
 
 	@Override
 	public void addAdverb(String word) {}
+
+	public boolean isSoleAdjective(String word) {
+		return (!this.isNoun(word)) 
+				&& (!this.isVerb(word)) 
+				&& (this.isAdjective(word))
+				&& (!this.isAdverb(word));
+	}
 }
