@@ -147,22 +147,33 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// Table wordpos
 	Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
+	
+	// WordNet
+	WordNetAPI myWN;
 
 	// DNGYE_TODO
 
-	public UnsupervisedClauseMarkup(String dir, String db, String lm, String p) {
+	public UnsupervisedClauseMarkup(String dir, String db, String lm, String p, String wnDir) {
 		System.out.println("Initialized:\n");
 		this.desDir = dir.concat("/");
 		this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		this.dataBase = db;
 		this.learningMode = lm;
 		this.prefix = p;
-		System.out.println(String.format("Read directory: %s", this.desDir));
-		System.out.println(String
-				.format("Character directory: %s", this.chrDir));
-		System.out.println(String.format("%s", this.dataBase));
+		//System.out.println(String.format("Read directory: %s", this.desDir));
+		//System.out.println(String
+		//		.format("Character directory: %s", this.chrDir));
+		//System.out.println(String.format("%s", this.dataBase));
 		System.out.println(String.format("%s", this.learningMode));
-		System.out.println(String.format("%s", this.prefix));
+		//System.out.println(String.format("%s", this.prefix));
+		
+		try {
+			myWN = new WordNetAPI(wnDir, false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	// replace '.', '?', ';', ':', '!' within brackets by some special markers,
@@ -526,8 +537,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					// first tokenize this sentence
 					InputStream modelIn;
 					try {
-						modelIn = new FileInputStream(
-								"/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-token.bin");
+						modelIn = new FileInputStream("res/en-token.bin");
+						//InputStream modelIn2 = new FileInputStream("res/en-token.bin");
+						//File file234 = new File("res/qwertyuiop.txt");
+						//System.out.println(file234.getAbsoluteFile());
 						TokenizerModel model = new TokenizerModel(modelIn);
 						Tokenizer tokenizer = new TokenizerME(model);
 						String tokens[] = tokenizer.tokenize(sentences[j]);
@@ -617,9 +630,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// need to be replaced by a relative path
 		InputStream modelIn;
 		try {
-			modelIn = new FileInputStream(
-					"/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-sent.bin");				
+			//File file234 = new File("qwertyuiop.txt");
+			//System.out.println(file234.getAbsoluteFile());
+			modelIn = new FileInputStream("res/en-sent.bin");
+			//		"/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-sent.bin");				
 			// "../../../../../../res/en-sent.bin");
+			
 			try {
 				model = new SentenceModel(modelIn);		
 				SentenceDetectorME sentenceDetector = new SentenceDetectorME(model);		
@@ -881,9 +897,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return true;
 		}
 
-		try {
-			myWN = new WordNetAPI("/Users/nescent/Phenoscape/WordNet-3.0/dict",
-					false);
+		//try {
+		//	myWN = new WordNetAPI("/Users/nescent/Phenoscape/WordNet-3.0/dict",
+		//			false);
 
 			// $base =~ s#_##g; #cup_shaped
 			// $wnoutputword = `wn $word -over`;
@@ -896,7 +912,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 			base.replaceAll("_", ""); // cup_shaped
 
-			if (myWN.contains(word)) {
+			if (this.myWN.contains(word)) {
 				wordInWN = true; // word is in WordNet
 			} else {
 				// $wnoutputword =~ s#\n# #g;
@@ -904,7 +920,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				wordInWN = false;
 			}
 
-			if (myWN.contains(base)) {
+			if (this.myWN.contains(base)) {
 				baseInWN = true;
 			} else {
 				// $wnoutputbase =~ s#\n# #g;
@@ -917,7 +933,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (suffix.equals("ly")) {
 				if (wordInWN) {
 					// if($wnoutputword =~/Overview of adv $word/){
-					if (myWN.isAdverb(word)) {
+					if (this.myWN.isAdverb(word)) {
 						return true;
 					}
 				}
@@ -935,7 +951,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					// softer,
 					// $1 = soft vs. $word=$1=neuter
 					// $word = softer, $1 = soft vs. $word=$1=neuter
-					if (myWN.isAdjective(word) || myWN.isAdverb(word)) {
+					if (this.myWN.isAdjective(word) || this.myWN.isAdverb(word)) {
 						return true;
 					}
 					// return 1 if $word=~/^$1\w+/;
@@ -956,7 +972,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			// adj
 			// in WN, return 1: e.g. scalelike
 			else {
-				if (myWN.isSoleAdjective(word)) {
+				if (this.myWN.isSoleAdjective(word)) {
 					return true;
 				}
 				if (baseInWN) {
@@ -969,11 +985,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 			return flag;
 
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return false;
-		}
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//			return false;
+//		}
 	}
 
 	public void markupbypattern() {

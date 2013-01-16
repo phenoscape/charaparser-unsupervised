@@ -18,10 +18,10 @@ public class UnsupervisedClauseMarkupTest {
 	
 	@Test
 	public void testUnsupervisedClauseMarkup() {
-		String str = "/Users/nescent/Phenoscape/TEST2/target/descriptions";
-		List<Treatment> treatments_l = new ArrayList<Treatment>();
+		//String str = "/Users/nescent/Phenoscape/TEST2/target/descriptions";
+		//List<Treatment> treatments_l = new ArrayList<Treatment>();
 				
-		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup(str,"biocreative2012","plain","test");
+		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("","biocreative2012","plain","test","/Users/nescent/Phenoscape/WordNet-3.0/dict");
 		
 		/*
 		assertEquals("Result", null, tester.getAdjNouns());
