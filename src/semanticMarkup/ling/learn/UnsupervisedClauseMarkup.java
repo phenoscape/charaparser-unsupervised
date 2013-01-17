@@ -75,17 +75,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private Hashtable<String, String> PLURALS = new Hashtable();
 
 	private String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
+	
 	// the following two patterns are used in mySQL rlike
 	private String PREFIX = "ab|ad|bi|deca|de|dis|di|dodeca|endo|end|e|hemi|hetero|hexa|homo|infra|inter|ir|macro|mega|meso|micro|mid|mono|multi|ob|octo|over|penta|poly|postero|post|ptero|pseudo|quadri|quinque|semi|sub|sur|syn|tetra|tri|uni|un|xero|[a-z0-9]+_";
-	private String SUFFIX = "er|est|fid|form|ish|less|like|ly|merous|most|shaped"; // 3_nerved,
-																					// )_nerved,
-																					// dealt
-																					// with
-																					// in
-																					// subroutine
-	private String FORBIDDEN = "to|and|or|nor"; // words in this list can not be
-												// treated as boundaries
-												// "to|a|b" etc.
+	
+	// 3_nerved, )_nerved, dealt with in subroutine
+	private String SUFFIX = "er|est|fid|form|ish|less|like|ly|merous|most|shaped"; 
+	
+	// words in this list can not be treated as boundaries "to|a|b" etc.
+	private String FORBIDDEN = "to|and|or|nor"; 
+	
 	private String PRONOUN = "all|each|every|some|few|individual|both|other";
 	private String CHARACTER = "lengths|length|lengthed|width|widths|widthed|heights|height|character|characters|distribution|distributions|outline|outlines|profile|profiles|feature|features|form|forms|mechanism|mechanisms|nature|natures|shape|shapes|shaped|size|sizes|sized";// remove
 																																																																					// growth,
@@ -150,6 +149,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	// WordNet
 	WordNetAPI myWN;
+	// OpenNLP sentence detector
+	SentenceDetectorME mySenDetector;
+	// OpenNLP tokenizer
+	Tokenizer myTokenizer;
+	
 
 	// DNGYE_TODO
 
@@ -167,8 +171,43 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		System.out.println(String.format("%s", this.learningMode));
 		//System.out.println(String.format("%s", this.prefix));
 		
+		// Get WordNetAPI instance
 		try {
 			myWN = new WordNetAPI(wnDir, false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Get OpenNLP sentence detector
+		InputStream sentModelIn;
+		try {
+			sentModelIn = new FileInputStream("res/en-sent.bin");
+			SentenceModel model = new SentenceModel(sentModelIn);
+			this.mySenDetector = new SentenceDetectorME(model);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Get OpenNLP tokenizer
+		InputStream tokenModelIn;
+		try {
+			tokenModelIn = new FileInputStream("res/en-token.bin");
+			TokenizerModel model = new TokenizerModel(tokenModelIn);
+			this.myTokenizer = new TokenizerME(model);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -534,9 +573,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 					// getallwords($_);
 
+					/**
 					// first tokenize this sentence
 					InputStream modelIn;
 					try {
+						kjsdhfjlds
 						modelIn = new FileInputStream("res/en-token.bin");
 						//InputStream modelIn2 = new FileInputStream("res/en-token.bin");
 						//File file234 = new File("res/qwertyuiop.txt");
@@ -565,7 +606,27 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					**/
+					
+					
+					// first tokenize this sentence
+					String tokens[] = this.myTokenizer.tokenize(sentences[j]);
+					for (int i1 = 0; i1 < tokens.length; i1++) {
+						this.unknownWordTable.put(tokens[i1], "unknown");
+					}
+					
+					// Get the leading NUM_LEAD_WORDS words
+					String lead="";
+					int minL = tokens.length>this.NUM_LEAD_WORDS? this.NUM_LEAD_WORDS:tokens.length;
+					for (int i2=0; i2<minL;i2++) {
+						lead=lead+tokens[i2]+" ";							
+					}
+					lead=lead.replaceAll("\\s$", "");
+					leadMap.put(j, lead);				
+					
+					// Index increase by 1
 					index++;
+					
 				}
 
 				for (int j = 0; j < validindex.size(); j++) {
@@ -626,6 +687,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	String[] segmentSentence(String text) {
 		String sentences[] = {};
 		
+		/**
 		SentenceModel model;
 		// need to be replaced by a relative path
 		InputStream modelIn;
@@ -651,7 +713,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		**/
 
+		sentences = this.mySenDetector.sentDetect(text);
 		return sentences;
 	}
 
