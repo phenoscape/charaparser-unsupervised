@@ -31,6 +31,8 @@ import opennlp.tools.util.InvalidFormatException;
 import semanticMarkup.core.Treatment;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
+import edu.mit.jwi.morph.SimpleStemmer;
+
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// directory of /descriptions folder
@@ -75,16 +77,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private Hashtable<String, String> PLURALS = new Hashtable();
 
 	private String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
-	
+
 	// the following two patterns are used in mySQL rlike
 	private String PREFIX = "ab|ad|bi|deca|de|dis|di|dodeca|endo|end|e|hemi|hetero|hexa|homo|infra|inter|ir|macro|mega|meso|micro|mid|mono|multi|ob|octo|over|penta|poly|postero|post|ptero|pseudo|quadri|quinque|semi|sub|sur|syn|tetra|tri|uni|un|xero|[a-z0-9]+_";
-	
+
 	// 3_nerved, )_nerved, dealt with in subroutine
-	private String SUFFIX = "er|est|fid|form|ish|less|like|ly|merous|most|shaped"; 
-	
+	private String SUFFIX = "er|est|fid|form|ish|less|like|ly|merous|most|shaped";
+
 	// words in this list can not be treated as boundaries "to|a|b" etc.
-	private String FORBIDDEN = "to|and|or|nor"; 
-	
+	private String FORBIDDEN = "to|and|or|nor";
+
 	private String PRONOUN = "all|each|every|some|few|individual|both|other";
 	private String CHARACTER = "lengths|length|lengthed|width|widths|widthed|heights|height|character|characters|distribution|distributions|outline|outlines|profile|profiles|feature|features|form|forms|mechanism|mechanisms|nature|natures|shape|shapes|shaped|size|sizes|sized";// remove
 																																																																					// growth,
@@ -127,7 +129,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	private String STOP = "state|page|fig|"
 			+ "a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
-
+ 
 	// List to store all unknown words
 	// List<String> unknownWordList = new ArrayList<String>();
 	// Set<String> unknownWordSet = new TreeSet<String>();
@@ -138,39 +140,56 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// List<String> tag = new ArrayList<String>();
 	// List<String> modifier = new ArrayList<String>();
 
+	// Data Holders
 	// Table sentence
 	List<Sentence> sentenceTable = new ArrayList<Sentence>();
-
 	// Table unknownwords
 	Map<String, String> unknownWordTable = new HashMap<String, String>();
-
 	// Table wordpos
 	Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
-	
+
+	// Third Tools
 	// WordNet
 	WordNetAPI myWN;
 	// OpenNLP sentence detector
 	SentenceDetectorME mySenDetector;
 	// OpenNLP tokenizer
 	Tokenizer myTokenizer;
+	// JWI Stemmer
+	SimpleStemmer myStemmer;
+
+	// Msg Output Controllers
+	// Control if output feedback on which step is in
+	boolean msg = false;
+	// Control if output debug msg
+	boolean debug = false;
+	// addHeuristicsNouns
+	boolean hn = true;
 	
+	
+	String NENDINGS = "\\w\\w(?:ist|sure)\\b";
+	String VENDINGS = "(ing)\\b";
+	
+	String SENDINGS = "(on|is|ex|ix|um|us|a)\\b";
+	String PENDINGS = "(ia|es|ices|i|ae)\\b";
 
 	// DNGYE_TODO
 
-	public UnsupervisedClauseMarkup(String dir, String db, String lm, String p, String wnDir) {
+	public UnsupervisedClauseMarkup(String dir, String db, String lm, String p,
+			String wnDir) {
 		System.out.println("Initialized:\n");
 		this.desDir = dir.concat("/");
 		this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		this.dataBase = db;
 		this.learningMode = lm;
 		this.prefix = p;
-		//System.out.println(String.format("Read directory: %s", this.desDir));
-		//System.out.println(String
-		//		.format("Character directory: %s", this.chrDir));
-		//System.out.println(String.format("%s", this.dataBase));
+		// System.out.println(String.format("Read directory: %s", this.desDir));
+		// System.out.println(String
+		// .format("Character directory: %s", this.chrDir));
+		// System.out.println(String.format("%s", this.dataBase));
 		System.out.println(String.format("%s", this.learningMode));
-		//System.out.println(String.format("%s", this.prefix));
-		
+		// System.out.println(String.format("%s", this.prefix));
+
 		// Get WordNetAPI instance
 		try {
 			myWN = new WordNetAPI(wnDir, false);
@@ -178,7 +197,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		// Get OpenNLP sentence detector
 		InputStream sentModelIn;
 		try {
@@ -195,7 +214,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		// Get OpenNLP tokenizer
 		InputStream tokenModelIn;
 		try {
@@ -212,7 +231,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
+		// Get JWI simple stemmer
+		this.myStemmer = new SimpleStemmer();
+
 	}
 
 	// replace '.', '?', ';', ':', '!' within brackets by some special markers,
@@ -512,9 +534,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	}
 
-	public boolean populatesents() {
-		boolean debug = false;
-
+	public boolean populateSents() {
 		System.out.println("Reading sentences:\n");
 		FileLoader fileLoader = new FileLoader(this.desDir);
 		if (!fileLoader.load())
@@ -533,9 +553,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				// use Apache OpenNLP to do sentence segmentation
 				String sentences[] = {};
 				sentences = this.segmentSentence(text);
-				
-				HashMap<Integer, String> leadMap = new HashMap<Integer,String>(); 
-				
+
+				HashMap<Integer, String> leadMap = new HashMap<Integer, String>();
+
 				if (debug)
 					System.out.println("Text: " + text);
 
@@ -544,7 +564,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				int index = 0;
 				// for each sentence, do some operations
 				for (int j = 0; j < sentences.length; j++) {
-					
+
 					if (debug)
 						System.out.println("Sentence " + j + ": "
 								+ sentences[j]);
@@ -565,68 +585,58 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					sentcopy.add(sentences[j]);
 
 					// remove bracketed text from sentence (keep those in
-					// originalsent); this step will not be able to remove 
+					// originalsent); this step will not be able to remove
 					// nested brackets, such as (petioles (2-)4-8 cm).
-					// nested brackets will be removed after threedsent 
+					// nested brackets will be removed after threedsent
 					// step in POSTagger4StanfordParser.java
 					sentences[j] = this.handleSentence(sentences[j]);
 
 					// getallwords($_);
 
 					/**
-					// first tokenize this sentence
-					InputStream modelIn;
-					try {
-						kjsdhfjlds
-						modelIn = new FileInputStream("res/en-token.bin");
-						//InputStream modelIn2 = new FileInputStream("res/en-token.bin");
-						//File file234 = new File("res/qwertyuiop.txt");
-						//System.out.println(file234.getAbsoluteFile());
-						TokenizerModel model = new TokenizerModel(modelIn);
-						Tokenizer tokenizer = new TokenizerME(model);
-						String tokens[] = tokenizer.tokenize(sentences[j]);
-						for (int i1 = 0; i1 < tokens.length; i1++) {
-							this.unknownWordTable.put(tokens[i1], "unknown");
-						}
-						String lead="";
-						int minL = tokens.length>this.NUM_LEAD_WORDS? this.NUM_LEAD_WORDS:tokens.length;
-						for (int i2=0; i2<minL;i2++) {
-							lead=lead+tokens[i2]+" ";							
-						}
-						lead=lead.replaceAll("\\s$", "");
-						//lead=lead.substring(lead.length()-1);
-						leadMap.put(j, lead);
-					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InvalidFormatException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					**/
-					
-					
+					 * // first tokenize this sentence InputStream modelIn; try
+					 * { kjsdhfjlds modelIn = new
+					 * FileInputStream("res/en-token.bin"); //InputStream
+					 * modelIn2 = new FileInputStream("res/en-token.bin");
+					 * //File file234 = new File("res/qwertyuiop.txt");
+					 * //System.out.println(file234.getAbsoluteFile());
+					 * TokenizerModel model = new TokenizerModel(modelIn);
+					 * Tokenizer tokenizer = new TokenizerME(model); String
+					 * tokens[] = tokenizer.tokenize(sentences[j]); for (int i1
+					 * = 0; i1 < tokens.length; i1++) {
+					 * this.unknownWordTable.put(tokens[i1], "unknown"); }
+					 * String lead=""; int minL =
+					 * tokens.length>this.NUM_LEAD_WORDS?
+					 * this.NUM_LEAD_WORDS:tokens.length; for (int i2=0;
+					 * i2<minL;i2++) { lead=lead+tokens[i2]+" "; }
+					 * lead=lead.replaceAll("\\s$", "");
+					 * //lead=lead.substring(lead.length()-1); leadMap.put(j,
+					 * lead); } catch (FileNotFoundException e) { // TODO
+					 * Auto-generated catch block e.printStackTrace(); } catch
+					 * (InvalidFormatException e) { // TODO Auto-generated catch
+					 * block e.printStackTrace(); } catch (IOException e) { //
+					 * TODO Auto-generated catch block e.printStackTrace(); }
+					 **/
+
 					// first tokenize this sentence
 					String tokens[] = this.myTokenizer.tokenize(sentences[j]);
 					for (int i1 = 0; i1 < tokens.length; i1++) {
 						this.unknownWordTable.put(tokens[i1], "unknown");
 					}
-					
+
 					// Get the leading NUM_LEAD_WORDS words
-					String lead="";
-					int minL = tokens.length>this.NUM_LEAD_WORDS? this.NUM_LEAD_WORDS:tokens.length;
-					for (int i2=0; i2<minL;i2++) {
-						lead=lead+tokens[i2]+" ";							
+					String lead = "";
+					int minL = tokens.length > this.NUM_LEAD_WORDS ? this.NUM_LEAD_WORDS
+							: tokens.length;
+					for (int i2 = 0; i2 < minL; i2++) {
+						lead = lead + tokens[i2] + " ";
 					}
-					lead=lead.replaceAll("\\s$", "");
-					leadMap.put(j, lead);				
-					
+					lead = lead.replaceAll("\\s$", "");
+					leadMap.put(j, lead);
+
 					// Index increase by 1
 					index++;
-					
+
 				}
 
 				for (int j = 0; j < validindex.size(); j++) {
@@ -656,8 +666,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					if (oline.length() >= 2000) { // EOL
 						oline = line;
 					}
-					
-					
+
 					this.sentenceTable.add(new Sentence(line, oline, lead,
 							null, null, null, null));
 
@@ -683,73 +692,167 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		System.out.println("Total sentences = " + SENTID);
 		return true;
 	}
-	
+
 	String[] segmentSentence(String text) {
 		String sentences[] = {};
-		
+
 		/**
-		SentenceModel model;
-		// need to be replaced by a relative path
-		InputStream modelIn;
-		try {
-			//File file234 = new File("qwertyuiop.txt");
-			//System.out.println(file234.getAbsoluteFile());
-			modelIn = new FileInputStream("res/en-sent.bin");
-			//		"/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-sent.bin");				
-			// "../../../../../../res/en-sent.bin");
-			
-			try {
-				model = new SentenceModel(modelIn);		
-				SentenceDetectorME sentenceDetector = new SentenceDetectorME(model);		
-				sentences = sentenceDetector.sentDetect(text);
-			} catch (InvalidFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		**/
+		 * SentenceModel model; // need to be replaced by a relative path
+		 * InputStream modelIn; try { //File file234 = new
+		 * File("qwertyuiop.txt");
+		 * //System.out.println(file234.getAbsoluteFile()); modelIn = new
+		 * FileInputStream("res/en-sent.bin"); //
+		 * "/Users/nescent/Phenoscape/charaparser-unsupervised/res/en-sent.bin"
+		 * ); // "../../../../../../res/en-sent.bin");
+		 * 
+		 * try { model = new SentenceModel(modelIn); SentenceDetectorME
+		 * sentenceDetector = new SentenceDetectorME(model); sentences =
+		 * sentenceDetector.sentDetect(text); } catch (InvalidFormatException e)
+		 * { // TODO Auto-generated catch block e.printStackTrace(); } catch
+		 * (IOException e) { // TODO Auto-generated catch block
+		 * e.printStackTrace(); } } catch (FileNotFoundException e) { // TODO
+		 * Auto-generated catch block e.printStackTrace(); }
+		 **/
 
 		sentences = this.mySenDetector.sentDetect(text);
 		return sentences;
 	}
 
 	public void addHeuristicsNouns() {
-		;
+		// Get all sentences
+		if (this.hn)
+			System.out.println("Enter addHeuristicsNouns:\n");
+		
+		LinkedList<String> sents = new LinkedList<String> ();
+		for (int i=0;i<this.sentenceTable.size();i++) {
+			//String sent = this.sentenceTable.get(i).getSentence();
+			String oSent = this.sentenceTable.get(i).getOriginalSentence();
+			if (this.hn) {
+				//if (!sent.equals(oSent)) {
+				//System.out.println(sent+"\n");
+				System.out.println(oSent+"\n");
+				//}
+			}
+			sents.add(oSent);
+			//if (this.d)
+		}
+		// Now we have original sentences in sents
+		
 	}
+
+	public String getPresentAbsentNouns(String text) {
+		
+		String pachecked = "and|or|to";
+		
+//		if($text =~ /(\w+?)\s+(present|absent)/){
+//			my $n = $1;
+//			if($n !~ /\b($pachecked)\b/ && $n!~/\b($STOP)\b/ && $n !~/\b(always|often|seldom|sometimes|[a-z]+ly)\b/){
+//				print "present/absent [$n]\n";
+//				
+//				if(($n =~/$PENDINGS/ or $n =~/[^s]s$/ or $n =~ /teeth/) and $n !~/$SENDINGS/){
+//					push(@NOUNS, $n."[p]");
+//				}else{
+//					push(@NOUNS, $n."[s]");
+//				}
+//				$pachecked .= "|$n";
+//			}
+//		}
+		
+		if (text.matches("(\\w+?)\\s+(present|absent)")) {
+			System.out.println(text);
+		}
+
+		// Matcher matcher = Pattern.compile("(^.*?)\\s+([:;\\.].*$)")
+		Matcher matcher = Pattern.compile("^.*?(\\w+?)\\s+(present|absent).*$")
+				.matcher(text);
+		if (matcher.lookingAt()) {
+
+			String word = matcher.group(1);
+			//String word1 = matcher.group();
+			//String word2= matcher.group(2);
+			
+			/**
+			 * if($n !~ /\b($pachecked)\b/ && $n!~/\b($STOP)\b/ && $n
+			 * !~/\b(always|often|seldom|sometimes|[a-z]+ly)\b/){
+			 **/
+			if ((!word.matches("\\b(" + pachecked + ")\\b"))
+					&& (!word.matches("\\b(" + this.STOP + ")\\b"))
+					&& (!word.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
+				
+				
+				
+				
+				//print "present/absent [$n]\n";
+				System.out.println("present/absent "+word+"\n");
+				
+				
+				
+				
+				
+				/**
+				 * if(($n =~/$PENDINGS/ or $n =~/[^s]s$/ or $n =~ /teeth/) and
+				 * $n !~/$SENDINGS/){
+				 **/
+				if (((word.matches("^.*" + this.PENDINGS))
+						|| (word.matches("^.*[^s]s$")) 
+						|| (word.matches("teeth")))
+					&& (!word.matches(this.SENDINGS))) {
+					return word+"[p]";
+				}
+				else {
+					return word+"[s]";
+				}
+
+				
+				
+
+
+			}
+			
+			
+				
+				
+				
+				
+		
+
+			
+		}
+
+		//only one pair of uroneurals present
+		
+		
+		return "";
+	}
+	
 	
 	public Set<String> getHeuristicsNouns(Set<String> words) {
 		String N_ENDINGS = "\\w\\w(?:ist|sure)\\b";
 		String V_ENDINGS = "(?:ing)\\b";
 		String S_ENDINGS = "(?:on|is|ex|ix|um|us|a)\\b";
 		String P_ENDINGS = "(?:ia|es|ices|i|ae)\\b";
-		
-		//HashSet<String> words = new HashSet<String>();
+
+		// HashSet<String> words = new HashSet<String>();
 		HashSet<String> nouns = new HashSet<String>();
-		
+
 		// get all words
 
 		// loop over words
 		Iterator<String> it = words.iterator();
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			String word = it.next();
 			// if word has N endings
-				// put word into nouns
+			// put word into nouns
 			// if word has S endings: w+S ending
-				// if (root + N endings exist) && (root + V ending does not exist) 
-					// put w[s] into nouns
-					// put w[p] into nouns
+			// if (root + N endings exist) && (root + V ending does not exist)
+			// put w[s] into nouns
+			// put w[p] into nouns
 			// if word has P endings: w+N ending
-				// if (root + S endings exist) && (root + V ending does not exist) 
-					// put w[p] into nouns
-					// put w[s] into nouns
+			// if (root + S endings exist) && (root + V ending does not exist)
+			// put w[p] into nouns
+			// put w[s] into nouns
 		}
-		
+
 		return nouns;
 	}
 
@@ -771,7 +874,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		return newNoun;
 	}
-
 
 	public void addStopWords() {
 		// my @stops = split(/\|/,$stop);
@@ -961,99 +1063,99 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return true;
 		}
 
-		//try {
-		//	myWN = new WordNetAPI("/Users/nescent/Phenoscape/WordNet-3.0/dict",
-		//			false);
+		// try {
+		// myWN = new WordNetAPI("/Users/nescent/Phenoscape/WordNet-3.0/dict",
+		// false);
 
-			// $base =~ s#_##g; #cup_shaped
-			// $wnoutputword = `wn $word -over`;
-			// if ($wnoutputword !~/\w/){#word not in WN
-			// $wordinwn = 0;
-			// }else{ #found $word in WN:
+		// $base =~ s#_##g; #cup_shaped
+		// $wnoutputword = `wn $word -over`;
+		// if ($wnoutputword !~/\w/){#word not in WN
+		// $wordinwn = 0;
+		// }else{ #found $word in WN:
+		// $wnoutputword =~ s#\n# #g;
+		// $wordinwn = 1;
+		// }
+
+		base.replaceAll("_", ""); // cup_shaped
+
+		if (this.myWN.contains(word)) {
+			wordInWN = true; // word is in WordNet
+		} else {
 			// $wnoutputword =~ s#\n# #g;
-			// $wordinwn = 1;
-			// }
 
-			base.replaceAll("_", ""); // cup_shaped
+			wordInWN = false;
+		}
 
-			if (this.myWN.contains(word)) {
-				wordInWN = true; // word is in WordNet
-			} else {
-				// $wnoutputword =~ s#\n# #g;
+		if (this.myWN.contains(base)) {
+			baseInWN = true;
+		} else {
+			// $wnoutputbase =~ s#\n# #g;
+			baseInWN = false;
+		}
 
-				wordInWN = false;
-			}
-
-			if (this.myWN.contains(base)) {
-				baseInWN = true;
-			} else {
-				// $wnoutputbase =~ s#\n# #g;
-				baseInWN = false;
-			}
-
-			// if WN pos is adv, return 1: e.g. ly, or if $base is in
-			// unknownwords
-			// table
-			if (suffix.equals("ly")) {
-				if (wordInWN) {
-					// if($wnoutputword =~/Overview of adv $word/){
-					if (this.myWN.isAdverb(word)) {
-						return true;
-					}
-				}
-				// if the word is in unknown word set, return true
-				if (this.unknownWordTable.containsKey(base)) {
+		// if WN pos is adv, return 1: e.g. ly, or if $base is in
+		// unknownwords
+		// table
+		if (suffix.equals("ly")) {
+			if (wordInWN) {
+				// if($wnoutputword =~/Overview of adv $word/){
+				if (this.myWN.isAdverb(word)) {
 					return true;
 				}
 			}
-
-			// if WN recognize superlative, comparative adjs, return 1: e.g. er,
-			// est
-			else if (suffix.equals("er") || suffix.equals("est")) {
-				if (wordInWN) {
-					// if($wnoutputword =~/Overview of adj (\w+)/){#$word =
-					// softer,
-					// $1 = soft vs. $word=$1=neuter
-					// $word = softer, $1 = soft vs. $word=$1=neuter
-					if (this.myWN.isAdjective(word) || this.myWN.isAdverb(word)) {
-						return true;
-					}
-					// return 1 if $word=~/^$1\w+/;
-				}
+			// if the word is in unknown word set, return true
+			if (this.unknownWordTable.containsKey(base)) {
+				return true;
 			}
+		}
 
-			/*
-			 * else{#if $base is in WN or unknownwords table, or if $word has
-			 * sole pos adj in WN, return 1: e.g. scalelike if($baseinwn){return
-			 * 1;} if($wnoutputword =~/Overview of adj/ && $wnoutputword
-			 * !~/Overview of .*? Overview of/){ return 1;; } $sth =
-			 * $dbh->prepare("select word from "
-			 * .$prefix."_unknownwords where word = '$base'"); $sth->execute()
-			 * or print STDOUT "$sth->errstr\n"; return 1 if $sth->rows > 0; }
-			 */
-
-			// if $base is in WN or unknownwords table, or if $word has sole pos
-			// adj
-			// in WN, return 1: e.g. scalelike
-			else {
-				if (this.myWN.isSoleAdjective(word)) {
+		// if WN recognize superlative, comparative adjs, return 1: e.g. er,
+		// est
+		else if (suffix.equals("er") || suffix.equals("est")) {
+			if (wordInWN) {
+				// if($wnoutputword =~/Overview of adj (\w+)/){#$word =
+				// softer,
+				// $1 = soft vs. $word=$1=neuter
+				// $word = softer, $1 = soft vs. $word=$1=neuter
+				if (this.myWN.isAdjective(word) || this.myWN.isAdverb(word)) {
 					return true;
 				}
-				if (baseInWN) {
-					return true;
-				}
-				if (this.unknownWordTable.containsKey(base)) {
-					return true;
-				}
+				// return 1 if $word=~/^$1\w+/;
 			}
+		}
 
-			return flag;
+		/*
+		 * else{#if $base is in WN or unknownwords table, or if $word has sole
+		 * pos adj in WN, return 1: e.g. scalelike if($baseinwn){return 1;}
+		 * if($wnoutputword =~/Overview of adj/ && $wnoutputword !~/Overview of
+		 * .*? Overview of/){ return 1;; } $sth =
+		 * $dbh->prepare("select word from "
+		 * .$prefix."_unknownwords where word = '$base'"); $sth->execute() or
+		 * print STDOUT "$sth->errstr\n"; return 1 if $sth->rows > 0; }
+		 */
 
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//			return false;
-//		}
+		// if $base is in WN or unknownwords table, or if $word has sole pos
+		// adj
+		// in WN, return 1: e.g. scalelike
+		else {
+			if (this.myWN.isSoleAdjective(word)) {
+				return true;
+			}
+			if (baseInWN) {
+				return true;
+			}
+			if (this.unknownWordTable.containsKey(base)) {
+				return true;
+			}
+		}
+
+		return flag;
+
+		// } catch (IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// return false;
+		// }
 	}
 
 	public void markupbypattern() {
@@ -1230,7 +1332,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return false;
 		}
 	}
-	
 
 	// ---------------TEST Helper function----------------
 	public void printWordPOSTable() {

@@ -178,5 +178,29 @@ public class UnsupervisedClauseMarkupTest {
 		words.add("word1");
 		words.add("septum");
 		assertEquals("addHeuristicsNouns - handleSpecialCase 1", "septa[p]", tester.addHeuristicsNounsHelper("septa[s]", words));
+		
+		// Method getPresentAbsentNouns
+		assertEquals("getPresentAbsentNouns - no present/absent", "",
+				tester.getPresentAbsentNouns("only one pair of abcly presen"));
+		assertEquals("getPresentAbsentNouns - and|or|to", "",
+				tester.getPresentAbsentNouns("only one pair of and present"));
+		assertEquals("getPresentAbsentNouns - STOP words", "",
+				tester.getPresentAbsentNouns("only one pair of without absent"));
+		assertEquals(
+				"getPresentAbsentNoun - always|often|seldom|sometimes|[a-z]+lys",
+				"",
+				tester.getPresentAbsentNouns("only one pair of abcly present"));
+		assertEquals("getPresentAbsentNouns - PENDINGS", "circuli[p]",
+				tester.getPresentAbsentNouns("only one pair of circuli absent"));
+		assertEquals("getPresentAbsentNouns - end with ss", "glass[s]",
+				tester.getPresentAbsentNouns("only one pair of glass absent"));
+		assertEquals("getPresentAbsentNouns - end with none ss", "computers[p]",
+				tester.getPresentAbsentNouns("only one pair of computers absent"));
+		assertEquals("getPresentAbsentNouns - teeth", "teeth[p]",
+				tester.getPresentAbsentNouns("only one pair of teeth present"));
+		assertEquals("getPresentAbsentNouns - not SENDINGS", "serum[s]",
+				tester.getPresentAbsentNouns("only one pair of serum absent"));
+		assertEquals("getPresentAbsentNouns - SENDINGS", "computer[s]",
+				tester.getPresentAbsentNouns("only one pair of computer absent"));
 	}
 }
