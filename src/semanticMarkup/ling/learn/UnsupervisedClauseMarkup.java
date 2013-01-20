@@ -736,7 +736,25 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			sents.add(oSent);
 			//if (this.d)
 		}
+		// Set of nouns
+		HashSet<String> nouns = new HashSet<String>();
 		// Now we have original sentences in sents
+		for (int i=0;i<sents.size();i++) {
+			String noun = this.getPresentAbsentNouns(sents.get(i));
+			if (!noun.equals("")) {
+				nouns.add(noun);
+			}
+		}
+		
+		Iterator<String> nounsIterator= nouns.iterator();
+		while (nounsIterator.hasNext()) {
+			String oldNoun = nounsIterator.next();
+			String newNoun = this.addHeuristicsNounsHelper(oldNoun, nouns);
+			if (!newNoun.equals(oldNoun)) {
+				nouns.remove(oldNoun);
+				nouns.add(newNoun);
+			}
+		}
 		
 	}
 
