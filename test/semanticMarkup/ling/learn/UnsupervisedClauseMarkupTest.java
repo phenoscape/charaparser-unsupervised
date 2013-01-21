@@ -202,5 +202,13 @@ public class UnsupervisedClauseMarkupTest {
 				tester.getPresentAbsentNouns("only one pair of serum absent"));
 		assertEquals("getPresentAbsentNouns - SENDINGS", "computer[s]",
 				tester.getPresentAbsentNouns("only one pair of computer absent"));
+		
+		// Method isWord
+		assertEquals("isWord - Length not > 1", false, tester.isWord("a"));
+		assertEquals("isWord - not all word characters", false, tester.isWord("%^"));
+		assertEquals("isWord - all word characters", true, tester.isWord("ab"));
+		assertEquals("isWord - STOP word", false, tester.isWord("state"));
+		assertEquals("isWord - STOP word", false, tester.isWord("page"));
+		assertEquals("isWord - STOP word", false, tester.isWord("fig"));
 	}
 }

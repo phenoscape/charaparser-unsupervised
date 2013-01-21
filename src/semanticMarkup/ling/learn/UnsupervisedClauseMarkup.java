@@ -31,6 +31,7 @@ import opennlp.tools.util.InvalidFormatException;
 import semanticMarkup.core.Treatment;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
+import edu.mit.jwi.item.POS;
 import edu.mit.jwi.morph.SimpleStemmer;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {
@@ -723,6 +724,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (this.hn)
 			System.out.println("Enter addHeuristicsNouns:\n");
 		
+		// Set of words
+		HashSet<String> words = new HashSet<String>();
+		
+		// Set of nouns
+		HashSet<String> nouns = new HashSet<String>();
+		
+		
+		
 		LinkedList<String> sents = new LinkedList<String> ();
 		for (int i=0;i<this.sentenceTable.size();i++) {
 			//String sent = this.sentenceTable.get(i).getSentence();
@@ -736,16 +745,28 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			sents.add(oSent);
 			//if (this.d)
 		}
-		// Set of nouns
-		HashSet<String> nouns = new HashSet<String>();
+		
 		// Now we have original sentences in sents
+		// Method addWords
 		for (int i=0;i<sents.size();i++) {
 			String noun = this.getPresentAbsentNouns(sents.get(i));
 			if (!noun.equals("")) {
 				nouns.add(noun);
 			}
+			
+			// add words
+			String[] tokens = this.myTokenizer.tokenize(sents.get(i));
+			for (int j=0;j<tokens.length;j++) {
+				String token = tokens[j];
+				
+				
+				if (isWord(token)) {
+					words.add(token);
+				}
+			}
 		}
 		
+		// solve the problem: septa and septum are both s
 		Iterator<String> nounsIterator= nouns.iterator();
 		while (nounsIterator.hasNext()) {
 			String oldNoun = nounsIterator.next();
@@ -756,6 +777,41 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 		
+		// get all words
+		
+		
+		
+		
+	}
+	
+	//if($t !~ /\b(?:$STOP)\b/ && $t =~/\w/ && $t !~ /\d/ && length $t > 1){
+	public boolean isWord(String token) {
+		String regex = "\\b("+this.STOP+")\\b";
+		if (token.matches(regex)) {
+			return false;
+		}
+		
+		if (!token.matches("\\w+")) {
+			return false;
+		}
+		
+		if (token.length()<=1) {
+			return false;
+		}
+		
+		
+		return true;
+	}
+	
+	public boolean isSameRoot(String word1, String word2, POS tag) {		
+		List<String> root1 = this.myStemmer.findStems("computers", POS.NOUN);
+		List<String> root2 = this.myStemmer.findStems("computing", POS.VERB);
+		int i= root1.size();
+		i=2;
+		i=3;
+		
+		
+		return false;
 	}
 
 	public String getPresentAbsentNouns(String text) {
