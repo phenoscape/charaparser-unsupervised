@@ -29,6 +29,7 @@ import opennlp.tools.tokenize.TokenizerModel;
 import opennlp.tools.util.InvalidFormatException;
 
 import semanticMarkup.core.Treatment;
+import semanticMarkup.knowledge.Stemmer;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
 import edu.mit.jwi.item.POS;
@@ -157,7 +158,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// OpenNLP tokenizer
 	Tokenizer myTokenizer;
 	// JWI Stemmer
-	SimpleStemmer myStemmer;
+	// SimpleStemmer myStemmer;
+	// Porter Stemmer
+	Stemmer myStemmer;
 
 	// Msg Output Controllers
 	// Control if output feedback on which step is in
@@ -234,7 +237,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 
 		// Get JWI simple stemmer
-		this.myStemmer = new SimpleStemmer();
+		//this.myStemmer = new SimpleStemmer();
+		// Get Porter Stemmer
+		this.myStemmer = new Stemmer();
 
 	}
 
@@ -777,7 +782,28 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 		
-		// get all words
+		// sort all words
+		HashMap<String, LinkedList<String>> wordMap = new HashMap<String, LinkedList<String>>();
+		Iterator<String> wordsIterator = words.iterator();
+		while (wordsIterator.hasNext()) {
+			String word = wordsIterator.next();
+			String root = this.getRoot(word);
+			if (wordMap.containsKey(root)) {
+				LinkedList<String> wordList = wordMap.get(root);
+				wordList.add(word);
+			}
+			else {
+				LinkedList<String> wordList = new LinkedList<String>();
+				wordList.add(word);
+				wordMap.put(root, wordList);
+			}
+		}
+		
+		int i=0;
+		i=3;
+		i=9;
+		
+		// find nouns
 		
 		
 		
@@ -803,16 +829,24 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return true;
 	}
 	
-	public boolean isSameRoot(String word1, String word2, POS tag) {		
-		List<String> root1 = this.myStemmer.findStems("computers", POS.NOUN);
-		List<String> root2 = this.myStemmer.findStems("computing", POS.VERB);
-		int i= root1.size();
-		i=2;
-		i=3;
-		
-		
-		return false;
+	public String getRoot (String word) {
+		String root;
+		this.myStemmer.add(word.toCharArray(), word.length());
+		this.myStemmer.stem();
+		root = this.myStemmer.toString();
+		return root;
 	}
+	
+	//public boolean isSameRoot(String word1, String word2, POS tag) {		
+	//	List<String> root1 = this.myStemmer.findStems("computers", POS.NOUN);
+	//	List<String> root2 = this.myStemmer.findStems("computing", POS.VERB);
+	//	int i= root1.size();
+	//	i=2;
+	//	i=3;
+		
+		
+	//	return false;
+	//}
 
 	public String getPresentAbsentNouns(String text) {
 		

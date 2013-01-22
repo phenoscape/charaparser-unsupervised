@@ -210,5 +210,10 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("isWord - STOP word", false, tester.isWord("state"));
 		assertEquals("isWord - STOP word", false, tester.isWord("page"));
 		assertEquals("isWord - STOP word", false, tester.isWord("fig"));
+		
+		// Mehod getRoot
+		assertEquals("getRoot - computer", "comput", tester.getRoot("computer"));
+		assertEquals("getRoot - computer", "comput", tester.getRoot("computers"));
+		assertEquals("getRoot - computer", "comput", tester.getRoot("computing"));
 	}
 }
