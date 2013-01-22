@@ -799,11 +799,49 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 		
-		int i=0;
-		i=3;
-		i=9;
+
 		
 		// find nouns
+		// getnouns
+		Iterator<String> wordsIterator2 = words.iterator();
+		while (wordsIterator2.hasNext()) {
+			String word = wordsIterator2.next();
+			//word = "sgdsgsddcdfembraseure";
+			if (word.matches("^.*"+this.NENDINGS)) {
+				int dsgi=0;
+				dsgi=90;
+				nouns.add(word+"[s]");
+				if (words.contains(word+"s")) {
+					nouns.add(word+"s"+"[p]");
+				}
+				if (words.contains(word+"es")) {
+					nouns.add(word+"es"+"[p]");
+				}
+			}
+		}
+		
+		
+		
+		//Iterator<LinkedList> wordMapIterator = wordMap.i
+		Iterator<Map.Entry<String, LinkedList<String>>> wordMapIterator = wordMap.entrySet().iterator();
+		if (wordMapIterator.hasNext()) {
+			Map.Entry<String, LinkedList<String>> wordMapEntry = wordMapIterator.next();
+			LinkedList<String> wordList = wordMapEntry.getValue();
+			
+			// check if there is a word with Vending
+			boolean hasVending = false;
+			for (int i1=0;i1<wordList.size();i1++) {
+				if (wordList.get(i1).matches("^.*"+this.VENDINGS)) {
+					hasVending = true;
+					break;
+				}
+			}
+			
+			if ((!hasVending) && (wordList.size()>1)) {
+				;
+			}
+			
+		}
 		
 		
 		
