@@ -728,14 +728,18 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// Get all sentences
 		if (this.hn)
 			System.out.println("Enter addHeuristicsNouns:\n");
-		
+
+		HashSet nouns = (HashSet) this.getHeuristicsNouns();
+	}
+
+	
+	public Set<String> getHeuristicsNouns() {
+
 		// Set of words
 		HashSet<String> words = new HashSet<String>();
 		
 		// Set of nouns
 		HashSet<String> nouns = new HashSet<String>();
-		
-		
 		
 		LinkedList<String> sents = new LinkedList<String> ();
 		for (int i=0;i<this.sentenceTable.size();i++) {
@@ -798,9 +802,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				wordMap.put(root, wordList);
 			}
 		}
-		
 
-		
 		// find nouns
 		// getnouns
 		Iterator<String> wordsIterator2 = words.iterator();
@@ -820,8 +822,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 		
-		
-		
 		//Iterator<LinkedList> wordMapIterator = wordMap.i
 		Iterator<Map.Entry<String, LinkedList<String>>> wordMapIterator = wordMap.entrySet().iterator();
 		if (wordMapIterator.hasNext()) {
@@ -837,15 +837,107 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				}
 			}
 			
+			// at least two words without verb endings
 			if ((!hasVending) && (wordList.size()>1)) {
-				;
-			}
-			
+				for (int i=0;i<wordList.size();i++) {
+					for (int j=i+1;j<wordList.size();j++) {
+						String word1 = wordList.get(i);
+						String word2 = wordList.get(j);
+						ArrayList<String> pair = getSingularPluralPair(word1,
+								word2);
+						if (pair.size()==2) {
+							String singular = pair.get(1);
+							String plural = pair.get(2);
+							nouns.add(singular+"[s]");
+							nouns.add(plural+"[p]");
+						}
+					}
+				}
+			}	
 		}
-		
-		
-		
-		
+
+		return nouns;
+	}
+	
+
+	ArrayList<String> getSingularPluralPair(String word1, String word2) {
+		ArrayList<String> pair = new ArrayList<String>();
+		String singular = "";
+		String plural = "";
+		int len1 = word1.length();
+		int len2 = word2.length();
+		if (len1 < len2) {
+			String temp_word = word1;
+			word1 = word2;
+			word2 = temp_word;
+			int temp_len = len1;
+			len1 = len2;
+			len2 = temp_len;
+		}
+
+		if ((word2.matches("^.*" + this.SENDINGS))
+				&& (word1.matches("^.*" + this.PENDINGS))) {
+
+			if (word1.matches("^.*" + "es$") && word2.matches("^.*" + "is$")
+					&& Math.abs(len1 - len2) == 0) {
+				singular = word2;
+				plural = word1;
+			} else if (word1.matches("^.*" + "a$")
+					&& word2.matches("^.*" + "on$")
+					&& Math.abs(len1 - len2) < 2) {
+				singular = word2;
+				plural = word1;
+			} else if (word1.matches("^.*" + "a$")
+					&& word2.matches("^.*" + "um$")
+					&& Math.abs(len1 - len2) < 2) {
+				singular = word2;
+				plural = word1;
+			} else if (word1.matches("^.*" + "i$")
+					&& word2.matches("^.*" + "us$")
+					&& Math.abs(len1 - len2) < 2) {
+				singular = word2;
+				plural = word1;
+			} else if (word1.matches("^.*" + "a$")
+					&& word2.matches("^.*" + "us$")
+					&& Math.abs(len1 - len2) < 2) {
+				singular = word2;
+				plural = word1;
+			}
+
+		} else {
+			// thicker, thickness; species, specimens; tomentulose, tomentulous;
+			// later laterals
+			if (word2.matches("^.*s$")) {
+				if (getSingularPluralPairHelper(word1, word2)) {
+					singular = word1;
+					plural = word2;
+				}
+			}
+		}
+
+		if ((!singular.equals("")) && (!plural.equals(""))) {
+			pair.add(singular);
+			pair.add(plural);
+		}
+
+		return pair;
+	}
+
+	// word2 has no other letters except those appearing in word1 or ies, and
+	// vice versa.
+	public boolean getSingularPluralPairHelper(String word1, String word2) {
+		int len1 = word1.length();
+		int len2 = word2.length();
+
+		if ((!word2.matches("^\\[^" + word1 + "yies" + "\\]*&"))
+				&& (!word1.matches("^\\[^" + word2 + "yies" + "\\]*&"))
+				&& (Math.abs(len1 - len2) > 0) 
+				&& (Math.abs(len1 - len2) < 3)) {
+			return true;
+		} else {
+
+			return false;
+		}
 	}
 	
 	//if($t !~ /\b(?:$STOP)\b/ && $t =~/\w/ && $t !~ /\d/ && length $t > 1){
@@ -861,8 +953,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		if (token.length()<=1) {
 			return false;
-		}
-		
+		}	
 		
 		return true;
 	}
@@ -874,17 +965,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		root = this.myStemmer.toString();
 		return root;
 	}
-	
-	//public boolean isSameRoot(String word1, String word2, POS tag) {		
-	//	List<String> root1 = this.myStemmer.findStems("computers", POS.NOUN);
-	//	List<String> root2 = this.myStemmer.findStems("computing", POS.VERB);
-	//	int i= root1.size();
-	//	i=2;
-	//	i=3;
-		
-		
-	//	return false;
-	//}
 
 	public String getPresentAbsentNouns(String text) {
 		
@@ -925,15 +1005,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					&& (!word.matches("\\b(" + this.STOP + ")\\b"))
 					&& (!word.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
 				
-				
-				
-				
 				//print "present/absent [$n]\n";
 				System.out.println("present/absent "+word+"\n");
-				
-				
-				
-				
 				
 				/**
 				 * if(($n =~/$PENDINGS/ or $n =~/[^s]s$/ or $n =~ /teeth/) and
@@ -948,59 +1021,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				else {
 					return word+"[s]";
 				}
-
-				
-				
-
-
-			}
-			
-			
-				
-				
-				
-				
-		
-
-			
+			}			
 		}
 
-		//only one pair of uroneurals present
-		
+		//only one pair of uroneurals present	
 		
 		return "";
 	}
 	
-	
-	public Set<String> getHeuristicsNouns(Set<String> words) {
-		String N_ENDINGS = "\\w\\w(?:ist|sure)\\b";
-		String V_ENDINGS = "(?:ing)\\b";
-		String S_ENDINGS = "(?:on|is|ex|ix|um|us|a)\\b";
-		String P_ENDINGS = "(?:ia|es|ices|i|ae)\\b";
-
-		// HashSet<String> words = new HashSet<String>();
-		HashSet<String> nouns = new HashSet<String>();
-
-		// get all words
-
-		// loop over words
-		Iterator<String> it = words.iterator();
-		while (it.hasNext()) {
-			String word = it.next();
-			// if word has N endings
-			// put word into nouns
-			// if word has S endings: w+S ending
-			// if (root + N endings exist) && (root + V ending does not exist)
-			// put w[s] into nouns
-			// put w[p] into nouns
-			// if word has P endings: w+N ending
-			// if (root + S endings exist) && (root + V ending does not exist)
-			// put w[p] into nouns
-			// put w[s] into nouns
-		}
-
-		return nouns;
-	}
 
 	// ---------------addHeuristicsNouns Help Function----
 	// #solve the problem: septa and septum are both s
