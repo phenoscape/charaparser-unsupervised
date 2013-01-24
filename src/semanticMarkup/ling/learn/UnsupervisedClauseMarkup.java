@@ -560,7 +560,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				String sentences[] = {};
 				sentences = this.segmentSentence(text);
 
-				HashMap<Integer, String> leadMap = new HashMap<Integer, String>();
+				Map<Integer, String> leadMap = new HashMap<Integer, String>();
 
 				if (debug)
 					System.out.println("Text: " + text);
@@ -729,19 +729,19 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (this.hn)
 			System.out.println("Enter addHeuristicsNouns:\n");
 
-		HashSet nouns = (HashSet) this.getHeuristicsNouns();
+		Set nouns = (HashSet) this.getHeuristicsNouns();
 	}
 
 	
 	public Set<String> getHeuristicsNouns() {
 
 		// Set of words
-		HashSet<String> words = new HashSet<String>();
+		Set<String> words = new HashSet<String>();
 		
 		// Set of nouns
-		HashSet<String> nouns = new HashSet<String>();
+		Set<String> nouns = new HashSet<String>();
 		
-		LinkedList<String> sents = new LinkedList<String> ();
+		List<String> sents = new LinkedList<String> ();
 		for (int i=0;i<this.sentenceTable.size();i++) {
 			//String sent = this.sentenceTable.get(i).getSentence();
 			String oSent = this.sentenceTable.get(i).getOriginalSentence();
@@ -787,17 +787,17 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 		
 		// sort all words
-		HashMap<String, LinkedList<String>> wordMap = new HashMap<String, LinkedList<String>>();
+		Map<String, List<String>> wordMap = new HashMap<String, List<String>>();
 		Iterator<String> wordsIterator = words.iterator();
 		while (wordsIterator.hasNext()) {
 			String word = wordsIterator.next();
 			String root = this.getRoot(word);
 			if (wordMap.containsKey(root)) {
-				LinkedList<String> wordList = wordMap.get(root);
+				List<String> wordList = wordMap.get(root);
 				wordList.add(word);
 			}
 			else {
-				LinkedList<String> wordList = new LinkedList<String>();
+				List<String> wordList = new LinkedList<String>();
 				wordList.add(word);
 				wordMap.put(root, wordList);
 			}
@@ -823,10 +823,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 		
 		//Iterator<LinkedList> wordMapIterator = wordMap.i
-		Iterator<Map.Entry<String, LinkedList<String>>> wordMapIterator = wordMap.entrySet().iterator();
+		Iterator<Map.Entry<String, List<String>>> wordMapIterator = wordMap.entrySet().iterator();
 		if (wordMapIterator.hasNext()) {
-			Map.Entry<String, LinkedList<String>> wordMapEntry = wordMapIterator.next();
-			LinkedList<String> wordList = wordMapEntry.getValue();
+			Map.Entry<String, List<String>> wordMapEntry = wordMapIterator.next();
+			List<String> wordList = wordMapEntry.getValue();
 			
 			// check if there is a word with Vending
 			boolean hasVending = false;
@@ -843,7 +843,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					for (int j=i+1;j<wordList.size();j++) {
 						String word1 = wordList.get(i);
 						String word2 = wordList.get(j);
-						ArrayList<String> pair = getSingularPluralPair(word1,
+						List<String> pair = getSingularPluralPair(word1,
 								word2);
 						if (pair.size()==2) {
 							String singular = pair.get(1);
@@ -860,8 +860,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 	
 
-	ArrayList<String> getSingularPluralPair(String word1, String word2) {
-		ArrayList<String> pair = new ArrayList<String>();
+	List<String> getSingularPluralPair(String word1, String word2) {
+		List<String> pair = new ArrayList<String>();
 		String singular = "";
 		String plural = "";
 		int len1 = word1.length();
@@ -1052,7 +1052,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public void addStopWords() {
 		// my @stops = split(/\|/,$stop);
 		// String []temp=this.STOP.split("|");
-		ArrayList<String> stops = new ArrayList();
+		List<String> stops = new ArrayList();
 		stops.addAll(Arrays.asList(this.STOP.split("\\|")));
 		// new ArrayList();
 		// for (int i=0;i<temp.length;i++) {
@@ -1087,7 +1087,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public void addCharacters() {
-		ArrayList<String> chars = new ArrayList();
+		List<String> chars = new ArrayList();
 		chars.addAll(Arrays.asList(this.CHARACTER.split("\\|")));
 
 		System.out.println(chars);
@@ -1108,7 +1108,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public void addNumbers() {
-		ArrayList<String> nums = new ArrayList();
+		List<String> nums = new ArrayList();
 		nums.addAll(Arrays.asList(this.NUMBER.split("\\|")));
 
 		System.out.println(nums);
@@ -1131,7 +1131,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public void addClusterstrings() {
-		ArrayList<String> cltstrs = new ArrayList();
+		List<String> cltstrs = new ArrayList();
 		cltstrs.addAll(Arrays.asList(this.CLUSTERSTRING.split("\\|")));
 
 		System.out.println(cltstrs);
@@ -1152,7 +1152,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public void addProperNouns() {
-		ArrayList<String> ppnouns = new ArrayList();
+		List<String> ppnouns = new ArrayList();
 		ppnouns.addAll(Arrays.asList(this.PROPERNOUN.split("\\|")));
 
 		System.out.println(ppnouns);

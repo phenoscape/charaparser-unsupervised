@@ -14,16 +14,16 @@ public class WordPOSKey {
 		return this.word;
 	}
 	
-	public void setWord(String s) {
-		this.word=s;
-	}
+	//public void setWord(String s) {
+	//	this.word=s;
+	//}
 	
 	public String getPOS() {
 		return this.pos;
 	}
 	
-	public void setPOS(String p) {
-		this.pos=p;
-	}
+	//public void setPOS(String p) {
+	//	this.pos=p;
+	//}
 
 }
