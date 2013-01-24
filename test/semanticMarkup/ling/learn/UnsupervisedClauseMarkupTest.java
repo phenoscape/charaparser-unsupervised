@@ -18,10 +18,10 @@ public class UnsupervisedClauseMarkupTest {
 	
 	@Test
 	public void testUnsupervisedClauseMarkup() {
-		String str = "/Users/nescent/Phenoscape/TEST2/target/descriptions";
-		List<Treatment> treatments_l = new ArrayList<Treatment>();
+		//String str = "/Users/nescent/Phenoscape/TEST2/target/descriptions";
+		//List<Treatment> treatments_l = new ArrayList<Treatment>();
 				
-		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup(str,"biocreative2012","plain","test");
+		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("","biocreative2012","plain","test","/Users/nescent/Phenoscape/WordNet-3.0/dict");
 		
 		/*
 		assertEquals("Result", null, tester.getAdjNouns());
@@ -178,5 +178,42 @@ public class UnsupervisedClauseMarkupTest {
 		words.add("word1");
 		words.add("septum");
 		assertEquals("addHeuristicsNouns - handleSpecialCase 1", "septa[p]", tester.addHeuristicsNounsHelper("septa[s]", words));
+		
+		// Method getPresentAbsentNouns
+		assertEquals("getPresentAbsentNouns - no present/absent", "",
+				tester.getPresentAbsentNouns("only one pair of abcly presen"));
+		assertEquals("getPresentAbsentNouns - and|or|to", "",
+				tester.getPresentAbsentNouns("only one pair of and present"));
+		assertEquals("getPresentAbsentNouns - STOP words", "",
+				tester.getPresentAbsentNouns("only one pair of without absent"));
+		assertEquals(
+				"getPresentAbsentNoun - always|often|seldom|sometimes|[a-z]+lys",
+				"",
+				tester.getPresentAbsentNouns("only one pair of abcly present"));
+		assertEquals("getPresentAbsentNouns - PENDINGS", "circuli[p]",
+				tester.getPresentAbsentNouns("only one pair of circuli absent"));
+		assertEquals("getPresentAbsentNouns - end with ss", "glass[s]",
+				tester.getPresentAbsentNouns("only one pair of glass absent"));
+		assertEquals("getPresentAbsentNouns - end with none ss", "computers[p]",
+				tester.getPresentAbsentNouns("only one pair of computers absent"));
+		assertEquals("getPresentAbsentNouns - teeth", "teeth[p]",
+				tester.getPresentAbsentNouns("only one pair of teeth present"));
+		assertEquals("getPresentAbsentNouns - not SENDINGS", "serum[s]",
+				tester.getPresentAbsentNouns("only one pair of serum absent"));
+		assertEquals("getPresentAbsentNouns - SENDINGS", "computer[s]",
+				tester.getPresentAbsentNouns("only one pair of computer absent"));
+		
+		// Method isWord
+		assertEquals("isWord - Length not > 1", false, tester.isWord("a"));
+		assertEquals("isWord - not all word characters", false, tester.isWord("%^"));
+		assertEquals("isWord - all word characters", true, tester.isWord("ab"));
+		assertEquals("isWord - STOP word", false, tester.isWord("state"));
+		assertEquals("isWord - STOP word", false, tester.isWord("page"));
+		assertEquals("isWord - STOP word", false, tester.isWord("fig"));
+		
+		// Mehod getRoot
+		assertEquals("getRoot - computer", "comput", tester.getRoot("computer"));
+		assertEquals("getRoot - computer", "comput", tester.getRoot("computers"));
+		assertEquals("getRoot - computer", "comput", tester.getRoot("computing"));
 	}
 }
