@@ -211,9 +211,39 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("isWord - STOP word", false, tester.isWord("page"));
 		assertEquals("isWord - STOP word", false, tester.isWord("fig"));
 		
-		// Mehod getRoot
+		// Method getRoot
 		assertEquals("getRoot - computer", "comput", tester.getRoot("computer"));
 		assertEquals("getRoot - computer", "comput", tester.getRoot("computers"));
 		assertEquals("getRoot - computer", "comput", tester.getRoot("computing"));
+		
+		// Method trimString
+		assertEquals("trimString head", "word", tester.trimString("	 	word"));
+		assertEquals("trimString tail", "word",
+				tester.trimString("word   		 	"));
+		assertEquals("trimString head and tail", "word",
+				tester.trimString("	 	word	 	 		  "));
+		
+		Set<String> taxonNames = new HashSet<String>();
+		// Method getTaxonNameNouns
+		assertEquals("getTaxonNameNouns - not match", taxonNames, tester.getTaxonNameNouns("word word word"));
+		assertEquals("getTaxonNameNouns - empty taxon name", taxonNames, tester.getTaxonNameNouns("<i></i>"));
+		taxonNames.add("word1 word2	word3");
+		taxonNames.add("word1");
+		taxonNames.add("word2");
+		taxonNames.add("word3");
+		taxonNames.add("word4 word5");
+		taxonNames.add("word4");
+		taxonNames.add("word5");
+		assertEquals("getTaxonNameNouns - match", taxonNames, tester.getTaxonNameNouns("<i>word1 word2	word3</i>, <i>word4 word5</i>"));
+		
+		Set<String> nouns = new HashSet<String>();
+		// Method getTaxonNameNouns
+		assertEquals("getTaxonNameNouns - not match", nouns, tester.getNounsMecklesCartilage("word word word"));
+		nouns.add("meckel#s");
+		nouns.add("meckels");
+		nouns.add("meckel");
+		assertEquals("getTaxonNameNouns - match", nouns, tester.getNounsMecklesCartilage("word Meckel#s word"));
+		
+		
 	}
 }

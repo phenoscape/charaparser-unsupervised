@@ -144,7 +144,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// Data Holders
 	// Table sentence
-	List<Sentence> sentenceTable = new ArrayList<Sentence>();
+	List<Sentence> sentenceTable = new LinkedList<Sentence>();
 	// Table unknownwords
 	Map<String, String> unknownWordTable = new HashMap<String, String>();
 	// Table wordpos
@@ -729,7 +729,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (this.hn)
 			System.out.println("Enter addHeuristicsNouns:\n");
 
-		Set nouns = (HashSet) this.getHeuristicsNouns();
+		Set<String> nouns = this.getHeuristicsNouns();
+		//nouns = this.characterHeuristics(nouns);
 	}
 
 	
@@ -859,6 +860,100 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return nouns;
 	}
 	
+	public void characterHeuristics() {
+		int sent_num = this.sentenceTable.size();
+		
+		Set<String> taxonNames = new HashSet<String>();
+		Set<String> nouns = new HashSet<String>();
+		
+		for (int i=0;i<sent_num;i++) {
+			
+			// noun rule 0: taxon names
+			Sentence sent = this.sentenceTable.get(i);
+			String sentence = sent.getSentence();
+			String oSentence = sent.getOriginalSentence();
+			oSentence = this.trimString(oSentence);
+			taxonNames = this.getTaxonNameNouns(oSentence);
+			//if (taxonNames.size()>0) {
+			//	Iterator<String> taxonNameIterator= taxonNames.iterator();
+			//	while ()
+			//}
+			//$sentence =~ s#<\s*/?\s*i\s*>##g;
+			//$originalsent =~ s#<\s*/?\s*i\s*>##g;
+			sentence = sentence.replaceAll("<\\s*/?\\s*i\\s*>", "");
+			oSentence = oSentence.replaceAll("\\s*/?\\s*i\\s*", "");
+			// Update sentenceTable
+			this.sentenceTable.get(i).setSentence(sentence);
+			
+			// noun rule 0.5: Meckle#s cartilage
+			
+			nouns = this.getNounsMecklesCartilage(oSentence);
+			sentence = sentence.replaceAll("#", "");
+			// Update sentenceTable
+			this.sentenceTable.get(i).setSentence(sentence);		
+
+			
+			
+			
+			
+		}
+	}
+	
+	/**
+	 * Meckle#s cartilage
+	 */
+	
+	public Set<String> getNounsMecklesCartilage(String oSent) {
+		Set<String> nouns = new HashSet<String>();
+		String regex = "^.*\\b(\\w+#s)\\b.*$";
+		Matcher m = Pattern.compile(regex).matcher(oSent);
+		if (m.lookingAt()) {
+			String noun = "";
+			noun = m.group(1);
+
+			noun = noun.toLowerCase();
+			nouns.add(noun);
+
+			noun = noun.replaceAll("#", "");
+			nouns.add(noun);
+
+			noun = noun.replaceAll("s$", "");
+			nouns.add(noun);
+		}
+
+		return nouns;
+	}
+	
+	
+	/** 
+	 * <i></i> enclosed taxon names  
+	 **/
+	public Set<String> getTaxonNameNouns (String oSent) {
+		Set<String> taxonNames = new HashSet<String>();
+		String regex = "(.*?)<i>\\s*([^<]*)\\s*<\\/i>(.*)";
+		String copy = oSent;
+		
+		while (true) {
+			Matcher matcher = Pattern.compile(regex).matcher(copy);
+			if (matcher.lookingAt()) {
+				String taxonName = matcher.group(2);
+				if (taxonName.length() > 0) {
+					taxonNames.add(taxonName);
+					String[] taxonNameArray = taxonName.split("\\s+");
+					for (int i = 0; i < taxonNameArray.length; i++) {
+						taxonNames.add(taxonNameArray[i]);
+					}
+					copy = matcher.group(3);
+				} else {
+					break;
+				}
+			} else {
+				break;
+			}
+		}
+		
+		return taxonNames;
+	}
 
 	List<String> getSingularPluralPair(String word1, String word2) {
 		List<String> pair = new ArrayList<String>();
@@ -1506,7 +1601,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return false;
 		}
 	}
-
+	
+	// ---------------CLASS Helper function----------------
+	public String trimString (String text){
+		String myText = text;
+		myText = myText.replaceAll("^\\s+|\\s+$", "");
+		return myText;
+	}
+	
 	// ---------------TEST Helper function----------------
 	public void printWordPOSTable() {
 		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = this.wordPOSTable
