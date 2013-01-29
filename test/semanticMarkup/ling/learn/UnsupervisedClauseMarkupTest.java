@@ -236,14 +236,30 @@ public class UnsupervisedClauseMarkupTest {
 		taxonNames.add("word5");
 		assertEquals("getTaxonNameNouns - match", taxonNames, tester.getTaxonNameNouns("<i>word1 word2	word3</i>, <i>word4 word5</i>"));
 		
-		Set<String> nouns = new HashSet<String>();
 		// Method getTaxonNameNouns
+		Set<String> nouns = new HashSet<String>();
 		assertEquals("getTaxonNameNouns - not match", nouns, tester.getNounsMecklesCartilage("word word word"));
 		nouns.add("meckel#s");
 		nouns.add("meckels");
 		nouns.add("meckel");
 		assertEquals("getTaxonNameNouns - match", nouns, tester.getNounsMecklesCartilage("word Meckel#s word"));
 		
-		
+		// Method getNounsEndOfSentence
+		Set<String> nouns2 = new HashSet<String>();
+		assertEquals(
+				"getNounsEndOfSentence - not match",
+				nouns2,
+				tester.getNounsEndOfSentence("word word 	word soe width nea"));		
+		nouns2.add("nouna");
+		assertEquals(
+				"getNounsEndOfSentence - match 1",
+				nouns2,
+				tester.getNounsEndOfSentence("word word 	word some nouna"));
+		nouns2.add("nounb");
+		assertEquals(
+				"getNounsEndOfSentence - match 2",
+				nouns2,
+				tester.getNounsEndOfSentence("word some nouna near word some width near word third nounb near end"));
+
 	}
 }

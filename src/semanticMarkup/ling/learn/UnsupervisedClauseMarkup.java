@@ -887,10 +887,30 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			
 			// noun rule 0.5: Meckle#s cartilage
 			
-			nouns = this.getNounsMecklesCartilage(oSentence);
+			Set<String> nouns1 = this.getNounsMecklesCartilage(oSentence);
+			nouns.addAll(nouns1);
 			sentence = sentence.replaceAll("#", "");
 			// Update sentenceTable
-			this.sentenceTable.get(i).setSentence(sentence);		
+			this.sentenceTable.get(i).setSentence(sentence);	
+			
+			// noun rule 2: end of sentence nouns (a|an|the|some|any|this|that|those|these) noun$
+
+			/**
+			my $cp = $originalsent;
+			while($cp =~ /(.*?)\b(a|an|the|some|any|this|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) +(\w+)\s*($|\(|\[|{|\b($PREPOSITION)\b)(.*)/){
+				my $t = $3;
+				$cp = $5;
+				my $prep = $4;
+				if($prep =~/\w/ && $t =~/\b(length|width|presence|\w+tion)\b/){next;}
+				$t =~ tr/A-Z/a-z/;
+				$nouns{$t} = 1;
+				if($debugnouns){ print "[noun2:$t] $originalsent\n";}
+			}
+			**/
+			
+			Set<String> nouns2 = this.getNounsEndOfSentence(oSentence);
+			nouns.addAll(nouns2);
+			
 
 			
 			
@@ -898,7 +918,39 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			
 		}
 	}
-	
+
+	public Set<String> getNounsEndOfSentence(String oSent) {
+		String copy = oSent;
+		String regex = "(.*?)\\b(a|an|the|some|any|this|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) +(\\w+)\\s*($|\\(|\\[|\\{|\\b"
+				+ this.PREPOSITION + "\\b)(.*)";
+		Set<String> nouns = new HashSet<String>();
+
+		while (true) {
+			if (copy == null) {
+				break;
+			}
+			Matcher m = Pattern.compile(regex).matcher(copy);
+			if (m.lookingAt()) {
+				String t = m.group(3);
+				String prep = m.group(4);
+				copy = m.group(5);
+				// String t6 = m.group(6);
+				// copy = m.group(5);
+				// String prep = m.group(4);
+				if (prep.matches("^.*\\w.*$")
+						&& t.matches("^.*\\b(length|width|presence|\\w+tion)\\b.*$")) {
+					continue;
+				}
+				t = t.toLowerCase();
+				nouns.add(t);
+			} else {
+				break;
+			}
+		}
+
+		return nouns;
+	}
+
 	/**
 	 * Meckle#s cartilage
 	 */
