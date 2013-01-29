@@ -911,8 +911,49 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			Set<String> nouns2 = this.getNounsEndOfSentence(oSentence);
 			nouns.addAll(nouns2);
 			
-
+			// noun rule 3: proper nouns and acronyms
+			Set<String> anouns = new HashSet<String>();
+			Set<String> pnouns = new HashSet<String>();
 			
+			String copy = oSentence;
+			String[] segs = copy.split("[()\\[\\]\\{\\}]");
+			for (int i1=0;i1<segs.length;i1++) {
+				String seg = segs[i1];
+				seg = seg.replaceAll("-", "aaa");
+				seg = seg.replaceAll("[[:punct:]]",""); 
+				seg = seg.replaceAll("aaa","-");
+				String[] tokens = seg.split("\\s+");
+				tokens[0]="";
+				
+				for (int j=0;j<tokens.length;j++) {
+					/**
+					 * 				if($t =~ /[A-Z].+/ and $t!~/-\w+ed$/){#proper nouns and acronyms, S-shaped
+					if($t=~/^[A-Z0-9]+$/){
+						$t =~ tr/A-Z/a-z/;
+						$anouns{$t} =1;
+					}else{
+						$t =~ tr/A-Z/a-z/;
+						$pnouns{$t} =1;
+					}			
+					$nouns{$t}=1;
+					if($debugnouns) {print "[noun3:$t] $originalsent\n";}
+				}
+					 */
+					
+					String token = tokens[j];
+					if (token.matches("^.*[A-Z].+$") && (!token.matches("^.*-\\w+ed$"))) {
+						if (token.matches("^[A-Z0-9]+$")) {
+							token = token.toLowerCase();
+							anouns.add(token);
+						}
+						else {
+							token = token.toLowerCase();
+							pnouns.add(token);
+						}
+						nouns.add(token);
+					}
+				}
+			}
 			
 			
 			
