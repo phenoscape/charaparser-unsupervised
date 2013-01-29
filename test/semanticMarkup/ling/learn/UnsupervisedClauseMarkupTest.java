@@ -260,6 +260,23 @@ public class UnsupervisedClauseMarkupTest {
 				"getNounsEndOfSentence - match 2",
 				nouns2,
 				tester.getNounsEndOfSentence("word some nouna near word some width near word third nounb near end"));
+		
+		// Method getNounsRule4
+		Set<String> nouns3 = new HashSet<String>();
+		assertEquals(
+				"getNounsRule4 - not match",
+				nouns3,
+				tester.getNounsRule4("word word 	word noun one"));	
+		nouns3.add("nouna");
+		assertEquals(
+				"getNounsRule4 - not match",
+				nouns3,
+				tester.getNounsRule4("word word 	word nouna 1"));
+		nouns3.add("nounb");
+		assertEquals(
+				"getNounsRule4 - not match",
+				nouns3,
+				tester.getNounsRule4("word word 	word page 1 word above 2 word nounb 2 end"));
 
 	}
 }

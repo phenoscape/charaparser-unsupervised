@@ -149,6 +149,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	Map<String, String> unknownWordTable = new HashMap<String, String>();
 	// Table wordpos
 	Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
+	
+	// Table heuristicnouns
+	Map<String, String> heuristicNounsTable = new HashMap<String, String>();
 
 	// Third Tools
 	// WordNet
@@ -866,6 +869,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Set<String> taxonNames = new HashSet<String>();
 		Set<String> nouns = new HashSet<String>();
 		
+		// Noun rule 3
+		Set<String> anouns = new HashSet<String>();
+		Set<String> pnouns = new HashSet<String>();
+		
+		// Descriptor rule 2
+		Set<String> descriptors = new HashSet<String>();
+		
 		for (int i=0;i<sent_num;i++) {
 			
 			// noun rule 0: taxon names
@@ -912,8 +922,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			nouns.addAll(nouns2);
 			
 			// noun rule 3: proper nouns and acronyms
-			Set<String> anouns = new HashSet<String>();
-			Set<String> pnouns = new HashSet<String>();
+
 			
 			String copy = oSentence;
 			String[] segs = copy.split("[()\\[\\]\\{\\}]");
@@ -955,9 +964,116 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				}
 			}
 			
+			// noun rule 4: non-stop/prep followed by a number: epibranchial 4 descriptor heuristics 
+			Set<String> nouns4 = this.getNounsRule4(oSentence);
+			nouns.addAll(nouns4);
 			
+			/**
+			 * 			
+			$originalsent =~ s#-#aaa#g;
+			$originalsent =~ s#[[:punct:]]##g; #keep "-"
+			$originalsent =~ s#aaa#-#g;
+			 */
+			
+			// remove puncts for descriptor rules
+			oSentence.replaceAll("-", "aaa");
+			oSentence.replaceAll("[[:punct:]]", "");
+			oSentence.replaceAll("aaa", "-");
+			
+			/**
+			 * 		
+		if($source =~ /\.xml_\S+_/ and $originalsent !~ /\s/){#single word
+			if(grep(/^$originalsent$/, keys(%nouns)) < 1){
+				$originalsent =~ tr/A-Z/a-z/;
+				$descriptors{$originalsent}=1;
+				if($debugnouns){ print "[desp:$originalsent] $originalsent\n";}
+			}
+		}	
+			 */
+			// Descriptor rule 1: single term descriptions are descriptors
+			// ???
+			
+			// Descriptor rule 2: (is|are) red: isDescriptor 
+			/**
+			 * 		@tokens = split(/\s+/, $originalsent);
+		foreach my $t (@tokens){
+			if(isDescriptor($t)){
+				$t =~ tr/A-Z/a-z/;
+				$descriptors{$t}=1;
+				if($debugnouns) {print "[desp:$t] $originalsent\n";}
+			}
+		}
+			 */
+			
+			descriptors.addAll(this.getNounsDescriptorsRule2(oSentence));
+			
+
+			
+
 			
 		}
+	}
+	
+	public Set<String> getNounsDescriptorsRule2(String oSent) {
+		Set<String> descriptors = new HashSet<String>();
+		
+		String[] tokens = oSent.split("\\s+");
+		
+		for (int i=0;i<tokens.length;i++) {
+			String token = tokens[i];
+			//if (isDescriptor(token)) {
+			if (true) {
+				token = token.toLowerCase();
+				descriptors.add(token);
+			}
+		}
+		
+		
+		return descriptors;
+	}
+	
+	
+	
+	// noun rule 4: non-stop/prep followed by a number: epibranchial 4 descriptor heuristics 
+	public Set<String> getNounsRule4(String oSent) {
+		Set<String> nouns = new HashSet<String>();
+		
+		/**
+		 * 		
+	$cp = $originalsent;
+	while($cp =~ /(.*?)\s(\w+)\s+\d+(.*)/){
+		my $t = $2;
+		$cp = $3;
+		if($t !~ /\b($PREPOSITION|$stop)\b/){
+			$t =~ tr/A-Z/a-z/;
+			$nouns{$t} = 1;
+			if($debugnouns){ print "[noun4:$t] $originalsent\n";}
+		}
+	}	
+		 */
+		
+		String copy = oSent;
+		String regex = "(.*?)\\s(\\w+)\\s+\\d+(.*)";
+		
+		
+		while (true) {
+			if (copy==null) {
+				break;
+			}
+			Matcher m = Pattern.compile(regex).matcher(copy);
+			if (m.lookingAt()) {
+				String t = m.group(2);
+				copy = m.group(3);
+				String regex2 = "\\b("+this.PREPOSITION+"|"+this.STOP+")\\b"; 
+				if (!t.matches(regex2)) {
+					t.toLowerCase();
+					nouns.add(t);
+				}
+			}
+		}
+		
+		
+		return nouns;
 	}
 
 	public Set<String> getNounsEndOfSentence(String oSent) {
