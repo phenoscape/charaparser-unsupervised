@@ -98,7 +98,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 																																																																					// check
 																																																																					// 207,
 																																																																					// 3971
-	private String PREPOSITION = "above|across|after|along|around|as|at|before|below|beneath|between|beyond|by|during|for|from|in|into|near|of|off|on|onto|out|outside|over|than|throught|throughout|toward|towards|up|upward|with|without";
+	private String PREPOSITION = "above|across|after|along|around|as|at|before|below|beneath|between|beyond|by|during|for|from|in|into|near|of|off|on|onto|out|outside|over|than|through|throughout|toward|towards|up|upward|with|without";
 	private String TAGS = "";
 	private String PLENDINGS = "[^aeiou]ies|i|ia|(x|ch|sh)es|ves|ices|ae|s";
 	private String CLUSTERSTRING = "group|groups|clusters|cluster|arrays|array|series|fascicles|fascicle|pairs|pair|rows|number|numbers|\\d+";
@@ -928,9 +928,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			String[] segs = copy.split("[()\\[\\]\\{\\}]");
 			for (int i1=0;i1<segs.length;i1++) {
 				String seg = segs[i1];
-				seg = seg.replaceAll("-", "aaa");
-				seg = seg.replaceAll("[[:punct:]]",""); 
-				seg = seg.replaceAll("aaa","-");
+				// seg = seg.replaceAll("-", "aaa");
+				// seg = seg.replaceAll("[\\p{Punct}]",""); 
+				// seg = seg.replaceAll("aaa","-");
+				seg = this.removePunctuation(seg, "-");
 				String[] tokens = seg.split("\\s+");
 				tokens[0]="";
 				
@@ -976,9 +977,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			 */
 			
 			// remove puncts for descriptor rules
-			oSentence.replaceAll("-", "aaa");
-			oSentence.replaceAll("[[:punct:]]", "");
-			oSentence.replaceAll("aaa", "-");
+			//oSentence.replaceAll("-", "aaa");
+			//oSentence.replaceAll("[\\p{Punct}]", "");
+			//oSentence.replaceAll("aaa", "-");
+			oSentence = this.removePunctuation(oSentence, "-");
 			
 			/**
 			 * 		
@@ -1013,7 +1015,30 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			
 		}
 	}
-	
+
+	/**
+	 * 
+	 * @param text
+	 *            : string in which all punctuations to remove
+	 * @param c
+	 *            : a punctuatin to keep
+	 * @return: string after puctuations are removed except the one in c
+	 */
+
+	public String removePunctuation(String text, String c) {
+		//System.out.println("Old: " + text);
+		if (c == null) {
+			text = text.replaceAll("[\\p{Punct}]", "");
+		} else {
+			text = text.replaceAll(c, "aaa");
+			text = text.replaceAll("[\\p{Punct}]", "");
+			text = text.replaceAll("aaa", c);
+		}
+		//System.out.println("New: " + text);
+
+		return text;
+	}
+
 	public Set<String> getNounsDescriptorsRule2(String oSent) {
 		Set<String> descriptors = new HashSet<String>();
 		
@@ -1069,6 +1094,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					t.toLowerCase();
 					nouns.add(t);
 				}
+			}
+			else {
+				break;
 			}
 		}
 		
@@ -1139,8 +1167,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 **/
 	public Set<String> getTaxonNameNouns (String oSent) {
 		Set<String> taxonNames = new HashSet<String>();
-		String regex = "(.*?)<i>\\s*([^<]*)\\s*<\\/i>(.*)";
+		String regex = "(.*?)<\\s*i\\s*>\\s*([^<]*)\\s*<\\s*\\/\\s*i\\s*>(.*)";
 		String copy = oSent;
+		//<\\s*/?\\s*i\\s*>
 		
 		while (true) {
 			Matcher matcher = Pattern.compile(regex).matcher(copy);
@@ -1717,6 +1746,23 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				sentenceTable.get(i).setModifier("");
 			}
 		}
+	}
+	
+	public void discover (String s) {
+		for (int i=0;i<this.sentenceTable.size();i++) {
+			Sentence sentEntry = sentenceTable.get(i);
+			//sentid
+			String sent = sentEntry.getSentence();
+			String lead = sentEntry.getLead();
+			String tag = sentEntry.getTag();
+			String status = sentEntry.getStatus();
+			if (!(tag == null || !tag.equals("ignore") && status.equals(s))) {
+				break;
+			}
+
+		}
+		
+		;
 	}
 
 	public void learn(List<Treatment> treatments) {

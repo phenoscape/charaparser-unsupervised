@@ -37,6 +37,22 @@ public class Sentence {
 		this.originalsent=os;
 	}
 	
+	public String getLead() {
+		return this.lead;
+	}
+	
+	public void setLead(String l) {
+		this.lead=l;
+	}
+	
+	public String getStatus() {
+		return this.status;
+	}
+	
+	public void setStatus(String s) {
+		this.status=s;
+	}
+	
 	public String getTag() {
 		return this.tag;
 	}
@@ -52,5 +68,5 @@ public class Sentence {
 	public void setModifier(String m) {
 		this.modifier=m;
 	}
-
+	
 }

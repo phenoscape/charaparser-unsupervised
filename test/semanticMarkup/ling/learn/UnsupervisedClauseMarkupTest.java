@@ -226,7 +226,7 @@ public class UnsupervisedClauseMarkupTest {
 		Set<String> taxonNames = new HashSet<String>();
 		// Method getTaxonNameNouns
 		assertEquals("getTaxonNameNouns - not match", taxonNames, tester.getTaxonNameNouns("word word word"));
-		assertEquals("getTaxonNameNouns - empty taxon name", taxonNames, tester.getTaxonNameNouns("<i></i>"));
+		assertEquals("getTaxonNameNouns - empty taxon name", taxonNames, tester.getTaxonNameNouns("< i >< / i >"));
 		taxonNames.add("word1 word2	word3");
 		taxonNames.add("word1");
 		taxonNames.add("word2");
@@ -234,7 +234,7 @@ public class UnsupervisedClauseMarkupTest {
 		taxonNames.add("word4 word5");
 		taxonNames.add("word4");
 		taxonNames.add("word5");
-		assertEquals("getTaxonNameNouns - match", taxonNames, tester.getTaxonNameNouns("<i>word1 word2	word3</i>, <i>word4 word5</i>"));
+		assertEquals("getTaxonNameNouns - match", taxonNames, tester.getTaxonNameNouns("< i	>word1 word2	word3< /	i>, < i >word4 word5<	/i>"));
 		
 		// Method getTaxonNameNouns
 		Set<String> nouns = new HashSet<String>();
@@ -272,11 +272,15 @@ public class UnsupervisedClauseMarkupTest {
 				"getNounsRule4 - not match",
 				nouns3,
 				tester.getNounsRule4("word word 	word nouna 1"));
+		nouns3.remove("nouna");
 		nouns3.add("nounb");
 		assertEquals(
 				"getNounsRule4 - not match",
 				nouns3,
 				tester.getNounsRule4("word word 	word page 1 word above 2 word nounb 2 end"));
+		
+		//
+		assertEquals("", "word word word wo-rd cant Id end", tester.removePunctuation("word word, word&$% wo-rd can't I'd end.","-"));
 
 	}
 }
