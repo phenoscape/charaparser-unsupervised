@@ -279,8 +279,16 @@ public class UnsupervisedClauseMarkupTest {
 				nouns3,
 				tester.getNounsRule4("word word 	word page 1 word above 2 word nounb 2 end"));
 		
-		//
-		assertEquals("", "word word word wo-rd cant Id end", tester.removePunctuation("word word, word&$% wo-rd can't I'd end.","-"));
+		// Method removePunctuation
+		assertEquals("removePunctuation", "word word word wo-rd cant Id end", tester.removePunctuation("word word, word&$% wo-rd can't I'd end.","-"));
+		
+		// Method updateCheckedWords
+		String checkedWords = ":";
+		Set<String> list = new HashSet<String>();
+		list.add("one");
+		list.add("two");
+		list.add("three");
+		assertEquals("updateCheckedWords", ":two:one:three:", tester.updateCheckedWords(":", checkedWords, list));
 
 	}
 }

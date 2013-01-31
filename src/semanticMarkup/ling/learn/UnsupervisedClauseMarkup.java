@@ -1757,12 +1757,95 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			String tag = sentEntry.getTag();
 			String status = sentEntry.getStatus();
 			if (!(tag == null || !tag.equals("ignore") && status.equals(s))) {
-				break;
+				continue;
+			}
+			
+			String[] startWords = lead.split("\\s+");
+			//@startwords = split(/\s+/,$lead);
+			
+			//$pattern = buildpattern(@startwords);
+			String pattern = buildPattern(startWords);
+			
+			if (pattern.matches("^.*\\w+.*$")) {
+				// ids of untagged sentences that match the pattern
+				Set matched = matchPattern(pattern, status, false); 
+				int round = 0;
+				int numNew = 0;
 			}
 
 		}
 		
 		;
+	}
+	
+	public Set<Integer> matchPattern(String pattern, String s, boolean hasTag) {
+		
+		Set<Integer> matchedIDs = new HashSet<Integer>();
+		
+		for (int i =0;i<this.sentenceTable.size();i++) {
+			Sentence sent = this.sentenceTable.get(i);
+			String sentence = sent.getSentence();
+			String status = sent.getStatus();
+			String tag = sent.getTag();
+			if ((hasTag && (tag != null) && (status.equals(s)) ) 
+					|| ((!hasTag) && (tag == null) && (status.equals(s))) ) {
+				Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+				Matcher m = p.matcher(sentence);
+				if (m.lookingAt()) {
+					matchedIDs.add(i);
+				}
+			}
+		}	
+		
+		return matchedIDs;
+	}
+	
+	/**
+	 * 
+	 * @param startWords
+	 * @return
+	 */
+	public String buildPattern(String[] startWords) {
+		Set<String> newWords = new HashSet<String>();
+		String temp = "";
+		String prefix = "\\w+\\s";
+		String pattern = "";
+		
+		for (int i = 0; i < startWords.length; i++) {
+			String word = startWords[i];
+			Pattern p = Pattern.compile(":" + word + ":",
+					Pattern.CASE_INSENSITIVE);
+			Matcher m = p.matcher(this.CHECKEDWORDS);
+			// TODO: This is not very sure, need to make sure - Dongye
+			if ((!word.matches("[\\p{Punct}0-9]")) && (!m.lookingAt())) {
+				temp = temp + word + "|";
+				newWords.add(word);
+			}
+		}
+
+		// no new words
+		if (!temp.matches("^.*\\w.*$")) {
+			return "";
+		}
+		
+		// remove the last char, which is a '|'
+		temp = temp.substring(0, temp.length()-1);
+		temp = "\\b(?:"+temp+")\\b";
+		
+		pattern = "^"+temp+"|"; 
+		
+		for (int j=0;j<this.NUM_LEAD_WORDS-1;j++) {
+			temp = prefix+temp;
+			pattern = pattern + "^"+temp+"|";
+		}
+		
+		pattern = pattern.substring(0, pattern.length()-1);
+		
+		pattern = "(?:"+pattern+")";
+		
+		this.CHECKEDWORDS = this.updateCheckedWords(":", this.CHECKEDWORDS, newWords);
+		
+		return pattern;
 	}
 
 	public void learn(List<Treatment> treatments) {
@@ -1862,6 +1945,26 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String myText = text;
 		myText = myText.replaceAll("^\\s+|\\s+$", "");
 		return myText;
+	}
+	
+	/**
+	 * 
+	 * @param expr
+	 * @param checkedWords
+	 * @param list
+	 * @return
+	 */
+	public String updateCheckedWords(String expr, String checkedWords,
+			Set<String> list) {
+		String newCheckedWords = checkedWords;
+		Iterator<String> iter = list.iterator();
+
+		while (iter.hasNext()) {
+			newCheckedWords = newCheckedWords + iter.next()+":";
+		}
+		//newCheckedWords = newCheckedWords + ":";
+
+		return newCheckedWords;
 	}
 	
 	// ---------------TEST Helper function----------------
