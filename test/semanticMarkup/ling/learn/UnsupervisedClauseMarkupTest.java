@@ -290,5 +290,11 @@ public class UnsupervisedClauseMarkupTest {
 		list.add("three");
 		assertEquals("updateCheckedWords", ":two:one:three:", tester.updateCheckedWords(":", checkedWords, list));
 
+		// Method buildPattern
+		assertEquals(
+				"buildPattern",
+				"(?:^\\b(?:one|two|three)\\b|^\\w+\\s\\b(?:one|two|three)\\b|^\\w+\\s\\w+\\s\\b(?:one|two|three)\\b)",
+				tester.buildPattern("one two three".split(" ")));
+
 	}
 }

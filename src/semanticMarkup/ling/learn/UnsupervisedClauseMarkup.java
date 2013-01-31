@@ -1748,7 +1748,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 	}
 	
-	public void discover (String s) {
+	public int discover (String s) {
+		int newDisc = 0;
+		
 		for (int i=0;i<this.sentenceTable.size();i++) {
 			Sentence sentEntry = sentenceTable.get(i);
 			//sentid
@@ -1768,16 +1770,91 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			
 			if (pattern.matches("^.*\\w+.*$")) {
 				// ids of untagged sentences that match the pattern
-				Set matched = matchPattern(pattern, status, false); 
+				Set<Integer> matched = matchPattern(pattern, status, false); 
 				int round = 0;
 				int numNew = 0;
+				
+				do {
+					numNew = ruleBasedLearn(matched);
+					newDisc= newDisc+numNew;
+					round++;
+				} while(numNew>0);
 			}
 
 		}
 		
+		return newDisc;
+	}
+
+	/**
+	 * return a positive number if anything new is learnt from @source sentences
+	 * by applying rules and clues to grow %NOUNS and %BDRY and to confirm tags
+	 * create and maintain decision tables
+	 * 
+	 * @param matched
+	 * @return
+	 */
+	public int ruleBasedLearn(Set<Integer> matched) {
+		
+		/*
+				########return a positive number if anything new is learnt from @source sentences
+				########by applying rules and clues to grow %NOUNS and %BDRY and to confirm tags
+				########create and maintain decision tables
+				sub rulebasedlearn{
+					my @sentids = @_; #an array of sentences with similar starting words
+					my ($sign, $new, $tag, $sentid);
+					foreach $sentid (@sentids){
+				    	if(!ismarked($sentid)){#without decision ids
+							($tag, $new) = doit($sentid);
+							tag($sentid, $tag);
+							$sign +=$new;
+						}
+					}
+					return $sign;
+				}
+		*/
+		
+		int sign = 0;
+		int numNew = 0;
+		String tag = "";
+
+		Iterator<Integer> iter = matched.iterator();
+		while (iter.hasNext()) {
+			int sentID = iter.next().intValue();
+			Sentence sent = this.sentenceTable.get(sentID);
+			if (sent.getTag() != null) {
+				doIt(sentID);
+				tagIt(sentID,tag);
+				sign = sign+numNew;
+			}
+		}
+		
+		
+		return 0;
+	}
+
+	// update wordpos table (on certainty) when a sentence is tagged for the
+	// first time. this update should not be done when a pos is looked up,
+	// because we may lookup a pos for the same example multiple times. if the
+	// tag need to be adjusted (not by doit function), also need to adjust
+	// certainty counts.
+	public void doIt(int sentID) {
+		Sentence sentEntry = this.sentenceTable.get(sentID);
+		String sent = sentEntry.getSentence();
+		String lead = sentEntry.getLead();
+		
+		String[] words = lead.split("\\s+");
+		
+	}
+	// the length of the ptn must be the same as the number of words in @words if certainty is < 50%, replace POS with ?.
+	public void getPOSptn() {
 		;
 	}
-	
+
+	public void tagIt(int sentID, String tag) {
+		;
+	}
+
 	public Set<Integer> matchPattern(String pattern, String s, boolean hasTag) {
 		
 		Set<Integer> matchedIDs = new HashSet<Integer>();
