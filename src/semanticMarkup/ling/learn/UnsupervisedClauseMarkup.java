@@ -1015,6 +1015,25 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			
 		}
 	}
+	
+	Set<String> filteOutDescriptors(Set<String> rNouns, Set<String> descriptors) {
+		Set<String> filtedNouns = new HashSet<String>();
+
+		Iterator<String> iter = rNouns.iterator();
+		while (iter.hasNext()) {
+			String noun = iter.next();
+			noun = noun.toLowerCase();
+
+			Pattern p = Pattern.compile("\\b(" + this.PREPOSITION + "|"
+					+ this.STOP + ")\\b", Pattern.CASE_INSENSITIVE);
+			Matcher m = p.matcher(noun);
+
+			if ((!m.lookingAt()) && (!descriptors.contains(noun))) {
+				filtedNouns.add(noun);
+			}
+		}
+		return filtedNouns;
+	}
 
 	/**
 	 * 
@@ -1796,24 +1815,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 */
 	public int ruleBasedLearn(Set<Integer> matched) {
 		
-		/*
-				########return a positive number if anything new is learnt from @source sentences
-				########by applying rules and clues to grow %NOUNS and %BDRY and to confirm tags
-				########create and maintain decision tables
-				sub rulebasedlearn{
-					my @sentids = @_; #an array of sentences with similar starting words
-					my ($sign, $new, $tag, $sentid);
-					foreach $sentid (@sentids){
-				    	if(!ismarked($sentid)){#without decision ids
-							($tag, $new) = doit($sentid);
-							tag($sentid, $tag);
-							$sign +=$new;
-						}
-					}
-					return $sign;
-				}
-		*/
-		
 		int sign = 0;
 		int numNew = 0;
 		String tag = "";
@@ -1823,7 +1824,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			int sentID = iter.next().intValue();
 			Sentence sent = this.sentenceTable.get(sentID);
 			if (sent.getTag() != null) {
+				// ($tag, $new) = doit($sentid);
 				doIt(sentID);
+				// tag($sentid, $tag);
 				tagIt(sentID,tag);
 				sign = sign+numNew;
 			}
