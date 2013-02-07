@@ -2047,6 +2047,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return newCheckedWords;
 	}
 	
+	public String update(String word, String newPOS, String newRole, String table, int increment) {
+		return "Sucessed!";
+	}
+	
 	// ---------------TEST Helper function----------------
 	public void printWordPOSTable() {
 		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = this.wordPOSTable
@@ -2063,5 +2067,3 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 	}
 }
-
-//test new local repo
