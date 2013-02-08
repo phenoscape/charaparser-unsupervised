@@ -2046,10 +2046,214 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		return newCheckedWords;
 	}
-	
-	public String update(String word, String newPOS, String newRole, String table, int increment) {
-		return "Sucessed!";
+
+	public int updateTable(String word, String pos, String role, String table,
+			int increment) {
+		int result = 0;
+
+		word = this.processWord(word);
+		// empty word
+		if (word.length() < 1) {
+			return 0;
+		}
+
+		// forbidden word
+		if (word.matches("\\b(?:" + this.FORBIDDEN + ")\\b")) {
+			return 0;
+		}
+
+		if (pos.equals("n")) {
+			pos = getNumber(word);
+		}
+
+		result = result + markKnown(word, pos, role, table, increment);
+
+		// to eliminate reduandent computation
+		if (!inSingularPluralPair(word)) {
+			if (pos.equals("p")) {
+				String pl = word;
+				word = sigular(word);
+				// add "*" and 0: pos for those words are inferred based on
+				// other clues, not seen directly from the text
+				result = result + this.markKnown(word, "s", "*", table, 0);
+				addSingularPluralPair(word, pl);
+			}
+			if (pos.equals("s")) {
+				List<String> words = plural(word);
+				String sg = word;
+				for (int i = 0; i < words.size(); i++) {
+					if (words.get(i).matches("^.*\\w.*$")) {
+						result = result
+								+ this.markKnown(words.get(i), "p", "*", table,
+										0);
+					}
+					addSingularPluralPair(sg, words.get(i));
+				}
+			}
+		}
+
+		return result;
 	}
+
+	private List<String> plural(String word) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private void addSingularPluralPair(String word, String pl) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private String sigular(String word) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private boolean inSingularPluralPair(String word) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public int markKnown(String word, String pos, String role, String table,
+			int increment) {
+
+		String sth = "";
+		String pattern = "";
+		int sign = 0;
+		String otherPrefix = "";
+		String spWords = "";
+
+		// empty word
+		// if (word.length() < 1) {
+		// return 0;
+		// }
+
+		// forbidden word
+		if (word.matches("\\b(?:" + this.FORBIDDEN + ")\\b")) {
+			return 0;
+		}
+
+		// stop words
+		if (word.matches("^(" + this.STOP + ")$")) {
+			sign = sign
+					+ processNewWord(word, pos, role, table, word, increment);
+			return sign;
+		}
+
+		sign = sign + processNewWord(word, pos, role, table, word, increment);
+
+		Pattern p = Pattern.compile("^(" + this.PREFIX + ")(\\S+).*$");
+		Matcher m = p.matcher(word);
+		if (m.lookingAt()) {
+			String g1 = m.group(1);
+			String g2 = m.group(2);
+			String temp = g2;
+			otherPrefix = this.PREFIX;
+			otherPrefix = otherPrefix.replace("\\b" + g1 + "\\b", "");
+			otherPrefix = otherPrefix.replace("\\|\\|", "|");
+			otherPrefix = otherPrefix.replace("^\\|", "");
+			spWords = "(" + escape(singularPluralVariations(temp)) + ")";
+			pattern = "^(" + otherPrefix + ")?" + spWords + "\\$";
+
+			Iterator<Map.Entry<String, String>> iter1 = this.unknownWordTable
+					.entrySet().iterator();
+			while (iter1.hasNext()) {
+				Map.Entry<String, String> entry = iter1.next();
+				String newWord = entry.getKey();
+				String flag = entry.getValue();
+				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
+					sign = sign
+							+ processNewWord(newWord, pos, "*", table, word, 0);
+				}
+			}
+
+			// word starts with a lowercase letter
+			if (word.matches("^[a-z].*$")) {
+				spWords = "(" + escape(singularPluralVariations(word)) + ")";
+				// word=shrubs, pattern = (pre|sub)shrubs
+				pattern = "^(" + this.PREFIX + ")" + spWords + "\\$";
+
+				Iterator<Map.Entry<String, String>> iter2 = this.unknownWordTable
+						.entrySet().iterator();
+				while (iter2.hasNext()) {
+					Map.Entry<String, String> entry = iter2.next();
+					String newWord = entry.getKey();
+					String flag = entry.getValue();
+					if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
+						sign = sign
+								+ processNewWord(newWord, pos, "*", table,
+										word, 0);
+					}
+				}
+
+				// word_$spwords
+				spWords = "(" + escape(singularPluralVariations(word)) + ")";
+				pattern = ".*_" + spWords + "\\$";
+				Iterator<Map.Entry<String, String>> iter3 = this.unknownWordTable
+						.entrySet().iterator();
+				while (iter3.hasNext()) {
+					Map.Entry<String, String> entry = iter3.next();
+					String newWord = entry.getKey();
+					String flag = entry.getValue();
+					if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
+						sign = sign
+								+ processNewWord(newWord, pos, "*", table,
+										word, 0);
+					}
+				}
+			}
+		}
+
+		return sign;
+	}
+
+	// in perl, it escape [] {} and () for mysql regexp, not perl regrexp. May not be necessary in Java
+	private String escape(String singularPluralVariations) {
+		// TODO Auto-generated method stub
+		return singularPluralVariations;
+	}
+
+	private String singularPluralVariations(String temp) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private int processNewWord(String word, String pos, String role,
+			String table, String word2, int increment) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	/**
+	 * Helper of method updateTable: ???
+	 * @param w
+	 * @return
+	 */
+	public String getNumber(String word) {
+		return word;
+	}
+
+	/**
+	 * Helper of method updateTable: process word
+	 * 
+	 * @param w
+	 * @return
+	 */
+
+	public String processWord(String word) {
+		//$word =~ s#<\S+?>##g; #remove tag from the word
+		//$word =~ s#\s+$##;
+		//$word =~ s#^\s*##;
+		
+		word = word.replaceAll("<\\S+?>", "");
+		word = word.replaceAll("\\s+$", "");
+		word = word.replaceAll("^\\s*", "");
+		
+		return word;
+	}
+	
+	
 	
 	// ---------------TEST Helper function----------------
 	public void printWordPOSTable() {

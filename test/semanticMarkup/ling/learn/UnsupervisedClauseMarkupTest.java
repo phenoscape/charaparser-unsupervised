@@ -295,6 +295,31 @@ public class UnsupervisedClauseMarkupTest {
 				"buildPattern",
 				"(?:^\\b(?:one|two|three)\\b|^\\w+\\s\\b(?:one|two|three)\\b|^\\w+\\s\\w+\\s\\b(?:one|two|three)\\b)",
 				tester.buildPattern("one two three".split(" ")));
+		
+		
 
+		// Method update
+		assertEquals("updateTable - empty word", 0,
+				tester.updateTable("", "", "", "", 0));
+		assertEquals("updateTable - forbidden word", 0,
+				tester.updateTable("to", "", "", "", 0));
+		
+		// Method processWord
+		String word = "<word>word <\\iword>word word</word2>";
+		assertEquals("processWord", "word word word",
+				tester.processWord(word));
+		assertEquals("processWord", "word word word",
+				tester.processWord(" 	 word word word"));
+		assertEquals("processWord", "word word word",
+				tester.processWord("word word word 	 "));
+		//System.out.println(word);
+		
+		// Method markKnown
+		assertEquals("markKnown - forbidden word", 0,
+				tester.markKnown("and", "", "", "", 0));
+		assertEquals("markKnown - stop word", 0,
+				tester.markKnown("page", "", "", "", 0));			
+		
+		
 	}
 }
