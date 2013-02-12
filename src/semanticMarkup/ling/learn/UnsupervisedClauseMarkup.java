@@ -69,10 +69,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private int DECISIONID = 0;
 	private String PROPERNOUN = "propernouns"; // EOL
 
-	private Hashtable<String, String> WNNUMBER = new Hashtable(); // word->(p|s)
-	private Hashtable<String, String> WNSINGULAR = new Hashtable();// word->singular
-	private Hashtable<String, String> WNPOS = new Hashtable(); // word->POSs
-	private Hashtable<String, String> WNPOSRECORDS = new Hashtable();
+	private Map<String, String> WN_NUMBER = new HashMap(); // word->(p|s)
+	private Map<String, String> WN_SINGULAR = new HashMap();// word->singular
+	private Map<String, String> WN_POS = new HashMap(); // word->POSs
+	private Map<String, String> WN_POSRECORDS = new HashMap();
 	private String NEWDESCRIPTION = ""; // record the index of sentences that
 										// ends a description
 	private Hashtable<String, String> WORDS = new Hashtable();
@@ -2063,6 +2063,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 
 		if (pos.equals("n")) {
+			//	$pos = getnumber($word);
 			pos = getNumber(word);
 		}
 
@@ -2231,7 +2232,108 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @return
 	 */
 	public String getNumber(String word) {
+		
+		/**
+		  my $word = shift;
+		  #$word = lc $word;
+		  my $number = checkWN($word, "number");
+		  return $number if $number =~/[sp]/;
+		  return "" if $number=~/x/;
+		  if($word =~/i$/) {return "p";} #1.	Calyculi  => 1.	Calyculus, pappi => pappus
+		  if ($word =~ /ss$/){return "s";}
+		  if($word =~/ia$/) {return "p";}
+		  if($word =~/[it]um$/) {return "s";}#3/13/09
+		  if ($word =~/ae$/){return "p";}
+		  if($word =~/ous$/){return ""; }
+		  if($word =~/^[aiu]s$/){return ""; }
+		  if ($word =~/us$/){return "s";}
+		  if($word =~ /es$/ || $word =~ /s$/){return "p";}
+		  if($word =~/ate$/){return "";} #3/12/09 good.
+		  return "s";
+		**/
+		
+		String number = checkWN(word, "number");
+		
+		
+		
+		
+		
 		return word;
+	}
+
+	private String checkWN(String word, String mode) {
+
+		word = word.replaceAll("\\W", "");
+		if (word.equals("")) {
+			return "";
+		}
+		
+		// singular case
+		String singular = "";
+		if (mode.equals("singular")) {
+			singular = this.WN_SINGULAR.get(word);
+		}
+		if (singular.matches("^.*\\w.*$")) {
+			return singular;
+		}
+		
+		// number case
+		String number ="";
+		if (mode.equals("number")) {
+			number = this.WN_NUMBER.get(word);
+		}
+		if (number.matches("^.*\\w.*$")) {
+			return number;
+		}
+
+		// pos case
+		String pos="";
+		if (mode.equals("pos")) {
+			pos = this.WN_POS.get(word);
+		}
+		if (pos.matches("^.*\\w.*$")){
+			return pos;
+		}
+		
+		// special cases
+		if (word.equals("teeth")) {
+			this.WN_NUMBER.put("teeth", "p");
+			this.WN_SINGULAR.put("teeth", "tooth");
+			return mode.equals("singular")?"tooth":"p";
+		}
+		
+		if (word.equals("tooth")) {
+			this.WN_NUMBER.put("tooth", "s");
+			this.WN_SINGULAR.put("tooth", "tooth");
+			return mode.equals("singular")?"tooth":"s";
+		}
+
+		if (word.equals("NUM")) {
+			return mode.equals("singular")?"NUM":"s";
+		}
+
+		if (word.equals("or")) {
+			return mode.equals("singular")?"or":"";
+		}
+
+		if (word.equals("and")) {
+			return mode.equals("singular")?"and":"";
+		}
+
+		if (word.matches("^.*[a-z]{3,}ly$")) {
+			if (mode.equals("singular")) {
+				return word;	
+			}
+			if (mode.equals("number")) {
+				return "";	
+			}
+			if (mode.equals("pos")) {
+				return "r";	
+			}
+		}
+		
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	/**

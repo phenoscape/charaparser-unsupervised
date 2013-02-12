@@ -298,7 +298,7 @@ public class UnsupervisedClauseMarkupTest {
 		
 		
 
-		// Method update
+		// Method updateTable
 		assertEquals("updateTable - empty word", 0,
 				tester.updateTable("", "", "", "", 0));
 		assertEquals("updateTable - forbidden word", 0,
