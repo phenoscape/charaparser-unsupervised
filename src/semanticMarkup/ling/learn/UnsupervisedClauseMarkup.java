@@ -2320,6 +2320,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return mode.equals("singular")?"and":"";
 		}
 
+		// concentrically
 		if (word.matches("^.*[a-z]{3,}ly$")) {
 			if (mode.equals("singular")) {
 				return word;	
@@ -2332,8 +2333,123 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 		
-		// TODO Auto-generated method stub
-		return null;
+		/**
+		  #otherwise, call wn
+		  my $result = `wn $word -over`;
+		  if ($result !~/\w/){#word not in WN
+		  	$WNPOSRECORDS{$word} = ""; #5/10/09
+		  	my $wordcopy = $word;
+		  	$word =~ s#ed$##;
+		  	if($word ne $wordcopy){ #$word not end with "ed"
+		  		$result = `wn $word -over`;
+		  		if($result =~ /\w/){ #$word end with "ed", what remains after removes "ed" is still a word
+		  			return $word if $mode eq "singular";
+		  			return "" if $mode eq "number";
+		  			return "a" if $mode eq "pos";
+		  		}
+
+		  	}
+		  	**/
+		// otherwise, call WordNet
+		if (!this.myWN.contains(word)) {// word not in WN
+			this.WN_POSRECORDS.put(word, "");
+			String wordCopy = word;
+			word = word.replaceAll("ed$", "");
+			if (!word.equals(wordCopy)) {
+				if (this.myWN.contains(word)) {
+					if (mode.equals("singular")) {
+						return word;
+					}
+					if (mode.equals("number")) {
+						return "";
+					}
+					if (mode.equals("pos")) {
+						return "a";
+					}
+				}
+			}
+			/**
+	$word = $wordcopy;
+  	$word =~ s#^($PREFIX)+##;
+  	if($word eq $wordcopy){
+  		return $mode eq "singular"? $word : ""; #not in WN, return ""
+  	}else{
+  		$result = `wn $word -over`;
+  		$result =~ s#\b$word\b#$wordcopy#g;
+  		$word = $wordcopy;
+  		return $mode eq "singular"? $word : "" if ($result !~/\w/);
+  	}
+  }
+			 */
+			word = wordCopy;
+			word = word.replace("^(" + this.PREFIX + ")+", "");
+			if (word.endsWith(wordCopy)) {
+				return mode.equals("singular") ? word : "";
+			} else {
+				this.myWN.contains(word);
+				// $result =~ s#\b$word\b#$wordcopy#g;
+				word = wordCopy;
+				if (true) {
+					return mode.equals("singular") ? word : "";
+				}
+			}
+		}
+		else {
+			/**
+  #found $word in WN:
+  $result =~ s#\n# #g;
+  if($mode eq "singular" || $mode eq "number"){
+    my $t = "";
+    while($result =~/Overview of noun (\w+) (.*) /){
+         $t .= $1." ";
+         $result = $2;
+    }
+    if ($t !~ /\w/){#$word is not a noun
+    	#return "v";
+    	return $mode eq "singular"? $word : "x"; #is not a noun, return "x"
+    }
+    $t =~ s#\s+$##;
+    my @ts = split(/\s+/, $t);
+    ###select the singular between roots and root.   bases => basis and base?
+			 */
+			if (mode.equals("singular") || mode.equals("number")) {
+				String temp = "";
+				if (this.myWN.isNoun(word)) {
+					return mode.equals("singular") ? word : "x";
+				}
+				// Not very sure how this part works
+				
+			}
+			else if (mode.equals("pos")) {
+				/**
+   my $pos = "";
+   while($result =~/.*?Overview of ([a-z]*) (.*)/){
+         my $t = $1;
+         $result = $2;
+         $pos .= "n" if $t eq "noun";
+         $pos .= "v" if $t eq "verb";
+         $pos .= "a" if $t eq "adj";
+         $pos .= "r" if $t eq "adv";
+
+    }
+    $WNPOSRECORDS{$word}=$pos;
+    if($pos =~/n/ && $pos =~/v/ && $word=~/(ed|ing)$/){ #appearing is a nv, but set it v
+    	$pos =~ s#n##g;
+    }
+    $WNPOS{$word} = $pos;
+    print "Wordnet Pos for $word is $pos\n" if $debug;
+    return $pos;
+				 */
+				pos = "";
+				if ((this.myWN.isNoun(word)) 
+						&& (this.myWN.isVerb(word))
+						&& (word.matches("^.*(ed|ing)$"))) {
+					pos = "v";
+				}
+				this.WN_POS.put(word, pos);
+				return pos;
+			}
+		}
 	}
 
 	/**
