@@ -2253,12 +2253,46 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		**/
 		
 		String number = checkWN(word, "number");
-		
-		
-		
-		
-		
-		return word;
+		if (number.matches("^.*[sp].*&")) {
+			return number;
+		}
+		if (number.matches("^.*x.*$")) {
+			return "";
+		}
+		// Calyculi => 1. Calyculus, pappi => pappus
+		if (word.matches("^.*i$")) {
+			return "p";
+		}
+		if (word.matches("^.*ss$")) {
+			return "s";
+		}
+		if (word.matches("^.*ia$")) {
+			return "p";
+		}
+		if (word.matches("^.*[it]um$")) {
+			return "s";
+		}
+		if (word.matches("^.*ae$")) {
+			return "p";
+		}
+		if (word.matches("^.*ous$")) {
+			return "";
+		}
+		if (word.matches("^.*[aiu]s$")) {
+			return "";
+		}
+		if (word.matches("^.*us$")) {
+			return "s";
+		}
+		// if($word =~ /es$/ || $word =~ /s$/){return "p";}
+		if (word.matches("^.*es$") || word.matches("^.*s$")) {
+			return "p";
+		}
+		if (word.matches("^.*ate$")) {
+			return "";
+		}
+
+		return "s";
 	}
 
 	public String checkWN(String word, String mode) {
