@@ -2261,7 +2261,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return word;
 	}
 
-	private String checkWN(String word, String mode) {
+	public String checkWN(String word, String mode) {
 
 		word = word.replaceAll("\\W", "");
 		if (word.equals("")) {
@@ -2273,8 +2273,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (mode.equals("singular")) {
 			singular = this.WN_SINGULAR.get(word);
 		}
-		if (singular.matches("^.*\\w.*$")) {
-			return singular;
+		if (singular != null) {
+			if (singular.matches("^.*\\w.*$")) {
+				return singular;
+			}
 		}
 		
 		// number case
@@ -2282,17 +2284,20 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (mode.equals("number")) {
 			number = this.WN_NUMBER.get(word);
 		}
-		if (number.matches("^.*\\w.*$")) {
-			return number;
+		if (number != null) {
+			if (number.matches("^.*\\w.*$")) {
+				return number;
+			}
 		}
-
 		// pos case
 		String pos="";
 		if (mode.equals("pos")) {
 			pos = this.WN_POS.get(word);
 		}
-		if (pos.matches("^.*\\w.*$")){
-			return pos;
+		if (pos != null) {
+			if (pos.matches("^.*\\w.*$")) {
+				return pos;
+			}
 		}
 		
 		// special cases
@@ -2450,6 +2455,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				return pos;
 			}
 		}
+		return "";
 	}
 
 	/**

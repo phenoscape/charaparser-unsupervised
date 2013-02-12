@@ -318,7 +318,15 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("markKnown - forbidden word", 0,
 				tester.markKnown("and", "", "", "", 0));
 		assertEquals("markKnown - stop word", 0,
-				tester.markKnown("page", "", "", "", 0));			
+				tester.markKnown("page", "", "", "", 0));	
+		
+		// Method checkWN
+		assertEquals ("checkWN - not word", "", tester.checkWN("()","pos"));
+		assertEquals ("checkWN - special case - teeth", "p", tester.checkWN("teeth","pos"));
+		assertEquals ("checkWN - special case - NUM", "NUM", tester.checkWN("NUM","singular"));
+		assertEquals ("checkWN - concentrically", "", tester.checkWN("concentrically","number"));
+
+		
 		
 		
 	}
