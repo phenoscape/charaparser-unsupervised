@@ -21,7 +21,7 @@ public class UnsupervisedClauseMarkupTest {
 		//String str = "/Users/nescent/Phenoscape/TEST2/target/descriptions";
 		//List<Treatment> treatments_l = new ArrayList<Treatment>();
 				
-		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("","biocreative2012","plain","test","/Users/nescent/Phenoscape/WordNet-3.0/dict");
+		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("","biocreative2012","plain","test","res/WordNet/WordNet-3.0/dict");
 		
 		/*
 		assertEquals("Result", null, tester.getAdjNouns());
@@ -211,9 +211,123 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("isWord - STOP word", false, tester.isWord("page"));
 		assertEquals("isWord - STOP word", false, tester.isWord("fig"));
 		
-		// Mehod getRoot
+		// Method getRoot
 		assertEquals("getRoot - computer", "comput", tester.getRoot("computer"));
 		assertEquals("getRoot - computer", "comput", tester.getRoot("computers"));
 		assertEquals("getRoot - computer", "comput", tester.getRoot("computing"));
+		
+		// Method trimString
+		assertEquals("trimString head", "word", tester.trimString("	 	word"));
+		assertEquals("trimString tail", "word",
+				tester.trimString("word   		 	"));
+		assertEquals("trimString head and tail", "word",
+				tester.trimString("	 	word	 	 		  "));
+		
+		Set<String> taxonNames = new HashSet<String>();
+		// Method getTaxonNameNouns
+		assertEquals("getTaxonNameNouns - not match", taxonNames, tester.getTaxonNameNouns("word word word"));
+		assertEquals("getTaxonNameNouns - empty taxon name", taxonNames, tester.getTaxonNameNouns("< i >< / i >"));
+		taxonNames.add("word1 word2	word3");
+		taxonNames.add("word1");
+		taxonNames.add("word2");
+		taxonNames.add("word3");
+		taxonNames.add("word4 word5");
+		taxonNames.add("word4");
+		taxonNames.add("word5");
+		assertEquals("getTaxonNameNouns - match", taxonNames, tester.getTaxonNameNouns("< i	>word1 word2	word3< /	i>, < i >word4 word5<	/i>"));
+		
+		// Method getTaxonNameNouns
+		Set<String> nouns = new HashSet<String>();
+		assertEquals("getTaxonNameNouns - not match", nouns, tester.getNounsMecklesCartilage("word word word"));
+		nouns.add("meckel#s");
+		nouns.add("meckels");
+		nouns.add("meckel");
+		assertEquals("getTaxonNameNouns - match", nouns, tester.getNounsMecklesCartilage("word Meckel#s word"));
+		
+		// Method getNounsEndOfSentence
+		Set<String> nouns2 = new HashSet<String>();
+		assertEquals(
+				"getNounsEndOfSentence - not match",
+				nouns2,
+				tester.getNounsEndOfSentence("word word 	word soe width nea"));		
+		nouns2.add("nouna");
+		assertEquals(
+				"getNounsEndOfSentence - match 1",
+				nouns2,
+				tester.getNounsEndOfSentence("word word 	word some nouna"));
+		nouns2.add("nounb");
+		assertEquals(
+				"getNounsEndOfSentence - match 2",
+				nouns2,
+				tester.getNounsEndOfSentence("word some nouna near word some width near word third nounb near end"));
+		
+		// Method getNounsRule4
+		Set<String> nouns3 = new HashSet<String>();
+		assertEquals(
+				"getNounsRule4 - not match",
+				nouns3,
+				tester.getNounsRule4("word word 	word noun one"));	
+		nouns3.add("nouna");
+		assertEquals(
+				"getNounsRule4 - not match",
+				nouns3,
+				tester.getNounsRule4("word word 	word nouna 1"));
+		nouns3.remove("nouna");
+		nouns3.add("nounb");
+		assertEquals(
+				"getNounsRule4 - not match",
+				nouns3,
+				tester.getNounsRule4("word word 	word page 1 word above 2 word nounb 2 end"));
+		
+		// Method removePunctuation
+		assertEquals("removePunctuation", "word word word wo-rd cant Id end", tester.removePunctuation("word word, word&$% wo-rd can't I'd end.","-"));
+		
+		// Method updateCheckedWords
+		String checkedWords = ":";
+		Set<String> list = new HashSet<String>();
+		list.add("one");
+		list.add("two");
+		list.add("three");
+		assertEquals("updateCheckedWords", ":two:one:three:", tester.updateCheckedWords(":", checkedWords, list));
+
+		// Method buildPattern
+		assertEquals(
+				"buildPattern",
+				"(?:^\\b(?:one|two|three)\\b|^\\w+\\s\\b(?:one|two|three)\\b|^\\w+\\s\\w+\\s\\b(?:one|two|three)\\b)",
+				tester.buildPattern("one two three".split(" ")));
+		
+		
+
+		// Method updateTable
+		assertEquals("updateTable - empty word", 0,
+				tester.updateTable("", "", "", "", 0));
+		assertEquals("updateTable - forbidden word", 0,
+				tester.updateTable("to", "", "", "", 0));
+		
+		// Method processWord
+		String word = "<word>word <\\iword>word word</word2>";
+		assertEquals("processWord", "word word word",
+				tester.processWord(word));
+		assertEquals("processWord", "word word word",
+				tester.processWord(" 	 word word word"));
+		assertEquals("processWord", "word word word",
+				tester.processWord("word word word 	 "));
+		//System.out.println(word);
+		
+		// Method markKnown
+		assertEquals("markKnown - forbidden word", 0,
+				tester.markKnown("and", "", "", "", 0));
+		assertEquals("markKnown - stop word", 0,
+				tester.markKnown("page", "", "", "", 0));	
+		
+		// Method checkWN
+		assertEquals ("checkWN - not word", "", tester.checkWN("()","pos"));
+		assertEquals ("checkWN - special case - teeth", "p", tester.checkWN("teeth","pos"));
+		assertEquals ("checkWN - special case - NUM", "NUM", tester.checkWN("NUM","singular"));
+		assertEquals ("checkWN - concentrically", "", tester.checkWN("concentrically","number"));
+
+		
+		
+		
 	}
 }
