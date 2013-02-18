@@ -4,5 +4,22 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/junit-4.5.jar"/>
+	<classpathentry kind="lib" path="lib/edu.mit.jwi_2.2.3_jdk.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/aopalliance.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/guice-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/guice-assistedinject-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/guice-grapher-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/guice-jmx-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/guice-jndi-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/guice-multibindings-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/guice-persist-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/guice-servlet-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/guice-spring-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/guice-struts2-plugin-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/guice-throwingproviders-3.0.jar"/>
+	<classpathentry kind="lib" path="lib/guice-3.0/javax.inject.jar"/>
+	<classpathentry kind="lib" path="lib/OpenNLP/opennlp-maxent-3.0.2-incubating.jar"/>
+	<classpathentry kind="lib" path="lib/OpenNLP/opennlp-tools-1.5.2-incubating.jar"/>
+	<classpathentry kind="lib" path="lib/OpenNLP/opennlp-uima-1.5.2-incubating.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
