@@ -2075,7 +2075,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (!inSingularPluralPair(word)) {
 			if (pos.equals("p")) {
 				String pl = word;
-				word = sigular(word);
+				word = getSingular(word);
 				// add "*" and 0: pos for those words are inferred based on
 				// other clues, not seen directly from the text
 				result = result + this.markKnown(word, "s", "*", table, 0);
@@ -2108,8 +2108,97 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
-	private String sigular(String word) {
-		// TODO Auto-generated method stub
+	/**
+	 * 
+	 * @param word
+	 * @return the plural form of the input word
+	 */
+	public String getSingular(String word) {
+		if (!word.matches("^.*\\w.*$")) {
+			return "";
+		}
+
+		if (word.equals("valves")) {
+			return "valve";
+		} else if (word.equals("media")) {
+			return "media";
+		} else if (word.equals("species")) {
+			return "species";
+		} else if (word.equals("axes")) {
+			return "axis";
+		} else if (word.equals("calyces")) {
+			return "calyx";
+		} else if (word.equals("frons")) {
+			return "frons";
+		} else if (word.equals("grooves")) {
+			return "groove";
+		} else if (word.equals("nerves")) {
+			return "nerve";
+		}
+
+		String singular = "";
+		if (getNumber(word).equals("p")) {
+			Pattern p = Pattern.compile("(^.*?[^aeiou])ies$");
+			Matcher m = p.matcher(word);
+
+			if (m.lookingAt()) {
+				singular = m.group(1) + "y";
+			} else {
+				p = Pattern.compile("(^.*?)i$");
+				m = p.matcher(word);
+				if (m.lookingAt()) {
+					singular = m.group(1) + "us";
+				} else {
+					p = Pattern.compile("(^.*?)ia$");
+					m = p.matcher(word);
+					if (m.lookingAt()) {
+						singular = m.group(1) + "ium";
+					} else {
+						p = Pattern.compile("(^.*?(x|ch|sh|ss))es$");
+						m = p.matcher(word);
+						if (m.lookingAt()) {
+							singular = m.group(1);
+						} else {
+							p = Pattern.compile("(^.*?)ves$");
+							m = p.matcher(word);
+							if (m.lookingAt()) {
+								singular = m.group(1) + "f";
+							} else {
+								p = Pattern.compile("(^.*?)ices");
+								m = p.matcher(word);
+								if (m.lookingAt()) {
+									singular = m.group(1) + "ex";
+								} else {
+									// pinnae ->pinna
+									p = Pattern.compile("(^.*?a)e$");
+									m = p.matcher(word);
+									if (m.lookingAt()) {
+										singular = m.group(1);
+									} else {
+										// fruits->fruit
+										p = Pattern.compile("(^.*?)s$");
+										m = p.matcher(word);
+										if (m.lookingAt()) {
+											singular = m.group(1);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (singular.matches("^.*\\w.*$")) {
+			return singular;
+		}
+
+		singular = checkWN(word, "singular");
+		if (singular.matches("^.*\\w.*$")) {
+			return singular;
+		}
+
 		return null;
 	}
 /**
@@ -2117,8 +2206,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
  * @param word
  * @return if the word is in the SingularPluralTable
  */
-	
-public  boolean inSingularPluralPair(String word) {
+
+	public boolean inSingularPluralPair(String word) {
 		// TODO Auto-generated method stub
 		Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
 
