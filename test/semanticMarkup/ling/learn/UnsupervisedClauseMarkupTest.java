@@ -325,6 +325,15 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals ("checkWN - special case - teeth", "p", tester.checkWN("teeth","pos"));
 		assertEquals ("checkWN - special case - NUM", "NUM", tester.checkWN("NUM","singular"));
 		assertEquals ("checkWN - concentrically", "", tester.checkWN("concentrically","number"));
+		
+		// Method checkWN
+		assertEquals ("inSingularPluralPair - null", false, tester.inSingularPluralPair("word"));
+		tester.singularPluralTable.add(new SingularPluralPair("word1", ""));
+		assertEquals ("inSingularPluralPair - singular match", true, tester.inSingularPluralPair("word1"));
+		tester.singularPluralTable.add(new SingularPluralPair("", "word2"));
+		assertEquals ("inSingularPluralPair - plural match", true, tester.inSingularPluralPair("word2"));
+		tester.singularPluralTable.add(new SingularPluralPair("word3", "word3"));
+		assertEquals ("inSingularPluralPair - both match", true, tester.inSingularPluralPair("word3"));
 
 		
 		

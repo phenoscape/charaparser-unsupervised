@@ -75,7 +75,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private Map<String, String> WN_POSRECORDS = new HashMap();
 	private String NEWDESCRIPTION = ""; // record the index of sentences that
 										// ends a description
-	private Hashtable<String, String> WORDS = new Hashtable();
+	private Map<String, Integer> WORDS = new HashMap();
 	private Hashtable<String, String> PLURALS = new Hashtable();
 
 	private String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
@@ -145,13 +145,18 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// Data Holders
 	// Table sentence
 	List<Sentence> sentenceTable = new LinkedList<Sentence>();
+	
 	// Table unknownwords
 	Map<String, String> unknownWordTable = new HashMap<String, String>();
+	
 	// Table wordpos
 	Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
 	
 	// Table heuristicnouns
 	Map<String, String> heuristicNounsTable = new HashMap<String, String>();
+	
+	// Table singularPlural
+	Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
 
 	// Third Tools
 	// WordNet
@@ -568,8 +573,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				if (debug)
 					System.out.println("Text: " + text);
 
-				List<String> sentcopy = new LinkedList<String>();
-				List<Integer> validindex = new LinkedList<Integer>();
+				List<String> sentCopy = new LinkedList<String>();
+				List<Integer> validIndex = new LinkedList<Integer>();
 				int index = 0;
 				// for each sentence, do some operations
 				for (int j = 0; j < sentences.length; j++) {
@@ -578,20 +583,17 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 						System.out.println("Sentence " + j + ": "
 								+ sentences[j]);
 
-					// TODO: Dongye
-					// Do something for this sentence:
-					// may have fewer than $N words
 					// if(!/\w+/){next;}
 					if (debug)
 						System.out.println(sentences[j]);
 					if (!sentences[j].matches("^.*\\w+.*$")) {
 						continue;
 					}
-					validindex.add(j);
+					validIndex.add(j);
 					// restore ".", "?", ";", ":", "."
 					sentences[j] = this.restoreMarksInBrackets(sentences[j]);
 					// push(@sentcopy, $_);
-					sentcopy.add(sentences[j]);
+					sentCopy.add(sentences[j]);
 
 					// remove bracketed text from sentence (keep those in
 					// originalsent); this step will not be able to remove
@@ -600,32 +602,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					// step in POSTagger4StanfordParser.java
 					sentences[j] = this.handleSentence(sentences[j]);
 
-					// getallwords($_);
-
-					/**
-					 * // first tokenize this sentence InputStream modelIn; try
-					 * { kjsdhfjlds modelIn = new
-					 * FileInputStream("res/en-token.bin"); //InputStream
-					 * modelIn2 = new FileInputStream("res/en-token.bin");
-					 * //File file234 = new File("res/qwertyuiop.txt");
-					 * //System.out.println(file234.getAbsoluteFile());
-					 * TokenizerModel model = new TokenizerModel(modelIn);
-					 * Tokenizer tokenizer = new TokenizerME(model); String
-					 * tokens[] = tokenizer.tokenize(sentences[j]); for (int i1
-					 * = 0; i1 < tokens.length; i1++) {
-					 * this.unknownWordTable.put(tokens[i1], "unknown"); }
-					 * String lead=""; int minL =
-					 * tokens.length>this.NUM_LEAD_WORDS?
-					 * this.NUM_LEAD_WORDS:tokens.length; for (int i2=0;
-					 * i2<minL;i2++) { lead=lead+tokens[i2]+" "; }
-					 * lead=lead.replaceAll("\\s$", "");
-					 * //lead=lead.substring(lead.length()-1); leadMap.put(j,
-					 * lead); } catch (FileNotFoundException e) { // TODO
-					 * Auto-generated catch block e.printStackTrace(); } catch
-					 * (InvalidFormatException e) { // TODO Auto-generated catch
-					 * block e.printStackTrace(); } catch (IOException e) { //
-					 * TODO Auto-generated catch block e.printStackTrace(); }
-					 **/
+					getAllWords(sentences[j]);
 
 					// first tokenize this sentence
 					String tokens[] = this.myTokenizer.tokenize(sentences[j]);
@@ -648,9 +625,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 				}
 
-				for (int j = 0; j < validindex.size(); j++) {
-					String line = sentences[validindex.get(j)];
-					String oline = sentcopy.get(validindex.get(j));
+				for (int j = 0; j < validIndex.size(); j++) {
+					String line = sentences[validIndex.get(j)];
+					String oline = sentCopy.get(validIndex.get(j));
 
 					// handle line first
 					// remove all ' to avoid escape problems
@@ -670,8 +647,28 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					// restore ".", "?", ";", ":", "."
 					oline = this.restoreMarksInBrackets(oline);
 					oline = oline.replaceAll("\'", " ");
+					
 					String lead = leadMap.get(j);
-
+					
+					String status = "";
+			
+					/**
+					 	if(getnumber($words[0]) eq "p"){
+					     $status = "start";
+						}else{
+					     $status = "normal";
+					}
+					
+					if (this.getNumber(lead)
+					
+					if(getnumber($words[0]) eq "p"){
+					     $status = "start";
+						}else{
+					     $status = "normal";
+					}
+					
+					if (this.getNumber(lead)
+ */
 					if (oline.length() >= 2000) { // EOL
 						oline = line;
 					}
@@ -700,6 +697,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// }
 		System.out.println("Total sentences = " + SENTID);
 		return true;
+	}
+
+	private void getAllWords(String sent) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	String[] segmentSentence(String text) {
@@ -2110,9 +2112,23 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	private boolean inSingularPluralPair(String word) {
+/**
+ * 
+ * @param word
+ * @return if the word is in the SingularPluralTable
+ */
+	
+public  boolean inSingularPluralPair(String word) {
 		// TODO Auto-generated method stub
+		Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+
+		while (iter.hasNext()) {
+			SingularPluralPair spp = iter.next();
+			if ((spp.getSingular().equals(word))
+					|| (spp.getPlural().equals(word))) {
+				return true;
+			}
+		}
 		return false;
 	}
 
