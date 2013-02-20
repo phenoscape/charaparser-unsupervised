@@ -2098,14 +2098,36 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return result;
 	}
 
-	private List<String> plural(String word) {
+	private List<String> getPlural(String word) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private void addSingularPluralPair(String word, String pl) {
-		// TODO Auto-generated method stub
-		
+	/**
+	 * 
+	 * @param sgl
+	 * @param pl
+	 * @return if add a pair, return true; otherwise return false
+	 */
+	public boolean addSingularPluralPair(String sgl, String pl) {
+		boolean is_exist = false;
+		Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+
+		while (iter.hasNext()) {
+			SingularPluralPair spp = iter.next();
+			if ((spp.getSingular().equals(sgl)) && (spp.getPlural().equals(pl))) {
+				is_exist = true;
+				break;
+			}
+		}
+
+		if (!is_exist) {
+			SingularPluralPair pair = new SingularPluralPair(sgl, pl);
+			this.singularPluralTable.add(pair);
+			return true;
+		}
+
+		return false;
 	}
 
 	/**

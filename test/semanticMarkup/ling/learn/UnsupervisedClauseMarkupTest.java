@@ -326,7 +326,7 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals ("checkWN - special case - NUM", "NUM", tester.checkWN("NUM","singular"));
 		assertEquals ("checkWN - concentrically", "", tester.checkWN("concentrically","number"));
 		
-		// Method checkWN
+		// Method inSingularPluralPair
 		assertEquals ("inSingularPluralPair - null", false, tester.inSingularPluralPair("word"));
 		tester.singularPluralTable.add(new SingularPluralPair("word1", ""));
 		assertEquals ("inSingularPluralPair - singular match", true, tester.inSingularPluralPair("word1"));
@@ -355,8 +355,13 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("getSingular - 7 - ae", "vertebra", tester.getSingular("vertebrae"));
 		// Cannot pass this test case
 		//assertEquals("getSingular - 7-2 - s", "hoplia", tester.getSingular("hoplias"));
-
 		
+		// Method addSingularPluralPair
+		assertEquals("addSigularPluralPair - pair not exist", true, tester.addSingularPluralPair("sword", "pword"));
+		tester.singularPluralTable.add(new SingularPluralPair("sword2",""));
+		assertEquals("addSigularPluralPair - one word exist", true, tester.addSingularPluralPair("sword2", "pword2"));
+		tester.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
+		assertEquals("addSigularPluralPair - pair exist", false, tester.addSingularPluralPair("sword3", "pword3"));
 		
 	}
 }
