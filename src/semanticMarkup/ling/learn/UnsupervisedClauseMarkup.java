@@ -2082,7 +2082,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				addSingularPluralPair(word, pl);
 			}
 			if (pos.equals("s")) {
-				List<String> words = plural(word);
+				List<String> words = getPlural(word);
 				String sg = word;
 				for (int i = 0; i < words.size(); i++) {
 					if (words.get(i).matches("^.*\\w.*$")) {
@@ -2098,8 +2098,252 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return result;
 	}
 
-	private List<String> getPlural(String word) {
+	private string[] getPlural(String word) {
 		// TODO Auto-generated method stub
+		
+		/**
+ my $word = shift;
+ return "" if $word =~/^(n|2n|x)$/;
+ my $plural = $PLURALS{$word};
+ if ($plural=~/\w+/){
+    my @pls = split(/ /, $plural);
+    return @pls;
+ }
+		 */
+		
+		if (word.matches("^(n|2n|x)$")) {
+			return "";
+		}
+		
+		String plural = this.PLURALS.get(word);
+		if (plural.matches("^.*\\w+.*$")) {
+			return plural.split(" ");
+		}
+		
+		/**
+if($word =~ /series$/){
+  $plural = $word;
+ }elsif($word =~ /(.*?)foot$/){
+  $plural = $1."feet";
+ }elsif($word =~ /(.*?)tooth$/){
+  $plural = $1."teeth";
+ }elsif($word =~ /(.*?)alga$/){
+  $plural = $1."algae";
+ }elsif($word =~ /(.*?)genus$/){
+  $plural = $1."genera";
+ }elsif($word =~ /(.*?)corpus$/){
+  $plural = $1."corpora";
+ }
+		 */
+		
+		plural = getPluralSpecialCaseHelper(word);
+		if (plural == null) {
+			plural = getPluralRuleHelper(word);
+			if (plural != null) {
+				plural = plural+""+word+"s";
+			}	
+		}
+		/**
+  $plural =~ s#^\s+##;
+  $plural =~ s#\s+$##;
+  my @pls = split(/ /, $plural);
+  my $plstring = "";
+  foreach my $p (@pls){
+    if ($WORDS{$p} >= 1){
+      $plstring .=$p." ";
+    }
+  }
+  $plstring =~ s#\s+$##;
+  $PLURALS{$word} = $plstring;
+  print "confirmed $word plural is *$plstring*\n" if $plstring=~/\w/ && $debug;
+  @pls = split(/ /, $plstring);
+  return @pls;
+		 */
+		plural=plural.replaceAll("^\\s+", "");
+		plural=plural.replaceAll("\\s+$", "");
+		String[] pls = plural.split(" ");
+		String plStr = "";
+		for (int i=0;i<pls.length;i++) {
+			if (this.WORDS.get(pls[i])>=1) {
+				plStr = plStr+pls[i]+" ";
+			}
+		}
+		plStr = plStr.replaceAll("\\s+", "");
+		this.PLURALS.put(word, plStr);
+		
+		return plStr.split(" ");
+	
+		
+		
+		return null;
+	}
+
+	/**
+	 * A helper method used by method getPlural. Help to apply a number of rules
+	 * 
+	 * @param word
+	 * @return
+	 */
+	public String getPluralRuleHelper(String word) {
+		String plural;
+		Pattern p;
+		Matcher m;
+
+		p = Pattern.compile("(^.*?)(ex|ix)$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "ices";
+			plural = plural + " " + m.group(1) + m.group(2) + "es";
+			return plural;
+		}
+
+		p = Pattern.compile("^.*(x|ch|ss|sh)$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = word + "es";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)([^aeiouy])y$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + m.group(2) + "ies";
+			return plural;
+		}
+
+		// p = Pattern.compile("");
+		// m = p.matcher(word);
+		// if (m.lookingAt()) {
+		// plural = m.group(1) + "";
+		// return plural;
+		// }
+
+		p = Pattern.compile("(^.*?)(x|s)is$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + m.group(2) + "es";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)([tidlv])um$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + m.group(2) + "a";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)(ex|ix)$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "ices";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?[^t][^i])on$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "a";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)a$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "ae";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)man$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "men";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)child$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "children";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*)status$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "statuses";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.+?)us$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "i";
+			plural = plural + " " + m.group(1) + "uses";
+			return plural;
+		}
+
+		p = Pattern.compile("^.*s$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = word + "es";
+		}
+
+		return null;
+	}
+
+	/**
+	 * A helper method used by method getPlural. Help to handle special cases.
+	 * 
+	 * @param word
+	 * @return if the word has a plural, return it; otherwise return null
+	 */
+	public String getPluralSpecialCaseHelper(String word) {
+		String plural;
+		Pattern p;
+		Matcher m;
+
+		p = Pattern.compile("^.*series$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = word;
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)foot$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "feet";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)tooth$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "teeth";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)alga$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "algae";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)genus$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "genera";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)corpus$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "corpora";
+			return plural;
+		}
+
 		return null;
 	}
 
