@@ -153,10 +153,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
 	
 	// Table heuristicnouns
-	Map<String, String> heuristicNounsTable = new HashMap<String, String>();
+	Map<String, String> heuristicNounTable = new HashMap<String, String>();
 	
 	// Table singularPlural
 	Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
+	
+	// Table modifier
+	Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
 
 	// Third Tools
 	// WordNet
@@ -2589,15 +2592,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @param pos
 	 * @param role
 	 * @param table
-	 * @param sourceWord
+	 * @param flag
 	 * @param increment
 	 * @return
 	 */
 	public int processNewWord(String newWord, String pos, String role,
-			String table, String sourceWord, int increment) {
+			String table, String flag, int increment) {
 		int sign = 0;
 		// remove $newword from unknownwords
-		updateUnknownWords(newWord, sourceWord);
+		updateUnknownWords(newWord, flag);
 		// insert $newword to the specified table
 		if (table.equals("wordpos")) {
 			sign = sign + updatePOS(newWord, pos, role, increment);
@@ -2608,9 +2611,27 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return sign;
 	}
 
-	private void updateUnknownWords(String newWord, String sourceWord) {
-		// TODO Auto-generated method stub
+	/**
+	 * This method updates a new word in the unknownWord table
+	 * 
+	 * @param newWord
+	 * @param sourceWord
+	 * @return if any updates occured, return true; otherwise, return false
+	 */
+	public boolean updateUnknownWords(String newWord, String flag) {
+		boolean result = false;
+		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
+				.entrySet().iterator();
 		
+		while (iter.hasNext()) {
+			Map.Entry<String, String> unknownWord = iter.next();
+			if (unknownWord.getKey().equals(newWord)) {
+				unknownWord.setValue(flag);
+				result = true;
+			}
+		}
+		
+		return true;
 	}
 	
 
@@ -2622,6 +2643,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	private int addModifier(String newWord, int increment) {
 		// TODO Auto-generated method stub
+
 		return 0;
 	}
 
