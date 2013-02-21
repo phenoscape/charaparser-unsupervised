@@ -363,5 +363,16 @@ public class UnsupervisedClauseMarkupTest {
 		tester.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
 		assertEquals("addSigularPluralPair - pair exist", false, tester.addSingularPluralPair("sword3", "pword3"));
 		
+		
+		
+		
+		// TEST of Helpers
+		// Method removeAll
+		assertEquals("removeAll - begin", "word word ", tester.removeAll("   word word ", "^\\s+"));
+		assertEquals("removeAll - end", "word|word", tester.removeAll("word|word|", "\\|+$"));
+		assertEquals("removeAll - all", "wordword", tester.removeAll("|word|word|", "\\|"));
+		
+		
+		
 	}
 }

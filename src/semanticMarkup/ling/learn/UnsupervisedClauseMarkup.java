@@ -2082,15 +2082,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				addSingularPluralPair(word, pl);
 			}
 			if (pos.equals("s")) {
-				List<String> words = getPlural(word);
+				//List<String> words = getPlural(word);
+				String[] words = this.getPlural(word);
 				String sg = word;
-				for (int i = 0; i < words.size(); i++) {
-					if (words.get(i).matches("^.*\\w.*$")) {
+				for (int i = 0; i < words.length; i++) {
+					if (words[i].matches("^.*\\w.*$")) {
 						result = result
-								+ this.markKnown(words.get(i), "p", "*", table,
+								+ this.markKnown(words[i], "p", "*", table,
 										0);
 					}
-					addSingularPluralPair(sg, words.get(i));
+					addSingularPluralPair(sg, words[i]);
 				}
 			}
 		}
@@ -2098,43 +2099,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return result;
 	}
 
-	private string[] getPlural(String word) {
-		// TODO Auto-generated method stub
-		
-		/**
- my $word = shift;
- return "" if $word =~/^(n|2n|x)$/;
- my $plural = $PLURALS{$word};
- if ($plural=~/\w+/){
-    my @pls = split(/ /, $plural);
-    return @pls;
- }
-		 */
+	public String[] getPlural(String word) {
 		
 		if (word.matches("^(n|2n|x)$")) {
-			return "";
+			return null;
 		}
 		
 		String plural = this.PLURALS.get(word);
 		if (plural.matches("^.*\\w+.*$")) {
 			return plural.split(" ");
 		}
-		
-		/**
-if($word =~ /series$/){
-  $plural = $word;
- }elsif($word =~ /(.*?)foot$/){
-  $plural = $1."feet";
- }elsif($word =~ /(.*?)tooth$/){
-  $plural = $1."teeth";
- }elsif($word =~ /(.*?)alga$/){
-  $plural = $1."algae";
- }elsif($word =~ /(.*?)genus$/){
-  $plural = $1."genera";
- }elsif($word =~ /(.*?)corpus$/){
-  $plural = $1."corpora";
- }
-		 */
 		
 		plural = getPluralSpecialCaseHelper(word);
 		if (plural == null) {
@@ -2143,22 +2117,12 @@ if($word =~ /series$/){
 				plural = plural+""+word+"s";
 			}	
 		}
-		/**
-  $plural =~ s#^\s+##;
-  $plural =~ s#\s+$##;
-  my @pls = split(/ /, $plural);
-  my $plstring = "";
-  foreach my $p (@pls){
-    if ($WORDS{$p} >= 1){
-      $plstring .=$p." ";
-    }
-  }
-  $plstring =~ s#\s+$##;
-  $PLURALS{$word} = $plstring;
-  print "confirmed $word plural is *$plstring*\n" if $plstring=~/\w/ && $debug;
-  @pls = split(/ /, $plstring);
-  return @pls;
-		 */
+
+		// Avoid null
+		if (plural == null) {
+			plural = "";
+		}
+		
 		plural=plural.replaceAll("^\\s+", "");
 		plural=plural.replaceAll("\\s+$", "");
 		String[] pls = plural.split(" ");
@@ -2172,17 +2136,13 @@ if($word =~ /series$/){
 		this.PLURALS.put(word, plStr);
 		
 		return plStr.split(" ");
-	
-		
-		
-		return null;
 	}
 
 	/**
 	 * A helper method used by method getPlural. Help to apply a number of rules
 	 * 
 	 * @param word
-	 * @return
+	 * @return if the word has plural form(s), return it(them); otherwise return ""
 	 */
 	public String getPluralRuleHelper(String word) {
 		String plural;
@@ -2286,16 +2246,17 @@ if($word =~ /series$/){
 		m = p.matcher(word);
 		if (m.lookingAt()) {
 			plural = word + "es";
+			return plural;
 		}
 
-		return null;
+		return "";
 	}
 
 	/**
 	 * A helper method used by method getPlural. Help to handle special cases.
 	 * 
 	 * @param word
-	 * @return if the word has a plural, return it; otherwise return null
+	 * @return if the word has a plural, return it; otherwise return ""
 	 */
 	public String getPluralSpecialCaseHelper(String word) {
 		String plural;
@@ -2344,7 +2305,7 @@ if($word =~ /series$/){
 			return plural;
 		}
 
-		return null;
+		return "";
 	}
 
 	/**
@@ -2487,6 +2448,15 @@ if($word =~ /series$/){
 		return false;
 	}
 
+	/**
+	 * 
+	 * @param word
+	 * @param pos
+	 * @param role
+	 * @param table
+	 * @param increment
+	 * @return
+	 */
 	public int markKnown(String word, String pos, String role, String table,
 			int increment) {
 
@@ -2586,16 +2556,76 @@ if($word =~ /series$/){
 		return singularPluralVariations;
 	}
 
-	private String singularPluralVariations(String temp) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * 
+	 * @param word
+	 * @return all variations of the word
+	 */
+	//return singular and plural variations of the word
+	public String singularPluralVariations(String word) {	
+		String variations = word+"|";
+		Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+		while (iter.hasNext()) {
+			SingularPluralPair pair = iter.next();
+			String sg = pair.getSingular();
+			String pl = pair.getPlural();
+			if (sg.equals(word)) {
+				variations = variations + pl+"|";
+			}
+			if (pl.equals(word)) {
+				variations = variations + sg+"|";	
+			}
+		}
+
+		variations = this.removeAll(variations, "\\|+$");
+		
+		return variations;
 	}
 
-	private int processNewWord(String word, String pos, String role,
-			String table, String word2, int increment) {
+	/**
+	 * This method handles a new word when for updateTable method
+	 * 
+	 * @param newWord
+	 * @param pos
+	 * @param role
+	 * @param table
+	 * @param sourceWord
+	 * @param increment
+	 * @return
+	 */
+	public int processNewWord(String newWord, String pos, String role,
+			String table, String sourceWord, int increment) {
+		int sign = 0;
+		// remove $newword from unknownwords
+		updateUnknownWords(newWord, sourceWord);
+		// insert $newword to the specified table
+		if (table.equals("wordpos")) {
+			sign = sign + updatePOS(newWord, pos, role, increment);
+		} else if (table.equals("modifiers")) {
+			sign = sign + addModifier(newWord, increment);
+		}
+
+		return sign;
+	}
+
+	private void updateUnknownWords(String newWord, String sourceWord) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+
+	private int updatePOS(String newWord, String pos, String role, int increment) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+
+	
+	private int addModifier(String newWord, int increment) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
 
 	/**
 	 * Helper of method updateTable: ???
@@ -2880,6 +2910,12 @@ if($word =~ /series$/){
 		word = word.replaceAll("^\\s*", "");
 		
 		return word;
+	}
+	
+	
+	public String removeAll(String word, String regex) {
+		String newWord = word.replaceAll(regex, ""); 
+		return newWord;
 	}
 	
 	
