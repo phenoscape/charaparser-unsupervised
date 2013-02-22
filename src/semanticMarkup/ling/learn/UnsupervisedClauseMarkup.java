@@ -1655,16 +1655,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 
-		/*
-		 * else{#if $base is in WN or unknownwords table, or if $word has sole
-		 * pos adj in WN, return 1: e.g. scalelike if($baseinwn){return 1;}
-		 * if($wnoutputword =~/Overview of adj/ && $wnoutputword !~/Overview of
-		 * .*? Overview of/){ return 1;; } $sth =
-		 * $dbh->prepare("select word from "
-		 * .$prefix."_unknownwords where word = '$base'"); $sth->execute() or
-		 * print STDOUT "$sth->errstr\n"; return 1 if $sth->rows > 0; }
-		 */
-
 		// if $base is in WN or unknownwords table, or if $word has sole pos
 		// adj
 		// in WN, return 1: e.g. scalelike
@@ -2649,8 +2639,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @return if anything changed in modifer table, return true; otherwise
 	 *         return false
 	 */
-	public boolean addModifier(String newWord, int increment) {
-		boolean isUpdate = false;
+	public int addModifier(String newWord, int increment) {
+		int isUpdate = 0;
 
 		if ((newWord.matches("(" + this.STOP + "|^.*\\w+ly$)"))
 				|| (!(newWord.matches("^.*\\w.*$")))) {
@@ -2661,10 +2651,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			int count = this.modifierTable.get(newWord).getCount();
 			count = count + increment;
 			this.modifierTable.get(newWord).setCount(count);
-			isUpdate = true;
+			//isUpdate = 1;
 		} else {
 			this.modifierTable.put(newWord, new ModifierTableValue(1, false));
-			isUpdate = true;
+			isUpdate = 1;
 		}
 
 		return isUpdate;
