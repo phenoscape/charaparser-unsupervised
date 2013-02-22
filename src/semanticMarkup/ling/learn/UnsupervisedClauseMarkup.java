@@ -75,7 +75,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private Map<String, String> WN_POSRECORDS = new HashMap();
 	private String NEWDESCRIPTION = ""; // record the index of sentences that
 										// ends a description
-	private Hashtable<String, String> WORDS = new Hashtable();
+	private Map<String, Integer> WORDS = new HashMap();
 	private Hashtable<String, String> PLURALS = new Hashtable();
 
 	private String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
@@ -145,13 +145,21 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// Data Holders
 	// Table sentence
 	List<Sentence> sentenceTable = new LinkedList<Sentence>();
+	
 	// Table unknownwords
 	Map<String, String> unknownWordTable = new HashMap<String, String>();
+	
 	// Table wordpos
 	Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
 	
 	// Table heuristicnouns
-	Map<String, String> heuristicNounsTable = new HashMap<String, String>();
+	Map<String, String> heuristicNounTable = new HashMap<String, String>();
+	
+	// Table singularPlural
+	Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
+	
+	// Table modifier
+	Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
 
 	// Third Tools
 	// WordNet
@@ -568,8 +576,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				if (debug)
 					System.out.println("Text: " + text);
 
-				List<String> sentcopy = new LinkedList<String>();
-				List<Integer> validindex = new LinkedList<Integer>();
+				List<String> sentCopy = new LinkedList<String>();
+				List<Integer> validIndex = new LinkedList<Integer>();
 				int index = 0;
 				// for each sentence, do some operations
 				for (int j = 0; j < sentences.length; j++) {
@@ -578,20 +586,17 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 						System.out.println("Sentence " + j + ": "
 								+ sentences[j]);
 
-					// TODO: Dongye
-					// Do something for this sentence:
-					// may have fewer than $N words
 					// if(!/\w+/){next;}
 					if (debug)
 						System.out.println(sentences[j]);
 					if (!sentences[j].matches("^.*\\w+.*$")) {
 						continue;
 					}
-					validindex.add(j);
+					validIndex.add(j);
 					// restore ".", "?", ";", ":", "."
 					sentences[j] = this.restoreMarksInBrackets(sentences[j]);
 					// push(@sentcopy, $_);
-					sentcopy.add(sentences[j]);
+					sentCopy.add(sentences[j]);
 
 					// remove bracketed text from sentence (keep those in
 					// originalsent); this step will not be able to remove
@@ -600,32 +605,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					// step in POSTagger4StanfordParser.java
 					sentences[j] = this.handleSentence(sentences[j]);
 
-					// getallwords($_);
-
-					/**
-					 * // first tokenize this sentence InputStream modelIn; try
-					 * { kjsdhfjlds modelIn = new
-					 * FileInputStream("res/en-token.bin"); //InputStream
-					 * modelIn2 = new FileInputStream("res/en-token.bin");
-					 * //File file234 = new File("res/qwertyuiop.txt");
-					 * //System.out.println(file234.getAbsoluteFile());
-					 * TokenizerModel model = new TokenizerModel(modelIn);
-					 * Tokenizer tokenizer = new TokenizerME(model); String
-					 * tokens[] = tokenizer.tokenize(sentences[j]); for (int i1
-					 * = 0; i1 < tokens.length; i1++) {
-					 * this.unknownWordTable.put(tokens[i1], "unknown"); }
-					 * String lead=""; int minL =
-					 * tokens.length>this.NUM_LEAD_WORDS?
-					 * this.NUM_LEAD_WORDS:tokens.length; for (int i2=0;
-					 * i2<minL;i2++) { lead=lead+tokens[i2]+" "; }
-					 * lead=lead.replaceAll("\\s$", "");
-					 * //lead=lead.substring(lead.length()-1); leadMap.put(j,
-					 * lead); } catch (FileNotFoundException e) { // TODO
-					 * Auto-generated catch block e.printStackTrace(); } catch
-					 * (InvalidFormatException e) { // TODO Auto-generated catch
-					 * block e.printStackTrace(); } catch (IOException e) { //
-					 * TODO Auto-generated catch block e.printStackTrace(); }
-					 **/
+					getAllWords(sentences[j]);
 
 					// first tokenize this sentence
 					String tokens[] = this.myTokenizer.tokenize(sentences[j]);
@@ -648,9 +628,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 				}
 
-				for (int j = 0; j < validindex.size(); j++) {
-					String line = sentences[validindex.get(j)];
-					String oline = sentcopy.get(validindex.get(j));
+				for (int j = 0; j < validIndex.size(); j++) {
+					String line = sentences[validIndex.get(j)];
+					String oline = sentCopy.get(validIndex.get(j));
 
 					// handle line first
 					// remove all ' to avoid escape problems
@@ -670,8 +650,28 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					// restore ".", "?", ";", ":", "."
 					oline = this.restoreMarksInBrackets(oline);
 					oline = oline.replaceAll("\'", " ");
+					
 					String lead = leadMap.get(j);
-
+					
+					String status = "";
+			
+					/**
+					 	if(getnumber($words[0]) eq "p"){
+					     $status = "start";
+						}else{
+					     $status = "normal";
+					}
+					
+					if (this.getNumber(lead)
+					
+					if(getnumber($words[0]) eq "p"){
+					     $status = "start";
+						}else{
+					     $status = "normal";
+					}
+					
+					if (this.getNumber(lead)
+ */
 					if (oline.length() >= 2000) { // EOL
 						oline = line;
 					}
@@ -700,6 +700,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// }
 		System.out.println("Total sentences = " + SENTID);
 		return true;
+	}
+
+	private void getAllWords(String sent) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	String[] segmentSentence(String text) {
@@ -2073,22 +2078,23 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (!inSingularPluralPair(word)) {
 			if (pos.equals("p")) {
 				String pl = word;
-				word = sigular(word);
+				word = getSingular(word);
 				// add "*" and 0: pos for those words are inferred based on
 				// other clues, not seen directly from the text
 				result = result + this.markKnown(word, "s", "*", table, 0);
 				addSingularPluralPair(word, pl);
 			}
 			if (pos.equals("s")) {
-				List<String> words = plural(word);
+				//List<String> words = getPlural(word);
+				String[] words = this.getPlural(word);
 				String sg = word;
-				for (int i = 0; i < words.size(); i++) {
-					if (words.get(i).matches("^.*\\w.*$")) {
+				for (int i = 0; i < words.length; i++) {
+					if (words[i].matches("^.*\\w.*$")) {
 						result = result
-								+ this.markKnown(words.get(i), "p", "*", table,
+								+ this.markKnown(words[i], "p", "*", table,
 										0);
 					}
-					addSingularPluralPair(sg, words.get(i));
+					addSingularPluralPair(sg, words[i]);
 				}
 			}
 		}
@@ -2096,26 +2102,364 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return result;
 	}
 
-	private List<String> plural(String word) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private void addSingularPluralPair(String word, String pl) {
-		// TODO Auto-generated method stub
+	public String[] getPlural(String word) {
 		
+		if (word.matches("^(n|2n|x)$")) {
+			return null;
+		}
+		
+		String plural = this.PLURALS.get(word);
+		if (plural.matches("^.*\\w+.*$")) {
+			return plural.split(" ");
+		}
+		
+		plural = getPluralSpecialCaseHelper(word);
+		if (plural == null) {
+			plural = getPluralRuleHelper(word);
+			if (plural != null) {
+				plural = plural+""+word+"s";
+			}	
+		}
+
+		// Avoid null
+		if (plural == null) {
+			plural = "";
+		}
+		
+		plural=plural.replaceAll("^\\s+", "");
+		plural=plural.replaceAll("\\s+$", "");
+		String[] pls = plural.split(" ");
+		String plStr = "";
+		for (int i=0;i<pls.length;i++) {
+			if (this.WORDS.get(pls[i])>=1) {
+				plStr = plStr+pls[i]+" ";
+			}
+		}
+		plStr = plStr.replaceAll("\\s+$", "");
+		this.PLURALS.put(word, plStr);
+		
+		return plStr.split(" ");
 	}
 
-	private String sigular(String word) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * A helper method used by method getPlural. Help to apply a number of rules
+	 * 
+	 * @param word
+	 * @return if the word has plural form(s), return it(them); otherwise return ""
+	 */
+	public String getPluralRuleHelper(String word) {
+		String plural;
+		Pattern p;
+		Matcher m;
+
+		p = Pattern.compile("(^.*?)(ex|ix)$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "ices";
+			plural = plural + " " + m.group(1) + m.group(2) + "es";
+			return plural;
+		}
+
+		p = Pattern.compile("^.*(x|ch|ss|sh)$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = word + "es";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)([^aeiouy])y$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + m.group(2) + "ies";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)(?:([^f])fe|([oaelr])f)$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + m.group(2) + "ves";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)(x|s)is$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + m.group(2) + "es";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)([tidlv])um$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + m.group(2) + "a";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)(ex|ix)$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "ices";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?[^t][^i])on$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "a";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)a$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "ae";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)man$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "men";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)child$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "children";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*)status$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "statuses";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.+?)us$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "i";
+			plural = plural + " " + m.group(1) + "uses";
+			return plural;
+		}
+
+		p = Pattern.compile("^.*s$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = word + "es";
+			return plural;
+		}
+
+		return "";
 	}
 
-	private boolean inSingularPluralPair(String word) {
-		// TODO Auto-generated method stub
+	/**
+	 * A helper method used by method getPlural. Help to handle special cases.
+	 * 
+	 * @param word
+	 * @return if the word has a plural, return it; otherwise return ""
+	 */
+	public String getPluralSpecialCaseHelper(String word) {
+		String plural;
+		Pattern p;
+		Matcher m;
+
+		p = Pattern.compile("^.*series$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = word;
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)foot$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "feet";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)tooth$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "teeth";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)alga$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "algae";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)genus$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "genera";
+			return plural;
+		}
+
+		p = Pattern.compile("(^.*?)corpus$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + "corpora";
+			return plural;
+		}
+
+		return "";
+	}
+
+	/**
+	 * 
+	 * @param sgl
+	 * @param pl
+	 * @return if add a pair, return true; otherwise return false
+	 */
+	public boolean addSingularPluralPair(String sgl, String pl) {
+		boolean is_exist = false;
+		Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+
+		while (iter.hasNext()) {
+			SingularPluralPair spp = iter.next();
+			if ((spp.getSingular().equals(sgl)) && (spp.getPlural().equals(pl))) {
+				is_exist = true;
+				break;
+			}
+		}
+
+		if (!is_exist) {
+			SingularPluralPair pair = new SingularPluralPair(sgl, pl);
+			this.singularPluralTable.add(pair);
+			return true;
+		}
+
 		return false;
 	}
 
+	/**
+	 * 
+	 * @param word
+	 * @return the plural form of the input word
+	 */
+	public String getSingular(String word) {
+		if (!word.matches("^.*\\w.*$")) {
+			return "";
+		}
+
+		if (word.equals("valves")) {
+			return "valve";
+		} else if (word.equals("media")) {
+			return "media";
+		} else if (word.equals("species")) {
+			return "species";
+		} else if (word.equals("axes")) {
+			return "axis";
+		} else if (word.equals("calyces")) {
+			return "calyx";
+		} else if (word.equals("frons")) {
+			return "frons";
+		} else if (word.equals("grooves")) {
+			return "groove";
+		} else if (word.equals("nerves")) {
+			return "nerve";
+		}
+
+		String singular = "";
+		if (getNumber(word).equals("p")) {
+			Pattern p = Pattern.compile("(^.*?[^aeiou])ies$");
+			Matcher m = p.matcher(word);
+
+			if (m.lookingAt()) {
+				singular = m.group(1) + "y";
+			} else {
+				p = Pattern.compile("(^.*?)i$");
+				m = p.matcher(word);
+				if (m.lookingAt()) {
+					singular = m.group(1) + "us";
+				} else {
+					p = Pattern.compile("(^.*?)ia$");
+					m = p.matcher(word);
+					if (m.lookingAt()) {
+						singular = m.group(1) + "ium";
+					} else {
+						p = Pattern.compile("(^.*?(x|ch|sh|ss))es$");
+						m = p.matcher(word);
+						if (m.lookingAt()) {
+							singular = m.group(1);
+						} else {
+							p = Pattern.compile("(^.*?)ves$");
+							m = p.matcher(word);
+							if (m.lookingAt()) {
+								singular = m.group(1) + "f";
+							} else {
+								p = Pattern.compile("(^.*?)ices");
+								m = p.matcher(word);
+								if (m.lookingAt()) {
+									singular = m.group(1) + "ex";
+								} else {
+									// pinnae ->pinna
+									p = Pattern.compile("(^.*?a)e$");
+									m = p.matcher(word);
+									if (m.lookingAt()) {
+										singular = m.group(1);
+									} else {
+										// fruits->fruit
+										p = Pattern.compile("(^.*?)s$");
+										m = p.matcher(word);
+										if (m.lookingAt()) {
+											singular = m.group(1);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (singular.matches("^.*\\w.*$")) {
+			return singular;
+		}
+
+		singular = checkWN(word, "singular");
+		if (singular.matches("^.*\\w.*$")) {
+			return singular;
+		}
+
+		return null;
+	}
+/**
+ * 
+ * @param word
+ * @return if the word is in the SingularPluralTable
+ */
+
+	public boolean inSingularPluralPair(String word) {
+		// TODO Auto-generated method stub
+		Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+
+		while (iter.hasNext()) {
+			SingularPluralPair spp = iter.next();
+			if ((spp.getSingular().equals(word))
+					|| (spp.getPlural().equals(word))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @param word
+	 * @param pos
+	 * @param role
+	 * @param table
+	 * @param increment
+	 * @return
+	 */
 	public int markKnown(String word, String pos, String role, String table,
 			int increment) {
 
@@ -2215,50 +2559,164 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return singularPluralVariations;
 	}
 
-	private String singularPluralVariations(String temp) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * 
+	 * @param word
+	 * @return all variations of the word
+	 */
+	//return singular and plural variations of the word
+	public String singularPluralVariations(String word) {	
+		String variations = word+"|";
+		Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+		while (iter.hasNext()) {
+			SingularPluralPair pair = iter.next();
+			String sg = pair.getSingular();
+			String pl = pair.getPlural();
+			if (sg.equals(word)) {
+				variations = variations + pl+"|";
+			}
+			if (pl.equals(word)) {
+				variations = variations + sg+"|";	
+			}
+		}
+
+		variations = this.removeAll(variations, "\\|+$");
+		
+		return variations;
 	}
 
-	private int processNewWord(String word, String pos, String role,
-			String table, String word2, int increment) {
+	/**
+	 * This method handles a new word when for updateTable method
+	 * 
+	 * @param newWord
+	 * @param pos
+	 * @param role
+	 * @param table
+	 * @param flag
+	 * @param increment
+	 * @return
+	 */
+	public int processNewWord(String newWord, String pos, String role,
+			String table, String flag, int increment) {
+		int sign = 0;
+		// remove $newword from unknownwords
+		updateUnknownWords(newWord, flag);
+		// insert $newword to the specified table
+		if (table.equals("wordpos")) {
+			sign = sign + updatePOS(newWord, pos, role, increment);
+		} else if (table.equals("modifiers")) {
+			sign = sign + addModifier(newWord, increment);
+		}
+
+		return sign;
+	}
+
+	/**
+	 * This method updates a new word in the unknownWord table
+	 * 
+	 * @param newWord
+	 * @param sourceWord
+	 * @return if any updates occured, return true; otherwise, return false
+	 */
+	public boolean updateUnknownWords(String newWord, String flag) {
+		boolean result = false;
+		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
+				.entrySet().iterator();
+		
+		while (iter.hasNext()) {
+			Map.Entry<String, String> unknownWord = iter.next();
+			if (unknownWord.getKey().equals(newWord)) {
+				unknownWord.setValue(flag);
+				result = true;
+			}
+		}
+		
+		return true;
+	}
+	
+
+	private int updatePOS(String newWord, String pos, String role, int increment) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	/**
-	 * Helper of method updateTable: ???
+	 * Take a new word, insert it into modifer table, or update its count in
+	 * modifer table if the word already exist
+	 * 
+	 * @param newWord
+	 * @param increment
+	 * @return if anything changed in modifer table, return true; otherwise
+	 *         return false
+	 */
+	public boolean addModifier(String newWord, int increment) {
+		boolean isUpdate = false;
+
+		if ((newWord.matches("(" + this.STOP + "|^.*\\w+ly$)"))
+				|| (!(newWord.matches("^.*\\w.*$")))) {
+			return isUpdate;
+		}
+
+		if (this.modifierTable.containsKey(newWord)) {
+			int count = this.modifierTable.get(newWord).getCount();
+			count = count + increment;
+			this.modifierTable.get(newWord).setCount(count);
+			isUpdate = true;
+		} else {
+			this.modifierTable.put(newWord, new ModifierTableValue(1, false));
+			isUpdate = true;
+		}
+
+		return isUpdate;
+	}
+
+	/**
+	 * Helper of method updateTable
 	 * @param w
 	 * @return
 	 */
 	public String getNumber(String word) {
-		
-		/**
-		  my $word = shift;
-		  #$word = lc $word;
-		  my $number = checkWN($word, "number");
-		  return $number if $number =~/[sp]/;
-		  return "" if $number=~/x/;
-		  if($word =~/i$/) {return "p";} #1.	Calyculi  => 1.	Calyculus, pappi => pappus
-		  if ($word =~ /ss$/){return "s";}
-		  if($word =~/ia$/) {return "p";}
-		  if($word =~/[it]um$/) {return "s";}#3/13/09
-		  if ($word =~/ae$/){return "p";}
-		  if($word =~/ous$/){return ""; }
-		  if($word =~/^[aiu]s$/){return ""; }
-		  if ($word =~/us$/){return "s";}
-		  if($word =~ /es$/ || $word =~ /s$/){return "p";}
-		  if($word =~/ate$/){return "";} #3/12/09 good.
-		  return "s";
-		**/
-		
 		String number = checkWN(word, "number");
-		if (number.matches("^.*[sp].*&")) {
+		String rt = "";
+
+		rt = getNumberHelper1(number);
+		if (rt != null) {
+			return rt;
+		}
+
+		rt = getNumberHelper2(word);
+		if (rt != null) {
+			return rt;
+		} else {
+			return "s";
+		}
+	}
+
+	/**
+	 * First Helper of method getNumber
+	 * 
+	 * @param number
+	 * @return if match return the right number, otherwise return null means not
+	 *         match
+	 */
+	public String getNumberHelper1(String number) {
+		if (number.matches("^.*[sp].*$")) {
 			return number;
 		}
 		if (number.matches("^.*x.*$")) {
 			return "";
 		}
+		return null;
+	}
+
+	/**
+	 * Second Helper of method getNumber
+	 * 
+	 * @param word
+	 * @return if match return the right number, otherwise return null means not
+	 *         match
+	 */
+	public String getNumberHelper2(String word) {
 		// Calyculi => 1. Calyculus, pappi => pappus
 		if (word.matches("^.*i$")) {
 			return "p";
@@ -2278,21 +2736,20 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (word.matches("^.*ous$")) {
 			return "";
 		}
-		if (word.matches("^.*[aiu]s$")) {
+		// this case only handle three words: as, is, us
+		if (word.matches("^[aiu]s$")) {
 			return "";
 		}
 		if (word.matches("^.*us$")) {
 			return "s";
 		}
-		// if($word =~ /es$/ || $word =~ /s$/){return "p";}
 		if (word.matches("^.*es$") || word.matches("^.*s$")) {
 			return "p";
 		}
 		if (word.matches("^.*ate$")) {
 			return "";
 		}
-
-		return "s";
+		return null;
 	}
 
 	public String checkWN(String word, String mode) {
@@ -2422,14 +2879,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			 */
 			word = wordCopy;
 			word = word.replace("^(" + this.PREFIX + ")+", "");
-			if (word.endsWith(wordCopy)) {
+			if (word.equals(wordCopy)) {
 				return mode.equals("singular") ? word : "";
 			} else {
-				this.myWN.contains(word);
-				// $result =~ s#\b$word\b#$wordcopy#g;
-				word = wordCopy;
-				if (true) {
-					return mode.equals("singular") ? word : "";
+				;
+				// $result =~ s#\b$word\b#$wordcopy#g;	????????????????
+				//word = wordCopy;
+				if (this.myWN.contains(word)) {
+					return mode.equals("singular") ? wordCopy : "";
 				}
 			}
 		}
@@ -2509,6 +2966,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		word = word.replaceAll("^\\s*", "");
 		
 		return word;
+	}
+	
+	
+	public String removeAll(String word, String regex) {
+		String newWord = word.replaceAll(regex, ""); 
+		return newWord;
 	}
 	
 	

@@ -325,7 +325,82 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals ("checkWN - special case - teeth", "p", tester.checkWN("teeth","pos"));
 		assertEquals ("checkWN - special case - NUM", "NUM", tester.checkWN("NUM","singular"));
 		assertEquals ("checkWN - concentrically", "", tester.checkWN("concentrically","number"));
+		
+		// Method inSingularPluralPair
+		assertEquals ("inSingularPluralPair - null", false, tester.inSingularPluralPair("word"));
+		tester.singularPluralTable.add(new SingularPluralPair("word1", ""));
+		assertEquals ("inSingularPluralPair - singular match", true, tester.inSingularPluralPair("word1"));
+		tester.singularPluralTable.add(new SingularPluralPair("", "word2"));
+		assertEquals ("inSingularPluralPair - plural match", true, tester.inSingularPluralPair("word2"));
+		tester.singularPluralTable.add(new SingularPluralPair("word3", "word3"));
+		assertEquals ("inSingularPluralPair - both match", true, tester.inSingularPluralPair("word3"));
 
+		// Method getSingular
+		assertEquals("getSingular - non word", "", tester.getSingular("!@#"));
+		assertEquals("getSingular - special case", "valve", tester.getSingular("valves"));
+		assertEquals("getSingular - special case", "media", tester.getSingular("media"));
+		assertEquals("getSingular - special case", "species", tester.getSingular("species"));
+		assertEquals("getSingular - special case", "axis", tester.getSingular("axes"));
+		assertEquals("getSingular - special case", "calyx", tester.getSingular("calyces"));
+		assertEquals("getSingular - special case", "frons", tester.getSingular("frons"));
+		assertEquals("getSingular - special case", "groove", tester.getSingular("grooves"));
+		assertEquals("getSingular - special case", "nerve", tester.getSingular("nerves"));
+
+		//assertEquals("getSingular - 1 - y", "", tester.getSingular(""));
+		assertEquals("getSingular - 2 - i", "varus", tester.getSingular("vari"));
+		//assertEquals("getSingular - 3 - ai", "", tester.getSingular(""));
+		assertEquals("getSingular - 4 - (x|ch|sh|ss))es", "process", tester.getSingular("processes"));
+		//assertEquals("getSingular - 5 - ves", "", tester.getSingular(""));
+		//assertEquals("getSingular - 6 - ices", "", tester.getSingular(""));
+		assertEquals("getSingular - 7 - ae", "vertebra", tester.getSingular("vertebrae"));
+		// Cannot pass this test case
+		//assertEquals("getSingular - 7-2 - s", "hoplia", tester.getSingular("hoplias"));
+		
+		// Method addSingularPluralPair
+		assertEquals("addSigularPluralPair - pair not exist", true, tester.addSingularPluralPair("sword", "pword"));
+		tester.singularPluralTable.add(new SingularPluralPair("sword2",""));
+		assertEquals("addSigularPluralPair - one word exist", true, tester.addSingularPluralPair("sword2", "pword2"));
+		tester.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
+		assertEquals("addSigularPluralPair - pair exist", false, tester.addSingularPluralPair("sword3", "pword3"));
+		
+		// Method checkWN
+		
+		
+		
+		// getNumber method group 
+		// Method getNumberHelper1
+		assertEquals ("getNumberHelp1 - case 1: s or p", "s", tester.getNumberHelper1("s"));
+		assertEquals ("getNumberHelp1 - case 2: x", "", tester.getNumberHelper1("x"));	
+		assertEquals ("getNumberHelp1 - case 3: null", null, tester.getNumberHelper1("a"));
+		// Method getNumberHelper2
+		assertEquals ("getNumberHelp2 - end with i", "p", tester.getNumberHelper2("pappi"));
+		assertEquals ("getNumberHelp2 - end with ss", "s", tester.getNumberHelper2("wordss"));
+		assertEquals ("getNumberHelp2 - end with ia", "p", tester.getNumberHelper2("criteria"));
+		assertEquals ("getNumberHelp2 - end with ium", "s", tester.getNumberHelper2("medium"));
+		assertEquals ("getNumberHelp2 - end with tum", "s", tester.getNumberHelper2("datum"));
+		assertEquals ("getNumberHelp2 - end with ae", "p", tester.getNumberHelper2("alumnae"));
+		assertEquals ("getNumberHelp2 - end with ous", "", tester.getNumberHelper2("various"));
+		assertEquals ("getNumberHelp2 - word as", "", tester.getNumberHelper2("as"));
+		assertEquals ("getNumberHelp2 - word is", "", tester.getNumberHelper2("is"));
+		assertEquals ("getNumberHelp2 - word us", "", tester.getNumberHelper2("us"));
+		assertEquals ("getNumberHelp2 - end with us", "s", tester.getNumberHelper2("corpus"));
+		assertEquals ("getNumberHelp2 - end with es", "p", tester.getNumberHelper2("phases"));
+		assertEquals ("getNumberHelp2 - end with s", "p", tester.getNumberHelper2("mouths"));
+		assertEquals ("getNumberHelp2 - end with ate", "", tester.getNumberHelper2("differentiate"));
+		assertEquals ("getNumberHelp2 - not match", null, tester.getNumberHelper2("jxbz"));
+		// Method getNumber
+		assertEquals ("getNumberHelp2 - not match", "s", tester.getNumber("jxbz"));
+		
+		// getPlural mthod group
+		assertEquals ("getPluralRuleHelper - ves plural", "leaves", tester.getPluralRuleHelper("leaf"));
+		
+		
+		
+		// TEST of Helpers
+		// Method removeAll
+		assertEquals("removeAll - begin", "word word ", tester.removeAll("   word word ", "^\\s+"));
+		assertEquals("removeAll - end", "word|word", tester.removeAll("word|word|", "\\|+$"));
+		assertEquals("removeAll - all", "wordword", tester.removeAll("|word|word|", "\\|"));
 		
 		
 		
