@@ -2135,7 +2135,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				plStr = plStr+pls[i]+" ";
 			}
 		}
-		plStr = plStr.replaceAll("\\s+", "");
+		plStr = plStr.replaceAll("\\s+$", "");
 		this.PLURALS.put(word, plStr);
 		
 		return plStr.split(" ");
@@ -2174,12 +2174,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
-		// p = Pattern.compile("");
-		// m = p.matcher(word);
-		// if (m.lookingAt()) {
-		// plural = m.group(1) + "";
-		// return plural;
-		// }
+		p = Pattern.compile("(^.*?)(?:([^f])fe|([oaelr])f)$");
+		m = p.matcher(word);
+		if (m.lookingAt()) {
+			plural = m.group(1) + m.group(2) + "ves";
+			return plural;
+		}
 
 		p = Pattern.compile("(^.*?)(x|s)is$");
 		m = p.matcher(word);
@@ -2640,48 +2640,83 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return 0;
 	}
 
-	
-	private int addModifier(String newWord, int increment) {
-		// TODO Auto-generated method stub
+	/**
+	 * Take a new word, insert it into modifer table, or update its count in
+	 * modifer table if the word already exist
+	 * 
+	 * @param newWord
+	 * @param increment
+	 * @return if anything changed in modifer table, return true; otherwise
+	 *         return false
+	 */
+	public boolean addModifier(String newWord, int increment) {
+		boolean isUpdate = false;
 
-		return 0;
+		if ((newWord.matches("(" + this.STOP + "|^.*\\w+ly$)"))
+				|| (!(newWord.matches("^.*\\w.*$")))) {
+			return isUpdate;
+		}
+
+		if (this.modifierTable.containsKey(newWord)) {
+			int count = this.modifierTable.get(newWord).getCount();
+			count = count + increment;
+			this.modifierTable.get(newWord).setCount(count);
+			isUpdate = true;
+		} else {
+			this.modifierTable.put(newWord, new ModifierTableValue(1, false));
+			isUpdate = true;
+		}
+
+		return isUpdate;
 	}
 
-
-
 	/**
-	 * Helper of method updateTable: ???
+	 * Helper of method updateTable
 	 * @param w
 	 * @return
 	 */
 	public String getNumber(String word) {
-		
-		/**
-		  my $word = shift;
-		  #$word = lc $word;
-		  my $number = checkWN($word, "number");
-		  return $number if $number =~/[sp]/;
-		  return "" if $number=~/x/;
-		  if($word =~/i$/) {return "p";} #1.	Calyculi  => 1.	Calyculus, pappi => pappus
-		  if ($word =~ /ss$/){return "s";}
-		  if($word =~/ia$/) {return "p";}
-		  if($word =~/[it]um$/) {return "s";}#3/13/09
-		  if ($word =~/ae$/){return "p";}
-		  if($word =~/ous$/){return ""; }
-		  if($word =~/^[aiu]s$/){return ""; }
-		  if ($word =~/us$/){return "s";}
-		  if($word =~ /es$/ || $word =~ /s$/){return "p";}
-		  if($word =~/ate$/){return "";} #3/12/09 good.
-		  return "s";
-		**/
-		
 		String number = checkWN(word, "number");
-		if (number.matches("^.*[sp].*&")) {
+		String rt = "";
+
+		rt = getNumberHelper1(number);
+		if (rt != null) {
+			return rt;
+		}
+
+		rt = getNumberHelper2(word);
+		if (rt != null) {
+			return rt;
+		} else {
+			return "s";
+		}
+	}
+
+	/**
+	 * First Helper of method getNumber
+	 * 
+	 * @param number
+	 * @return if match return the right number, otherwise return null means not
+	 *         match
+	 */
+	public String getNumberHelper1(String number) {
+		if (number.matches("^.*[sp].*$")) {
 			return number;
 		}
 		if (number.matches("^.*x.*$")) {
 			return "";
 		}
+		return null;
+	}
+
+	/**
+	 * Second Helper of method getNumber
+	 * 
+	 * @param word
+	 * @return if match return the right number, otherwise return null means not
+	 *         match
+	 */
+	public String getNumberHelper2(String word) {
 		// Calyculi => 1. Calyculus, pappi => pappus
 		if (word.matches("^.*i$")) {
 			return "p";
@@ -2701,21 +2736,20 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (word.matches("^.*ous$")) {
 			return "";
 		}
-		if (word.matches("^.*[aiu]s$")) {
+		// this case only handle three words: as, is, us
+		if (word.matches("^[aiu]s$")) {
 			return "";
 		}
 		if (word.matches("^.*us$")) {
 			return "s";
 		}
-		// if($word =~ /es$/ || $word =~ /s$/){return "p";}
 		if (word.matches("^.*es$") || word.matches("^.*s$")) {
 			return "p";
 		}
 		if (word.matches("^.*ate$")) {
 			return "";
 		}
-
-		return "s";
+		return null;
 	}
 
 	public String checkWN(String word, String mode) {
@@ -2845,14 +2879,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			 */
 			word = wordCopy;
 			word = word.replace("^(" + this.PREFIX + ")+", "");
-			if (word.endsWith(wordCopy)) {
+			if (word.equals(wordCopy)) {
 				return mode.equals("singular") ? word : "";
 			} else {
-				this.myWN.contains(word);
-				// $result =~ s#\b$word\b#$wordcopy#g;
-				word = wordCopy;
-				if (true) {
-					return mode.equals("singular") ? word : "";
+				;
+				// $result =~ s#\b$word\b#$wordcopy#g;	????????????????
+				//word = wordCopy;
+				if (this.myWN.contains(word)) {
+					return mode.equals("singular") ? wordCopy : "";
 				}
 			}
 		}

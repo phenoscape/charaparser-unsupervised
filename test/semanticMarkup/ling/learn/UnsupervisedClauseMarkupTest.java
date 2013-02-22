@@ -363,6 +363,36 @@ public class UnsupervisedClauseMarkupTest {
 		tester.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
 		assertEquals("addSigularPluralPair - pair exist", false, tester.addSingularPluralPair("sword3", "pword3"));
 		
+		// Method checkWN
+		
+		
+		
+		// getNumber method group 
+		// Method getNumberHelper1
+		assertEquals ("getNumberHelp1 - case 1: s or p", "s", tester.getNumberHelper1("s"));
+		assertEquals ("getNumberHelp1 - case 2: x", "", tester.getNumberHelper1("x"));	
+		assertEquals ("getNumberHelp1 - case 3: null", null, tester.getNumberHelper1("a"));
+		// Method getNumberHelper2
+		assertEquals ("getNumberHelp2 - end with i", "p", tester.getNumberHelper2("pappi"));
+		assertEquals ("getNumberHelp2 - end with ss", "s", tester.getNumberHelper2("wordss"));
+		assertEquals ("getNumberHelp2 - end with ia", "p", tester.getNumberHelper2("criteria"));
+		assertEquals ("getNumberHelp2 - end with ium", "s", tester.getNumberHelper2("medium"));
+		assertEquals ("getNumberHelp2 - end with tum", "s", tester.getNumberHelper2("datum"));
+		assertEquals ("getNumberHelp2 - end with ae", "p", tester.getNumberHelper2("alumnae"));
+		assertEquals ("getNumberHelp2 - end with ous", "", tester.getNumberHelper2("various"));
+		assertEquals ("getNumberHelp2 - word as", "", tester.getNumberHelper2("as"));
+		assertEquals ("getNumberHelp2 - word is", "", tester.getNumberHelper2("is"));
+		assertEquals ("getNumberHelp2 - word us", "", tester.getNumberHelper2("us"));
+		assertEquals ("getNumberHelp2 - end with us", "s", tester.getNumberHelper2("corpus"));
+		assertEquals ("getNumberHelp2 - end with es", "p", tester.getNumberHelper2("phases"));
+		assertEquals ("getNumberHelp2 - end with s", "p", tester.getNumberHelper2("mouths"));
+		assertEquals ("getNumberHelp2 - end with ate", "", tester.getNumberHelper2("differentiate"));
+		assertEquals ("getNumberHelp2 - not match", null, tester.getNumberHelper2("jxbz"));
+		// Method getNumber
+		assertEquals ("getNumberHelp2 - not match", "s", tester.getNumber("jxbz"));
+		
+		// getPlural mthod group
+		assertEquals ("getPluralRuleHelper - ves plural", "leaves", tester.getPluralRuleHelper("leaf"));
 		
 		
 		
