@@ -2167,7 +2167,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		p = Pattern.compile("(^.*?)(?:([^f])fe|([oaelr])f)$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
-			plural = m.group(1) + m.group(2) + "ves";
+			String s1 = m.group(1);
+			String s2 = m.group(2);
+			String s3 = m.group(3);
+			if (s2 != null) {
+				plural = m.group(1) + m.group(2) + "ves";
+			} else {
+				plural = m.group(1) + m.group(3) + "ves";
+			}
 			return plural;
 		}
 
@@ -2625,9 +2632,123 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 	
 
-	private int updatePOS(String newWord, String pos, String role, int increment) {
-		// TODO Auto-generated method stub
+	public int updatePOS(String newWord, String pos, String role, int increment) {
+
+/**
+   my ($word, $pos, $role, $increment) = @_;
+   my ($sth1, $sth, $new, $oldpos, $oldrole, $certaintyu, $certaintyl, $newwordflag);
+
+   if($word =~ /(\b|_)(NUM|$NUMBERS|$CLUSTERSTRINGS|$CHARACTER)\b/ and $pos =~/[nsp]/){
+   	return 0;
+   }
+
+	$newwordflag = 1;
+  	#updates should be in one transaction
+	$sth1 = $dbh->prepare("select pos, role, certaintyu, certaintyl from ".$prefix."_wordpos where word='$word' ");
+	$sth1->execute(); #return 1 record
+	($oldpos, $oldrole, $certaintyu) = $sth1->fetchrow_array();
+	#if($oldpos !~ /\w/){#new word
+	
+ */
+		//String regex = "^.*(\b|_)(NUM|" + this.NUMBER + "|"
+		//		+ this.CLUSTERSTRING + "|" + this.CHARACTER + ")\b.*$";
+		if ((newWord.matches("^.*(\b|_)(NUM|" + this.NUMBER + "|"
+				+ this.CLUSTERSTRING + "|" + this.CHARACTER + ")\b.*$"))
+				&& (pos.matches("[nsp]"))) {
+			return 0;
+		}
+		
+		int newWordFlag = 1;
+		
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
+		//boolean isExist = false;
+		Map.Entry<WordPOSKey, WordPOSValue> targetWordPOS = null;
+		while (iter.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> wordPOS = iter.next();
+			if (wordPOS.getKey().getWord().equals(newWord)) {
+				targetWordPOS = wordPOS;
+				//isExist = true;
+				
+
+				
+				
+				
+				
+				
+				
+				
+				break;
+			}
+		}
+		if ( targetWordPOS==null) {
+			int certaintyU = 0;
+			certaintyU += increment;
+			this.wordPOSTable.put(new WordPOSKey(newWord, pos),
+					new WordPOSValue(role, certaintyU, 0, null, null));
+			 int n = 1;
+			 
+			
+		}
+		
+
+		else {
+			String oldPOS = targetWordPOS.getKey().getPOS();
+			if (
+					(!oldPOS.equals(pos))
+				&& 
+				(
+						(oldPOS.equals("b"))
+				||
+						(pos.equals("b"))
+				)
+				){
+				
+				
+				/**
+				}elsif(($oldpos ne $pos) && ($oldpos eq "b" or $pos eq "b") ){ #different pos: b vs. s/p resolve conflicts,
+					my $otherpos = $pos ne "b" ? $pos : $oldpos;
+					$pos = resolveconflicts($word, "b", $otherpos);
+					#$role = $pos eq $oldpos? $oldrole : $role; #6/11/09 remove
+					if ($pos ne $oldpos){ #new pos win
+						$role = $role eq "*" ? "" : $role;; #6/11/09 add
+						$new += changePOS($word, $oldpos, $pos, $role, $increment) ;
+					}else{ #old pos win
+						#$role = mergerole($oldrole, $role); #6/11/09
+						$role = $oldrole eq "*" ? $role : $oldrole;
+						$certaintyu += $increment; #change from +1 to +$increment
+						$sth = $dbh->prepare("update ".$prefix."_wordpos set role ='$role', certaintyu =$certaintyu where word='$word' and pos='$pos' ");
+			    		$sth->execute();
+						print "\t: update [$word($pos):a] role: $oldrole=>$role, certaintyu=$certaintyu\n" if $debug;
+					}
+					 */		
+				String otherPOS = pos.equals("b")?oldPOS:pos;
+				pos = resolveConfilicts(newWord, "b", otherPOS);
+			;
+			}
+			else {
+				
+				/**
+	}else{#old and new pos are all [n],  update role and certaintyu
+		$role = mergerole($oldrole, $role);
+		$certaintyu += $increment; #change from +1 to +$increment
+		$sth = $dbh->prepare("update ".$prefix."_wordpos set role ='$role', certaintyu =$certaintyu where word='$word' and pos='$pos' ");
+    	$sth->execute();
+		print "\t: update [$word($pos):b] role: $oldrole=>$role, certaintyu=$certaintyu\n" if $debug;
+	}
+				 */
+				
+			}
+		}
+		
+		
+		
 		return 0;
+	}
+
+	private String resolveConfilicts(String newWord, String string,
+			String otherPOS) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	/**
@@ -2975,8 +3096,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			System.out.println(entry.getKey().getWord() + ", "
 					+ entry.getKey().getPOS() + ", "
 					+ entry.getValue().getRole() + ", "
-					+ entry.getValue().getCertainTye() + ", "
-					+ entry.getValue().getCertainTyl() + ", "
+					+ entry.getValue().getCertaintyU() + ", "
+					+ entry.getValue().getCertaintyL() + ", "
 					+ entry.getValue().getSavedFlag() + ", "
 					+ entry.getValue().getSavedID());
 		}
