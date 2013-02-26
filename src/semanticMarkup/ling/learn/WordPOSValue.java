@@ -3,15 +3,15 @@ package semanticMarkup.ling.learn;
 public class WordPOSValue {
 	
 	private String role;
-	private int certaintye;
-	private int certaintyl;
+	private int certaintyU;
+	private int certaintyL;
 	private String savedFlag;
 	private String savedID;
 
-	public WordPOSValue(String r, int ce, int cl, String sf, String si) {
+	public WordPOSValue(String r, int cu, int cl, String sf, String si) {
 		this.role=r;
-		this.certaintye=ce;
-		this.certaintyl=cl;
+		this.certaintyU=cu;
+		this.certaintyL=cl;
 		this.savedFlag=sf;
 		this.savedID=si;
 	}
@@ -24,20 +24,20 @@ public class WordPOSValue {
 		this.role=r;
 	}
 	
-	public int getCertainTye() {
-		return this.certaintye;
+	public int getCertaintyU() {
+		return this.certaintyU;
 	}
 	
-	public void setCertianTye(int ct) {
-		this.certaintye=ct;
+	public void setCertiantyU(int cu) {
+		this.certaintyU=cu;
 	}
 	
-	public int getCertainTyl() {
-		return this.certaintyl;
+	public int getCertaintyL() {
+		return this.certaintyL;
 	}
 	
-	public void setCertianTyl(int cl) {
-		this.certaintyl=cl;
+	public void setCertiantyL(int cl) {
+		this.certaintyL=cl;
 	}
 
 	public String getSavedFlag() {

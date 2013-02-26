@@ -2631,117 +2631,91 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return true;
 	}
 	
-
 	public int updatePOS(String newWord, String pos, String role, int increment) {
+		int n = 0;
 
-/**
-   my ($word, $pos, $role, $increment) = @_;
-   my ($sth1, $sth, $new, $oldpos, $oldrole, $certaintyu, $certaintyl, $newwordflag);
-
-   if($word =~ /(\b|_)(NUM|$NUMBERS|$CLUSTERSTRINGS|$CHARACTER)\b/ and $pos =~/[nsp]/){
-   	return 0;
-   }
-
-	$newwordflag = 1;
-  	#updates should be in one transaction
-	$sth1 = $dbh->prepare("select pos, role, certaintyu, certaintyl from ".$prefix."_wordpos where word='$word' ");
-	$sth1->execute(); #return 1 record
-	($oldpos, $oldrole, $certaintyu) = $sth1->fetchrow_array();
-	#if($oldpos !~ /\w/){#new word
-	
- */
-		//String regex = "^.*(\b|_)(NUM|" + this.NUMBER + "|"
-		//		+ this.CLUSTERSTRING + "|" + this.CHARACTER + ")\b.*$";
 		if ((newWord.matches("^.*(\b|_)(NUM|" + this.NUMBER + "|"
 				+ this.CLUSTERSTRING + "|" + this.CHARACTER + ")\b.*$"))
 				&& (pos.matches("[nsp]"))) {
 			return 0;
 		}
-		
-		int newWordFlag = 1;
-		
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
-		//boolean isExist = false;
+
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable
+				.entrySet().iterator();
+		// boolean isExist = false;
 		Map.Entry<WordPOSKey, WordPOSValue> targetWordPOS = null;
 		while (iter.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> wordPOS = iter.next();
 			if (wordPOS.getKey().getWord().equals(newWord)) {
 				targetWordPOS = wordPOS;
-				//isExist = true;
-				
-
-				
-				
-				
-				
-				
-				
-				
 				break;
 			}
 		}
-		if ( targetWordPOS==null) {
+		if (targetWordPOS == null) {
 			int certaintyU = 0;
 			certaintyU += increment;
 			this.wordPOSTable.put(new WordPOSKey(newWord, pos),
 					new WordPOSValue(role, certaintyU, 0, null, null));
-			 int n = 1;
-			 
-			
-		}
-		
-
-		else {
+			n = 1;
+		} else {
 			String oldPOS = targetWordPOS.getKey().getPOS();
-			if (
-					(!oldPOS.equals(pos))
-				&& 
-				(
-						(oldPOS.equals("b"))
-				||
-						(pos.equals("b"))
-				)
-				){
-				
-				
-				/**
-				}elsif(($oldpos ne $pos) && ($oldpos eq "b" or $pos eq "b") ){ #different pos: b vs. s/p resolve conflicts,
-					my $otherpos = $pos ne "b" ? $pos : $oldpos;
-					$pos = resolveconflicts($word, "b", $otherpos);
-					#$role = $pos eq $oldpos? $oldrole : $role; #6/11/09 remove
-					if ($pos ne $oldpos){ #new pos win
-						$role = $role eq "*" ? "" : $role;; #6/11/09 add
-						$new += changePOS($word, $oldpos, $pos, $role, $increment) ;
-					}else{ #old pos win
-						#$role = mergerole($oldrole, $role); #6/11/09
-						$role = $oldrole eq "*" ? $role : $oldrole;
-						$certaintyu += $increment; #change from +1 to +$increment
-						$sth = $dbh->prepare("update ".$prefix."_wordpos set role ='$role', certaintyu =$certaintyu where word='$word' and pos='$pos' ");
-			    		$sth->execute();
-						print "\t: update [$word($pos):a] role: $oldrole=>$role, certaintyu=$certaintyu\n" if $debug;
-					}
-					 */		
-				String otherPOS = pos.equals("b")?oldPOS:pos;
+			String oldRole = targetWordPOS.getValue().getRole();
+			int certaintyU = targetWordPOS.getValue().getCertaintyU();
+			if ((!oldPOS.equals(pos))
+					&& ((oldPOS.equals("b")) || (pos.equals("b")))) {
+				String otherPOS = pos.equals("b") ? oldPOS : pos;
 				pos = resolveConfilicts(newWord, "b", otherPOS);
-			;
-			}
-			else {
-				
-				/**
-	}else{#old and new pos are all [n],  update role and certaintyu
-		$role = mergerole($oldrole, $role);
-		$certaintyu += $increment; #change from +1 to +$increment
-		$sth = $dbh->prepare("update ".$prefix."_wordpos set role ='$role', certaintyu =$certaintyu where word='$word' and pos='$pos' ");
-    	$sth->execute();
-		print "\t: update [$word($pos):b] role: $oldrole=>$role, certaintyu=$certaintyu\n" if $debug;
-	}
-				 */
-				
+				if (!pos.equals(oldPOS)) { // new pos win
+					role = role.equals("*") ? "" : role;
+					n = n + changePOS(newWord, oldPOS, pos, role, increment);
+				} else { // olde pos win
+					role = oldRole.equals("*") ? role : oldRole;
+					certaintyU = certaintyU + increment;
+					WordPOSKey key = new WordPOSKey("newWord", "pos");
+					WordPOSValue value = new WordPOSValue(role, certaintyU, 0,
+							null, null);
+					this.wordPOSTable.put(key, value);
+				}
+			} else {
+				role = mergeRole(oldRole, role);
+				certaintyU += increment;
+				WordPOSKey key = new WordPOSKey("newWord", "pos");
+				WordPOSValue value = new WordPOSValue(role, certaintyU, 0,
+						null, null);
+				this.wordPOSTable.put(key, value);
 			}
 		}
-		
-		
-		
+
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.wordPOSTable
+				.entrySet().iterator();
+		int certaintyL = 0;
+		while (iter2.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
+			if (e.getKey().getWord().equals(newWord)) {
+				certaintyL += e.getValue().getCertaintyU();
+			}
+		}
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter3 = this.wordPOSTable
+				.entrySet().iterator();
+		while (iter3.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> e = iter3.next();
+			if (e.getKey().getWord().equals(newWord)) {
+				e.getValue().setCertiantyU(certaintyL);
+			}
+		}
+
+		return n;
+
+	}
+
+	private String mergeRole(String oldRole, String role) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private int changePOS(String newWord, String oldPOS, String pos,
+			String role, int increment) {
+		// TODO Auto-generated method stub
 		return 0;
 	}
 
