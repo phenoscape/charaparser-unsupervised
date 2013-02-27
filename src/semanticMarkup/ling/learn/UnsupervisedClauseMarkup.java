@@ -114,7 +114,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private Map<String, String> heuristicNounTable = new HashMap<String, String>();
 	
 	// Table singularPlural
-	private Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
+	Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
 	
 	// Table modifier
 	private Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
@@ -1816,8 +1816,29 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public void learn(List<Treatment> treatments) {
-		// TODO: Implement the unsupervised algorithm here!
-		System.out.println("Method: learn\n");
+		
+		// process treatments
+		this.populateSents();
+		
+		// pre load words
+		this.addHeuristicsNouns();
+		this.addStopWords();
+		this.addCharacters();
+		this.addNumbers();
+		this.addClusterstrings();
+		this.addProperNouns();
+		
+		// ???
+		this.posBySuffix();
+		this.markupbypattern();
+		this.markupIgnore();
+		
+		// learning rules with high certainty
+		this.discover("start");
+		// bootstrapping rules
+		this.discover("normal");
+				
+		System.out.println("Method: learn - Done!\n");
 	}
 
 	public Map<Treatment, List<String>> getSentences() {
@@ -2058,11 +2079,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		p = Pattern.compile("(^.*?)(?:([^f])fe|([oaelr])f)$");
 		m = p.matcher(word);
+		String s1 = m.group(1);
+		String s2 = m.group(2);
+		String s3 = m.group(3);
 		if (m.lookingAt()) {
 			if (s2 != null) {
-				plural = m.group(1) + m.group(2) + "ves";
+				plural = s1 + s2 + "ves";
 			} else {
-				plural = m.group(1) + m.group(3) + "ves";
+				plural = s1 + s3 + "ves";
 			}
 			return plural;
 		}
@@ -2597,6 +2621,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return n;
 
 	}
+
 
 	/**
 	 * 
