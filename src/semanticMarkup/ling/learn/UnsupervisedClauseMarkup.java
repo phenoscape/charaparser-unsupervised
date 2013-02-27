@@ -1571,7 +1571,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return flag;
 	}
 
-	public void markupbypattern() {
+	public void markupByPattern() {
 		System.out.println("markupbypattern start");
 		// int cap=this.sentence.size();
 		int cap = this.sentenceTable.size();
@@ -1830,7 +1830,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		// ???
 		this.posBySuffix();
-		this.markupbypattern();
+		this.markupByPattern();
 		this.markupIgnore();
 		
 		// learning rules with high certainty
