@@ -2664,7 +2664,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if ((!oldPOS.equals(pos))
 					&& ((oldPOS.equals("b")) || (pos.equals("b")))) {
 				String otherPOS = pos.equals("b") ? oldPOS : pos;
-				pos = resolveConfilicts(newWord, "b", otherPOS);
+				pos = resolveConflicts(newWord, "b", otherPOS);
 				if (!pos.equals(oldPOS)) { // new pos win
 					role = role.equals("*") ? "" : role;
 					n = n + changePOS(newWord, oldPOS, pos, role, increment);
@@ -2708,23 +2708,181 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	}
 
-	private String mergeRole(String oldRole, String role) {
-		// TODO Auto-generated method stub
+
+	/**
+	 * 
+	 * @param newWord
+	 * @param bPOS
+	 * @param otherPOS
+	 * @return
+	 */
+	private String resolveConflicts(String newWord, String bPOS,
+			String otherPOS) {
+		int count = 0;
+
+		for (int i = 0; i < this.sentenceTable.size(); i++) {
+			Sentence sent = this.sentenceTable.get(i);
+			if ((!sent.getTag().equals("ignore")) || (sent.getTag() != null)) {
+				Pattern p = Pattern.compile("([a-z]+(" + this.PLENDINGS
+						+ ")) (" + newWord + ")", Pattern.CASE_INSENSITIVE);
+				Matcher m = p.matcher(newWord);
+				if (m.lookingAt()) {
+					String pl = m.group(1).toLowerCase();
+					if (getNumber(pl).equals("p")) {
+
+						count++;
+					}
+					if (count >= 1) {
+						return bPOS;
+					}
+				}
+			}
+		}
 		return null;
 	}
 
-	private int changePOS(String newWord, String oldPOS, String pos,
+	/**
+	 * This method corrects the pos of the word from N to M
+	 * 
+	 * @param newWord
+	 * @param oldPOS
+	 * @param pos
+	 * @param role
+	 * @param increment
+	 * @return
+	 */
+	public int changePOS(String newWord, String oldPOS, String newPOS,
 			String role, int increment) {
-		// TODO Auto-generated method stub
+		int sign=0;
+		//String modifier = "";
+		oldPOS = oldPOS.toLowerCase();
+		newPOS = newPOS.toLowerCase();
+		
+	if (oldPOS.matches("^.*s.*$") && newPOS.matches("^.*m.*$")) {
+		discount(newWord, oldPOS, newPOS, "all");
+		sign += markKnown(newWord, "m","", "modifiers", increment);
+		for (int i=0;i<this.sentenceTable.size();i++) {
+			Sentence sent = this.sentenceTable.get(i);
+			if (sent.getTag().equals(newWord)) {								
+				String modifier = sent.getModifier();
+				String tag = sent.getTag();				
+				String sentence = sent.getSentence();
+				tag = getParentsentenceTag(i);
+				modifier = modifier+" "+newWord;
+				modifier.replaceAll("^\\s*", "");
+				String m = getMFromParentTag(tag);
+				tag = getTagFromParentTag(tag);
+				if (m.matches("^.*\\w.*$")) {
+					modifier = modifier+" "+m;
+				}
+				tagSentWMT(i,sentence, modifier, tag, "changePOS[n->m:parenttag]");		
+			}
+		}
+	}
+	else if ((oldPOS.matches("^.*s.*$")) && (newPOS.matches("^.*b.*$"))){
+/**
+}elsif($oldpos =~ /s/ && $newpos=~/b/){#s2b
+		#update pos table
+		$sth = $dbh->prepare("select certaintyu from ".$prefix."_wordpos where word='$word' and pos='$oldpos' ");
+    	$sth->execute();
+    	my ($certaintyu) = $sth->fetchrow_array();
+    	#$certaintyu++; #6/11/09
+    	$certaintyu += $increment;
+    	discount($word, $oldpos, $newpos, "all");
+    	
+    	$sth = $dbh->prepare("select * from ".$prefix."_wordpos where word = '$word' and pos = '$newpos'");
+    	$sth->execute() or print STDOUT "$sth->errstr\n";
+    	if($sth->rows == 0){
+    		$sth = $dbh->prepare("insert into ".$prefix."_wordpos (word, pos, role, certaintyu, certaintyl)values ('$word', '$newpos', '$role', $certaintyu, 0)");
+    		$sth->execute() or print STDOUT "$sth->errstr\n";;
+    	}
+		print "\t: change [$word($oldpos => $newpos)] role=>$role\n" if $debug;
+		$sign++;
+		#all sentences tagged with $word (b), retag.
+		$sth = $dbh->prepare("select sentid, modifier, tag, sentence from ".$prefix."_sentence where tag = '$word'");
+		$sth->execute() or print STDOUT "$sth->errstr\n";
+		while(($sentid, $modifier, $tag, $sentence) = $sth->fetchrow_array()){
+			tagsentwmt($sentid, $sentence, "", "NULL", "changePOS[s->b: reset to NULL]");
+		}
+	
+ */
+		
+		
+		
+		;
+	}
+		
+		
 		return 0;
 	}
+	
+	private void tagSentWMT(int i, String sentence, String modifier,
+			String tag, String string) {
+		// TODO Auto-generated method stub
+		
+	}
 
-	private String resolveConfilicts(String newWord, String string,
-			String otherPOS) {
+	private String getTagFromParentTag(String tag) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	private String getMFromParentTag(String tag) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private String getParentsentenceTag(int i) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private void discount(String newWord, String oldPOS, String newPOS,
+			String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+	 * Given a new role, and the old role, of a word, decide the right role to
+	 * return
+	 * 
+	 * @param oldRole
+	 * @param role
+	 * @return
+	 */
+	public String mergeRole(String oldRole, String role) {
+	String role1 = oldRole;
+		String role2 = role;
+		
+		// if old role is "*", return the new role
+		if (role1.equals("*")) {
+			return role2;
+		}
+		// if the new role is "*", return the old rule
+		else if (role2.equals("*")) {
+			return role1;
+		}
+		
+		// if the old role is empty, return the new role
+		if (role1.equals("")) {
+			return role2;
+		}
+		// if the new role is empty, return the old role
+		else if (role2.equals("")) {
+			return role1;
+		}
+		// if the old role is not same as the new role, return "+"
+		else if (!role1.equals(role2)) {
+			return "+";
+		}
+		// if none of above apply, return the old role by default
+		else {
+			return role1;
+		}
+	}
+
+	
 	/**
 	 * Take a new word, insert it into modifer table, or update its count in
 	 * modifer table if the word already exist

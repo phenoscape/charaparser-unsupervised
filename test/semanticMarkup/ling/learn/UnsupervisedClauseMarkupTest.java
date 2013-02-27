@@ -396,8 +396,15 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals ("getPluralRuleHelper - ves plural", "knives", tester.getPluralRuleHelper("knife"));
 		
 		// Method updatePOS
-		assertEquals ("getPluralRuleHelper - ves plural", 0, tester.updatePOS("", "", "", 0));
+		//assertEquals ("getPluralRuleHelper - ves plural", 0, tester.updatePOS("", "", "", 0));
 		
+		// Method mergeRole
+		assertEquals ("mergeRole - case 1", "new", tester.mergeRole("*", "new"));
+		assertEquals ("mergeRole - case 2", "old", tester.mergeRole("old", "*"));
+		assertEquals ("mergeRole - case 3", "new", tester.mergeRole("", "new"));
+		assertEquals ("mergeRole - case 4", "old", tester.mergeRole("old", ""));
+		assertEquals ("mergeRole - case 5", "+", tester.mergeRole("old", "new"));
+		assertEquals ("mergeRole - case 0", "same", tester.mergeRole("same", "same"));
 		
 		
 		
