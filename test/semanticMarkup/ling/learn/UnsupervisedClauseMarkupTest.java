@@ -391,8 +391,21 @@ public class UnsupervisedClauseMarkupTest {
 		// Method getNumber
 		assertEquals ("getNumberHelp2 - not match", "s", tester.getNumber("jxbz"));
 		
-		// getPlural mthod group
+		// getPlural method group
 		assertEquals ("getPluralRuleHelper - ves plural", "leaves", tester.getPluralRuleHelper("leaf"));
+		assertEquals ("getPluralRuleHelper - ves plural", "knives", tester.getPluralRuleHelper("knife"));
+		
+		// Method updatePOS
+		//assertEquals ("getPluralRuleHelper - ves plural", 0, tester.updatePOS("", "", "", 0));
+		
+		// Method mergeRole
+		assertEquals ("mergeRole - case 1", "new", tester.mergeRole("*", "new"));
+		assertEquals ("mergeRole - case 2", "old", tester.mergeRole("old", "*"));
+		assertEquals ("mergeRole - case 3", "new", tester.mergeRole("", "new"));
+		assertEquals ("mergeRole - case 4", "old", tester.mergeRole("old", ""));
+		assertEquals ("mergeRole - case 5", "+", tester.mergeRole("old", "new"));
+		assertEquals ("mergeRole - case 0", "same", tester.mergeRole("same", "same"));
+		
 		
 		
 		
@@ -401,6 +414,9 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("removeAll - begin", "word word ", tester.removeAll("   word word ", "^\\s+"));
 		assertEquals("removeAll - end", "word|word", tester.removeAll("word|word|", "\\|+$"));
 		assertEquals("removeAll - all", "wordword", tester.removeAll("|word|word|", "\\|"));
+		
+		
+		
 		
 		
 		

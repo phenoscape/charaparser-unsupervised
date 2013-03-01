@@ -25,5 +25,17 @@ public class WordPOSKey {
 	//public void setPOS(String p) {
 	//	this.pos=p;
 	//}
+	
+	public boolean equals(WordPOSKey wpk) {
+		return ((this.word.equals(wpk.getWord())) 
+				&& (this.pos.equals(wpk.getPOS())));
+	}
 
+	public int hashCode() {
+		int hash = 1;
+		hash = hash * 31 + (this.word == null ? 0 : this.word.hashCode());
+		hash = hash * 31 + (this.pos == null ? 0 : this.pos.hashCode());
+		return hash;
+	}
+	
 }
