@@ -2667,69 +2667,113 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 */
 	public int changePOS(String newWord, String oldPOS, String newPOS,
 			String role, int increment) {
-		int sign=0;
-		//String modifier = "";
 		oldPOS = oldPOS.toLowerCase();
 		newPOS = newPOS.toLowerCase();
-		
-	if (oldPOS.matches("^.*s.*$") && newPOS.matches("^.*m.*$")) {
-		discount(newWord, oldPOS, newPOS, "all");
-		sign += markKnown(newWord, "m","", "modifiers", increment);
-		for (int i=0;i<this.sentenceTable.size();i++) {
-			Sentence sent = this.sentenceTable.get(i);
-			if (sent.getTag().equals(newWord)) {								
-				String modifier = sent.getModifier();
-				String tag = sent.getTag();				
-				String sentence = sent.getSentence();
-				tag = getParentsentenceTag(i);
-				modifier = modifier+" "+newWord;
-				modifier.replaceAll("^\\s*", "");
-				String m = getMFromParentTag(tag);
-				tag = getTagFromParentTag(tag);
-				if (m.matches("^.*\\w.*$")) {
-					modifier = modifier+" "+m;
+
+		String modifier = "";
+		String tag = "";
+		String sentence = null;
+		int sign = 0;
+
+		// case 1: oldPOS is "s" AND newPOS is "m"
+		if (oldPOS.matches("^.*s.*$") && newPOS.matches("^.*m.*$")) {
+			discount(newWord, oldPOS, newPOS, "all");
+			sign += markKnown(newWord, "m", "", "modifiers", increment);
+			for (int i = 0; i < this.sentenceTable.size(); i++) {
+				Sentence sent = this.sentenceTable.get(i);
+				if (sent.getTag().equals(newWord)) {
+					modifier = sent.getModifier();
+					tag = sent.getTag();
+					sentence = sent.getSentence();
+					tag = getParentsentenceTag(i);
+					modifier = modifier + " " + newWord;
+					modifier.replaceAll("^\\s*", "");
+					String m = getMFromParentTag(tag);
+					tag = getTagFromParentTag(tag);
+					if (m.matches("^.*\\w.*$")) {
+						modifier = modifier + " " + m;
+					}
+					tagSentWMT(i, sentence, modifier, tag,
+							"changePOS[n->m:parenttag]");
 				}
-				tagSentWMT(i,sentence, modifier, tag, "changePOS[n->m:parenttag]");		
+			}
+			// case 2: oldPOS is "s" AND newPOS is "b"
+		} else if ((oldPOS.matches("^.*s.*$")) && (newPOS.matches("^.*b.*$"))) {
+			int certaintyU = 0;
+
+			// case 2.1: (newWord, oldPOS)
+			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
+			if (this.wordPOSTable.containsKey(newOldKey)) {
+				WordPOSValue v = this.wordPOSTable.get(newOldKey);
+				certaintyU = v.getCertaintyU();
+				certaintyU += increment;
+				discount(newWord, oldPOS, newPOS, "all");
+			}
+
+			// case 2.2: (newWord, newPOS)
+			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
+			if (!this.wordPOSTable.containsKey(newOldKey)) {
+				this.wordPOSTable.put(newNewKey, new WordPOSValue(role,
+						certaintyU, 0, "", ""));
+			}
+			sign++;
+
+			// for all sentences tagged with (newWord, "b"), re tag them
+			for (int i = 0; i < this.sentenceTable.size(); i++) {
+				Sentence sent = this.sentenceTable.get(i);
+				if (sent.getTag().equals(newWord)) {
+					int sentID = i;
+					String s = sent.getSentence();
+					this.tagSentWMT(sentID, s, "", "NULL",
+							"changePOS[s->b: reset to NULL]");
+				}
 			}
 		}
-	}
-	else if ((oldPOS.matches("^.*s.*$")) && (newPOS.matches("^.*b.*$"))){
-/**
-}elsif($oldpos =~ /s/ && $newpos=~/b/){#s2b
-		#update pos table
-		$sth = $dbh->prepare("select certaintyu from ".$prefix."_wordpos where word='$word' and pos='$oldpos' ");
-    	$sth->execute();
-    	my ($certaintyu) = $sth->fetchrow_array();
-    	#$certaintyu++; #6/11/09
-    	$certaintyu += $increment;
-    	discount($word, $oldpos, $newpos, "all");
-    	
-    	$sth = $dbh->prepare("select * from ".$prefix."_wordpos where word = '$word' and pos = '$newpos'");
-    	$sth->execute() or print STDOUT "$sth->errstr\n";
-    	if($sth->rows == 0){
-    		$sth = $dbh->prepare("insert into ".$prefix."_wordpos (word, pos, role, certaintyu, certaintyl)values ('$word', '$newpos', '$role', $certaintyu, 0)");
-    		$sth->execute() or print STDOUT "$sth->errstr\n";;
-    	}
-		print "\t: change [$word($oldpos => $newpos)] role=>$role\n" if $debug;
-		$sign++;
-		#all sentences tagged with $word (b), retag.
-		$sth = $dbh->prepare("select sentid, modifier, tag, sentence from ".$prefix."_sentence where tag = '$word'");
-		$sth->execute() or print STDOUT "$sth->errstr\n";
-		while(($sentid, $modifier, $tag, $sentence) = $sth->fetchrow_array()){
-			tagsentwmt($sentid, $sentence, "", "NULL", "changePOS[s->b: reset to NULL]");
+		// case 3: oldPOS is "b" AND newPOS is "s"
+		else if (oldPOS.matches("^.*b.*$") && newPOS.matches("^.*s.*$")) {
+			int certaintyU = 0;
+
+			// case 3.1: (newWord, oldPOS)
+			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
+			if (this.wordPOSTable.containsKey(newOldKey)) {
+				WordPOSValue v = this.wordPOSTable.get(newOldKey);
+				certaintyU = v.getCertaintyU();
+				certaintyU += increment;
+				discount(newWord, oldPOS, newPOS, "all");
+			}
+
+			// case 3.2: (newWord, newPOS)
+			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
+			if (!this.wordPOSTable.containsKey(newOldKey)) {
+				this.wordPOSTable.put(newNewKey, new WordPOSValue(role,
+						certaintyU, 0, "", ""));
+			}
+			sign++;
 		}
-	
- */
-		
-		
-		
-		;
+
+		int sum_certaintyU = 0;
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter1 = this.wordPOSTable
+				.entrySet().iterator();
+		while (iter1.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> e = iter1.next();
+			if (e.getKey().getWord().equals(newWord)) {
+				sum_certaintyU += e.getValue().getCertaintyU();
+			}
+		}
+		if (sum_certaintyU > 0) {
+			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.wordPOSTable
+					.entrySet().iterator();
+			while (iter2.hasNext()) {
+				Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
+				if (e.getKey().getWord().equals(newWord)) {
+					e.getValue().setCertiantyL(sum_certaintyU);
+				}
+			}
+		}
+
+		return sign;
 	}
-		
-		
-		return 0;
-	}
-	
+
 	private void tagSentWMT(int i, String sentence, String modifier,
 			String tag, String string) {
 		// TODO Auto-generated method stub
