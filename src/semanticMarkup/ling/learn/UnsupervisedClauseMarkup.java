@@ -118,6 +118,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	// Table modifier
 	private Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
+	
+	// Table discounted
+	private Map<DiscountedKey,String> discountedTable = new HashMap<DiscountedKey,String>();
 
 	// Third Tools
 	// WordNet
@@ -2542,7 +2545,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 		
-		return true;
+		return result;
 	}
 	
 	public int updatePOS(String newWord, String pos, String role, int increment) {
@@ -2656,7 +2659,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	/**
-	 * This method corrects the pos of the word from N to M
+	 * This method corrects the pos of the word from N to M (establish newPOS)
 	 * 
 	 * @param newWord
 	 * @param oldPOS
@@ -2795,10 +2798,72 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return null;
 	}
 
-	private void discount(String newWord, String oldPOS, String newPOS,
-			String string) {
-		// TODO Auto-generated method stub
+	/**
+	 * Discount existing pos, but do not establish $suggestedpos
+	 * 
+	 * @param newWord
+	 * @param oldPOS
+	 * @param newPOS
+	 * @param mode
+	 *            "byone" - reduce certainty 1 by 1. 
+	 *            "all" - remove this POS
+	 */
+	public void discount(String newWord, String oldPOS, String newPOS,
+			String mode) {
 		
+		/**
+		 * 1. Find the flag of newWord in unknownWords table
+		 * 1. Select all words from unknownWords table who have the same flag (including newWord)
+		 * 1. From wordPOS table, select certaintyU of the (word, oldPOS) where word is in the words list
+		 *     For each of them
+		 *     1.1 case 1: certaintyu less than 1, AND mode is "all"
+		 *         1.1.1 Delete the entry from wordpos table
+		 *         1.1.1 Update unknownwords
+		 *             1.1.1.1 Case 1: the pos is "s" or "p"
+		 *                 Delete all entries contains word from singularplural table as well
+		 *         1.1.1 Insert (word, oldpos, newpos) into discounted table
+		 */
+
+		String flag = this.unknownWordTable.get(newWord);
+		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
+				.entrySet().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<String, String> e = iter.next();
+			if (e.getValue().equals(flag)) {
+				String word = e.getKey();
+				WordPOSKey key = new WordPOSKey(word, oldPOS);
+				WordPOSValue value = this.wordPOSTable.get(key);
+				int cU = value.getCertaintyU();
+				if (cU < 1 && mode.equals("all")) {
+					this.wordPOSTable.remove(key);
+					this.updateUnknownWords(word, "unknown");
+					if (oldPOS.matches("^.*[sp].*$")) {
+						// list of entries to be deleted
+						ArrayList<SingularPluralPair> delList = new ArrayList<SingularPluralPair>();
+
+						// find entries to be deleted, put them into delList
+						Iterator<SingularPluralPair> iterSPTable = this.singularPluralTable
+								.iterator();
+						while (iterSPTable.hasNext()) {
+							SingularPluralPair spp = iterSPTable.next();
+							if (spp.getSingular().equals(word)
+									|| spp.getPlural().equals(word)) {
+								delList.add(spp);
+							}
+						}
+
+						// delete all entries in delList from
+						// singularPluralTable
+						for (int i = 0; i < delList.size(); i++) {
+							this.singularPluralTable.remove(delList.get(i));
+						}
+					}
+
+					DiscountedKey dKey = new DiscountedKey(word, oldPOS);
+					this.discountedTable.put(dKey, newPOS);
+				}
+			}
+		}
 	}
 
 	/**
