@@ -2082,10 +2082,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		p = Pattern.compile("(^.*?)(?:([^f])fe|([oaelr])f)$");
 		m = p.matcher(word);
-		String s1 = m.group(1);
-		String s2 = m.group(2);
-		String s3 = m.group(3);
+
 		if (m.lookingAt()) {
+			String s1 = m.group(1);
+			String s2 = m.group(2);
+			String s3 = m.group(3);
 			if (s2 != null) {
 				plural = s1 + s2 + "ves";
 			} else {
@@ -2688,11 +2689,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					modifier = sent.getModifier();
 					tag = sent.getTag();
 					sentence = sent.getSentence();
-					tag = getParentsentenceTag(i);
+					tag = getParentSentenceTag(i);
 					modifier = modifier + " " + newWord;
 					modifier.replaceAll("^\\s*", "");
-					String m = getMFromParentTag(tag);
-					tag = getTagFromParentTag(tag);
+					List<String> pair = getMTFromParentTag(tag);
+					String m = pair.get(1);
+					tag = pair.get(2);
 					if (m.matches("^.*\\w.*$")) {
 						modifier = modifier + " " + m;
 					}
@@ -2783,15 +2785,31 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
-	private String getTagFromParentTag(String tag) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<String> getMTFromParentTag(String tag) {
+		String modifier = "";
+		String newTag = "";
+
+		Pattern p = Pattern.compile("^\\[(\\w+)\\s+(\\w+)\\]$");
+		Matcher m = p.matcher(tag);
+		if (m.lookingAt()) {
+			modifier = m.group(1);
+			newTag = m.group(2);
+		} else {
+			p = Pattern.compile("^(\\w+)\\s+(\\w+)$");
+			m = p.matcher(tag);
+			if (m.lookingAt()) {
+				modifier = m.group(1);
+				newTag = m.group(2);
+			}
+
+		}
+		List<String> pair = new ArrayList<String>();
+		pair.add(modifier);
+		pair.add(newTag);
+
+		return pair;
 	}
 
-	private String getMFromParentTag(String tag) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	/**
 	 * Find the tag of the sentence of which this sentid (clause) is a part of

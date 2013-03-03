@@ -406,8 +406,17 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals ("mergeRole - case 5", "+", tester.mergeRole("old", "new"));
 		assertEquals ("mergeRole - case 0", "same", tester.mergeRole("same", "same"));
 		
-		
-		
+		// Method getMTFromParentTag
+		List<String> pair = new ArrayList<String>();
+		pair.add("");
+		pair.add("");		
+		assertEquals ("getMTFromParentTag - case 0: fail", pair, tester.getMTFromParentTag("[modifier_ta"));
+		pair.remove(1);
+		pair.remove(0);
+		pair.add("modifier");
+		pair.add("tag");		
+		assertEquals ("getMTFromParentTag - case 1: with []", pair, tester.getMTFromParentTag("[modifier tag]"));
+		assertEquals ("getMTFromParentTag - case 2: without []", pair, tester.getMTFromParentTag("modifier tag"));
 		
 		// TEST of Helpers
 		// Method removeAll
