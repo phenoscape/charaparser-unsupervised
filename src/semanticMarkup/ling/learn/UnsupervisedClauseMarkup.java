@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -2779,10 +2781,35 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return sign;
 	}
 
-	private void tagSentWMT(int i, String sentence, String modifier,
-			String tag, String string) {
-		// TODO Auto-generated method stub
-		
+	/**
+	 * 
+	 * @param sentID
+	 * @param sentence
+	 * @param modifier
+	 * @param tag
+	 * @param label
+	 */
+	public void tagSentWMT(int sentID, String sentence, String modifier,
+			String tag, String label) {
+
+		modifier.replaceAll("<\\S+?>", "");
+		tag.replaceAll("<\\S+?>", "");
+
+		// remove stop and forbidden words from beginning
+		modifier = this.removeAll(modifier, "\\s*\\b(" + this.STOP + "|"
+				+ this.FORBIDDEN + "|\\w+ly)$");
+		tag = this.removeAll(tag, "\\s*\\b(" + this.STOP + "|" + this.FORBIDDEN
+				+ "|\\w+ly)$");
+
+		// remove stop and forbidden words from ending
+		modifier = this.removeAll(modifier, "\\s*\\b(" + this.STOP + "|"
+				+ this.FORBIDDEN + "|\\w+ly)$");
+		tag = this.removeAll(tag, "\\s*\\b(" + this.STOP + "|" + this.FORBIDDEN
+				+ "|\\w+ly)$");
+
+		// $modifier =~ s#\b($PRONOUN)\b##g; #5/11/09 check 4974, 7269
+		modifier = this.removeAll(modifier, "\\b(" + this.PRONOUN + ")\\b");
+
 	}
 
 	public List<String> getMTFromParentTag(String tag) {
@@ -3296,7 +3323,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String newWord = word.replaceAll(regex, ""); 
 		return newWord;
 	}
-	
+	public String getStopWords(){
+		return this.STOP;
+	}
+	public String getForbiddenWords(){
+		return this.FORBIDDEN;
+	}	
+	public String getPronounWords(){
+		return this.PRONOUN;
+	}
 	
 	
 	// ---------------TEST Helper function----------------
@@ -3314,4 +3349,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					+ entry.getValue().getSavedID());
 		}
 	}
+	
+
 }
