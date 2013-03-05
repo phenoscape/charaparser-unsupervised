@@ -150,10 +150,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private String SENDINGS = "(on|is|ex|ix|um|us|a)\\b";
 	private String PENDINGS = "(ia|es|ices|i|ae)\\b";
 
-	public UnsupervisedClauseMarkup(String dir, String db, String lm, String p,
+	public UnsupervisedClauseMarkup(String db, String lm, String p,
 			String wnDir) {
 		System.out.println("Initialized:\n");
-		this.desDir = dir.concat("/");
+
 		this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		this.learningMode = lm;
 		this.prefix = p;
@@ -506,22 +506,27 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		sentence = sentence.toLowerCase();
 
 		return sentence;
-
 	}
 
-	public boolean populateSents() {
+	public boolean populateSents(List<Treatment> treatments) {
 		System.out.println("Reading sentences:\n");
-		FileLoader fileLoader = new FileLoader(this.desDir);
-		if (!fileLoader.load())
-			return false;
+		//FileLoader fileLoader = new FileLoader(this.desDir);
+		//if (!fileLoader.load())
+		//	return false;
 
-		List<String> fileNameList = fileLoader.getFileNameList();
-		List<Integer> typeList = fileLoader.getTypeList();
-		List<String> textList = fileLoader.getTextList();
+		//List<String> fileNameList = fileLoader.getFileNameList();
+		//List<Integer> typeList = fileLoader.getTypeList();
+		
+		//List<String> textList = fileLoader.getTextList();
+		
+		//List<String>
 
 		String text;
-		for (int i = 0; i < fileLoader.getCount(); i++) {
-			text = textList.get(i);
+		//for (int i = 0; i < fileLoader.getCount(); i++) {
+		for (int i=0;i<treatments.size();i++){
+			//text = textList.get(i);
+			Treatment tm = treatments.get(i);
+			text = tm.getDescription();
 			if (text != null) {
 				// process this text
 				text = this.handleText(text);
@@ -1822,8 +1827,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	public void learn(List<Treatment> treatments) {
 		
+
+
+		//List<String> fileNameList = fileLoader.getFileNameList();
+		//List<Integer> typeList = fileLoader.getTypeList();
+		
+		//List<String> textList = fileLoader.getTextList();
+		
+		
 		// process treatments
-		this.populateSents();
+		this.populateSents(treatments);
 		
 		// pre load words
 		this.addHeuristicsNouns();

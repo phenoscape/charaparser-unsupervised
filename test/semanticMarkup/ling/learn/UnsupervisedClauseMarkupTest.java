@@ -21,7 +21,7 @@ public class UnsupervisedClauseMarkupTest {
 		//String str = "/Users/nescent/Phenoscape/TEST2/target/descriptions";
 		//List<Treatment> treatments_l = new ArrayList<Treatment>();
 				
-		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("","biocreative2012","plain","test","res/WordNet/WordNet-3.0/dict");
+		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("biocreative2012","plain","test","res/WordNet/WordNet-3.0/dict");
 		
 		/*
 		assertEquals("Result", null, tester.getAdjNouns());

@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import semanticMarkup.core.Treatment;
+
 public class FileLoader {
 	
 	private String dir;
@@ -16,6 +18,7 @@ public class FileLoader {
 	private List<String>  fileNameList = new LinkedList<String>();
 	private List<Integer> typeList = new ArrayList<Integer>();
 	private List<String>  textList = new LinkedList<String>();
+	private List<Treatment> treatmentList = new LinkedList<Treatment>();
 	
 	public FileLoader(String d) {
 		this.dir = d;
@@ -50,9 +53,12 @@ public class FileLoader {
 				return false;
 			}
 			
-			fileNameList.add(name);
-			typeList.add(type);
-			textList.add(text);			
+			this.fileNameList.add(name);
+			this.typeList.add(type);
+			this.textList.add(text);
+			
+			Treatment tm = new Treatment(text);
+			this.treatmentList.add(tm);
 		}
 		
 		//for (int i=0;i<fileNameList.size();i++) {
@@ -85,6 +91,10 @@ public class FileLoader {
 	
 	public List<String> getTextList() {
 		return this.textList;
+	}
+	
+	public List<Treatment> getTreatmentList(){
+		return this.treatmentList;
 	}
 	
 	public int getCount() {
