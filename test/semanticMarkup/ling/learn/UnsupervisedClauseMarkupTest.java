@@ -424,10 +424,18 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("removeAll - end", "word|word", tester.removeAll("word|word|", "\\|+$"));
 		assertEquals("removeAll - all", "wordword", tester.removeAll("|word|word|", "\\|"));
 		// this test cases is for method tagSentWMT
-		assertEquals("removeAll - remove beginning", "word", tester.removeAll("above word","^("+tester.getStopWords()+"|"+tester.getForbiddenWords()+")\\b\\s*"));
-		assertEquals("removeAll - remove ending 1", "word1 word2", tester.removeAll("word1 word2 or","\\s*\\b("+tester.getStopWords()+"|"+tester.getForbiddenWords()+"|\\w+ly)$"));
-		assertEquals("removeAll - remove ending 2", "word1 word2", tester.removeAll("word1 word2 usually","\\s*\\b("+tester.getStopWords()+"|"+tester.getForbiddenWords()+"|\\w+ly)$"));
-		assertEquals("removeAll - remove middle pronouns", "word1  word2", tester.removeAll("word1 each word2","\\b("+tester.getPronounWords()+")\\b"));
+		assertEquals("removeAll - remove beginning", "word", 
+				tester.removeAll("above word","^("+tester.getStopWords()+"|"+tester.getForbiddenWords()+")\\b\\s*"));
+		assertEquals("removeAll - remove ending 1", "word1 word2", 
+				tester.removeAll("word1 word2 or","\\s*\\b("+tester.getStopWords()+"|"+tester.getForbiddenWords()+"|\\w+ly)$"));
+		assertEquals("removeAll - remove ending 2", "word1 word2", 
+				tester.removeAll("word1 word2 usually","\\s*\\b("+tester.getStopWords()+"|"+tester.getForbiddenWords()+"|\\w+ly)$"));
+		assertEquals("removeAll - remove middle pronouns", "word1  word2", 
+				tester.removeAll("word1 each word2","\\b("+tester.getPronounWords()+")\\b"));
+		assertEquals("removeAll - remove beginning and ending", "word", 
+				tester.removeAll(" 	word	 	","(^\\s*|\\s*$)"));
+		
+		
 		
 		
 		

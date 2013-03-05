@@ -2700,7 +2700,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					if (m.matches("^.*\\w.*$")) {
 						modifier = modifier + " " + m;
 					}
-					tagSentWMT(i, sentence, modifier, tag,
+					tagSentWithMT(i, sentence, modifier, tag,
 							"changePOS[n->m:parenttag]");
 				}
 			}
@@ -2731,7 +2731,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				if (sent.getTag().equals(newWord)) {
 					int sentID = i;
 					String s = sent.getSentence();
-					this.tagSentWMT(sentID, s, "", "NULL",
+					this.tagSentWithMT(sentID, s, "", "NULL",
 							"changePOS[s->b: reset to NULL]");
 				}
 			}
@@ -2789,8 +2789,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @param tag
 	 * @param label
 	 */
-	public void tagSentWMT(int sentID, String sentence, String modifier,
+	public void tagSentWithMT(int sentID, String sentence, String modifier,
 			String tag, String label) {
+
+		/**
+		 * 1. Do some preprocessing of modifier and tag 
+		 * 1. Remove -ly words 
+		 * 1. Update modifier and tag of sentence sentID in sentenceTable
+		 */
 
 		modifier.replaceAll("<\\S+?>", "");
 		tag.replaceAll("<\\S+?>", "");
@@ -2807,11 +2813,46 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		tag = this.removeAll(tag, "\\s*\\b(" + this.STOP + "|" + this.FORBIDDEN
 				+ "|\\w+ly)$");
 
-		// $modifier =~ s#\b($PRONOUN)\b##g; #5/11/09 check 4974, 7269
+		// remove all pronoun words
 		modifier = this.removeAll(modifier, "\\b(" + this.PRONOUN + ")\\b");
 
+		Pattern p = Pattern.compile("^(\\w+ly)\\s*(.*)$");
+		Matcher m = p.matcher(modifier);
+		while (m.lookingAt()) {
+			String ly = m.group(1);
+			String rest = m.group(2);
+			WordPOSKey wp = new WordPOSKey(ly, "b");
+			if (this.wordPOSTable.containsKey(wp)) {
+				modifier = rest;
+				m = p.matcher(modifier);
+			} else {
+				break;
+			}
+		}
+
+		modifier = this.removeAll(modifier, "(^\\s*|\\s*$)");
+		tag = this.removeAll(tag, "(^\\s*|\\s*$)");
+
+		if (tag != null) {
+			if (tag.length() > this.tagLength) {
+				tag = tag.substring(0, this.tagLength);
+			}
+		}
+
+		for (int i = 0; i < this.sentenceTable.size(); i++) {
+			Sentence sent = this.sentenceTable.get(i);
+		}
+
+		Sentence sent = this.sentenceTable.get(sentID);
+		sent.setTag(tag);
+		sent.setModifier(modifier);
 	}
 
+	/**
+	 * 
+	 * @param tag
+	 * @return
+	 */
 	public List<String> getMTFromParentTag(String tag) {
 		String modifier = "";
 		String newTag = "";
@@ -2836,7 +2877,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		return pair;
 	}
-
 
 	/**
 	 * Find the tag of the sentence of which this sentid (clause) is a part of
