@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -118,6 +120,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	// Table modifier
 	private Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
+	
+	// Table discounted
+	private Map<DiscountedKey,String> discountedTable = new HashMap<DiscountedKey,String>();
 
 	// Third Tools
 	// WordNet
@@ -145,10 +150,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private String SENDINGS = "(on|is|ex|ix|um|us|a)\\b";
 	private String PENDINGS = "(ia|es|ices|i|ae)\\b";
 
-	public UnsupervisedClauseMarkup(String dir, String db, String lm, String p,
+	public UnsupervisedClauseMarkup(String db, String lm, String p,
 			String wnDir) {
 		System.out.println("Initialized:\n");
-		this.desDir = dir.concat("/");
+
 		this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		this.learningMode = lm;
 		this.prefix = p;
@@ -501,22 +506,27 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		sentence = sentence.toLowerCase();
 
 		return sentence;
-
 	}
 
-	public boolean populateSents() {
+	public boolean populateSents(List<Treatment> treatments) {
 		System.out.println("Reading sentences:\n");
-		FileLoader fileLoader = new FileLoader(this.desDir);
-		if (!fileLoader.load())
-			return false;
+		//FileLoader fileLoader = new FileLoader(this.desDir);
+		//if (!fileLoader.load())
+		//	return false;
 
-		List<String> fileNameList = fileLoader.getFileNameList();
-		List<Integer> typeList = fileLoader.getTypeList();
-		List<String> textList = fileLoader.getTextList();
+		//List<String> fileNameList = fileLoader.getFileNameList();
+		//List<Integer> typeList = fileLoader.getTypeList();
+		
+		//List<String> textList = fileLoader.getTextList();
+		
+		//List<String>
 
 		String text;
-		for (int i = 0; i < fileLoader.getCount(); i++) {
-			text = textList.get(i);
+		//for (int i = 0; i < fileLoader.getCount(); i++) {
+		for (int i=0;i<treatments.size();i++){
+			//text = textList.get(i);
+			Treatment tm = treatments.get(i);
+			text = tm.getDescription();
 			if (text != null) {
 				// process this text
 				text = this.handleText(text);
@@ -1817,8 +1827,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	public void learn(List<Treatment> treatments) {
 		
+
+
+		//List<String> fileNameList = fileLoader.getFileNameList();
+		//List<Integer> typeList = fileLoader.getTypeList();
+		
+		//List<String> textList = fileLoader.getTextList();
+		
+		
 		// process treatments
-		this.populateSents();
+		this.populateSents(treatments);
 		
 		// pre load words
 		this.addHeuristicsNouns();
@@ -2079,10 +2097,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		p = Pattern.compile("(^.*?)(?:([^f])fe|([oaelr])f)$");
 		m = p.matcher(word);
-		String s1 = m.group(1);
-		String s2 = m.group(2);
-		String s3 = m.group(3);
+
 		if (m.lookingAt()) {
+			String s1 = m.group(1);
+			String s2 = m.group(2);
+			String s3 = m.group(3);
 			if (s2 != null) {
 				plural = s1 + s2 + "ves";
 			} else {
@@ -2542,7 +2561,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 		
-		return true;
+		return result;
 	}
 	
 	public int updatePOS(String newWord, String pos, String role, int increment) {
@@ -2656,7 +2675,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	/**
-	 * This method corrects the pos of the word from N to M
+	 * This method corrects the pos of the word from N to M (establish newPOS)
 	 * 
 	 * @param newWord
 	 * @param oldPOS
@@ -2685,15 +2704,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					modifier = sent.getModifier();
 					tag = sent.getTag();
 					sentence = sent.getSentence();
-					tag = getParentsentenceTag(i);
+					tag = getParentSentenceTag(i);
 					modifier = modifier + " " + newWord;
 					modifier.replaceAll("^\\s*", "");
-					String m = getMFromParentTag(tag);
-					tag = getTagFromParentTag(tag);
+					List<String> pair = getMTFromParentTag(tag);
+					String m = pair.get(1);
+					tag = pair.get(2);
 					if (m.matches("^.*\\w.*$")) {
 						modifier = modifier + " " + m;
 					}
-					tagSentWMT(i, sentence, modifier, tag,
+					tagSentWithMT(i, sentence, modifier, tag,
 							"changePOS[n->m:parenttag]");
 				}
 			}
@@ -2724,7 +2744,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				if (sent.getTag().equals(newWord)) {
 					int sentID = i;
 					String s = sent.getSentence();
-					this.tagSentWMT(sentID, s, "", "NULL",
+					this.tagSentWithMT(sentID, s, "", "NULL",
 							"changePOS[s->b: reset to NULL]");
 				}
 			}
@@ -2774,31 +2794,213 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return sign;
 	}
 
-	private void tagSentWMT(int i, String sentence, String modifier,
-			String tag, String string) {
-		// TODO Auto-generated method stub
+	/**
+	 * 
+	 * @param sentID
+	 * @param sentence
+	 * @param modifier
+	 * @param tag
+	 * @param label
+	 */
+	public void tagSentWithMT(int sentID, String sentence, String modifier,
+			String tag, String label) {
+
+		/**
+		 * 1. Do some preprocessing of modifier and tag 
+		 * 1. Remove -ly words 
+		 * 1. Update modifier and tag of sentence sentID in sentenceTable
+		 */
+
+		modifier.replaceAll("<\\S+?>", "");
+		tag.replaceAll("<\\S+?>", "");
+
+		// remove stop and forbidden words from beginning
+		modifier = this.removeAll(modifier, "\\s*\\b(" + this.STOP + "|"
+				+ this.FORBIDDEN + "|\\w+ly)$");
+		tag = this.removeAll(tag, "\\s*\\b(" + this.STOP + "|" + this.FORBIDDEN
+				+ "|\\w+ly)$");
+
+		// remove stop and forbidden words from ending
+		modifier = this.removeAll(modifier, "\\s*\\b(" + this.STOP + "|"
+				+ this.FORBIDDEN + "|\\w+ly)$");
+		tag = this.removeAll(tag, "\\s*\\b(" + this.STOP + "|" + this.FORBIDDEN
+				+ "|\\w+ly)$");
+
+		// remove all pronoun words
+		modifier = this.removeAll(modifier, "\\b(" + this.PRONOUN + ")\\b");
+
+		Pattern p = Pattern.compile("^(\\w+ly)\\s*(.*)$");
+		Matcher m = p.matcher(modifier);
+		while (m.lookingAt()) {
+			String ly = m.group(1);
+			String rest = m.group(2);
+			WordPOSKey wp = new WordPOSKey(ly, "b");
+			if (this.wordPOSTable.containsKey(wp)) {
+				modifier = rest;
+				m = p.matcher(modifier);
+			} else {
+				break;
+			}
+		}
+
+		modifier = this.removeAll(modifier, "(^\\s*|\\s*$)");
+		tag = this.removeAll(tag, "(^\\s*|\\s*$)");
+
+		if (tag != null) {
+			if (tag.length() > this.tagLength) {
+				tag = tag.substring(0, this.tagLength);
+			}
+		}
+
+		for (int i = 0; i < this.sentenceTable.size(); i++) {
+			Sentence sent = this.sentenceTable.get(i);
+		}
+
+		Sentence sent = this.sentenceTable.get(sentID);
+		sent.setTag(tag);
+		sent.setModifier(modifier);
+	}
+
+	/**
+	 * 
+	 * @param tag
+	 * @return
+	 */
+	public List<String> getMTFromParentTag(String tag) {
+		String modifier = "";
+		String newTag = "";
+
+		Pattern p = Pattern.compile("^\\[(\\w+)\\s+(\\w+)\\]$");
+		Matcher m = p.matcher(tag);
+		if (m.lookingAt()) {
+			modifier = m.group(1);
+			newTag = m.group(2);
+		} else {
+			p = Pattern.compile("^(\\w+)\\s+(\\w+)$");
+			m = p.matcher(tag);
+			if (m.lookingAt()) {
+				modifier = m.group(1);
+				newTag = m.group(2);
+			}
+
+		}
+		List<String> pair = new ArrayList<String>();
+		pair.add(modifier);
+		pair.add(newTag);
+
+		return pair;
+	}
+
+	/**
+	 * Find the tag of the sentence of which this sentid (clause) is a part of
+	 * 
+	 * @param sentID
+	 * @return a tag
+	 */
+	public String getParentSentenceTag(int sentID) {
+		/**
+		 * 1. Get the originalsent of sentence sentID
+		 * 1. Case 1: the originalsent of $sentence sentID starts with a [a-z\d]
+		 *     1.1 select modifier and tag from sentenceTable where
+		 *             tag is not "ignore" OR tag is null
+		 *             AND originalsent COLLATE utf8_bin regexp '^[A-Z].*' or originalsent rlike ': *\$'
+		 *             AND id < sentID
+		 *     1.1 take the tag of the first sentence (with smallest id), get its modifier and tag
+		 *     1.1 if modifier match \w, tag = modifier + space + tag
+		 *     1.1 remove [ and ] from tag
+		 * 1. if tag matches \w return [+tag+], else return [parenttag] 
+		 */
+
+		String tag = "";
+
+		String originalSent = this.sentenceTable.get(sentID)
+				.getOriginalSentence();
+		if (originalSent.matches("^\\s*([a-z]|\\d).*$")) {
+			for (int i = 0; i < this.sentenceTable.size(); i++) {
+				Sentence sent = this.sentenceTable.get(i);
+				tag = sent.getTag();
+				if (((!tag.equals("ignore")) || (tag == null))
+						&& ((originalSent.matches("^[A-Z].*$")) || (originalSent.matches("^.*:\\s*\\$"))) 
+						&& (i < sentID)) {
+					String modifier = sent.getModifier();
+					if (modifier.matches("^.*\\w.*$")) {
+						tag = modifier + " " + tag;
+						tag.replaceAll("[\\[\\]]", "");
+					}
+					break;
+				}
+			}
+		}
+
+		return tag.matches("^.*\\w.*$") ? "[parenttag]" : "[" + tag + "]";
+	}
+
+	/**
+	 * Discount existing pos, but do not establish $suggestedpos
+	 * 
+	 * @param newWord
+	 * @param oldPOS
+	 * @param newPOS
+	 * @param mode
+	 *            "byone" - reduce certainty 1 by 1. 
+	 *            "all" - remove this POS
+	 */
+	public void discount(String newWord, String oldPOS, String newPOS,
+			String mode) {
 		
-	}
+		/**
+		 * 1. Find the flag of newWord in unknownWords table
+		 * 1. Select all words from unknownWords table who have the same flag (including newWord)
+		 * 1. From wordPOS table, select certaintyU of the (word, oldPOS) where word is in the words list
+		 *     For each of them
+		 *     1.1 Case 1: certaintyu less than 1, AND mode is "all"
+		 *         1.1.1 Delete the entry from wordpos table
+		 *         1.1.1 Update unknownwords
+		 *             1.1.1.1 Case 1: the pos is "s" or "p"
+		 *                 Delete all entries contains word from singularplural table as well
+		 *         1.1.1 Insert (word, oldpos, newpos) into discounted table
+		 */
 
-	private String getTagFromParentTag(String tag) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+		String flag = this.unknownWordTable.get(newWord);
+		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
+				.entrySet().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<String, String> e = iter.next();
+			if (e.getValue().equals(flag)) {
+				String word = e.getKey();
+				WordPOSKey key = new WordPOSKey(word, oldPOS);
+				WordPOSValue value = this.wordPOSTable.get(key);
+				int cU = value.getCertaintyU();
+				if (cU < 1 && mode.equals("all")) {
+					this.wordPOSTable.remove(key);
+					this.updateUnknownWords(word, "unknown");
+					if (oldPOS.matches("^.*[sp].*$")) {
+						// list of entries to be deleted
+						ArrayList<SingularPluralPair> delList = new ArrayList<SingularPluralPair>();
 
-	private String getMFromParentTag(String tag) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+						// find entries to be deleted, put them into delList
+						Iterator<SingularPluralPair> iterSPTable = this.singularPluralTable
+								.iterator();
+						while (iterSPTable.hasNext()) {
+							SingularPluralPair spp = iterSPTable.next();
+							if (spp.getSingular().equals(word)
+									|| spp.getPlural().equals(word)) {
+								delList.add(spp);
+							}
+						}
 
-	private String getParentsentenceTag(int i) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+						// delete all entries in delList from
+						// singularPluralTable
+						for (int i = 0; i < delList.size(); i++) {
+							this.singularPluralTable.remove(delList.get(i));
+						}
+					}
 
-	private void discount(String newWord, String oldPOS, String newPOS,
-			String string) {
-		// TODO Auto-generated method stub
-		
+					DiscountedKey dKey = new DiscountedKey(word, oldPOS);
+					this.discountedTable.put(dKey, newPOS);
+				}
+			}
+		}
 	}
 
 	/**
@@ -3174,7 +3376,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String newWord = word.replaceAll(regex, ""); 
 		return newWord;
 	}
-	
+	public String getStopWords(){
+		return this.STOP;
+	}
+	public String getForbiddenWords(){
+		return this.FORBIDDEN;
+	}	
+	public String getPronounWords(){
+		return this.PRONOUN;
+	}
 	
 	
 	// ---------------TEST Helper function----------------
@@ -3192,4 +3402,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					+ entry.getValue().getSavedID());
 		}
 	}
+	
+
 }

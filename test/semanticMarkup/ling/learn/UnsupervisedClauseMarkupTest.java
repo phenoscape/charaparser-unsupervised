@@ -21,7 +21,7 @@ public class UnsupervisedClauseMarkupTest {
 		//String str = "/Users/nescent/Phenoscape/TEST2/target/descriptions";
 		//List<Treatment> treatments_l = new ArrayList<Treatment>();
 				
-		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("","biocreative2012","plain","test","res/WordNet/WordNet-3.0/dict");
+		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("biocreative2012","plain","test","res/WordNet/WordNet-3.0/dict");
 		
 		/*
 		assertEquals("Result", null, tester.getAdjNouns());
@@ -406,14 +406,43 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals ("mergeRole - case 5", "+", tester.mergeRole("old", "new"));
 		assertEquals ("mergeRole - case 0", "same", tester.mergeRole("same", "same"));
 		
-		
-		
+		// Method getMTFromParentTag
+		List<String> pair = new ArrayList<String>();
+		pair.add("");
+		pair.add("");		
+		assertEquals ("getMTFromParentTag - case 0: fail", pair, tester.getMTFromParentTag("[modifier_ta"));
+		pair.remove(1);
+		pair.remove(0);
+		pair.add("modifier");
+		pair.add("tag");		
+		assertEquals ("getMTFromParentTag - case 1: with []", pair, tester.getMTFromParentTag("[modifier tag]"));
+		assertEquals ("getMTFromParentTag - case 2: without []", pair, tester.getMTFromParentTag("modifier tag"));
 		
 		// TEST of Helpers
 		// Method removeAll
 		assertEquals("removeAll - begin", "word word ", tester.removeAll("   word word ", "^\\s+"));
 		assertEquals("removeAll - end", "word|word", tester.removeAll("word|word|", "\\|+$"));
 		assertEquals("removeAll - all", "wordword", tester.removeAll("|word|word|", "\\|"));
+		// this test cases is for method tagSentWMT
+		assertEquals("removeAll - remove beginning", "word", 
+				tester.removeAll("above word","^("+tester.getStopWords()+"|"+tester.getForbiddenWords()+")\\b\\s*"));
+		assertEquals("removeAll - remove ending 1", "word1 word2", 
+				tester.removeAll("word1 word2 or","\\s*\\b("+tester.getStopWords()+"|"+tester.getForbiddenWords()+"|\\w+ly)$"));
+		assertEquals("removeAll - remove ending 2", "word1 word2", 
+				tester.removeAll("word1 word2 usually","\\s*\\b("+tester.getStopWords()+"|"+tester.getForbiddenWords()+"|\\w+ly)$"));
+		assertEquals("removeAll - remove middle pronouns", "word1  word2", 
+				tester.removeAll("word1 each word2","\\b("+tester.getPronounWords()+")\\b"));
+		assertEquals("removeAll - remove beginning and ending", "word", 
+				tester.removeAll(" 	word	 	","(^\\s*|\\s*$)"));
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		
 		
 		
