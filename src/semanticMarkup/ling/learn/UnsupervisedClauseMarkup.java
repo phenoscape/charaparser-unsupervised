@@ -1739,6 +1739,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// tag need to be adjusted (not by doit function), also need to adjust
 	// certainty counts.
 	public void doIt(int sentID) {
+		int sign =0;
+		
 		Sentence sentEntry = this.sentenceTable.get(sentID);
 		String sent = sentEntry.getSentence();
 		String lead = sentEntry.getLead();
@@ -1746,6 +1748,23 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String[] words = lead.split("\\s+");
 		String ptn = this.getPOSptn(words);
 		
+		// Case 1: single word case
+		if (ptn.matches("^[pns]$")) {
+			String tag = words[0];
+			sign = sign+updateTable(tag,ptn,"-","wordpos",1);
+		}
+		
+		// Case 2: the POSs are "ps"
+		else {
+			Pattern p = Pattern.compile("^.*ps.*$");
+			Matcher m = p.matcher(ptn);
+			if (m.find()) {
+				int start = m.start();
+				int end = m.end();
+				String wordS = words[start];
+				String endS = words[end-1];
+			}
+		}		
 	}
 	
 	/**
