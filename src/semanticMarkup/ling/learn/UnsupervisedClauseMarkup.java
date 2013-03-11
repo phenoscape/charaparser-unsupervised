@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -1727,8 +1728,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				tagIt(sentID,tag);
 				sign = sign+numNew;
 			}
-		}
-		
+		}		
 		
 		return 0;
 	}
@@ -1744,11 +1744,81 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String lead = sentEntry.getLead();
 		
 		String[] words = lead.split("\\s+");
+		String ptn = this.getPOSptn(words);
 		
 	}
-	// the length of the ptn must be the same as the number of words in @words if certainty is < 50%, replace POS with ?.
-	public void getPOSptn() {
-		;
+	
+	/**
+	 * The length of the ptn must be the same as the number of words in words. If certainty is < 50%, replace POS with ?.
+	 * @param words
+	 * @return
+	 */
+	public String getPOSptn(String[] words) {
+		String ptn = "";
+		for (int i = 0; i < words.length; i++) {
+			String word = words[i];
+			List<POSInfo> POSInfoList = checkPOSInfo(word);
+			if (POSInfoList.size() > 0) {
+				POSInfo p = POSInfoList.get(0);
+				String POS = p.getPOS();
+				String role = p.getRole();
+				double certainty = (double) p.getCertaintyU()
+						/ (double) p.getCertaintyL();
+
+				if ((!POS.equals("?")) && (certainty <= 0.5)) {
+					// This POS has a certainty less than 0.5. It is ignored.
+					POS = "?";
+				}
+				ptn = ptn + POS;
+			}
+		}
+
+		return ptn;
+	}
+
+	/**
+	 * It usually return all
+	 * @param word
+	 * @return a list of POSInfo objects in descending order of certaintyU/certaintyL
+	 */
+	public List<POSInfo> checkPOSInfo(String word) {
+		List<POSInfo> POSInfoList = new ArrayList<POSInfo>();
+
+		word = this.removeAll(word, "^\\s*");
+		word = this.removeAll(word, "\\s+$");
+
+		if (word.matches("^\\d+.*$")) {
+			POSInfo p = new POSInfo("b", "", 1, 1);
+			POSInfoList.add(p);
+			return POSInfoList;
+		}
+
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable
+				.entrySet().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> e = iter.next();
+			String w = e.getKey().getWord();
+			if (w.equals(word)) {
+				String POS = e.getKey().getPOS();
+				String role = e.getValue().getRole();
+				int certaintyU = e.getValue().getCertaintyU();
+				int certaintyL = e.getValue().getCertaintyL();
+				POSInfo p = new POSInfo(POS, role, certaintyU, certaintyL);
+				POSInfoList.add(p);
+			}
+		}
+
+		// nothing found
+		if (POSInfoList.size() == 0) {
+			return new ArrayList<POSInfo>();
+		} else {
+			// sort the list in  ascending order of certaintyU/certaintyL
+			Collections.sort(POSInfoList);
+			// reverse it into descending order
+			Collections.reverse(POSInfoList);
+			
+			return POSInfoList;
+		}
 	}
 
 	public void tagIt(int sentID, String tag) {
