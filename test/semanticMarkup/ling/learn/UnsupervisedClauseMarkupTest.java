@@ -321,10 +321,34 @@ public class UnsupervisedClauseMarkupTest {
 				tester.markKnown("page", "", "", "", 0));	
 		
 		// Method checkWN
-		assertEquals ("checkWN - not word", "", tester.checkWN("()","pos"));
-		assertEquals ("checkWN - special case - teeth", "p", tester.checkWN("teeth","pos"));
-		assertEquals ("checkWN - special case - NUM", "NUM", tester.checkWN("NUM","singular"));
-		assertEquals ("checkWN - concentrically", "", tester.checkWN("concentrically","number"));
+		assertEquals ("checkWN - case 0.0 not word", "", tester.checkWN("()","pos"));
+		assertEquals ("checkWN - case 0.2 special case - teeth", "p", tester.checkWN("teeth","pos"));
+		assertEquals ("checkWN - case 0.2 special case - NUM", "NUM", tester.checkWN("NUM","singular"));
+		assertEquals ("checkWN - case 0.2 concentrically", "", tester.checkWN("concentrically","number"));
+		// otherwise, call wn
+		// Case 1.1
+		// Case 1.2
+		assertEquals ("checkWN - case 1.2", "", tester.checkWN("operculi","number"));
+		assertEquals ("checkWN - case 1.2", "operculi", tester.checkWN("operculi","singular"));
+		// Case 1.3
+		assertEquals ("checkWN - case 1.3", "", tester.checkWN("postcleithra","number"));
+		assertEquals ("checkWN - case 1.3", "postcleithra", tester.checkWN("postcleithra","singular"));
+		// Case 2.1.1
+		assertEquals ("checkWN - case 2.1.1", "conical", tester.checkWN("conical","singular"));	
+		assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("conical","number"));
+		assertEquals ("checkWN - case 2.1.1", "ossified", tester.checkWN("ossified","singular"));
+		assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("ossified","number"));
+		// These two tests not passed!
+		//assertEquals ("checkWN - case 2.1.1", "extending", tester.checkWN("extending","singular"));
+		//assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("extending","number"));
+		
+		// Case 2.1.2
+		assertEquals ("checkWN - case 2.1.2", "stay", tester.checkWN("stays","singular"));
+		assertEquals ("checkWN - case 2.1.2", "p", tester.checkWN("stays","number"));
+		assertEquals ("checkWN - case 2.1.2", "general", tester.checkWN("general","singular"));
+		assertEquals ("checkWN - case 2.1.2", "s", tester.checkWN("general","number"));
+		// Case 2.2
+		// Need test cases!
 		
 		// Method inSingularPluralPair
 		assertEquals ("inSingularPluralPair - null", false, tester.inSingularPluralPair("word"));

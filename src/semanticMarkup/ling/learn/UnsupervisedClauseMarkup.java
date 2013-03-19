@@ -60,10 +60,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private int DECISIONID = 0;
 	private String PROPERNOUN = "propernouns"; // EOL
 
-	private Map<String, String> WN_NUMBER = new HashMap(); // word->(p|s)
-	private Map<String, String> WN_SINGULAR = new HashMap();// word->singular
-	private Map<String, String> WN_POS = new HashMap(); // word->POSs
-	private Map<String, String> WN_POSRECORDS = new HashMap();
+	private Map<String, String> numberRecords = new HashMap<String, String>(); // word->(p|s)
+	private Map<String, String> singularRecords = new HashMap<String, String>();// word->singular
+	private Map<String, String> POSRecords = new HashMap<String, String>(); // word->POSs
+	//private Map<String, String> POSRecordsRECORDS = new HashMap<String, String>();
 	private String NEWDESCRIPTION = ""; // record the index of sentences that
 										// ends a description
 	private Map<String, Integer> WORDS = new HashMap();
@@ -1748,6 +1748,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String[] words = lead.split("\\s+");
 		String ptn = this.getPOSptn(words);
 		
+		Pattern p;
+		Matcher m;
+		
 		// Case 1: single word case
 		if (ptn.matches("^[pns]$")) {
 			String tag = words[0];
@@ -1756,13 +1759,29 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		// Case 2: the POSs are "ps"
 		else {
-			Pattern p = Pattern.compile("^.*ps.*$");
-			Matcher m = p.matcher(ptn);
-			if (m.find()) {
-				int start = m.start();
-				int end = m.end();
-				String wordS = words[start];
-				String endS = words[end-1];
+		p = Pattern.compile("^.*ps.*$");
+		m = p.matcher(ptn);
+		if (m.find()) {
+			int start = m.start();
+			int end = m.end();
+			String pWord = words[start];
+			String sWord = words[end-1];
+			
+			sign += updateTable(pWord, "p", "-", "wordpos",1);
+			sign += updateTable(sWord, "s", "", "wordpos", 1);
+			
+
+			//$sign += updatenn(0, $#tws+1, @tws); #up to the "p" inclusive
+
+			
+			
+		}
+		else {
+		p = Pattern.compile("^.*p(\\?).*$");
+		m = p.matcher(ptn);
+		if (m.find()) {
+			int start = m.start();
+		}
 			}
 		}		
 	}
@@ -2359,7 +2378,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	/**
 	 * 
 	 * @param word
-	 * @return the plural form of the input word
+	 * @return the singular form of the input word
 	 */
 	public String getSingular(String word) {
 		if (!word.matches("^.*\\w.*$")) {
@@ -3244,55 +3263,87 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return null;
 	}
 
+	/**
+	 * 1) Check wordnet to gether information about a word 
+	 * 2) Save checked words in three hash tables, singularRecords (singular), numberRecords (number), and POSRecords (pos), respectively
+	 * 
+	 * @param word
+	 *            The word to check
+	 * @param mode
+	 *            The mode can be "signular", "number", "pos"
+	 * @return 1) mode "singular": if a plural noun, return its singular form, otherwise, return itself. 
+	 *         2) mode "number": if a noun, return "p" [plural] or "s"[singular], else if not in WN "", otherwise "x".
+	 *         3) mode "pos": return n [p,s], v, a, r, "" (not in WN).
+	 */
 	public String checkWN(String word, String mode) {
-
+		
+		/**
+		 * 0.0 If the word contains nothing but non-word characters, such as <>, return empty
+		 * 0.1 Check singularRecordsprevious records
+		 * 0.2 Special cases
+		 * 1   Word not in WordNet
+		 * 	1.1
+		 * 	1.2
+		 * 	1.3
+		 * 2.  Word in WordNet
+		 * 	2.1 mode is singular or number
+		 * 		2.1.1
+		 * 		2.1.2
+		 *  2.2 mode is pos
+		 */
+		
+		//this.myWN.getMostLikleyPOS(word);
+		
+		// If the word contains nothing but non-word characters, such as <>, return empty
 		word = word.replaceAll("\\W", "");
 		if (word.equals("")) {
 			return "";
 		}
 		
+		// Check previous records
 		// singular case
 		String singular = "";
 		if (mode.equals("singular")) {
-			singular = this.WN_SINGULAR.get(word);
+			singular = this.singularRecords.get(word);
 		}
 		if (singular != null) {
 			if (singular.matches("^.*\\w.*$")) {
 				return singular;
 			}
 		}
-		
+
 		// number case
-		String number ="";
+		String number = "";
 		if (mode.equals("number")) {
-			number = this.WN_NUMBER.get(word);
+			number = this.numberRecords.get(word);
 		}
 		if (number != null) {
 			if (number.matches("^.*\\w.*$")) {
 				return number;
 			}
 		}
+
 		// pos case
-		String pos="";
+		String pos = "";
 		if (mode.equals("pos")) {
-			pos = this.WN_POS.get(word);
+			pos = this.POSRecords.get(word);
 		}
 		if (pos != null) {
 			if (pos.matches("^.*\\w.*$")) {
 				return pos;
 			}
 		}
-		
-		// special cases
+	
+		// Case 0: special cases
 		if (word.equals("teeth")) {
-			this.WN_NUMBER.put("teeth", "p");
-			this.WN_SINGULAR.put("teeth", "tooth");
+			this.numberRecords.put("teeth", "p");
+			this.singularRecords.put("teeth", "tooth");
 			return mode.equals("singular")?"tooth":"p";
 		}
 		
 		if (word.equals("tooth")) {
-			this.WN_NUMBER.put("tooth", "s");
-			this.WN_SINGULAR.put("tooth", "tooth");
+			this.numberRecords.put("tooth", "s");
+			this.singularRecords.put("tooth", "tooth");
 			return mode.equals("singular")?"tooth":"s";
 		}
 
@@ -3321,30 +3372,17 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 		
-		/**
-		  #otherwise, call wn
-		  my $result = `wn $word -over`;
-		  if ($result !~/\w/){#word not in WN
-		  	$WNPOSRECORDS{$word} = ""; #5/10/09
-		  	my $wordcopy = $word;
-		  	$word =~ s#ed$##;
-		  	if($word ne $wordcopy){ #$word not end with "ed"
-		  		$result = `wn $word -over`;
-		  		if($result =~ /\w/){ #$word end with "ed", what remains after removes "ed" is still a word
-		  			return $word if $mode eq "singular";
-		  			return "" if $mode eq "number";
-		  			return "a" if $mode eq "pos";
-		  		}
-
-		  	}
-		  	**/
 		// otherwise, call WordNet
+		// Case 1
 		if (!this.myWN.contains(word)) {// word not in WN
-			this.WN_POSRECORDS.put(word, "");
+			boolean f = this.myWN.contains(word);
+			this.POSRecords.put(word, "");
 			String wordCopy = word;
 			word = word.replaceAll("ed$", "");
+			// Case 1.1
 			if (!word.equals(wordCopy)) {
 				if (this.myWN.contains(word)) {
+					// Case 1.1.1-1.1.3
 					if (mode.equals("singular")) {
 						return word;
 					}
@@ -3356,86 +3394,70 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					}
 				}
 			}
-			/**
-	$word = $wordcopy;
-  	$word =~ s#^($PREFIX)+##;
-  	if($word eq $wordcopy){
-  		return $mode eq "singular"? $word : ""; #not in WN, return ""
-  	}else{
-  		$result = `wn $word -over`;
-  		$result =~ s#\b$word\b#$wordcopy#g;
-  		$word = $wordcopy;
-  		return $mode eq "singular"? $word : "" if ($result !~/\w/);
-  	}
-  }
-			 */
+			
 			word = wordCopy;
 			word = word.replace("^(" + this.PREFIX + ")+", "");
+			// Case 1.2
 			if (word.equals(wordCopy)) {
 				return mode.equals("singular") ? word : "";
-			} else {
-				;
-				// $result =~ s#\b$word\b#$wordcopy#g;	????????????????
-				//word = wordCopy;
-				if (this.myWN.contains(word)) {
+			} 
+			// Case 1.3
+			else {
+				if (!this.myWN.contains(word)) {
 					return mode.equals("singular") ? wordCopy : "";
 				}
 			}
 		}
-		else {
-			/**
-  #found $word in WN:
-  $result =~ s#\n# #g;
-  if($mode eq "singular" || $mode eq "number"){
-    my $t = "";
-    while($result =~/Overview of noun (\w+) (.*) /){
-         $t .= $1." ";
-         $result = $2;
-    }
-    if ($t !~ /\w/){#$word is not a noun
-    	#return "v";
-    	return $mode eq "singular"? $word : "x"; #is not a noun, return "x"
-    }
-    $t =~ s#\s+$##;
-    my @ts = split(/\s+/, $t);
-    ###select the singular between roots and root.   bases => basis and base?
-			 */
-			if (mode.equals("singular") || mode.equals("number")) {
-				String temp = "";
-				if (this.myWN.isNoun(word)) {
-					return mode.equals("singular") ? word : "x";
-				}
-				// Not very sure how this part works
-				
+		else { if (mode.equals("singular") || mode.equals("number")) {
+			// Case 2.1.1: not a noun
+			if (!this.myWN.isNoun(word)) {
+				return mode.equals("singular") ? word : "x";
 			}
-			else if (mode.equals("pos")) {
-				/**
-   my $pos = "";
-   while($result =~/.*?Overview of ([a-z]*) (.*)/){
-         my $t = $1;
-         $result = $2;
-         $pos .= "n" if $t eq "noun";
-         $pos .= "v" if $t eq "verb";
-         $pos .= "a" if $t eq "adj";
-         $pos .= "r" if $t eq "adv";
-
-    }
-    $WNPOSRECORDS{$word}=$pos;
-    if($pos =~/n/ && $pos =~/v/ && $word=~/(ed|ing)$/){ #appearing is a nv, but set it v
-    	$pos =~ s#n##g;
-    }
-    $WNPOS{$word} = $pos;
-    print "Wordnet Pos for $word is $pos\n" if $debug;
-    return $pos;
-				 */
-				pos = "";
-				if ((this.myWN.isNoun(word)) 
-						&& (this.myWN.isVerb(word))
-						&& (word.matches("^.*(ed|ing)$"))) {
-					pos = "v";
+			List<String> stemList = myWN.getSingulars(word);
+			int maxLength = 100;
+			String sWord = "";
+			for (int i=0;i<stemList.size();i++) {
+				String stem = stemList.get(i);
+				if (stem.length()<maxLength) {
+					maxLength = stem.length();
+					sWord = stem;
 				}
-				this.WN_POS.put(word, pos);
-				return pos;
+			}
+			this.singularRecords.put(word, sWord);
+			// Case 2.1.2: singular
+			if (sWord.equals(word)) {
+				this.numberRecords.put(word, "s");
+				return mode.equals("singular")?sWord:"s";
+			}
+			// Case 2.1.3: pluarl
+			else {
+				this.numberRecords.put(word, "p");
+				return mode.equals("singular")?sWord:"p";
+			}		
+		}
+		// Case 2.2
+		else if (mode.equals("pos")) {
+			pos = "";
+			if (this.myWN.isNoun(word)){
+				pos = pos+"n";
+			}
+			if (this.myWN.isVerb(word)){
+				pos = pos+"v";
+			}
+			if (this.myWN.isAdjective(word)){
+				pos = pos+"a";
+			}
+			if (this.myWN.isAdverb(word)){
+				pos = pos+"r";
+			}
+			this.POSRecords.put(word, pos);
+			if ((this.myWN.isNoun(word)) 
+					&& (this.myWN.isVerb(word))
+					&& (word.matches("^.*(ed|ing)$"))) {
+				pos.replaceAll("n", "");
+			}
+			this.POSRecords.put(word, pos);
+			return pos;
 			}
 		}
 		return "";
