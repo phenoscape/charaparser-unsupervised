@@ -1,13 +1,9 @@
 package semanticMarkup.ling.learn;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -18,9 +14,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,9 +28,6 @@ import opennlp.tools.util.InvalidFormatException;
 import semanticMarkup.core.Treatment;
 import semanticMarkup.knowledge.Stemmer;
 import semanticMarkup.knowledge.lib.WordNetAPI;
-
-import edu.mit.jwi.item.POS;
-import edu.mit.jwi.morph.SimpleStemmer;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// directory of /descriptions folder
@@ -66,8 +57,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	//private Map<String, String> POSRecordsRECORDS = new HashMap<String, String>();
 	private String NEWDESCRIPTION = ""; // record the index of sentences that
 										// ends a description
-	private Map<String, Integer> WORDS = new HashMap();
-	private Hashtable<String, String> PLURALS = new Hashtable();
+	private Map<String, Integer> WORDS = new HashMap<String, Integer>();
+	private Hashtable<String, String> PLURALS = new Hashtable<String, String>();
 
 	private String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
 
@@ -129,7 +120,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// WordNet
 	private WordNetAPI myWN;
 	// OpenNLP sentence detector
-	private SentenceDetectorME mySenDetector;
+	private SentenceDetectorME mySentDetector;
 	// OpenNLP tokenizer
 	private Tokenizer myTokenizer;
 	// JWI Stemmer
@@ -151,18 +142,28 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private String SENDINGS = "(on|is|ex|ix|um|us|a)\\b";
 	private String PENDINGS = "(ia|es|ices|i|ae)\\b";
 
-	public UnsupervisedClauseMarkup(String db, String lm, String p,
+	/**
+	 * Constructor of UnsupervisedClauseMarkup class
+	 * @param lm learning mode, can be "plain"
+	 * @param p prefix
+	 * @param wnDir directory of WordNet dictionary
+	 */
+	public UnsupervisedClauseMarkup(String lm, String p,
 			String wnDir) {
-		System.out.println("Initialized:\n");
+		/**
+		 * 1. Store 1) learning mode and 2) prefix
+		 * 2. Get WordNet instance
+		 * 3. Get OpenNLP sentence detector
+		 * 4. Get OpenNLP tokenizer
+		 * 5. Get JWI simple stemmer
+		 */
+		//System.out.println("Initialized:\n");
 
 		this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		this.learningMode = lm;
 		this.prefix = p;
-		// System.out.println(String.format("Read directory: %s", this.desDir));
-		// System.out.println(String
-		// .format("Character directory: %s", this.chrDir));
-		System.out.println(String.format("%s", this.learningMode));
-		// System.out.println(String.format("%s", this.prefix));
+		System.out.println(String.format("Learning Mode: %s", this.learningMode));
+		System.out.println(String.format("Prefix: %s", this.prefix));
 
 		// Get WordNetAPI instance
 		try {
@@ -177,7 +178,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		try {
 			sentModelIn = new FileInputStream("res/en-sent.bin");
 			SentenceModel model = new SentenceModel(sentModelIn);
-			this.mySenDetector = new SentenceDetectorME(model);
+			this.mySentDetector = new SentenceDetectorME(model);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -659,7 +660,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	String[] segmentSentence(String text) {
 		String sentences[] = {};
-		sentences = this.mySenDetector.sentDetect(text);
+		sentences = this.mySentDetector.sentDetect(text);
 		return sentences;
 	}
 
@@ -1331,7 +1332,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public void addStopWords() {
 		// my @stops = split(/\|/,$stop);
 		// String []temp=this.STOP.split("|");
-		List<String> stops = new ArrayList();
+		List<String> stops = new ArrayList<String>();
 		stops.addAll(Arrays.asList(this.STOP.split("\\|")));
 		// new ArrayList();
 		// for (int i=0;i<temp.length;i++) {
@@ -1366,7 +1367,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public void addCharacters() {
-		List<String> chars = new ArrayList();
+		List<String> chars = new ArrayList<String>();
 		chars.addAll(Arrays.asList(this.CHARACTER.split("\\|")));
 
 		System.out.println(chars);
@@ -1387,7 +1388,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public void addNumbers() {
-		List<String> nums = new ArrayList();
+		List<String> nums = new ArrayList<String>();
 		nums.addAll(Arrays.asList(this.NUMBER.split("\\|")));
 
 		System.out.println(nums);
@@ -1410,7 +1411,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public void addClusterstrings() {
-		List<String> cltstrs = new ArrayList();
+		List<String> cltstrs = new ArrayList<String>();
 		cltstrs.addAll(Arrays.asList(this.CLUSTERSTRING.split("\\|")));
 
 		System.out.println(cltstrs);
@@ -1431,7 +1432,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public void addProperNouns() {
-		List<String> ppnouns = new ArrayList();
+		List<String> ppnouns = new ArrayList<String>();
 		ppnouns.addAll(Arrays.asList(this.PROPERNOUN.split("\\|")));
 
 		System.out.println(ppnouns);
