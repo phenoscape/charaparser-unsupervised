@@ -347,6 +347,9 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals ("checkWN - case 2.1.2", "p", tester.checkWN("stays","number"));
 		assertEquals ("checkWN - case 2.1.2", "general", tester.checkWN("general","singular"));
 		assertEquals ("checkWN - case 2.1.2", "s", tester.checkWN("general","number"));
+		// Case 2.1.3
+		assertEquals ("checkWN - case 1.2", "row", tester.checkWN("row","singular"));
+		assertEquals ("checkWN - case 1.2", "s", tester.checkWN("row","number"));
 		// Case 2.2
 		// Need test cases!
 		
@@ -413,7 +416,10 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals ("getNumberHelp2 - end with ate", "", tester.getNumberHelper2("differentiate"));
 		assertEquals ("getNumberHelp2 - not match", null, tester.getNumberHelper2("jxbz"));
 		// Method getNumber
-		assertEquals ("getNumberHelp2 - not match", "s", tester.getNumber("jxbz"));
+		assertEquals ("getNumber - not match", "s", tester.getNumber("jxbz"));
+		assertEquals ("getNumber - case 1", "", tester.getNumber("only"));
+		assertEquals ("getNumber - case 3", "s", tester.getNumber("uroneural"));
+		
 		
 		// getPlural method group
 		assertEquals ("getPluralRuleHelper - ves plural", "leaves", tester.getPluralRuleHelper("leaf"));

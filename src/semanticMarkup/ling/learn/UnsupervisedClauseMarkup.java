@@ -143,7 +143,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private String PENDINGS = "(ia|es|ices|i|ae)\\b";
 
 	/**
-	 * Constructor of UnsupervisedClauseMarkup class
+	 * Constructor of UnsupervisedClauseMarkup class. Create a new UnsupervisedClauseMarkup object.
 	 * @param lm learning mode, can be "plain"
 	 * @param p prefix
 	 * @param wnDir directory of WordNet dictionary
@@ -3183,7 +3183,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	/**
-	 * Helper of method updateTable
+	 * Helper of method updateTable: Given a word, return [p] if it is a plural, [s] if it is singular
 	 * @param w
 	 * @return
 	 */
@@ -3191,15 +3191,19 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String number = checkWN(word, "number");
 		String rt = "";
 
+		// Case 1
 		rt = getNumberHelper1(number);
 		if (rt != null) {
 			return rt;
 		}
 
+		// Case 2
 		rt = getNumberHelper2(word);
 		if (rt != null) {
 			return rt;
-		} else {
+		} 
+		// Case 3
+		else {
 			return "s";
 		}
 	}
