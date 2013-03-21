@@ -320,6 +320,22 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("markKnown - stop word", 0,
 				tester.markKnown("page", "", "", "", 0));	
 		
+
+		
+		// Method inSingularPluralPair
+		assertEquals ("inSingularPluralPair - null", false, tester.inSingularPluralPair("word"));
+		tester.singularPluralTable.add(new SingularPluralPair("word1", ""));
+		assertEquals ("inSingularPluralPair - singular match", true, tester.inSingularPluralPair("word1"));
+		tester.singularPluralTable.add(new SingularPluralPair("", "word2"));
+		assertEquals ("inSingularPluralPair - plural match", true, tester.inSingularPluralPair("word2"));
+		tester.singularPluralTable.add(new SingularPluralPair("word3", "word3"));
+		assertEquals ("inSingularPluralPair - both match", true, tester.inSingularPluralPair("word3"));
+
+		
+		
+		/*******************************
+		 * Method checkWN
+		 ******************************/		
 		// Method checkWN
 		assertEquals ("checkWN - case 0.0 not word", "", tester.checkWN("()","pos"));
 		assertEquals ("checkWN - case 0.2 special case - teeth", "p", tester.checkWN("teeth","pos"));
@@ -341,7 +357,6 @@ public class UnsupervisedClauseMarkupTest {
 		// These two tests not passed!
 		//assertEquals ("checkWN - case 2.1.1", "extending", tester.checkWN("extending","singular"));
 		//assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("extending","number"));
-		
 		// Case 2.1.2
 		assertEquals ("checkWN - case 2.1.2", "stay", tester.checkWN("stays","singular"));
 		assertEquals ("checkWN - case 2.1.2", "p", tester.checkWN("stays","number"));
@@ -353,16 +368,9 @@ public class UnsupervisedClauseMarkupTest {
 		// Case 2.2
 		// Need test cases!
 		
-		// Method inSingularPluralPair
-		assertEquals ("inSingularPluralPair - null", false, tester.inSingularPluralPair("word"));
-		tester.singularPluralTable.add(new SingularPluralPair("word1", ""));
-		assertEquals ("inSingularPluralPair - singular match", true, tester.inSingularPluralPair("word1"));
-		tester.singularPluralTable.add(new SingularPluralPair("", "word2"));
-		assertEquals ("inSingularPluralPair - plural match", true, tester.inSingularPluralPair("word2"));
-		tester.singularPluralTable.add(new SingularPluralPair("word3", "word3"));
-		assertEquals ("inSingularPluralPair - both match", true, tester.inSingularPluralPair("word3"));
-
-		// Method getSingular
+		/*******************************
+		 * Method getSingular
+		 ******************************/
 		assertEquals("getSingular - non word", "", tester.getSingular("!@#"));
 		assertEquals("getSingular - special case", "valve", tester.getSingular("valves"));
 		assertEquals("getSingular - special case", "media", tester.getSingular("media"));
@@ -390,11 +398,9 @@ public class UnsupervisedClauseMarkupTest {
 		tester.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
 		assertEquals("addSigularPluralPair - pair exist", false, tester.addSingularPluralPair("sword3", "pword3"));
 		
-		// Method checkWN
-		
-		
-		
-		// getNumber method group 
+		/*******************************
+		 * Method getNumber
+		 ******************************/
 		// Method getNumberHelper1
 		assertEquals ("getNumberHelp1 - case 1: s or p", "s", tester.getNumberHelper1("s"));
 		assertEquals ("getNumberHelp1 - case 2: x", "", tester.getNumberHelper1("x"));	
@@ -420,10 +426,25 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals ("getNumber - case 1", "", tester.getNumber("only"));
 		assertEquals ("getNumber - case 3", "s", tester.getNumber("uroneural"));
 		
+		/*******************************
+		 * Method getPlural
+		 ******************************/
+		// method getPluralRuleHelper
+		assertEquals ("getPluralRuleHelper - case 2", "ices ixes", tester.getPluralRuleHelper("ix"));
+		assertEquals ("getPluralRuleHelper - case 2", "thicknesses", tester.getPluralRuleHelper("thickness"));
+		assertEquals ("getPluralRuleHelper - case 4", "leaves", tester.getPluralRuleHelper("leaf"));
+		assertEquals ("getPluralRuleHelper - case 4", "knives", tester.getPluralRuleHelper("knife"));		
+		assertEquals ("getPluralRuleHelper - case 6", "neurocrania", tester.getPluralRuleHelper("neurocranium"));
+		assertEquals ("getPluralRuleHelper - case 9", "premaxillae", tester.getPluralRuleHelper("premaxilla"));
 		
-		// getPlural method group
-		assertEquals ("getPluralRuleHelper - ves plural", "leaves", tester.getPluralRuleHelper("leaf"));
-		assertEquals ("getPluralRuleHelper - ves plural", "knives", tester.getPluralRuleHelper("knife"));
+		// method getPlural
+		List<String> pList = new ArrayList<String>();
+		pList.add("ices");
+		pList.add("ixes");
+		tester.WORDS.put("ices", 1);
+		tester.WORDS.put("ixes", 2);
+		assertEquals ("getPlural", pList, tester.getPlural("ix"));		
+		
 		
 		// Method updatePOS
 		//assertEquals ("getPluralRuleHelper - ves plural", 0, tester.updatePOS("", "", "", 0));

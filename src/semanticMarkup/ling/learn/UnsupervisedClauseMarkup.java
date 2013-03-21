@@ -57,7 +57,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	//private Map<String, String> POSRecordsRECORDS = new HashMap<String, String>();
 	private String NEWDESCRIPTION = ""; // record the index of sentences that
 										// ends a description
-	private Map<String, Integer> WORDS = new HashMap<String, Integer>();
+	
+	public Map<String, Integer> WORDS = new HashMap<String, Integer>();
 	private Hashtable<String, String> PLURALS = new Hashtable<String, String>();
 
 	private String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
@@ -2116,15 +2117,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 			if (pos.equals("s")) {
 				//List<String> words = getPlural(word);
-				String[] words = this.getPlural(word);
+				List<String> words = this.getPlural(word);
 				String sg = word;
-				for (int i = 0; i < words.length; i++) {
-					if (words[i].matches("^.*\\w.*$")) {
+				for (int i = 0; i < words.size(); i++) {
+					if (words.get(i).matches("^.*\\w.*$")) {
 						result = result
-								+ this.markKnown(words[i], "p", "*", table,
+								+ this.markKnown(words.get(i), "p", "*", table,
 										0);
 					}
-					addSingularPluralPair(sg, words[i]);
+					addSingularPluralPair(sg, words.get(i));
 				}
 			}
 		}
@@ -2132,43 +2133,51 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return result;
 	}
 
-	public String[] getPlural(String word) {
+	public List<String> getPlural(String word) {
 		
 		if (word.matches("^(n|2n|x)$")) {
 			return null;
 		}
 		
-		String plural = this.PLURALS.get(word);
-		if (plural.matches("^.*\\w+.*$")) {
-			return plural.split(" ");
+		String plural = "";
+		if (this.PLURALS.containsKey(word)) {
+			plural = this.PLURALS.get(word);
+
+			if (plural.matches("^.*\\w+.*$")) {
+				String[] pArray = plural.split(" ");
+				List<String> pList = new ArrayList<String>();
+				Collections.addAll(pList, pArray);
+				return pList;
+			}
 		}
 		
 		plural = getPluralSpecialCaseHelper(word);
-		if (plural == null) {
+		if (!plural.equals("")) {
+			;
+		}
+		else {
 			plural = getPluralRuleHelper(word);
-			if (plural != null) {
-				plural = plural+""+word+"s";
-			}	
+			plural = plural+" "+word+"s";
 		}
 
-		// Avoid null
-		if (plural == null) {
-			plural = "";
-		}
-		
 		plural=plural.replaceAll("^\\s+", "");
 		plural=plural.replaceAll("\\s+$", "");
 		String[] pls = plural.split(" ");
 		String plStr = "";
-		for (int i=0;i<pls.length;i++) {
-			if (this.WORDS.get(pls[i])>=1) {
-				plStr = plStr+pls[i]+" ";
+		for (int i = 0; i < pls.length; i++) {
+			if (this.WORDS.containsKey(pls[i])) {
+				if (this.WORDS.get(pls[i]) >= 1) {
+					plStr = plStr + pls[i] + " ";
+				}
 			}
 		}
 		plStr = plStr.replaceAll("\\s+$", "");
 		this.PLURALS.put(word, plStr);
 		
-		return plStr.split(" ");
+		String[] pArray = plStr.split(" ");
+		List<String> pList = new ArrayList<String>();
+		Collections.addAll(pList, pArray);
+		return pList;
 	}
 
 	/**
@@ -2182,6 +2191,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Pattern p;
 		Matcher m;
 
+		// Case 1
 		p = Pattern.compile("(^.*?)(ex|ix)$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2190,6 +2200,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 2
 		p = Pattern.compile("^.*(x|ch|ss|sh)$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2197,6 +2208,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 3
 		p = Pattern.compile("(^.*?)([^aeiouy])y$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2204,9 +2216,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 4
 		p = Pattern.compile("(^.*?)(?:([^f])fe|([oaelr])f)$");
 		m = p.matcher(word);
-
 		if (m.lookingAt()) {
 			String s1 = m.group(1);
 			String s2 = m.group(2);
@@ -2219,6 +2231,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 5
 		p = Pattern.compile("(^.*?)(x|s)is$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2226,6 +2239,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 6
 		p = Pattern.compile("(^.*?)([tidlv])um$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2233,6 +2247,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 7
 		p = Pattern.compile("(^.*?)(ex|ix)$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2240,6 +2255,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 8
 		p = Pattern.compile("(^.*?[^t][^i])on$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2247,6 +2263,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 9
 		p = Pattern.compile("(^.*?)a$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2254,6 +2271,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 10
 		p = Pattern.compile("(^.*?)man$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2261,6 +2279,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 11
 		p = Pattern.compile("(^.*?)child$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2268,6 +2287,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 12
 		p = Pattern.compile("(^.*)status$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2275,6 +2295,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 13
 		p = Pattern.compile("(^.+?)us$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2283,6 +2304,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 14
 		p = Pattern.compile("^.*s$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2297,13 +2319,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * A helper method used by method getPlural. Help to handle special cases.
 	 * 
 	 * @param word
-	 * @return if the word has a plural, return it; otherwise return ""
+	 * @return if the word match any special case, return its plural form, return it; otherwise return ""
 	 */
 	public String getPluralSpecialCaseHelper(String word) {
 		String plural;
 		Pattern p;
 		Matcher m;
 
+		// Case 1
 		p = Pattern.compile("^.*series$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2311,13 +2334,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 2		
 		p = Pattern.compile("(^.*?)foot$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
 			plural = m.group(1) + "feet";
 			return plural;
 		}
-
+		
+		// Case 3
 		p = Pattern.compile("(^.*?)tooth$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2325,6 +2350,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 4		
 		p = Pattern.compile("(^.*?)alga$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2332,6 +2358,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 5		
 		p = Pattern.compile("(^.*?)genus$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -2339,6 +2366,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return plural;
 		}
 
+		// Case 6		
 		p = Pattern.compile("(^.*?)corpus$");
 		m = p.matcher(word);
 		if (m.lookingAt()) {
