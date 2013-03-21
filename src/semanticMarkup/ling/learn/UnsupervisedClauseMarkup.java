@@ -1331,39 +1331,22 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public void addStopWords() {
-		// my @stops = split(/\|/,$stop);
-		// String []temp=this.STOP.split("|");
 		List<String> stops = new ArrayList<String>();
 		stops.addAll(Arrays.asList(this.STOP.split("\\|")));
-		// new ArrayList();
-		// for (int i=0;i<temp.length;i++) {
-		// stops.add(temp[i]);
-		// }
-		// push(@stops, "NUM", "(", "[", "{", ")", "]", "}");
 		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
 				"]", "}", "\\\\d+" }));
-		// String []a= {stops,"NUM", "(", "[", "{", ")", "]", "}"};
-
-		// push(@stops, "\\\\d+");
-		// stops.addAll(Arrays.asList(new String[]{}));
-
-		// print "stop list:\n@stops\n" if $debug;
-		// print STDOUT "stop list:\n@stops\n";;
 
 		System.out.println(stops);
 		System.out.println(this.FORBIDDEN);
 
 		for (int i = 0; i < stops.size(); i++) {
 			String word = stops.get(i);
-			// String reg="\\b("+this.FORBIDDEN+")\\b";
-			// boolean f = word.matches(reg);
 			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			// update(word, "b", "*", "wordpos", 0);
-			this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue(
-					"*", 0, 0, null, null));
-			System.out.println("Update " + word);
+			this.updateTable(word, "b", "*", "wordpos", 0);
+			//this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue("*", 0, 0, null, null));
+			//System.out.println("Add Stop Word: " + word+"\n");
 		}
 	}
 
@@ -1381,10 +1364,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			// update(word, "b", "*", "wordpos", 0);
-			this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue(
-					"", 0, 0, null, null));
-			System.out.println("Update " + word);
+			this.updateTable(word, "b", "*", "wordpos", 0);
+			//this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue("", 0, 0, null, null));
+			//System.out.println("addCharacter word: " + word);
 		}
 	}
 
@@ -1402,13 +1384,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			// update(word, "b", "*", "wordpos", 0);
-			this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue(
-					"*", 0, 0, null, null));
-			System.out.println("Update " + word);
+			this.updateTable(word, "b", "*", "wordpos", 0);
+			//this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue("*", 0, 0, null, null));
+			//System.out.println("add Number: " + word);
 		}
-		this.wordPOSTable.put(new WordPOSKey("NUM", "b"), new WordPOSValue("*",
-				0, 0, null, null));
+		this.updateTable("NUM", "b", "*", "wordpos", 0);
+		//this.wordPOSTable.put(new WordPOSKey("NUM", "b"), new WordPOSValue("*",0, 0, null, null));
 	}
 
 	public void addClusterstrings() {
@@ -1420,15 +1401,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		for (int i = 0; i < cltstrs.size(); i++) {
 			String word = cltstrs.get(i);
-			// String reg="\\b("+this.FORBIDDEN+")\\b";
-			// boolean f = word.matches(reg);
 			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			// update(word, "b", "*", "wordpos", 0);
-			this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue(
-					"*", 1, 1, null, null));
-			System.out.println("Update " + word);
+			this.updateTable(word, "b", "*", "wordpos", 0);
+			//this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue("*", 1, 1, null, null));
+			//System.out.println("addClusterString: " + word);
 		}
 	}
 
@@ -1436,20 +1414,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		List<String> ppnouns = new ArrayList<String>();
 		ppnouns.addAll(Arrays.asList(this.PROPERNOUN.split("\\|")));
 
-		System.out.println(ppnouns);
-		System.out.println(this.PROPERNOUN);
-
 		for (int i = 0; i < ppnouns.size(); i++) {
 			String word = ppnouns.get(i);
-			// String reg="\\b("+this.FORBIDDEN+")\\b";
-			// boolean f = word.matches(reg);
 			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			// update(word, "b", "*", "wordpos", 0);
-			this.wordPOSTable.put(new WordPOSKey(word, "z"), new WordPOSValue(
-					"*", 0, 0, null, null));
-			System.out.println("Update " + word);
+			this.updateTable(word, "b", "*", "wordpos", 0);
+			//this.wordPOSTable.put(new WordPOSKey(word, "z"), new WordPOSValue("*", 0, 0, null, null));
+			System.out.println("Add ProperNoun: " + word);
 		}
 	}
 
