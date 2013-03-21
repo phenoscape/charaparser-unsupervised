@@ -2434,55 +2434,69 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		String singular = "";
 		if (getNumber(word).equals("p")) {
+			// Case 1
 			Pattern p = Pattern.compile("(^.*?[^aeiou])ies$");
 			Matcher m = p.matcher(word);
-
 			if (m.lookingAt()) {
 				singular = m.group(1) + "y";
-			} else {
-				p = Pattern.compile("(^.*?)i$");
-				m = p.matcher(word);
-				if (m.lookingAt()) {
-					singular = m.group(1) + "us";
-				} else {
-					p = Pattern.compile("(^.*?)ia$");
-					m = p.matcher(word);
-					if (m.lookingAt()) {
-						singular = m.group(1) + "ium";
-					} else {
-						p = Pattern.compile("(^.*?(x|ch|sh|ss))es$");
-						m = p.matcher(word);
-						if (m.lookingAt()) {
-							singular = m.group(1);
-						} else {
-							p = Pattern.compile("(^.*?)ves$");
-							m = p.matcher(word);
-							if (m.lookingAt()) {
-								singular = m.group(1) + "f";
-							} else {
-								p = Pattern.compile("(^.*?)ices");
-								m = p.matcher(word);
-								if (m.lookingAt()) {
-									singular = m.group(1) + "ex";
-								} else {
-									// pinnae ->pinna
-									p = Pattern.compile("(^.*?a)e$");
-									m = p.matcher(word);
-									if (m.lookingAt()) {
-										singular = m.group(1);
-									} else {
-										// fruits->fruit
-										p = Pattern.compile("(^.*?)s$");
-										m = p.matcher(word);
-										if (m.lookingAt()) {
-											singular = m.group(1);
-										}
-									}
-								}
-							}
-						}
-					}
-				}
+			} 
+			else {
+			// Case 2
+			p = Pattern.compile("(^.*?)i$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1) + "us";
+			} 
+			else {	
+			// Case 3				
+			p = Pattern.compile("(^.*?)ia$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1) + "ium";
+			} 
+			else {
+			// Case 4	
+			p = Pattern.compile("(^.*?(x|ch|sh|ss))es$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1);
+			} 
+			else {
+			// Case 5	
+			p = Pattern.compile("(^.*?)ves$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1) + "f";
+				} 
+			else {
+			// Case 6	
+			p = Pattern.compile("(^.*?)ices");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1) + "ex";
+			} 
+			else {
+			// Case 7.1
+			// pinnae ->pinna
+			p = Pattern.compile("(^.*?a)e$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1);
+			} 
+			else {
+			// Case 7.2
+			// fruits->fruit
+			p = Pattern.compile("(^.*?)s$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1);
+			}
+			}
+			}
+			}
+			}
+			}
+			}
 			}
 		}
 

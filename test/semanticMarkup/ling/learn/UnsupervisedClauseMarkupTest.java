@@ -369,36 +369,6 @@ public class UnsupervisedClauseMarkupTest {
 		// Need test cases!
 		
 		/*******************************
-		 * Method getSingular
-		 ******************************/
-		assertEquals("getSingular - non word", "", tester.getSingular("!@#"));
-		assertEquals("getSingular - special case", "valve", tester.getSingular("valves"));
-		assertEquals("getSingular - special case", "media", tester.getSingular("media"));
-		assertEquals("getSingular - special case", "species", tester.getSingular("species"));
-		assertEquals("getSingular - special case", "axis", tester.getSingular("axes"));
-		assertEquals("getSingular - special case", "calyx", tester.getSingular("calyces"));
-		assertEquals("getSingular - special case", "frons", tester.getSingular("frons"));
-		assertEquals("getSingular - special case", "groove", tester.getSingular("grooves"));
-		assertEquals("getSingular - special case", "nerve", tester.getSingular("nerves"));
-
-		//assertEquals("getSingular - 1 - y", "", tester.getSingular(""));
-		assertEquals("getSingular - 2 - i", "varus", tester.getSingular("vari"));
-		//assertEquals("getSingular - 3 - ai", "", tester.getSingular(""));
-		assertEquals("getSingular - 4 - (x|ch|sh|ss))es", "process", tester.getSingular("processes"));
-		//assertEquals("getSingular - 5 - ves", "", tester.getSingular(""));
-		//assertEquals("getSingular - 6 - ices", "", tester.getSingular(""));
-		assertEquals("getSingular - 7 - ae", "vertebra", tester.getSingular("vertebrae"));
-		// Cannot pass this test case
-		//assertEquals("getSingular - 7-2 - s", "hoplia", tester.getSingular("hoplias"));
-		
-		// Method addSingularPluralPair
-		assertEquals("addSigularPluralPair - pair not exist", true, tester.addSingularPluralPair("sword", "pword"));
-		tester.singularPluralTable.add(new SingularPluralPair("sword2",""));
-		assertEquals("addSigularPluralPair - one word exist", true, tester.addSingularPluralPair("sword2", "pword2"));
-		tester.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
-		assertEquals("addSigularPluralPair - pair exist", false, tester.addSingularPluralPair("sword3", "pword3"));
-		
-		/*******************************
 		 * Method getNumber
 		 ******************************/
 		// Method getNumberHelper1
@@ -425,6 +395,38 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals ("getNumber - not match", "s", tester.getNumber("jxbz"));
 		assertEquals ("getNumber - case 1", "", tester.getNumber("only"));
 		assertEquals ("getNumber - case 3", "s", tester.getNumber("uroneural"));
+		
+		
+		
+		/*******************************
+		 * Method getSingular
+		 ******************************/
+		assertEquals("getSingular - non word", "", tester.getSingular("!@#"));
+		assertEquals("getSingular - special case", "valve", tester.getSingular("valves"));
+		assertEquals("getSingular - special case", "media", tester.getSingular("media"));
+		assertEquals("getSingular - special case", "species", tester.getSingular("species"));
+		assertEquals("getSingular - special case", "axis", tester.getSingular("axes"));
+		assertEquals("getSingular - special case", "calyx", tester.getSingular("calyces"));
+		assertEquals("getSingular - special case", "frons", tester.getSingular("frons"));
+		assertEquals("getSingular - special case", "groove", tester.getSingular("grooves"));
+		assertEquals("getSingular - special case", "nerve", tester.getSingular("nerves"));
+
+		assertEquals("getSingular - case 1 - y", "gallery", tester.getSingular("galleries"));
+		assertEquals("getSingular - case 2", "varus", tester.getSingular("vari"));
+		assertEquals("getSingular - case 3 - ai", "lepidotrichium", tester.getSingular("lepidotrichia"));
+		assertEquals("getSingular - case 4 - (x|ch|sh|ss))es", "process", tester.getSingular("processes"));
+		assertEquals("getSingular - case 5 - ves", "leaf", tester.getSingular("leaves"));
+		assertEquals("getSingular - case 6 - ices", "index", tester.getSingular("indices"));
+		assertEquals("getSingular - case 7.1 - ae", "vertebra", tester.getSingular("vertebrae"));
+		assertEquals("getSingular - case 7.2 - s", "hoplia", tester.getSingular("hoplias"));
+		assertEquals("getSingular - case 7.2 - s", "branchiostegal", tester.getSingular("branchiostegals"));
+		
+		// Method addSingularPluralPair
+		assertEquals("addSigularPluralPair - pair not exist", true, tester.addSingularPluralPair("sword", "pword"));
+		tester.singularPluralTable.add(new SingularPluralPair("sword2",""));
+		assertEquals("addSigularPluralPair - one word exist", true, tester.addSingularPluralPair("sword2", "pword2"));
+		tester.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
+		assertEquals("addSigularPluralPair - pair exist", false, tester.addSingularPluralPair("sword3", "pword3"));		
 		
 		/*******************************
 		 * Method getPlural
