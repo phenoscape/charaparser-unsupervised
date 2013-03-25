@@ -419,14 +419,7 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("getSingular - case 6 - ices", "index", tester.getSingular("indices"));
 		assertEquals("getSingular - case 7.1 - ae", "vertebra", tester.getSingular("vertebrae"));
 		assertEquals("getSingular - case 7.2 - s", "hoplia", tester.getSingular("hoplias"));
-		assertEquals("getSingular - case 7.2 - s", "branchiostegal", tester.getSingular("branchiostegals"));
-		
-		// Method addSingularPluralPair
-		assertEquals("addSigularPluralPair - pair not exist", true, tester.addSingularPluralPair("sword", "pword"));
-		tester.singularPluralTable.add(new SingularPluralPair("sword2",""));
-		assertEquals("addSigularPluralPair - one word exist", true, tester.addSingularPluralPair("sword2", "pword2"));
-		tester.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
-		assertEquals("addSigularPluralPair - pair exist", false, tester.addSingularPluralPair("sword3", "pword3"));		
+		assertEquals("getSingular - case 7.2 - s", "branchiostegal", tester.getSingular("branchiostegals"));	
 		
 		/*******************************
 		 * Method getPlural
@@ -445,7 +438,16 @@ public class UnsupervisedClauseMarkupTest {
 		pList.add("ixes");
 		tester.WORDS.put("ices", 1);
 		tester.WORDS.put("ixes", 2);
-		assertEquals ("getPlural", pList, tester.getPlural("ix"));		
+		assertEquals ("getPlural", pList, tester.getPlural("ix"));	
+		
+		
+		
+		// Method addSingularPluralPair
+		assertEquals("addSigularPluralPair - pair not exist", true, tester.addSingularPluralPair("sword", "pword"));
+		tester.singularPluralTable.add(new SingularPluralPair("sword2",""));
+		assertEquals("addSigularPluralPair - one word exist", true, tester.addSingularPluralPair("sword2", "pword2"));
+		tester.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
+		assertEquals("addSigularPluralPair - pair exist", false, tester.addSingularPluralPair("sword3", "pword3"));	
 		
 		
 		// Method updatePOS
