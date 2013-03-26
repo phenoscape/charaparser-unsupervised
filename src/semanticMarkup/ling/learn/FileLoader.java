@@ -57,7 +57,7 @@ public class FileLoader {
 			this.typeList.add(type);
 			this.textList.add(text);
 			
-			Treatment tm = new Treatment(text);
+			Treatment tm = new Treatment(name,text);
 			this.treatmentList.add(tm);
 		}
 		

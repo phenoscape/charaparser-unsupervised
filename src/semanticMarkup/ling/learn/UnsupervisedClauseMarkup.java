@@ -58,7 +58,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private String NEWDESCRIPTION = ""; // record the index of sentences that
 										// ends a description
 	
-	public Map<String, Integer> WORDS = new HashMap<String, Integer>();
 	private Hashtable<String, String> PLURALS = new Hashtable<String, String>();
 
 	private String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
@@ -134,6 +133,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private boolean msg = false;
 	// Control if output debug msg
 	private boolean debug = false;
+	private boolean populateSent_debug = false;
 	// addHeuristicsNouns
 	private boolean hn = true;
 	
@@ -142,6 +142,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private String VENDINGS = "(ing)\\b";	
 	private String SENDINGS = "(on|is|ex|ix|um|us|a)\\b";
 	private String PENDINGS = "(ia|es|ices|i|ae)\\b";
+	
+	//WordFormUility
+	public Map<String, Integer> WORDS = new HashMap<String, Integer>();
+	
+	
 
 	/**
 	 * Constructor of UnsupervisedClauseMarkup class. Create a new UnsupervisedClauseMarkup object.
@@ -215,6 +220,180 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	}
 
+	public boolean populateSents(List<Treatment> treatments) {
+		System.out.println("Reading sentences:\n");
+		
+		String fileName;
+		int type;
+		String text;
+		
+		for (int i=0;i<treatments.size();i++){
+			Treatment tm = treatments.get(i);
+			fileName = tm.getFileName();
+			text = tm.getDescription();
+			type = this.getType(fileName);
+					
+			if (text != null) {
+				// process this text
+				text = this.handleText(text);
+				if (populateSent_debug) System.out.println("Text: " + text);
+				
+				// use Apache OpenNLP to do sentence segmentation
+				String sentences[] = {};
+				sentences = this.segmentSentence(text);
+
+				
+				Map<Integer, String> leadMap = new HashMap<Integer, String>();
+				List<String> sentCopy = new LinkedList<String>();
+				List<Integer> validIndex = new LinkedList<Integer>();
+				int index = 0;
+				
+				// for each sentence, do some operations
+				for (int j = 0; j < sentences.length; j++) {
+					if (populateSent_debug) System.out.println("Sentence " + j + ": " + sentences[j]);
+					if (populateSent_debug) System.out.println(sentences[j]);
+					
+					// if(!/\w+/){next;}					
+					if (!sentences[j].matches("^.*\\w+.*$")) {
+						continue;
+					}
+					
+					// This is a valid sentence, save the index
+					validIndex.add(j);
+					
+					// restore marks in brackets
+					sentences[j] = this.restoreMarksInBrackets(sentences[j]);
+					// Make a copy of the sentence
+					sentCopy.add(sentences[j]);
+
+					// process the sentence
+					sentences[j] = this.handleSentence(sentences[j]);
+
+					// store all words
+					this.WORDS = getAllWords(sentences[j], this.WORDS);
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					//////////////////////////////////////////////////////////////////
+
+					// first tokenize this sentence
+					String tokens[] = this.myTokenizer.tokenize(sentences[j]);
+					for (int i1 = 0; i1 < tokens.length; i1++) {
+						this.unknownWordTable.put(tokens[i1], "unknown");
+					}
+
+					// Get the leading NUM_LEAD_WORDS words
+					String lead = "";
+					int minL = tokens.length > this.NUM_LEAD_WORDS ? this.NUM_LEAD_WORDS
+							: tokens.length;
+					for (int i2 = 0; i2 < minL; i2++) {
+						lead = lead + tokens[i2] + " ";
+					}
+					lead = lead.replaceAll("\\s$", "");
+					leadMap.put(j, lead);
+
+					// Index increase by 1
+					index++;
+					//////////////////////////////////////////////////////////////////					
+
+				}
+
+				for (int j = 0; j < validIndex.size(); j++) {
+					String line = sentences[validIndex.get(j)];
+					String oline = sentCopy.get(j);
+
+					// handle line first
+					// remove all ' to avoid escape problems
+					// $line =~ s#'# #g;
+					line.replaceAll("\'", " ");
+
+					// then handle oline
+					Matcher matcher = 
+							Pattern.compile("(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)").matcher(oline);
+					if (matcher.lookingAt()) {
+						oline = oline.replaceAll("(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)",
+							matcher.group(1) + matcher.group(2));
+					}
+
+					// restore ".", "?", ";", ":", "."
+					oline = this.restoreMarksInBrackets(oline);
+					oline = oline.replaceAll("\'", " ");
+					
+					
+					
+					
+					
+					
+					//////////////////////////////////////////////////////////////////
+					
+					String lead = leadMap.get(j);					
+					String status = "";
+			
+					/**
+					 	if(getnumber($words[0]) eq "p"){
+					     $status = "start";
+						}else{
+					     $status = "normal";
+					}
+					
+					if (this.getNumber(lead)
+					
+					if(getnumber($words[0]) eq "p"){
+					     $status = "start";
+						}else{
+					     $status = "normal";
+					}
+					
+					if (this.getNumber(lead)
+ */
+					//////////////////////////////////////////////////////////////////
+					
+					
+					if (oline.length() >= 2000) { // EOL
+						oline = line;
+					}
+
+					this.sentenceTable.add(new Sentence(line, oline, lead,
+							null, null, null, null));
+
+					this.SENTID++;
+				}
+			}
+
+		}
+		System.out.println("Total sentences = " + SENTID);
+		return true;
+	}
+	
+	/**
+	 * Given a file name, return 1 if it is a file of character file, or 2 if it is a description file, otherwise return 0
+	 */
+	public int getType(String fileName) {		
+		// remove pdf.xml
+		fileName = this.removeAll(fileName, ".*\\.xml_");
+		// remove all non_ charaters
+		fileName = this.removeAll(fileName, "[^_]");
+		
+		// a character file
+		if (fileName.length()==0) {
+			return 1;
+		}
+		
+		// a description file
+		if (fileName.length()==1) {
+			return 2;
+		}
+		
+		return 0;
+	}
+	
 	// replace '.', '?', ';', ':', '!' within brackets by some special markers,
 	// to avoid split within brackets during sentence segmentation
 	public String hideMarksInBrackets(String text) {
@@ -286,19 +465,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 
 		// restore "." from "[DOT]"
-		// s#\[\s*DOT\s*\]#.#g;
 		text = text.replaceAll("\\[\\s*DOT\\s*\\]", ".");
 		// restore "?" from "[QST]"
-		// s#\[\s*QST\s*\]#?#g;
 		text = text.replaceAll("\\[\\s*QST\\s*\\]", "?");
 		// restore ";" from "[SQL]"
-		// s#\[\s*SQL\s*\]#;#g;
 		text = text.replaceAll("\\[\\s*SQL\\s*\\]", ";");
 		// restore ":" from "[QLN]"
-		// s#\[\s*QLN\s*\]#:#g;
 		text = text.replaceAll("\\[\\s*QLN\\s*\\]", ":");
 		// restore "." from "[DOT]"
-		// s#\[\s*EXM\s*\]#!#g;
 		text = text.replaceAll("\\[\\s*EXM\\s*\\]", "!");
 
 		return text;
@@ -350,12 +524,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		text = text.replaceAll("_", "-"); // _ to -
 		text = text.replaceAll("", ""); //
-
-		//
-		// Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(text);
-		// if (matcher1.lookingAt()) {
-		// text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
-		// }
 
 		// absent ; => absent;
 		while (true) {
@@ -425,6 +593,59 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return text;
 	}
 
+	/**
+	 * remove bracketed text from sentence (keep those in originalsent). Tthis
+	 * step will not be able to remove nested brackets, such as (petioles
+	 * (2-)4-8 cm). Nested brackets will be removed after threedsent step in
+	 * POSTagger4StanfordParser.java
+	 * 
+	 * @param s
+	 * @return
+	 */
+	public String handleSentence(String s) {
+		if (s == null || s == "") {
+			return s;
+		}
+
+		String sentence = s;
+
+		// remove (.a.)
+		sentence = sentence.replaceAll("\\([^()]*?[a-zA-Z][^()]*?\\)", " ");
+
+		// remove [.a.]
+		sentence = sentence.replaceAll("\\[[^\\]\\[]*?[a-zA-Z][^\\]\\[]*?\\]"," ");
+
+		// remove {.a.}
+		sentence = sentence.replaceAll("\\{[^{}]*?[a-zA-Z][^{}]*?\\}", " ");
+
+		// to fix basi- and hypobranchial
+		while (true) {
+			Matcher matcher = Pattern.compile("(^.*?)\\s*[-]+\\s*([a-z].*$)")
+					.matcher(sentence);
+			if (matcher.lookingAt()) {
+				sentence = matcher.group(1) + "_ " + matcher.group(2);
+			} else {
+				break;
+			}
+		}
+
+		// add space around nonword char
+		// s#(\W)# $1 #g;
+		sentence = this.addSpace(sentence, "\\W");
+
+		// multiple spaces => 1 space
+		sentence = sentence.replaceAll("\\s+", " ");
+
+		// trim: remove leading and ending spaces
+		sentence = sentence.replaceAll("^\\s*", "");
+		sentence = sentence.replaceAll("\\s*$", "");
+
+		// all to lower case
+		sentence = sentence.toLowerCase();
+
+		return sentence;
+	}
+	
 	// add space before and after all occurance of the regex in the string str
 	public String addSpace(String str, String regex) {
 
@@ -441,222 +662,24 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		} else {
 			return str;
 		}
-
 	}
 
-	public String handleSentence(String s) {
-
-		if (s == null || s == "") {
-			return s;
-		}
-
-		String sentence = s;
-
-		// remove (.a.)
-		sentence = sentence.replaceAll("\\([^()]*?[a-zA-Z][^()]*?\\)", " ");
-
-		// remove [.a.]
-		sentence = sentence.replaceAll("\\[[^\\]\\[]*?[a-zA-Z][^\\]\\[]*?\\]",
-				" ");
-
-		// remove {.a.}
-		sentence = sentence.replaceAll("\\{[^{}]*?[a-zA-Z][^{}]*?\\}", " ");
-
-		// to fix basi- and hypobranchial
-		// s#\s*[-]+\s*([a-z])#_ $1#g;
-		while (true) {
-			Matcher matcher = Pattern.compile("(^.*?)\\s*[-]+\\s*([a-z].*$)")
-					.matcher(sentence);
-			if (matcher.lookingAt()) {
-				sentence = matcher.group(1) + "_ " + matcher.group(2);
-			} else {
-				break;
+	public Map<String, Integer> getAllWords(String sent, Map<String, Integer> words) {
+		String[] tokens = this.myTokenizer.tokenize(sent);
+		
+		for (int i=0;i<tokens.length;i++) {
+			String token = tokens[i];
+			if (words.containsKey(token)) {
+				int count = words.get(token);
+				count = count+1;
+				words.put(token, count);
+			}
+			else {
+				words.put(token, 1);
 			}
 		}
-
-		// add space around nonword char
-		// s#(\W)# $1 #g;
-		/*
-		 * while (true) { Matcher matcher8
-		 * =Pattern.compile("(^.*)(\\S\\W\\S)(.*$)").matcher( sentence); if
-		 * (matcher8.lookingAt()) { //sentence = sentence.replaceAll("\\W", " "+
-		 * // matcher8.group(1) // + " "); sentence = matcher8.group(1) + " "+
-		 * matcher8.group(2) + " " + matcher8.group(3); } else { break; } } /
-		 */
-		sentence = this.addSpace(sentence, "\\W");
-
-		// String [] substrings=
-		// Pattern.compile("(\\W)").split(sentence);//matcher(sentence);
-		// matcher8.replaceAll(" " + matcher8.group(1) + " ");
-		// sentence="";
-		// for (int i=0;i<substrings.length;i++) {
-		// sentence=sentence+" "+substrings[i]+" ";
-		// }
-
-		// multiple spaces => 1 space
-		// s#\s+# #g;
-		sentence = sentence.replaceAll("\\s+", " ");
-
-		// trim
-		// s#^\s*##;
-		sentence = sentence.replaceAll("^\\s*", "");
-
-		// trim
-		// s#\s*$##;
-		sentence = sentence.replaceAll("\\s*$", "");
-
-		// all to lower case
-		sentence = sentence.toLowerCase();
-
-		return sentence;
-	}
-
-	public boolean populateSents(List<Treatment> treatments) {
-		System.out.println("Reading sentences:\n");
-		//FileLoader fileLoader = new FileLoader(this.desDir);
-		//if (!fileLoader.load())
-		//	return false;
-
-		//List<String> fileNameList = fileLoader.getFileNameList();
-		//List<Integer> typeList = fileLoader.getTypeList();
 		
-		//List<String> textList = fileLoader.getTextList();
-		
-		//List<String>
-
-		String text;
-		//for (int i = 0; i < fileLoader.getCount(); i++) {
-		for (int i=0;i<treatments.size();i++){
-			//text = textList.get(i);
-			Treatment tm = treatments.get(i);
-			text = tm.getDescription();
-			if (text != null) {
-				// process this text
-				text = this.handleText(text);
-				// use Apache OpenNLP to do sentence segmentation
-				String sentences[] = {};
-				sentences = this.segmentSentence(text);
-
-				Map<Integer, String> leadMap = new HashMap<Integer, String>();
-
-				if (debug)
-					System.out.println("Text: " + text);
-
-				List<String> sentCopy = new LinkedList<String>();
-				List<Integer> validIndex = new LinkedList<Integer>();
-				int index = 0;
-				// for each sentence, do some operations
-				for (int j = 0; j < sentences.length; j++) {
-
-					if (debug)
-						System.out.println("Sentence " + j + ": "
-								+ sentences[j]);
-
-					// if(!/\w+/){next;}
-					if (debug)
-						System.out.println(sentences[j]);
-					if (!sentences[j].matches("^.*\\w+.*$")) {
-						continue;
-					}
-					validIndex.add(j);
-					// restore ".", "?", ";", ":", "."
-					sentences[j] = this.restoreMarksInBrackets(sentences[j]);
-					// push(@sentcopy, $_);
-					sentCopy.add(sentences[j]);
-
-					// remove bracketed text from sentence (keep those in
-					// originalsent); this step will not be able to remove
-					// nested brackets, such as (petioles (2-)4-8 cm).
-					// nested brackets will be removed after threedsent
-					// step in POSTagger4StanfordParser.java
-					sentences[j] = this.handleSentence(sentences[j]);
-
-					getAllWords(sentences[j]);
-
-					// first tokenize this sentence
-					String tokens[] = this.myTokenizer.tokenize(sentences[j]);
-					for (int i1 = 0; i1 < tokens.length; i1++) {
-						this.unknownWordTable.put(tokens[i1], "unknown");
-					}
-
-					// Get the leading NUM_LEAD_WORDS words
-					String lead = "";
-					int minL = tokens.length > this.NUM_LEAD_WORDS ? this.NUM_LEAD_WORDS
-							: tokens.length;
-					for (int i2 = 0; i2 < minL; i2++) {
-						lead = lead + tokens[i2] + " ";
-					}
-					lead = lead.replaceAll("\\s$", "");
-					leadMap.put(j, lead);
-
-					// Index increase by 1
-					index++;
-
-				}
-
-				for (int j = 0; j < validIndex.size(); j++) {
-					String line = sentences[validIndex.get(j)];
-					String oline = sentCopy.get(validIndex.get(j));
-
-					// handle line first
-					// remove all ' to avoid escape problems
-					// $line =~ s#'# #g;
-					line.replaceAll("\'", " ");
-
-					// then handle oline
-					Matcher matcher = Pattern.compile(
-							"(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)").matcher(
-							oline);
-					if (matcher.lookingAt()) {
-						oline = oline.replaceAll(
-								"(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)",
-								matcher.group(1) + matcher.group(2));
-					}
-
-					// restore ".", "?", ";", ":", "."
-					oline = this.restoreMarksInBrackets(oline);
-					oline = oline.replaceAll("\'", " ");
-					
-					String lead = leadMap.get(j);
-					
-					String status = "";
-			
-					/**
-					 	if(getnumber($words[0]) eq "p"){
-					     $status = "start";
-						}else{
-					     $status = "normal";
-					}
-					
-					if (this.getNumber(lead)
-					
-					if(getnumber($words[0]) eq "p"){
-					     $status = "start";
-						}else{
-					     $status = "normal";
-					}
-					
-					if (this.getNumber(lead)
- */
-					if (oline.length() >= 2000) { // EOL
-						oline = line;
-					}
-
-					this.sentenceTable.add(new Sentence(line, oline, lead,
-							null, null, null, null));
-
-					this.SENTID++;
-				}
-			}
-
-		}
-		System.out.println("Total sentences = " + SENTID);
-		return true;
-	}
-
-	private void getAllWords(String sent) {
-		// TODO Auto-generated method stub
-		
+		return words;		
 	}
 
 	String[] segmentSentence(String text) {

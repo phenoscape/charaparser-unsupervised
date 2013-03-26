@@ -45,6 +45,13 @@ public class UnsupervisedClauseMarkupTest {
 		//assertEquals("Result", 1, sentLoader.GetType("Buckup_1998.xml_5c157037-01e4-4d48-8014-b1ebfc9dc120_8210ee00-8026-4fd9-974f-2f4cf6ce389f.txt"));
 		//assertEquals("Result", 0, sentLoader.GetType("Buckup_1998.xml_8d819b51-b88a-459e-bcb2-c6137d8b95d7.txt"));
 		
+		assertEquals("PopulateSent Helper - getType: character", 1, tester.getType("Brazeau_2009.xml_states737.txt"));
+		assertEquals("PopulateSent Helper - getType: description", 2, tester.getType("Brazeau_2009.xml_states737_state739.txt"));
+		assertEquals("PopulateSent Helper - getType: otherwise", 0, tester.getType("saf_saiflkds)dsljf_fls.txt"));
+		
+		
+		
+		
 		// test method hideMarksInBrackets
 		assertEquals("Result", null, 
 				tester.hideMarksInBrackets(null));
