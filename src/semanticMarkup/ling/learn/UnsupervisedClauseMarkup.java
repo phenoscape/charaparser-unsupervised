@@ -220,6 +220,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	}
 
+	/**
+	 * 
+	 * @param treatments
+	 * @return
+	 */
 	public boolean populateSents(List<Treatment> treatments) {
 		System.out.println("Reading sentences:\n");
 		
@@ -272,37 +277,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					// store all words
 					this.WORDS = getAllWords(sentences[j], this.WORDS);
 					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					//////////////////////////////////////////////////////////////////
-
-					// first tokenize this sentence
-					String tokens[] = this.myTokenizer.tokenize(sentences[j]);
-					for (int i1 = 0; i1 < tokens.length; i1++) {
-						this.unknownWordTable.put(tokens[i1], "unknown");
-					}
-
-					// Get the leading NUM_LEAD_WORDS words
-					String lead = "";
-					int minL = tokens.length > this.NUM_LEAD_WORDS ? this.NUM_LEAD_WORDS
-							: tokens.length;
-					for (int i2 = 0; i2 < minL; i2++) {
-						lead = lead + tokens[i2] + " ";
-					}
-					lead = lead.replaceAll("\\s$", "");
-					leadMap.put(j, lead);
-
 					// Index increase by 1
 					index++;
-					//////////////////////////////////////////////////////////////////					
-
 				}
 
 				for (int j = 0; j < validIndex.size(); j++) {
@@ -327,56 +303,65 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					oline = oline.replaceAll("\'", " ");
 					
 					
+					List<String> nWords = this.getFirstNWords(line, this.NUM_LEAD_WORDS);										
+					String lead = "";
+					Iterator<String> iter = nWords.iterator();
+					while(iter.hasNext()){
+						String w = iter.next();
+						lead = lead + w + " ";
+					}
+					lead = lead.replaceAll("\\s$", "");
 					
-					
-					
-					
-					//////////////////////////////////////////////////////////////////
-					
-					String lead = leadMap.get(j);					
 					String status = "";
-			
-					/**
-					 	if(getnumber($words[0]) eq "p"){
-					     $status = "start";
-						}else{
-					     $status = "normal";
+					if (this.getNumber(nWords.get(0)).equals("p")) {
+						status = "start";
+					} else {
+						status = "normal";
 					}
 					
-					if (this.getNumber(lead)
+					lead = this.removeAll(lead, "\\s+$");
+					lead = this.removeAll(lead, "^\\s*");
+					lead = lead.replaceAll("\\s+", " ");
 					
-					if(getnumber($words[0]) eq "p"){
-					     $status = "start";
-						}else{
-					     $status = "normal";
-					}
-					
-					if (this.getNumber(lead)
- */
-					//////////////////////////////////////////////////////////////////
-					
-					
+					String source = fileName+"-"+Integer.toString(j);					
 					if (oline.length() >= 2000) { // EOL
 						oline = line;
 					}
-
-					this.sentenceTable.add(new Sentence(line, oline, lead,
-							null, null, null, null));
+					String typeStr=null;
+					switch (type){
+					case 1:
+						typeStr="character";
+						break;
+					case 2:
+						typeStr = "description";
+						break;
+					}
+					
+					Sentence newSent = new Sentence(source, line, oline, lead, status, null, null, typeStr);
+					this.sentenceTable.add(newSent);
 
 					this.SENTID++;
 				}
 			}
-
 		}
-		System.out.println("Total sentences = " + SENTID);
+		
+		int numWord = this.populateUnknownWordsTable(WORDS);
+		
+		System.out.println("Total sentences = " + SENTID);				
+		System.out.println("Total words = " + numWord);
+		
 		return true;
 	}
-	
+
 	/**
-	 * Given a file name, return 1 if it is a file of character file, or 2 if it is a description file, otherwise return 0
+	 * Given a file name, return its type
+	 * 
+	 * @param fileName
+	 * @return return 1 if it is a file of character file, or 2 if it is a
+	 *         description file, otherwise return 0
 	 */
-	public int getType(String fileName) {		
-		// remove pdf.xml
+	public int getType(String fileName) {
+	// remove pdf.xml
 		fileName = this.removeAll(fileName, ".*\\.xml_");
 		// remove all non_ charaters
 		fileName = this.removeAll(fileName, "[^_]");
@@ -394,8 +379,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return 0;
 	}
 	
-	// replace '.', '?', ';', ':', '!' within brackets by some special markers,
-	// to avoid split within brackets during sentence segmentation
+	/**
+	 * replace '.', '?', ';', ':', '!' within brackets by some special markers,
+	 * to avoid split within brackets during sentence segmentation
+	 * 
+	 * @param text
+	 * @return
+	 */
 	public String hideMarksInBrackets(String text) {
 
 		if (text == null || text == "") {
@@ -458,6 +448,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	}
 
+	/**
+	 * Restore '.', '?', ';', ':', '!' within brackets
+	 * @param text
+	 * @return the restored string
+	 */
 	public String restoreMarksInBrackets(String text) {
 
 		if (text == null || text == "") {
@@ -478,6 +473,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return text;
 	}
 
+	/**
+	 * 
+	 * @param t
+	 * @return
+	 */
 	public String handleText(String t) {
 
 		if (t == null || t == "") {
@@ -594,6 +594,114 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	/**
+	 * Add space before and after all occurence of the regex in the string str
+	 * 
+	 * @param str
+	 * @param regex
+	 * @return
+	 */
+	public String addSpace(String str, String regex) {
+
+		if (str == null || str == "" || regex == null || regex == "") {
+			return str;
+		}
+
+		Matcher matcher = Pattern.compile("(^.*)(" + regex + ")(.*$)").matcher(
+				str);
+		if (matcher.lookingAt()) {
+			str = addSpace(matcher.group(1), regex) + " " + matcher.group(2)
+					+ " " + addSpace(matcher.group(3), regex);
+			return str;
+		} else {
+			return str;
+		}
+	}	
+	
+	/**
+	 * Put all words in this sentence into the words map
+	 * @param sent
+	 * @param words: a map mapping all words already known to its current count
+	 * @return a new map of all words, including words in sent
+	 */
+	public Map<String, Integer> getAllWords(String sent, Map<String, Integer> words) {
+		String[] tokens = this.myTokenizer.tokenize(sent);
+		
+		for (int i=0;i<tokens.length;i++) {
+			String token = tokens[i];
+			if (words.containsKey(token)) {
+				int count = words.get(token);
+				count = count+1;
+				words.put(token, count);
+			}
+			else {
+				words.put(token, 1);
+			}
+		}
+		
+		return words;		
+	}
+
+	/**
+	 * returns the first n words of the sentence
+	 * 
+	 * @param sent
+	 *            the sentence
+	 * @param n
+	 *            number of words to be returned
+	 * @return the first n words of the sentence. If the number of words in the
+	 *         sentence is less than n, return all of them.
+	 */
+	public List<String> getFirstNWords(String sent, int n) {
+		List<String> nWords = new ArrayList<String>();
+		
+		if (sent==null || sent =="") {
+			return nWords;
+		}
+
+		String[] tokens = this.myTokenizer.tokenize(sent);
+		int minL = tokens.length > n ? n : tokens.length;
+		for (int i = 0; i < minL; i++) {
+			nWords.add(tokens[i]);
+		}
+
+		return nWords;
+	}
+	
+	/**
+	 * Insert all words in WORDS into unknownWordTable. Insert those formed by non words characters into wordPOSTable
+	 * @param WORDS
+	 * @return
+	 */
+	public int populateUnknownWordsTable(Map<String, Integer> WORDS){
+		int count = 0;
+		
+		Iterator<String> iter = WORDS.keySet().iterator();
+		
+		while(iter.hasNext()){
+			String word = iter.next();
+			if ((!word.matches("^.*\\w.*$")) || (word.matches("^.*ous$"))) {
+				insertUnknown(word, word);
+				this.updateTable(word, "b", "", "wordpos", 1);
+			}
+			else{
+				insertUnknown(word, "unknown");
+			}
+			count++;
+		}
+		
+		return count;
+	}
+	
+	/**
+	 * 
+	 * @param word
+	 * @param tag
+	 */
+	public void insertUnknown(String word, String tag) {		
+		this.unknownWordTable.put(word, tag);
+	}
+	
+	/**
 	 * remove bracketed text from sentence (keep those in originalsent). Tthis
 	 * step will not be able to remove nested brackets, such as (petioles
 	 * (2-)4-8 cm). Nested brackets will be removed after threedsent step in
@@ -630,7 +738,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 
 		// add space around nonword char
-		// s#(\W)# $1 #g;
 		sentence = this.addSpace(sentence, "\\W");
 
 		// multiple spaces => 1 space
@@ -646,41 +753,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return sentence;
 	}
 	
-	// add space before and after all occurance of the regex in the string str
-	public String addSpace(String str, String regex) {
 
-		if (str == null || str == "" || regex == null || regex == "") {
-			return str;
-		}
+	
 
-		Matcher matcher = Pattern.compile("(^.*)(" + regex + ")(.*$)").matcher(
-				str);
-		if (matcher.lookingAt()) {
-			str = addSpace(matcher.group(1), regex) + " " + matcher.group(2)
-					+ " " + addSpace(matcher.group(3), regex);
-			return str;
-		} else {
-			return str;
-		}
-	}
+	
 
-	public Map<String, Integer> getAllWords(String sent, Map<String, Integer> words) {
-		String[] tokens = this.myTokenizer.tokenize(sent);
-		
-		for (int i=0;i<tokens.length;i++) {
-			String token = tokens[i];
-			if (words.containsKey(token)) {
-				int count = words.get(token);
-				count = count+1;
-				words.put(token, count);
-			}
-			else {
-				words.put(token, 1);
-			}
-		}
-		
-		return words;		
-	}
+	
+	
+
 
 	String[] segmentSentence(String text) {
 		String sentences[] = {};
@@ -1444,7 +1524,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
 			//this.wordPOSTable.put(new WordPOSKey(word, "z"), new WordPOSValue("*", 0, 0, null, null));
-			System.out.println("Add ProperNoun: " + word);
+			//System.out.println("Add ProperNoun: " + word);
 		}
 	}
 

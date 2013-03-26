@@ -2,6 +2,7 @@ package semanticMarkup.ling.learn;
 
 public class Sentence {
 	
+	private String source;
 	private String sentence;
 	private String originalsent;
 	private String lead;
@@ -10,8 +11,9 @@ public class Sentence {
 	private String modifier;
 	private String type;
 
-	public Sentence(String sent, String os, String l, String st, String tg, String m, String ty) {
+	public Sentence(String sou, String sent, String os, String l, String st, String tg, String m, String ty) {
 		// TODO Auto-generated constructor stub
+		this.source=sou;
 		this.sentence=sent;
 		this.originalsent=os;
 		this.lead=l;
@@ -19,6 +21,14 @@ public class Sentence {
 		this.tag=tg;
 		this.modifier=m;
 		this.type=ty;
+	}
+	
+	public String getSource() {
+		return this.source;
+	}
+	
+	public void setSource(String sou) {
+		this.sentence=sou;
 	}
 	
 	public String getSentence() {

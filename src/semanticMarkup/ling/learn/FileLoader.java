@@ -25,7 +25,7 @@ public class FileLoader {
 	}
 	
 	public boolean load() {
-		System.out.println("Reading sentences:\n");		
+		//System.out.println("Reading sentences:\n");		
 		File myDir = new File(this.dir);
 		File[] contents = myDir.listFiles();
 		
@@ -46,7 +46,7 @@ public class FileLoader {
 			try {
 				reader = new BufferedReader(new FileReader(file));				
 				text = reader.readLine();
-				System.out.println(text);
+				//System.out.println(text);
 				reader.close();
 			} catch (IOException e) {
 				e.printStackTrace();
