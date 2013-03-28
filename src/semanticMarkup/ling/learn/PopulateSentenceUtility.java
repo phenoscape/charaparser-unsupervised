@@ -8,11 +8,11 @@ import java.util.regex.Pattern;
 
 import opennlp.tools.tokenize.Tokenizer;
 
-public class PopulateSentsUtility {
+public class PopulateSentenceUtility {
 
 	private Tokenizer myTokenizer;
 
-	public PopulateSentsUtility(Tokenizer t) {
+	public PopulateSentenceUtility(Tokenizer t) {
 		this.myTokenizer = t;
 	}
 

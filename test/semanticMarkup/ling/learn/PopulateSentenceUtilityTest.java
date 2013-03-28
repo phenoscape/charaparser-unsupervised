@@ -21,9 +21,9 @@ import opennlp.tools.util.InvalidFormatException;
 import org.junit.Before;
 import org.junit.Test;
 
-public class PopulateSentsUtilityTest {
+public class PopulateSentenceUtilityTest {
 
-	private PopulateSentsUtility tester;
+	private PopulateSentenceUtility tester;
 
 	@Before
 	public void initialize() {
@@ -45,7 +45,7 @@ public class PopulateSentsUtilityTest {
 			e.printStackTrace();
 		}
 
-		tester = new PopulateSentsUtility(myTokenizer);
+		tester = new PopulateSentenceUtility(myTokenizer);
 	}
 
 	@Test
