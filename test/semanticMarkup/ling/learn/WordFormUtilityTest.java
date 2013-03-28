@@ -11,9 +11,7 @@ import org.junit.Test;
 public class WordFormUtilityTest {
 	
 	private WordFormUtility tester;
-	
-	
-	
+		
 	@Before
 	public void initialize(){
 		tester = new WordFormUtility("res/WordNet/WordNet-3.0/dict");

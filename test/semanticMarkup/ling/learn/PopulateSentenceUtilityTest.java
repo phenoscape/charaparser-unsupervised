@@ -22,9 +22,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class PopulateSentsUtilityTest {
-	
+
 	private PopulateSentsUtility tester;
-	
+
 	@Before
 	public void initialize() {
 		// Get OpenNLP tokenizer
@@ -50,17 +50,18 @@ public class PopulateSentsUtilityTest {
 
 	@Test
 	public void testGetType() {
-		assertEquals("PopulateSent Helper - getType: character", 1, tester.getType("Brazeau_2009.xml_states737.txt"));
-		assertEquals("PopulateSent Helper - getType: description", 2, tester.getType("Brazeau_2009.xml_states737_state739.txt"));
-		assertEquals("PopulateSent Helper - getType: otherwise", 0, tester.getType("saf_saiflkds)dsljf_fls.txt"));
+		assertEquals("PopulateSent Helper - getType: character", 1,
+				tester.getType("Brazeau_2009.xml_states737.txt"));
+		assertEquals("PopulateSent Helper - getType: description", 2,
+				tester.getType("Brazeau_2009.xml_states737_state739.txt"));
+		assertEquals("PopulateSent Helper - getType: otherwise", 0,
+				tester.getType("saf_saiflkds)dsljf_fls.txt"));
 	}
 
 	@Test
 	public void testHideMarksInBrackets() {
-		assertEquals("Result", null, 
-				tester.hideMarksInBrackets(null));
-		assertEquals("Result", "", 
-				tester.hideMarksInBrackets(""));
+		assertEquals("Result", null, tester.hideMarksInBrackets(null));
+		assertEquals("Result", "", tester.hideMarksInBrackets(""));
 		assertEquals("Result", "before (word[DOT]  word) after",
 				tester.hideMarksInBrackets("before (word. word) after"));
 		assertEquals("Result", "before (word[QST]  word) after",
@@ -75,12 +76,10 @@ public class PopulateSentsUtilityTest {
 
 	@Test
 	public void testRestoreMarksInBrackets() {
-		assertEquals("Result", null,
-				tester.restoreMarksInBrackets(null));
-		assertEquals("Result", "",
-				tester.restoreMarksInBrackets(""));	
+		assertEquals("Result", null, tester.restoreMarksInBrackets(null));
+		assertEquals("Result", "", tester.restoreMarksInBrackets(""));
 		assertEquals("Result", "before (word.  word) after",
-				tester.restoreMarksInBrackets("before (word[DOT]  word) after"));	
+				tester.restoreMarksInBrackets("before (word[DOT]  word) after"));
 		assertEquals("Result", "before (word?  word) after",
 				tester.restoreMarksInBrackets("before (word[QST]  word) after"));
 		assertEquals("Result", "before (word;  word) after",
@@ -94,23 +93,30 @@ public class PopulateSentsUtilityTest {
 	@Test
 	public void testAddSpace() {
 		// null
-				assertEquals("Result", null, tester.addSpace(null,null));
-				// ""
-				assertEquals("Result", "", tester.addSpace("", ""));
-				assertEquals("Result", "word , word ; word : word ! word ? word . ",tester.addSpace("word,word;word:word!word?word.", "\\W"));
+		assertEquals("Result", null, tester.addSpace(null, null));
+		// ""
+		assertEquals("Result", "", tester.addSpace("", ""));
+		assertEquals("Result", "word , word ; word : word ! word ? word . ",
+				tester.addSpace("word,word;word:word!word?word.", "\\W"));
 	}
 
 	@Test
 	public void testGetFirstNWords() {
 		List<String> nWords = new ArrayList<String>();
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords(null,-1));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords("",-1));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords(null, 1));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords("", 1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords(null, -1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("", -1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords(null, 1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("", 1));
 		nWords.add("word1");
 		nWords.add("word2");
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords("word1 word2 word3 word4", 2));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords("word1 word2", 3));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("word1 word2 word3 word4", 2));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("word1 word2", 3));
 	}
 
 	@Test
@@ -124,7 +130,9 @@ public class PopulateSentsUtilityTest {
 		wordsAfter.put("word3", 2);
 		wordsAfter.put("word4", 1);
 		wordsAfter.put("word5", 1);
-		assertEquals("PopulateSent Helper - getAllWords", wordsAfter, tester.getAllWords("word1 word2 word3 word2 word3 word4 word5", wordsBefore));
+		assertEquals("PopulateSent Helper - getAllWords", wordsAfter,
+				tester.getAllWords("word1 word2 word3 word2 word3 word4 word5",
+						wordsBefore));
 	}
 
 }
