@@ -275,40 +275,31 @@ public class UnsupervisedClauseMarkupTest {
 		nouns.add("meckel");
 		assertEquals("getTaxonNameNouns - match", nouns, tester.getNounsMecklesCartilage("word Meckel#s word"));
 		
-		// Method getNounsEndOfSentence
+		// Method getNounsRule2
 		Set<String> nouns2 = new HashSet<String>();
-		assertEquals(
-				"getNounsEndOfSentence - not match",
-				nouns2,
-				tester.getNounsEndOfSentence("word word 	word soe width nea"));		
+		assertEquals("getNounsRule2 - not match", nouns2,
+				tester.getNounsRule2("word word 	word soe width nea"));	
 		nouns2.add("nouna");
-		assertEquals(
-				"getNounsEndOfSentence - match 1",
-				nouns2,
-				tester.getNounsEndOfSentence("word word 	word some nouna"));
+		assertEquals("getNounsRule2 - match 1",nouns2,
+				tester.getNounsRule2("word word 	word some nouna"));
 		nouns2.add("nounb");
-		assertEquals(
-				"getNounsEndOfSentence - match 2",
-				nouns2,
-				tester.getNounsEndOfSentence("word some nouna near word some width near word third nounb near end"));
+		assertEquals("getNounsRule2 - match 2",nouns2,
+				tester.getNounsRule2("word some nouna near word some width near word third nounb near end"));
+		assertEquals("getNounsRule2 - match 2",nouns2,
+				tester.getNounsRule2("word some nouna near word some width near word third nounb near end nounc abction of end"));
+		
 		
 		// Method getNounsRule4
-		Set<String> nouns3 = new HashSet<String>();
-		assertEquals(
-				"getNounsRule4 - not match",
-				nouns3,
+		Set<String> nouns4 = new HashSet<String>();
+		assertEquals("getNounsRule4 - not match",nouns4,
 				tester.getNounsRule4("word word 	word noun one"));	
-		nouns3.add("nouna");
-		assertEquals(
-				"getNounsRule4 - not match",
-				nouns3,
+		nouns4.add("nouna");
+		assertEquals("getNounsRule4 - not match",nouns4,
 				tester.getNounsRule4("word word 	word nouna 1"));
-		nouns3.remove("nouna");
-		nouns3.add("nounb");
-		assertEquals(
-				"getNounsRule4 - not match",
-				nouns3,
-				tester.getNounsRule4("word word 	word page 1 word above 2 word nounb 2 end"));
+		nouns4.remove("nouna");
+		nouns4.add("nounb");
+		assertEquals("getNounsRule4 - not match",nouns4,
+				tester.getNounsRule4("word word 	word page 1 word above 2 word NoUnb 2 end"));
 		
 		// Method removePunctuation
 		assertEquals("removePunctuation", "word word word wo-rd cant Id end", tester.removePunctuation("word word, word&$% wo-rd can't I'd end.","-"));

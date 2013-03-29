@@ -905,7 +905,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 	
 	public void characterHeuristics() {
-		int sent_num = this.sentenceTable.size();
+		
+		boolean ifDebugCharacterHeuristics = true;
+		
 		
 		Set<String> taxonNames = new HashSet<String>();
 		Set<String> nouns = new HashSet<String>();
@@ -917,28 +919,31 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// Descriptor rule 2
 		Set<String> descriptors = new HashSet<String>();
 		
+		int sent_num = this.sentenceTable.size();
 		for (int i=0;i<sent_num;i++) {
 			
 			// noun rule 0: taxon names
 			Sentence sent = this.sentenceTable.get(i);
+			String source = sent.getSource();
 			String sentence = sent.getSentence();
-			String oSentence = sent.getOriginalSentence();
-			oSentence = this.trimString(oSentence);
-			taxonNames = this.getTaxonNameNouns(oSentence);
-			//if (taxonNames.size()>0) {
-			//	Iterator<String> taxonNameIterator= taxonNames.iterator();
-			//	while ()
-			//}
-			//$sentence =~ s#<\s*/?\s*i\s*>##g;
-			//$originalsent =~ s#<\s*/?\s*i\s*>##g;
+			String originalSentence = sent.getOriginalSentence();
+			
+			
+			if (ifDebugCharacterHeuristics) System.out.println(source);
+			if (ifDebugCharacterHeuristics) System.out.println(sentence);
+			if (ifDebugCharacterHeuristics) System.out.println(originalSentence+"\n");
+			
+			originalSentence = this.trimString(originalSentence);
+			taxonNames = this.getTaxonNameNouns(originalSentence);
+
 			sentence = sentence.replaceAll("<\\s*/?\\s*i\\s*>", "");
-			oSentence = oSentence.replaceAll("\\s*/?\\s*i\\s*", "");
+			originalSentence = originalSentence.replaceAll("\\s*/?\\s*i\\s*", "");
 			// Update sentenceTable
 			this.sentenceTable.get(i).setSentence(sentence);
 			
 			// noun rule 0.5: Meckle#s cartilage
 			
-			Set<String> nouns1 = this.getNounsMecklesCartilage(oSentence);
+			Set<String> nouns1 = this.getNounsMecklesCartilage(originalSentence);
 			nouns.addAll(nouns1);
 			sentence = sentence.replaceAll("#", "");
 			// Update sentenceTable
@@ -959,13 +964,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 			**/
 			
-			Set<String> nouns2 = this.getNounsEndOfSentence(oSentence);
+			Set<String> nouns2 = this.getNounsRule2(originalSentence);
 			nouns.addAll(nouns2);
 			
 			// noun rule 3: proper nouns and acronyms
 
 			
-			String copy = oSentence;
+			String copy = originalSentence;
 			String[] segs = copy.split("[()\\[\\]\\{\\}]");
 			for (int i1=0;i1<segs.length;i1++) {
 				String seg = segs[i1];
@@ -1007,7 +1012,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 			
 			// noun rule 4: non-stop/prep followed by a number: epibranchial 4 descriptor heuristics 
-			Set<String> nouns4 = this.getNounsRule4(oSentence);
+			Set<String> nouns4 = this.getNounsRule4(originalSentence);
 			nouns.addAll(nouns4);
 			
 			/**
@@ -1021,7 +1026,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			//oSentence.replaceAll("-", "aaa");
 			//oSentence.replaceAll("[\\p{Punct}]", "");
 			//oSentence.replaceAll("aaa", "-");
-			oSentence = this.removePunctuation(oSentence, "-");
+			originalSentence = this.removePunctuation(originalSentence, "-");
 			
 			/**
 			 * 		
@@ -1048,7 +1053,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 			 */
 			
-			descriptors.addAll(this.getNounsDescriptorsRule2(oSentence));
+			descriptors.addAll(this.getNounsDescriptorsRule2(originalSentence));
 		}
 	}
 	
@@ -1111,52 +1116,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return descriptors;
 	}
 	
-	
-	
-	// noun rule 4: non-stop/prep followed by a number: epibranchial 4 descriptor heuristics 
-	public Set<String> getNounsRule4(String oSent) {
-		Set<String> nouns = new HashSet<String>();
-		
-		/**
-		 * 		
-	$cp = $originalsent;
-	while($cp =~ /(.*?)\s(\w+)\s+\d+(.*)/){
-		my $t = $2;
-		$cp = $3;
-		if($t !~ /\b($PREPOSITION|$stop)\b/){
-			$t =~ tr/A-Z/a-z/;
-			$nouns{$t} = 1;
-			if($debugnouns){ print "[noun4:$t] $originalsent\n";}
-		}
-	}	
-		 */
-		
-		String copy = oSent;
-		String regex = "(.*?)\\s(\\w+)\\s+\\d+(.*)";
-				
-		while (true) {
-			if (copy==null) {
-				break;
-			}
-			Matcher m = Pattern.compile(regex).matcher(copy);
-			if (m.lookingAt()) {
-				String t = m.group(2);
-				copy = m.group(3);
-				String regex2 = "\\b("+this.PREPOSITION+"|"+this.STOP+")\\b"; 
-				if (!t.matches(regex2)) {
-					t.toLowerCase();
-					nouns.add(t);
-				}
-			}
-			else {
-				break;
-			}
-		}		
-		
-		return nouns;
-	}
-
-	public Set<String> getNounsEndOfSentence(String oSent) {
+	public Set<String> getNounsRule2(String oSent) {
 		String copy = oSent;
 		String regex = "(.*?)\\b(a|an|the|some|any|this|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) +(\\w+)\\s*($|\\(|\\[|\\{|\\b"
 				+ this.PREPOSITION + "\\b)(.*)";
@@ -1171,9 +1131,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				String t = m.group(3);
 				String prep = m.group(4);
 				copy = m.group(5);
-				// String t6 = m.group(6);
-				// copy = m.group(5);
-				// String prep = m.group(4);
+
 				if (prep.matches("^.*\\w.*$")
 						&& t.matches("^.*\\b(length|width|presence|\\w+tion)\\b.*$")) {
 					continue;
@@ -1187,6 +1145,43 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		return nouns;
 	}
+	
+	/**
+	 * noun rule 4: non-stop/prep followed by a number: epibranchial 4
+	 * descriptor heuristics
+	 * 
+	 * @param oSent
+	 * @return a set of nouns
+	 */
+	public Set<String> getNounsRule4(String oSent) {
+		Set<String> nouns = new HashSet<String>();
+
+		String copy = oSent;
+		String regex = "(.*?)\\s(\\w+)\\s+\\d+(.*)";
+				
+		while (true) {
+			if (copy==null) {
+				break;
+			}
+			Matcher m = Pattern.compile(regex).matcher(copy);
+			if (m.lookingAt()) {
+				String t = m.group(2);
+				copy = m.group(3);
+				String regex2 = "\\b("+this.PREPOSITION+"|"+this.STOP+")\\b"; 
+				if (!t.matches(regex2)) {
+					t = t.toLowerCase();
+					nouns.add(t);
+				}
+			}
+			else {
+				break;
+			}
+		}		
+		
+		return nouns;
+	}
+
+
 
 	/**
 	 * Meckle#s cartilage
