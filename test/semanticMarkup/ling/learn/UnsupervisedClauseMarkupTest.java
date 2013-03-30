@@ -288,6 +288,16 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("getNounsRule2 - match 2",nouns2,
 				tester.getNounsRule2("word some nouna near word some width near word third nounb near end nounc abction of end"));
 		
+		// Method getNounsRule3
+		Set<String> nouns3 = new HashSet<String>();
+		nouns3.add("II");
+		nouns3.add("IX");
+		assertEquals("getNounsRule3", nouns3, tester.getNounsRule3("posterior and dorsal to foramen for nerve II (i.e. a posterior oblique myodome IX)"));
+		nouns3.remove("II");
+		nouns3.remove("IX");
+		nouns3.add("Meckelian");
+		assertEquals("getNounsRule3", nouns3, tester.getNounsRule3("Pronounced dorsal process on Meckelian element"));
+		
 		
 		// Method getNounsRule4
 		Set<String> nouns4 = new HashSet<String>();
@@ -301,6 +311,30 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("getNounsRule4 - not match",nouns4,
 				tester.getNounsRule4("word word 	word page 1 word above 2 word NoUnb 2 end"));
 		
+		// Method getDescriptorsRule1
+		Set<String> descriptors1 = new HashSet<String>();
+		descriptors1.add("absent");
+		assertEquals("getDescriptorsRule1", descriptors1,
+				tester.getDescriptorsRule1("Brazeau_2009.xml_states200_state202.txt-0", "absent",
+						new HashSet<String>()));
+		descriptors1.remove("absent");
+		descriptors1.add("present");
+		nouns.add("present");
+		assertEquals("getDescriptorsRule1", new HashSet<String>(),
+				tester.getDescriptorsRule1("Brazeau_2009.xml_states200_state203.txt-0", "present", nouns));
+		assertEquals("getDescriptorsRule1", descriptors1,
+				tester.getDescriptorsRule1("Brazeau_2009.xml_states200_state203.txt-0", "present",
+						new HashSet<String>()));
+		
+		// Method getDescriptorsRule2
+		// Method isDescriptor
+		// Method isMatched
+		Map<String, Boolean> descriptorMap = new HashMap<String,Boolean>();
+		descriptorMap.put("term1", false);
+		assertEquals("isMatched", false, descriptorMap.get("term1"));
+		assertEquals("isMatched", true, tester.isMatched("begin word word was term1 word word end", "term1", descriptorMap));
+		assertEquals("isMatched", true, descriptorMap.get("term1"));
+
 		// Method removePunctuation
 		assertEquals("removePunctuation", "word word word wo-rd cant Id end", tester.removePunctuation("word word, word&$% wo-rd can't I'd end.","-"));
 		

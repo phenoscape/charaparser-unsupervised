@@ -918,6 +918,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		// Descriptor rule 2
 		Set<String> descriptors = new HashSet<String>();
+		Map<String, Boolean> descriptorMap = new HashMap<String, Boolean>();
 		
 		int sent_num = this.sentenceTable.size();
 		for (int i=0;i<sent_num;i++) {
@@ -949,111 +950,43 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			// Update sentenceTable
 			this.sentenceTable.get(i).setSentence(sentence);	
 			
-			// noun rule 2: end of sentence nouns (a|an|the|some|any|this|that|those|these) noun$
-
-			/**
-			my $cp = $originalsent;
-			while($cp =~ /(.*?)\b(a|an|the|some|any|this|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) +(\w+)\s*($|\(|\[|{|\b($PREPOSITION)\b)(.*)/){
-				my $t = $3;
-				$cp = $5;
-				my $prep = $4;
-				if($prep =~/\w/ && $t =~/\b(length|width|presence|\w+tion)\b/){next;}
-				$t =~ tr/A-Z/a-z/;
-				$nouns{$t} = 1;
-				if($debugnouns){ print "[noun2:$t] $originalsent\n";}
-			}
-			**/
-			
+			// noun rule 2: end of sentence nouns (a|an|the|some|any|this|that|those|these) noun$			
 			Set<String> nouns2 = this.getNounsRule2(originalSentence);
 			nouns.addAll(nouns2);
 			
 			// noun rule 3: proper nouns and acronyms
-
-			
 			String copy = originalSentence;
-			String[] segs = copy.split("[()\\[\\]\\{\\}]");
-			for (int i1=0;i1<segs.length;i1++) {
-				String seg = segs[i1];
-				// seg = seg.replaceAll("-", "aaa");
-				// seg = seg.replaceAll("[\\p{Punct}]",""); 
-				// seg = seg.replaceAll("aaa","-");
-				seg = this.removePunctuation(seg, "-");
-				String[] tokens = seg.split("\\s+");
-				tokens[0]="";
-				
-				for (int j=0;j<tokens.length;j++) {
-					/**
-					 * 				if($t =~ /[A-Z].+/ and $t!~/-\w+ed$/){#proper nouns and acronyms, S-shaped
-					if($t=~/^[A-Z0-9]+$/){
-						$t =~ tr/A-Z/a-z/;
-						$anouns{$t} =1;
-					}else{
-						$t =~ tr/A-Z/a-z/;
-						$pnouns{$t} =1;
-					}			
-					$nouns{$t}=1;
-					if($debugnouns) {print "[noun3:$t] $originalsent\n";}
-				}
-					 */
-					
-					String token = tokens[j];
-					if (token.matches("^.*[A-Z].+$") && (!token.matches("^.*-\\w+ed$"))) {
-						if (token.matches("^[A-Z0-9]+$")) {
-							token = token.toLowerCase();
-							anouns.add(token);
-						}
-						else {
-							token = token.toLowerCase();
-							pnouns.add(token);
-						}
-						nouns.add(token);
+			Set<String> nouns_temp = this.getNounsRule3(copy);
+			Iterator<String> iter = nouns_temp.iterator();
+			while(iter.hasNext()){
+				String token = iter.next();
+				if (token.matches("^.*[A-Z].+$") && (!token.matches("^.*-\\w+ed$"))) {
+					if (token.matches("^[A-Z0-9]+$")) {
+						token = token.toLowerCase();
+						anouns.add(token);
 					}
+					else {
+						token = token.toLowerCase();
+						pnouns.add(token);
+					}
+					nouns.add(token);
 				}
-			}
+			}		
+			
+			// noun rule 1: sources with 1 _ are character statements, 2 _ are descriptions
 			
 			// noun rule 4: non-stop/prep followed by a number: epibranchial 4 descriptor heuristics 
 			Set<String> nouns4 = this.getNounsRule4(originalSentence);
 			nouns.addAll(nouns4);
 			
-			/**
-			 * 			
-			$originalsent =~ s#-#aaa#g;
-			$originalsent =~ s#[[:punct:]]##g; #keep "-"
-			$originalsent =~ s#aaa#-#g;
-			 */
-			
 			// remove puncts for descriptor rules
-			//oSentence.replaceAll("-", "aaa");
-			//oSentence.replaceAll("[\\p{Punct}]", "");
-			//oSentence.replaceAll("aaa", "-");
 			originalSentence = this.removePunctuation(originalSentence, "-");
 			
-			/**
-			 * 		
-		if($source =~ /\.xml_\S+_/ and $originalsent !~ /\s/){#single word
-			if(grep(/^$originalsent$/, keys(%nouns)) < 1){
-				$originalsent =~ tr/A-Z/a-z/;
-				$descriptors{$originalsent}=1;
-				if($debugnouns){ print "[desp:$originalsent] $originalsent\n";}
-			}
-		}	
-			 */
 			// Descriptor rule 1: single term descriptions are descriptors
-			// ???
+			descriptors.addAll(this.getDescriptorsRule1(source, originalSentence, nouns));
 			
-			// Descriptor rule 2: (is|are) red: isDescriptor 
-			/**
-			 * 		@tokens = split(/\s+/, $originalsent);
-		foreach my $t (@tokens){
-			if(isDescriptor($t)){
-				$t =~ tr/A-Z/a-z/;
-				$descriptors{$t}=1;
-				if($debugnouns) {print "[desp:$t] $originalsent\n";}
-			}
-		}
-			 */
-			
-			descriptors.addAll(this.getNounsDescriptorsRule2(originalSentence));
+			// Descriptor rule 2: (is|are) red: isDescriptor 			
+			descriptors.addAll(this.getDescriptorsRule2(originalSentence, descriptorMap));
 		}
 	}
 	
@@ -1099,15 +1032,49 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return text;
 	}
 
-	public Set<String> getNounsDescriptorsRule2(String oSent) {
+	/**
+	 * 
+	 * @param source
+	 * @param sentence
+	 * @param nouns
+	 * @return
+	 */
+	public Set<String> getDescriptorsRule1(String source, String sentence, Set<String> nouns){
 		Set<String> descriptors = new HashSet<String>();
 		
-		String[] tokens = oSent.split("\\s+");
+		if (source.matches("^.*\\.xml_\\S+_.*$") && (!sentence.matches("\\s"))) {// single word
+			Iterator<String> iter = nouns.iterator();
+			boolean isExist = false;
+			while(iter.hasNext()){
+				String noun = iter.next();
+				if (noun.equals(sentence)) {
+					isExist = true;
+					break;
+				}
+			}
+			if (isExist == false) {
+				sentence = sentence.toLowerCase();
+				descriptors.add(sentence);
+			}
+		}
+		
+		return descriptors;
+	}
+	
+	/**
+	 * 
+	 * @param oSent
+	 * @return
+	 */
+	public Set<String> getDescriptorsRule2(String sentence, Map<String, Boolean> descriptorMap) {
+		Set<String> descriptors = new HashSet<String>();
+		
+		String[] tokens = sentence.split("\\s+");
 		
 		for (int i=0;i<tokens.length;i++) {
 			String token = tokens[i];
-			//if (isDescriptor(token)) {
-			if (true) {
+			token=token.toLowerCase();
+			if (isDescriptor(token,descriptorMap)) {
 				token = token.toLowerCase();
 				descriptors.add(token);
 			}
@@ -1116,6 +1083,59 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return descriptors;
 	}
 	
+	/**
+	 * 
+	 * @param term
+	 * @param descriptorMap
+	 * @return
+	 */
+	public boolean isDescriptor(String term, Map<String, Boolean> descriptorMap) {
+		if (descriptorMap.containsKey(term)) {
+			if (descriptorMap.get(term).booleanValue()) {
+				return true;
+			} else {
+				return false;
+			}
+		} 
+		else {
+			for (int i = 0; i < this.sentenceTable.size(); i++) {
+				String originalSentence = this.sentenceTable.get(i)
+						.getOriginalSentence();
+				if (isMatched(originalSentence, term, descriptorMap)){
+					return true;
+				}
+			}
+			term=term.toLowerCase();
+			descriptorMap.put(term, false);
+			return false;
+		}
+
+	}
+
+	/**
+	 * 
+	 * @param sentence
+	 * @param term
+	 * @param descriptorMap
+	 * @return
+	 */
+	public boolean isMatched(String sentence, String term,
+			Map<String, Boolean> descriptorMap) {
+		if (sentence.matches("^.*" + " (is|are|was|were|be|being) " + term
+				+ ".*$")) {
+			term=term.toLowerCase();
+			descriptorMap.put(term, true);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * 
+	 * @param oSent
+	 * @return
+	 */
 	public Set<String> getNounsRule2(String oSent) {
 		String copy = oSent;
 		String regex = "(.*?)\\b(a|an|the|some|any|this|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) +(\\w+)\\s*($|\\(|\\[|\\{|\\b"
@@ -1143,6 +1163,33 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 
+		return nouns;
+	}
+	
+	/**
+	 * 
+	 * @param sentence
+	 * @return
+	 */
+	public Set<String> getNounsRule3(String sentence){
+		Set<String> nouns = new HashSet<String>();
+		
+
+		String[] segs = sentence.split("[()\\[\\]\\{\\}]");
+		for (int i1=0;i1<segs.length;i1++) {
+			String seg = segs[i1];
+			seg = this.removePunctuation(seg, "-");
+			String[] tokens = seg.split("\\s+");
+
+			//#ignore the first word in character statements--this is normally capitalized
+			for (int j=1;j<tokens.length;j++) {					
+				String token = tokens[j];
+				if (token.matches("^.*[A-Z].+$") && (!token.matches("^.*-\\w+ed$"))) {
+					nouns.add(token);
+				}
+			}
+		}
+		
 		return nouns;
 	}
 	
