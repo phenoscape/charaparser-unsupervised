@@ -904,39 +904,40 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return nouns;
 	}
 	
-	public void characterHeuristics() {
-		
-		boolean ifDebugCharacterHeuristics = true;
-		
+	/**
+	 * Discover nouns and descriptors according to a set of rules
+	 * 
+	 * @return a linked list, whose first element is a set of nouns, and second
+	 *         element is a set of descriptors
+	 */
+	public List<Set<String>> characterHeuristics() {		
+		boolean ifDebugCharacterHeuristics = true;		
 		
 		Set<String> taxonNames = new HashSet<String>();
-		Set<String> nouns = new HashSet<String>();
-		
-		// Noun rule 3
+		Set<String> nouns = new HashSet<String>();		
 		Set<String> anouns = new HashSet<String>();
-		Set<String> pnouns = new HashSet<String>();
-		
-		// Descriptor rule 2
+		Set<String> pnouns = new HashSet<String>();		
 		Set<String> descriptors = new HashSet<String>();
 		Map<String, Boolean> descriptorMap = new HashMap<String, Boolean>();
 		
 		int sent_num = this.sentenceTable.size();
 		for (int i=0;i<sent_num;i++) {
 			
-			// noun rule 0: taxon names
+			// taxon rule
 			Sentence sent = this.sentenceTable.get(i);
 			String source = sent.getSource();
 			String sentence = sent.getSentence();
 			String originalSentence = sent.getOriginalSentence();
 			
-			
 			if (ifDebugCharacterHeuristics) System.out.println(source);
 			if (ifDebugCharacterHeuristics) System.out.println(sentence);
 			if (ifDebugCharacterHeuristics) System.out.println(originalSentence+"\n");
 			
-			originalSentence = this.trimString(originalSentence);
+			
+			originalSentence = this.trimString(originalSentence);			
+			
+			// noun rule 0: taxon names
 			taxonNames = this.getTaxonNameNouns(originalSentence);
-
 			sentence = sentence.replaceAll("<\\s*/?\\s*i\\s*>", "");
 			originalSentence = originalSentence.replaceAll("\\s*/?\\s*i\\s*", "");
 			// Update sentenceTable
@@ -944,8 +945,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			
 			// noun rule 0.5: Meckle#s cartilage
 			
-			Set<String> nouns1 = this.getNounsMecklesCartilage(originalSentence);
-			nouns.addAll(nouns1);
+			Set<String> nouns0 = this.getNounsMecklesCartilage(originalSentence);
+			nouns.addAll(nouns0);
 			sentence = sentence.replaceAll("#", "");
 			// Update sentenceTable
 			this.sentenceTable.get(i).setSentence(sentence);	
@@ -956,7 +957,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			
 			// noun rule 3: proper nouns and acronyms
 			String copy = originalSentence;
-			Set<String> nouns_temp = this.getNounsRule3(copy);
+			Set<String> nouns_temp = this.getNounsRule3Helper(copy);
 			Iterator<String> iter = nouns_temp.iterator();
 			while(iter.hasNext()){
 				String token = iter.next();
@@ -973,7 +974,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				}
 			}		
 			
-			// noun rule 1: sources with 1 _ are character statements, 2 _ are descriptions
+			// noun rule 1: sources with 1 _ are character statements, 2 _ are descriptions			
+			Set<String> nouns1 = getNounsRule1(source, originalSentence, descriptorMap);
+			nouns.addAll(nouns1);
 			
 			// noun rule 4: non-stop/prep followed by a number: epibranchial 4 descriptor heuristics 
 			Set<String> nouns4 = this.getNounsRule4(originalSentence);
@@ -986,11 +989,62 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			descriptors.addAll(this.getDescriptorsRule1(source, originalSentence, nouns));
 			
 			// Descriptor rule 2: (is|are) red: isDescriptor 			
-			descriptors.addAll(this.getDescriptorsRule2(originalSentence, descriptorMap));
+			descriptors.addAll(this.getDescriptorsRule2(originalSentence, descriptorMap));			
 		}
+		
+		nouns = this.filterOutDescriptors(nouns, descriptors);
+		anouns = this.filterOutDescriptors(anouns, descriptors);
+		pnouns = this.filterOutDescriptors(pnouns, descriptors);
+		
+		this.add2HeuristicNounTable(nouns, "organ");
+		this.add2HeuristicNounTable(anouns, "acronyms");
+		this.add2HeuristicNounTable(pnouns, "propernouns");
+		this.add2HeuristicNounTable(taxonNames, "taxonnames");
+		
+		nouns.addAll(anouns);
+		nouns.addAll(pnouns);
+		nouns.addAll(taxonNames);
+		
+		List<Set<String>> results = new LinkedList<Set<String>>();
+		results.add(nouns);
+		results.add(descriptors);
+		
+		return results;
 	}
 	
-	Set<String> filteOutDescriptors(Set<String> rNouns, Set<String> descriptors) {
+	/**
+	 * Add the terms into the heuristicNounTable with the type specified
+	 * 
+	 * @param terms
+	 *            set of terms
+	 * @param type
+	 *            type of the terms
+	 * @return number of the terms that have been added
+	 */
+	public int add2HeuristicNounTable(Set<String> terms, String type) {
+		int count = 0;
+
+		Iterator<String> iter = terms.iterator();
+		while (iter.hasNext()) {
+			String term = iter.next();
+			this.heuristicNounTable.put(term, type);
+			count++;
+		}
+
+		return count;
+	}
+	
+	
+	/**
+	 * filter out descriptors from nouns, and return remaining nouns
+	 * 
+	 * @param rNouns
+	 *            set of nouns
+	 * @param rDescriptors
+	 *            set of descriptors
+	 * @return set of nouns that are not descriptors
+	 */
+	Set<String> filterOutDescriptors(Set<String> rNouns, Set<String> rDescriptors) {
 		Set<String> filtedNouns = new HashSet<String>();
 
 		Iterator<String> iter = rNouns.iterator();
@@ -1002,7 +1056,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					+ this.STOP + ")\\b", Pattern.CASE_INSENSITIVE);
 			Matcher m = p.matcher(noun);
 
-			if ((!m.lookingAt()) && (!descriptors.contains(noun))) {
+			if ((!m.lookingAt()) && (!rDescriptors.contains(noun))) {
 				filtedNouns.add(noun);
 			}
 		}
@@ -1032,105 +1086,86 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return text;
 	}
 
-	/**
-	 * 
-	 * @param source
-	 * @param sentence
-	 * @param nouns
-	 * @return
-	 */
-	public Set<String> getDescriptorsRule1(String source, String sentence, Set<String> nouns){
-		Set<String> descriptors = new HashSet<String>();
-		
-		if (source.matches("^.*\\.xml_\\S+_.*$") && (!sentence.matches("\\s"))) {// single word
-			Iterator<String> iter = nouns.iterator();
-			boolean isExist = false;
-			while(iter.hasNext()){
-				String noun = iter.next();
-				if (noun.equals(sentence)) {
-					isExist = true;
-					break;
-				}
-			}
-			if (isExist == false) {
-				sentence = sentence.toLowerCase();
-				descriptors.add(sentence);
-			}
-		}
-		
-		return descriptors;
-	}
 	
 	/**
-	 * 
+	 * Nouns rule 0: get <i></i> enclosed taxon names  
 	 * @param oSent
 	 * @return
 	 */
-	public Set<String> getDescriptorsRule2(String sentence, Map<String, Boolean> descriptorMap) {
-		Set<String> descriptors = new HashSet<String>();
+	public Set<String> getTaxonNameNouns (String oSent) {
+		Set<String> taxonNames = new HashSet<String>();
+		String regex = "(.*?)<\\s*i\\s*>\\s*([^<]*)\\s*<\\s*\\/\\s*i\\s*>(.*)";
+		String copy = oSent;
 		
-		String[] tokens = sentence.split("\\s+");
-		
-		for (int i=0;i<tokens.length;i++) {
-			String token = tokens[i];
-			token=token.toLowerCase();
-			if (isDescriptor(token,descriptorMap)) {
-				token = token.toLowerCase();
-				descriptors.add(token);
+		while (true) {
+			Matcher matcher = Pattern.compile(regex).matcher(copy);
+			if (matcher.lookingAt()) {
+				String taxonName = matcher.group(2);
+				if (taxonName.length() > 0) {
+					taxonNames.add(taxonName);
+					String[] taxonNameArray = taxonName.split("\\s+");
+					for (int i = 0; i < taxonNameArray.length; i++) {
+						taxonNames.add(taxonNameArray[i]);
+					}
+					copy = matcher.group(3);
+				} else {
+					break;
+				}
+			} else {
+				break;
 			}
 		}
-				
-		return descriptors;
-	}
+		
+		return taxonNames;
+	}		
 	
 	/**
-	 * 
-	 * @param term
-	 * @param descriptorMap
+	 * Nouns rule 0.5: Meckle#s cartilage 
+	 * @param oSent
 	 * @return
 	 */
-	public boolean isDescriptor(String term, Map<String, Boolean> descriptorMap) {
-		if (descriptorMap.containsKey(term)) {
-			if (descriptorMap.get(term).booleanValue()) {
-				return true;
-			} else {
-				return false;
-			}
-		} 
-		else {
-			for (int i = 0; i < this.sentenceTable.size(); i++) {
-				String originalSentence = this.sentenceTable.get(i)
-						.getOriginalSentence();
-				if (isMatched(originalSentence, term, descriptorMap)){
-					return true;
-				}
-			}
-			term=term.toLowerCase();
-			descriptorMap.put(term, false);
-			return false;
+	public Set<String> getNounsMecklesCartilage(String oSent) {
+		Set<String> nouns = new HashSet<String>();
+		String regex = "^.*\\b(\\w+#s)\\b.*$";
+		Matcher m = Pattern.compile(regex).matcher(oSent);
+		if (m.lookingAt()) {
+			String noun = "";
+			noun = m.group(1);
+
+			noun = noun.toLowerCase();
+			nouns.add(noun);
+
+			noun = noun.replaceAll("#", "");
+			nouns.add(noun);
+
+			noun = noun.replaceAll("s$", "");
+			nouns.add(noun);
 		}
 
+		return nouns;
 	}
 
 	/**
 	 * 
-	 * @param sentence
-	 * @param term
-	 * @param descriptorMap
+	 * @param source
+	 * @param originalSentence
+	 * @param descriptorMap 
 	 * @return
 	 */
-	public boolean isMatched(String sentence, String term,
-			Map<String, Boolean> descriptorMap) {
-		if (sentence.matches("^.*" + " (is|are|was|were|be|being) " + term
-				+ ".*$")) {
-			term=term.toLowerCase();
-			descriptorMap.put(term, true);
-			return true;
-		} else {
-			return false;
+	public Set<String> getNounsRule1(String source, String originalSentence, Map<String, Boolean> descriptorMap) {
+		Set<String> nouns = new HashSet<String>();
+		
+		if ((!(source.matches("^.*\\.xml_\\S+_.*$")))
+				&& (!(originalSentence.matches("^.*\\s.*$")))) {
+			if (!this.isDescriptor(originalSentence, descriptorMap)) {
+				originalSentence = originalSentence.toLowerCase();
+				nouns.add(originalSentence);
+			}
 		}
-	}
 
+		return nouns;
+	}
+	
 	/**
 	 * 
 	 * @param oSent
@@ -1171,7 +1206,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @param sentence
 	 * @return
 	 */
-	public Set<String> getNounsRule3(String sentence){
+	public Set<String> getNounsRule3Helper(String sentence){
 		Set<String> nouns = new HashSet<String>();
 		
 
@@ -1227,64 +1262,108 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		return nouns;
 	}
-
-
-
+	
+	
 	/**
-	 * Meckle#s cartilage
+	 * 
+	 * @param source
+	 * @param sentence
+	 * @param nouns
+	 * @return
 	 */
-	
-	public Set<String> getNounsMecklesCartilage(String oSent) {
-		Set<String> nouns = new HashSet<String>();
-		String regex = "^.*\\b(\\w+#s)\\b.*$";
-		Matcher m = Pattern.compile(regex).matcher(oSent);
-		if (m.lookingAt()) {
-			String noun = "";
-			noun = m.group(1);
-
-			noun = noun.toLowerCase();
-			nouns.add(noun);
-
-			noun = noun.replaceAll("#", "");
-			nouns.add(noun);
-
-			noun = noun.replaceAll("s$", "");
-			nouns.add(noun);
-		}
-
-		return nouns;
-	}
-	
-	
-	/** 
-	 * <i></i> enclosed taxon names  
-	 **/
-	public Set<String> getTaxonNameNouns (String oSent) {
-		Set<String> taxonNames = new HashSet<String>();
-		String regex = "(.*?)<\\s*i\\s*>\\s*([^<]*)\\s*<\\s*\\/\\s*i\\s*>(.*)";
-		String copy = oSent;
-		//<\\s*/?\\s*i\\s*>
+	public Set<String> getDescriptorsRule1(String source, String sentence, Set<String> nouns){
+		Set<String> descriptors = new HashSet<String>();
 		
-		while (true) {
-			Matcher matcher = Pattern.compile(regex).matcher(copy);
-			if (matcher.lookingAt()) {
-				String taxonName = matcher.group(2);
-				if (taxonName.length() > 0) {
-					taxonNames.add(taxonName);
-					String[] taxonNameArray = taxonName.split("\\s+");
-					for (int i = 0; i < taxonNameArray.length; i++) {
-						taxonNames.add(taxonNameArray[i]);
-					}
-					copy = matcher.group(3);
-				} else {
+		if (source.matches("^.*\\.xml_\\S+_.*$") && (!sentence.matches("\\s"))) {// single word
+			Iterator<String> iter = nouns.iterator();
+			boolean isExist = false;
+			while(iter.hasNext()){
+				String noun = iter.next();
+				if (noun.equals(sentence)) {
+					isExist = true;
 					break;
 				}
-			} else {
-				break;
+			}
+			if (isExist == false) {
+				sentence = sentence.toLowerCase();
+				descriptors.add(sentence);
 			}
 		}
 		
-		return taxonNames;
+		return descriptors;
+	}
+	
+	/**
+	 * 
+	 * @param oSent
+	 * @return
+	 */
+	public Set<String> getDescriptorsRule2(String sentence, Map<String, Boolean> descriptorMap) {
+		Set<String> descriptors = new HashSet<String>();
+		
+		String[] tokens = sentence.split("\\s+");
+		
+		for (int i=0;i<tokens.length;i++) {
+			String token = tokens[i];
+			token=token.toLowerCase();
+			if (isDescriptor(token,descriptorMap)) {
+				token = token.toLowerCase();
+				descriptors.add(token);
+			}
+		}
+				
+		return descriptors;
+	}
+
+	/**
+	 * Check if the term is a descriptor
+	 * 
+	 * @param term
+	 * @param descriptorMap
+	 *            descriptors have already learned
+	 * @return a boolean value indicating whether the term is a descriptor. This
+	 *         result will be stored in the descriptorMap for future use
+	 */
+	public boolean isDescriptor(String term, Map<String, Boolean> descriptorMap) {
+		if (descriptorMap.containsKey(term)) {
+			if (descriptorMap.get(term).booleanValue()) {
+				return true;
+			} else {
+				return false;
+			}
+		} 
+		else {
+			for (int i = 0; i < this.sentenceTable.size(); i++) {
+				String originalSentence = this.sentenceTable.get(i)
+						.getOriginalSentence();
+				if (isMatched(originalSentence, term, descriptorMap)){
+					return true;
+				}
+			}
+			term=term.toLowerCase();
+			descriptorMap.put(term, false);
+			return false;
+		}
+
+	}
+
+	/**
+	 * Check if the term matches the sentence
+	 * @param sentence
+	 * @param term
+	 * @param descriptorMap
+	 * @return a boolean value indicating whether the term matches the sentence
+	 */
+	public boolean isMatched(String sentence, String term,
+			Map<String, Boolean> descriptorMap) {
+		if (sentence.matches("^.*" + " (is|are|was|were|be|being) " + term
+				+ ".*$")) {
+			term=term.toLowerCase();
+			descriptorMap.put(term, true);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	List<String> getSingularPluralPair(String word1, String word2) {

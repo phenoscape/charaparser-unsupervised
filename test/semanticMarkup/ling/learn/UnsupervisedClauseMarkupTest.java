@@ -254,6 +254,7 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("trimString head and tail", "word",
 				tester.trimString("	 	word	 	 		  "));
 		
+		// Nouns rule 0: Taxon name nouns
 		Set<String> taxonNames = new HashSet<String>();
 		// Method getTaxonNameNouns
 		assertEquals("getTaxonNameNouns - not match", taxonNames, tester.getTaxonNameNouns("word word word"));
@@ -267,13 +268,19 @@ public class UnsupervisedClauseMarkupTest {
 		taxonNames.add("word5");
 		assertEquals("getTaxonNameNouns - match", taxonNames, tester.getTaxonNameNouns("< i	>word1 word2	word3< /	i>, < i >word4 word5<	/i>"));
 		
-		// Method getTaxonNameNouns
+		// Nouns rule 0.5: Method getNounsMecklesCartilage
 		Set<String> nouns = new HashSet<String>();
 		assertEquals("getTaxonNameNouns - not match", nouns, tester.getNounsMecklesCartilage("word word word"));
 		nouns.add("meckel#s");
 		nouns.add("meckels");
 		nouns.add("meckel");
 		assertEquals("getTaxonNameNouns - match", nouns, tester.getNounsMecklesCartilage("word Meckel#s word"));
+		
+		// Method getNounsRule1
+		//Set<String> descriptorMap = new HashSet<String>();
+		Set<String> nouns1 = new HashSet<String>();
+		nouns1.add("term1");
+		assertEquals("getNounsRule1", nouns1, tester.getNounsRule1("Chang_2004.xml_ ffa60eb1-4320-4e69-b151-75a2615dca4b_29482156-8083-430c-91f4-e80209b50138.txt-0", "term1", new HashMap<String, Boolean>()));
 		
 		// Method getNounsRule2
 		Set<String> nouns2 = new HashSet<String>();
@@ -292,11 +299,11 @@ public class UnsupervisedClauseMarkupTest {
 		Set<String> nouns3 = new HashSet<String>();
 		nouns3.add("II");
 		nouns3.add("IX");
-		assertEquals("getNounsRule3", nouns3, tester.getNounsRule3("posterior and dorsal to foramen for nerve II (i.e. a posterior oblique myodome IX)"));
+		assertEquals("getNounsRule3", nouns3, tester.getNounsRule3Helper("posterior and dorsal to foramen for nerve II (i.e. a posterior oblique myodome IX)"));
 		nouns3.remove("II");
 		nouns3.remove("IX");
 		nouns3.add("Meckelian");
-		assertEquals("getNounsRule3", nouns3, tester.getNounsRule3("Pronounced dorsal process on Meckelian element"));
+		assertEquals("getNounsRule3", nouns3, tester.getNounsRule3Helper("Pronounced dorsal process on Meckelian element"));
 		
 		
 		// Method getNounsRule4
@@ -334,6 +341,20 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("isMatched", false, descriptorMap.get("term1"));
 		assertEquals("isMatched", true, tester.isMatched("begin word word was term1 word word end", "term1", descriptorMap));
 		assertEquals("isMatched", true, descriptorMap.get("term1"));
+		
+		// Method filterOutDescriptors
+		Set<String> rNouns = new HashSet<String>();		
+		Set<String> rDescriptors = new HashSet<String>();
+		Set<String> results = new HashSet<String>();
+		rNouns.add("noun1");
+		rNouns.add("descriptor2");
+		rNouns.add("noun2");
+		rDescriptors.add("descriptor1");
+		rDescriptors.add("descriptor2");
+		rDescriptors.add("descriptor3");
+		results.add("noun1");
+		results.add("noun2");
+		assertEquals("filterOutDescriptors",results,tester.filterOutDescriptors(rNouns, rDescriptors));
 
 		// Method removePunctuation
 		assertEquals("removePunctuation", "word word word wo-rd cant Id end", tester.removePunctuation("word word, word&$% wo-rd can't I'd end.","-"));
