@@ -106,6 +106,22 @@ public class UnsupervisedClauseMarkupTest {
 				
 		assertEquals("Method getWordToSources", resultGetWordToSources, tester.getWordToSources());
 	}
+	
+	@Test
+	public void testGetHeuristicNouns(){
+		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
+				"res/WordNet/WordNet-3.0/dict");
+		DataHolder myDataHolder = tester.getDataHolder();
+		Map<String, String> myHeuristicNouns = myDataHolder.getHeuristicNounTable();
+		myHeuristicNouns.put("word1", "type1");
+		myHeuristicNouns.put("word2", "type2");
+		
+		Map<String,String> resultGetHeuristicNouns = new HashMap<String, String>();
+		resultGetHeuristicNouns.put("word2", "type2");
+		resultGetHeuristicNouns.put("word1", "type1");
+		
+		assertEquals("Method getHeuristicNouns", resultGetHeuristicNouns, tester.getHeuristicNouns());
+	}
 
 
 	

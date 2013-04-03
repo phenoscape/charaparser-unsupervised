@@ -3805,8 +3805,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public Map<String, String> getHeuristicNouns() {
-		System.out.println("Method: getHeuristicNouns\n");
-		return null;
+		return this.myDataHolder.getHeuristicNounTable();
 	}
 
 	public Map<Treatment, List<String>> getSentenceTags() {
