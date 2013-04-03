@@ -115,6 +115,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	// Table discounted
 	private Map<DiscountedKey,String> discountedTable = new HashMap<DiscountedKey,String>();
+	
+	private DataHolder myDataHolder;
 
 	// Third Tools
 	// WordNet
@@ -145,17 +147,18 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	//WordFormUility
 	public Map<String, Integer> WORDS = new HashMap<String, Integer>();
-	
-	
 
 	/**
-	 * Constructor of UnsupervisedClauseMarkup class. Create a new UnsupervisedClauseMarkup object.
-	 * @param lm learning mode, can be "plain"
-	 * @param p prefix
-	 * @param wnDir directory of WordNet dictionary
+	 * Constructor of UnsupervisedClauseMarkup class. Create a new
+	 * UnsupervisedClauseMarkup object.
+	 * 
+	 * @param learningMode
+	 *            learning mode. There two legal values, "adj" and "plain"
+	 * @param wordnetDir
+	 *            directory of WordNet dictionary
 	 */
-	public UnsupervisedClauseMarkup(String lm, String p,
-			String wnDir) {
+	public UnsupervisedClauseMarkup(String learningMode,
+			String wordnetDir) {
 		/**
 		 * 1. Store 1) learning mode and 2) prefix
 		 * 2. Get WordNet instance
@@ -166,14 +169,17 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		//System.out.println("Initialized:\n");
 
 		this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
-		this.learningMode = lm;
-		this.prefix = p;
+		this.learningMode = learningMode;
+		//this.prefix = prefix;
 		System.out.println(String.format("Learning Mode: %s", this.learningMode));
 		System.out.println(String.format("Prefix: %s", this.prefix));
+		
+		// Get DataHolder
+		myDataHolder = new DataHolder();
 
 		// Get WordNetAPI instance
 		try {
-			myWN = new WordNetAPI(wnDir, false);
+			myWN = new WordNetAPI(wordnetDir, false);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -2165,66 +2171,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		System.out.println("Method: learn - Done!\n");
 	}
 
-	public Map<Treatment, List<String>> getSentences() {
-		System.out.println("Method: getSentences\n");
-		return null;
-	}
 
-	public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
-		System.out.println("Method: getSentencesForOrganStateMarker\n");
-		return null;
-	}
-
-	public List<String> getAdjNouns() {
-		System.out.println("Method: getAdjNouns\n");
-		return null;
-	}
-
-	public Map<String, String> getAdjNounSent() {
-		System.out.println("Method: getAdjNounsSent\n");
-		return null;
-	}
-
-	public Set<String> getBracketTags() {
-		System.out.println("Method: getAdjNounsSent\n");
-		return null;
-	}
-
-	public Set<String> getWordRoleTags() {
-		System.out.println("Method: getSentenceTags\n");
-		return null;
-	}
-
-	public Map<String, Set<String>> getWordToSources() {
-		System.out.println("Method: getBracketTags\n");
-		return null;
-	}
-
-	public Map<String, Set<String>> getRoleToWords() {
-		System.out.println("Method: getRoleToWords\n");
-		return null;
-
-	}
-
-	public Map<String, Set<String>> getWordsToRoles() {
-		System.out.println("Method: getWordsToRoles\n");
-		return null;
-	}
-
-	public Map<String, String> getHeuristicNouns() {
-		System.out.println("Method: getHeuristicNouns\n");
-		return null;
-	}
-
-	public Map<Treatment, List<String>> getSentenceTags() {
-		System.out.println("Method: getTermCategories\n");
-		return null;
-	}
-
-	public Map<String, Set<String>> getTermCategories() {
-		System.out.println("Method: getTermCategories\n");
-		return null;
-	}
 
 	public boolean testWN(String word) {
 		try {
@@ -3755,6 +3702,104 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					+ entry.getValue().getSavedFlag() + ", "
 					+ entry.getValue().getSavedID());
 		}
+	}
+	
+	public DataHolder getDataHolder(){
+		return this.myDataHolder;
+	}
+	
+	
+	// interface metods
+	public Map<Treatment, List<String>> getSentences() {
+		System.out.println("Method: getSentences\n");
+		return null;
+	}
+
+	public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
+		System.out.println("Method: getSentencesForOrganStateMarker\n");
+		return null;
+	}
+
+	public List<String> getAdjNouns() {
+		Set<String> myAdjNounSet = new HashSet<String>();
+		
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable().iterator();
+		
+		while(iter.hasNext()){
+			Sentence sentence = iter.next();
+			String modifier = sentence.getModifier();
+			String tag = sentence.getTag();
+			if (tag.matches("^\\[.*$")) {
+				modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
+				myAdjNounSet.add(modifier);
+			}
+		}
+		
+		List<String> myAdjNouns = new ArrayList<String>();
+		myAdjNouns.addAll(myAdjNounSet);
+		
+		return myAdjNouns;
+	}
+
+	public Map<String, String> getAdjNounSent() {
+		Map<String, String> myAdjNounSent = new HashMap<String, String>();
+		
+		// collect senteces that need adj-nn disambiguation
+		Iterator<Sentence> iter = 
+			this.myDataHolder.getSentenceTable().iterator();
+
+		while (iter.hasNext()) {
+			Sentence sentence = iter.next();
+			String modifier = sentence.getModifier();
+			String tag = sentence.getTag();
+			if ((!(modifier.equals(""))) && (tag.matches("^\\[.*$"))) {
+				modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
+				myAdjNounSent.put(tag, modifier);
+			}
+		}
+
+		return myAdjNounSent;
+	}
+
+	public Set<String> getBracketTags() {
+		System.out.println("Method: getAdjNounsSent\n");
+		return null;
+	}
+
+	public Set<String> getWordRoleTags() {
+		System.out.println("Method: getSentenceTags\n");
+		return null;
+	}
+
+	public Map<String, Set<String>> getWordToSources() {
+		System.out.println("Method: getBracketTags\n");
+		return null;
+	}
+
+	public Map<String, Set<String>> getRoleToWords() {
+		System.out.println("Method: getRoleToWords\n");
+		return null;
+
+	}
+
+	public Map<String, Set<String>> getWordsToRoles() {
+		System.out.println("Method: getWordsToRoles\n");
+		return null;
+	}
+
+	public Map<String, String> getHeuristicNouns() {
+		System.out.println("Method: getHeuristicNouns\n");
+		return null;
+	}
+
+	public Map<Treatment, List<String>> getSentenceTags() {
+		System.out.println("Method: getTermCategories\n");
+		return null;
+	}
+
+	public Map<String, Set<String>> getTermCategories() {
+		System.out.println("Method: getTermCategories\n");
+		return null;
 	}
 	
 

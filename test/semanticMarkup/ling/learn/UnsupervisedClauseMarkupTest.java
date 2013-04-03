@@ -1,5 +1,6 @@
 package semanticMarkup.ling.learn;
 
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -17,12 +18,46 @@ import semanticMarkup.ling.learn.FileLoader;
 
 public class UnsupervisedClauseMarkupTest {
 	
+	private UnsupervisedClauseMarkup tester;
+	
+	@Before
+	public void initialize() {
+		tester = new UnsupervisedClauseMarkup("plain",
+				"res/WordNet/WordNet-3.0/dict");
+		DataHolder myDataHolder = tester.getDataHolder();
+		List<Sentence> sentenceTable = myDataHolder.getSentenceTable();
+		sentenceTable.add(
+				new Sentence("", "", "", "", "", "tag1", "modifier1",""));
+		sentenceTable.add(
+				new Sentence("", "", "", "", "", "[tag2"," modifier2[abc]", ""));
+		sentenceTable.add(
+				new Sentence("", "", "", "", "", "[tag3","[abc]modifier2	", ""));
+		sentenceTable.add(
+				new Sentence("", "", "", "", "", "[tag4","	mo[123]difier3", ""));
+
+	}
+
 	@Test
 	public void testUnsupervisedClauseMarkup() {
+
+		// getAdjNouns
+		List<String> resultGetAdjNouns = new ArrayList<String>();
+		resultGetAdjNouns.add("modifier3");
+		resultGetAdjNouns.add("modifier2");
+		assertEquals("Method getAdjNouns", resultGetAdjNouns,
+				tester.getAdjNouns());
+		
+		// getAdjNounSent
+		Map<String, String> resultGetAdjNounSent = new HashMap<String, String>();
+		resultGetAdjNounSent.put("[tag2","modifier2");
+		resultGetAdjNounSent.put("[tag3","modifier2");
+		resultGetAdjNounSent.put("[tag4","modifier3");
+		assertEquals("Method getAdjNouns", resultGetAdjNounSent, tester.getAdjNounSent());
+		
 		//String str = "/Users/nescent/Phenoscape/TEST2/target/descriptions";
 		//List<Treatment> treatments_l = new ArrayList<Treatment>();
 				
-		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain","test","res/WordNet/WordNet-3.0/dict");
+		//UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain","test","res/WordNet/WordNet-3.0/dict");
 		
 		/*
 		assertEquals("Result", null, tester.getAdjNouns());
