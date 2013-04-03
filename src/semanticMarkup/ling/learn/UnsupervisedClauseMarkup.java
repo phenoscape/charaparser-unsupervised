@@ -3772,8 +3772,25 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public Map<String, Set<String>> getWordToSources() {
-		System.out.println("Method: getBracketTags\n");
-		return null;
+		Map<String, Set<String>> myWordToSources = new HashMap<String, Set<String>>();
+
+		Iterator<Sentence> iter 
+			= this.myDataHolder.getSentenceTable().iterator();
+
+		while (iter.hasNext()) {
+			Sentence sentenceElement = iter.next();
+			String source = sentenceElement.getSource();
+			String sentence = sentenceElement.getSentence();
+			String[] words = this.myTokenizer.tokenize(sentence);
+			for (int i = 0; i < words.length; i++) {
+				String word = words[i];
+				if (!myWordToSources.containsKey(word))
+					myWordToSources.put(word, new HashSet<String>());
+				myWordToSources.get(word).add(source);
+			}
+		}
+
+		return myWordToSources;
 	}
 
 	public Map<String, Set<String>> getRoleToWords() {

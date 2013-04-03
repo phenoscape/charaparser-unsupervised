@@ -18,41 +18,104 @@ import semanticMarkup.ling.learn.FileLoader;
 
 public class UnsupervisedClauseMarkupTest {
 	
-	private UnsupervisedClauseMarkup tester;
+
 	
 	@Before
 	public void initialize() {
-		tester = new UnsupervisedClauseMarkup("plain",
+
+
+	}
+	
+	@Test
+	public void testGetAdjNouns(){
+		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
 				"res/WordNet/WordNet-3.0/dict");
 		DataHolder myDataHolder = tester.getDataHolder();
 		List<Sentence> sentenceTable = myDataHolder.getSentenceTable();
 		sentenceTable.add(
-				new Sentence("", "", "", "", "", "tag1", "modifier1",""));
+				new Sentence("source1", "word1 word2", "", "", "", "tag1", "modifier1",""));
 		sentenceTable.add(
-				new Sentence("", "", "", "", "", "[tag2"," modifier2[abc]", ""));
+				new Sentence("source2", "word2 word3", "", "", "", "[tag2"," modifier2[abc]", ""));
 		sentenceTable.add(
-				new Sentence("", "", "", "", "", "[tag3","[abc]modifier2	", ""));
+				new Sentence("source3", "word3", "", "", "", "[tag3","[abc]modifier2	", ""));
 		sentenceTable.add(
-				new Sentence("", "", "", "", "", "[tag4","	mo[123]difier3", ""));
+				new Sentence("source4", "word1 word3 word4", "", "", "", "[tag4","	mo[123]difier3", ""));
 
-	}
-
-	@Test
-	public void testUnsupervisedClauseMarkup() {
-
-		// getAdjNouns
 		List<String> resultGetAdjNouns = new ArrayList<String>();
 		resultGetAdjNouns.add("modifier3");
 		resultGetAdjNouns.add("modifier2");
-		assertEquals("Method getAdjNouns", resultGetAdjNouns,
-				tester.getAdjNouns());
 		
-		// getAdjNounSent
+		assertEquals("Method getAdjNouns", resultGetAdjNouns,tester.getAdjNouns());
+	}
+	
+	@Test
+	public void testGetAdjNounSent(){
+		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
+				"res/WordNet/WordNet-3.0/dict");
+		DataHolder myDataHolder = tester.getDataHolder();
+		List<Sentence> sentenceTable = myDataHolder.getSentenceTable();
+		sentenceTable.add(
+				new Sentence("source1", "word1 word2", "", "", "", "tag1", "modifier1",""));
+		sentenceTable.add(
+				new Sentence("source2", "word2 word3", "", "", "", "[tag2"," modifier2[abc]", ""));
+		sentenceTable.add(
+				new Sentence("source3", "word3", "", "", "", "[tag3","[abc]modifier2	", ""));
+		sentenceTable.add(
+				new Sentence("source4", "word1 word3 word4", "", "", "", "[tag4","	mo[123]difier3", ""));
+
 		Map<String, String> resultGetAdjNounSent = new HashMap<String, String>();
 		resultGetAdjNounSent.put("[tag2","modifier2");
 		resultGetAdjNounSent.put("[tag3","modifier2");
 		resultGetAdjNounSent.put("[tag4","modifier3");
-		assertEquals("Method getAdjNouns", resultGetAdjNounSent, tester.getAdjNounSent());
+		
+		assertEquals("Method getAdjNouns", resultGetAdjNounSent, tester.getAdjNounSent());		
+	}
+	
+	@Test
+	public void testGetWordToSoures(){
+		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
+				"res/WordNet/WordNet-3.0/dict");
+		DataHolder myDataHolder = tester.getDataHolder();
+		List<Sentence> sentenceTable = myDataHolder.getSentenceTable();
+		sentenceTable.add(
+				new Sentence("source1", "word1 word2", "", "", "", "tag1", "modifier1",""));
+		sentenceTable.add(
+				new Sentence("source2", "word2 word3", "", "", "", "[tag2"," modifier2[abc]", ""));
+		sentenceTable.add(
+				new Sentence("source3", "word3", "", "", "", "[tag3","[abc]modifier2	", ""));
+		sentenceTable.add(
+				new Sentence("source4", "word1 word3 word4", "", "", "", "[tag4","	mo[123]difier3", ""));
+		
+		// getWordToSources
+		Map<String, Set<String>> resultGetWordToSources = new HashMap<String, Set<String>>();
+		resultGetWordToSources.put("word1", new HashSet<String>());
+		resultGetWordToSources.get("word1").add("source1");
+		resultGetWordToSources.get("word1").add("source4");
+		
+		resultGetWordToSources.put("word2", new HashSet<String>());
+		resultGetWordToSources.get("word2").add("source1");
+		resultGetWordToSources.get("word2").add("source2");
+		
+		resultGetWordToSources.put("word3", new HashSet<String>());
+		resultGetWordToSources.get("word3").add("source2");
+		resultGetWordToSources.get("word3").add("source3");
+		resultGetWordToSources.get("word3").add("source4");
+		
+		resultGetWordToSources.put("word4", new HashSet<String>());
+		resultGetWordToSources.get("word4").add("source4");
+				
+		assertEquals("Method getWordToSources", resultGetWordToSources, tester.getWordToSources());
+	}
+
+
+	
+	@Test
+	public void testUnsupervisedClauseMarkup() {
+		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
+				"res/WordNet/WordNet-3.0/dict");
+
+		
+
 		
 		//String str = "/Users/nescent/Phenoscape/TEST2/target/descriptions";
 		//List<Treatment> treatments_l = new ArrayList<Treatment>();
@@ -601,20 +664,6 @@ public class UnsupervisedClauseMarkupTest {
 				tester.removeAll("word1 each word2","\\b("+tester.getPronounWords()+")\\b"));
 		assertEquals("removeAll - remove beginning and ending", "word", 
 				tester.removeAll(" 	word	 	","(^\\s*|\\s*$)"));
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		
 	}
 }
