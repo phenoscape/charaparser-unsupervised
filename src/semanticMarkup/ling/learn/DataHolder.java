@@ -45,6 +45,30 @@ public class DataHolder {
 		return this.sentenceTable;
 	}
 	
+	public Map<String, String> getHeuristicNounTable(){
+		return this.heuristicNounTable;
+	}
 	
-
+	
+	public boolean equals(Object obj) {
+		if (obj==this){
+			return true;
+		}
+		
+		if (obj==null||obj.getClass()!=this.getClass()){
+			return false;
+		}
+		
+		DataHolder myDataHolder = (DataHolder) obj;
+		
+		return ((this.discountedTable.equals(myDataHolder.discountedTable))
+				&& (this.heuristicNounTable.equals(myDataHolder.heuristicNounTable))
+				&& (this.modifierTable.equals(myDataHolder.modifierTable))
+				&& (this.sentenceTable.equals(myDataHolder.sentenceTable))
+				&& (this.singularPluralTable.equals(myDataHolder.singularPluralTable))
+				&& (this.unknownWordTable.equals(myDataHolder.unknownWordTable))
+				&& (this.wordPOSTable.equals(myDataHolder.wordPOSTable))
+				);
+	}
+	
 }

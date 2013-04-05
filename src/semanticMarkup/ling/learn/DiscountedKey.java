@@ -19,9 +19,24 @@ public class DiscountedKey {
 		return this.pos;
 	}
 	
-	public boolean equals(DiscountedKey dKey) {
-		return ((this.word.equals(dKey.getWord())) 
-				&& (this.pos.equals(dKey.getPOS())));
+	//public boolean equals(DiscountedKey dKey) {
+	//	return ((this.word.equals(dKey.getWord())) 
+	//			&& (this.pos.equals(dKey.getPOS())));
+	//}
+	
+	public boolean equals(Object obj){
+		if (obj==this){
+			return true;
+		}
+		
+		if (obj==null||obj.getClass()!=this.getClass()){
+			return false;
+		}
+		
+		DiscountedKey myDiscountedKey = (DiscountedKey) obj;
+		
+		return ((this.word.equals(myDiscountedKey.getWord())) 
+				&& (this.pos.equals(myDiscountedKey.getPOS())));
 	}
 
 	public int hashCode() {
