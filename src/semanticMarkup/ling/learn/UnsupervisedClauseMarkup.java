@@ -73,24 +73,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	private Hashtable<String, String> PLURALS = new Hashtable<String, String>();
 
-	private String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
-
-	// the following two patterns are used in mySQL rlike
-	private String PREFIX = "ab|ad|bi|deca|de|dis|di|dodeca|endo|end|e|hemi|hetero|hexa|homo|infra|inter|ir|macro|mega|meso|micro|mid|mono|multi|ob|octo|over|penta|poly|postero|post|ptero|pseudo|quadri|quinque|semi|sub|sur|syn|tetra|tri|uni|un|xero|[a-z0-9]+_";
-
-	// 3_nerved, )_nerved, dealt with in subroutine
-	private String SUFFIX = "er|est|fid|form|ish|less|like|ly|merous|most|shaped";
-
-	// words in this list can not be treated as boundaries "to|a|b" etc.
-	private String FORBIDDEN = "to|and|or|nor";
-
-	private String PRONOUN = "all|each|every|some|few|individual|both|other";
-	private String CHARACTER = "lengths|length|lengthed|width|widths|widthed|heights|height|character|characters|distribution|distributions|outline|outlines|profile|profiles|feature|features|form|forms|mechanism|mechanisms|nature|natures|shape|shapes|shaped|size|sizes|sized";
-	private String PREPOSITION = "above|across|after|along|around|as|at|before|below|beneath|between|beyond|by|during|for|from|in|into|near|of|off|on|onto|out|outside|over|than|through|throughout|toward|towards|up|upward|with|without";
 	private String TAGS = "";
 	private String PLENDINGS = "[^aeiou]ies|i|ia|(x|ch|sh)es|ves|ices|ae|s";
-	private String CLUSTERSTRING = "group|groups|clusters|cluster|arrays|array|series|fascicles|fascicle|pairs|pair|rows|number|numbers|\\d+";
-	private String SUBSTRUCTURESTRING = "part|parts|area|areas|portion|portions";
+	
 	// grouped #may contain q but not the last m, unless it is followed by a p
 	private String mptn = "((?:[mbq][,&]*)*(?:m|b|q(?=[pon])))";
 	// grouped #must present, no q allowed
@@ -104,9 +89,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// private String stop =
 	// "state|page|fig|"+"a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
 
-	private String STOP = "state|page|fig|"
-			+ "a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
- 
 	// Data Holders
 	// Table sentence
 	private List<Sentence> sentenceTable = new LinkedList<Sentence>();
@@ -179,7 +161,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		this.learningMode = learningMode;
 		//this.prefix = prefix;
 		System.out.println(String.format("Learning Mode: %s", this.learningMode));
-		System.out.println(String.format("Prefix: %s", this.prefix));
+		System.out.println(String.format("Prefix: %s", Constant.PREFIX));
 		
 		// Get DataHolder
 		myDataHolder = new DataHolder();
@@ -332,8 +314,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 						status = "normal";
 					}
 					
-					lead = this.removeAll(lead, "\\s+$");
-					lead = this.removeAll(lead, "^\\s*");
+					lead = StringUtility.removeAll(lead, "\\s+$");
+					lead = StringUtility.removeAll(lead, "^\\s*");
 					lead = lead.replaceAll("\\s+", " ");
 					
 					String source = fileName+"-"+Integer.toString(j);					
@@ -375,9 +357,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 */
 	public int getType(String fileName) {
 	// remove pdf.xml
-		fileName = this.removeAll(fileName, ".*\\.xml_");
+		fileName = StringUtility.removeAll(fileName, ".*\\.xml_");
 		// remove all non_ charaters
-		fileName = this.removeAll(fileName, "[^_]");
+		fileName = StringUtility.removeAll(fileName, "[^_]");
 		
 		// a character file
 		if (fileName.length()==0) {
@@ -807,7 +789,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (this.getHeuristicNouns_debug) {
 				//System.out.println(originalSentence+"\n");
 			}
-			sentences.add(this.strip(originalSentence));
+			sentences.add(StringUtility.strip(originalSentence));
 		}
 		
 		// Now we have original sentences in sentences
@@ -917,18 +899,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return nouns;
 	}
 	
-	public String strip(String text) {				
-		text=text.replaceAll("<(([^ >]|\n)*)>", " ");
-		text=text.replaceAll("<\\?[^>]*\\?>", " "); //<? ... ?>
-		text=text.replaceAll("&[^ ]{2,5};", " "); //remove &nbsp;
-		text=text.replaceAll("\\s+", " ");
-		
-		return text;
-	}
+
 	
 	//if($t !~ /\b(?:$STOP)\b/ && $t =~/\w/ && $t !~ /\d/ && length $t > 1){
 	public boolean isWord(String token) {
-		String regex = "\\b("+this.STOP+")\\b";
+		String regex = "\\b("+Constant.STOP+")\\b";
 		if (token.matches(regex)) {
 			return false;
 		}
@@ -964,7 +939,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (matcher.lookingAt()) {
 			String word = matcher.group(1);
 			if ((!word.matches("\\b(" + pachecked + ")\\b"))
-					&& (!word.matches("\\b(" + this.STOP + ")\\b"))
+					&& (!word.matches("\\b(" + Constant.STOP + ")\\b"))
 					&& (!word.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
 				if (this.getHeuristicNouns_debug) System.out.println("present/absent "+word+"\n");
 
@@ -1013,7 +988,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (ifDebugCharacterHeuristics) System.out.println(originalSentence+"\n");
 			
 			
-			originalSentence = this.trimString(originalSentence);			
+			originalSentence = StringUtility.trimString(originalSentence);			
 			
 			// noun rule 0: taxon names
 			taxonNames = this.getTaxonNameNouns(originalSentence);
@@ -1062,7 +1037,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			nouns.addAll(nouns4);
 			
 			// remove puncts for descriptor rules
-			originalSentence = this.removePunctuation(originalSentence, "-");
+			originalSentence = StringUtility.removePunctuation(originalSentence, "-");
 			
 			// Descriptor rule 1: single term descriptions are descriptors
 			descriptors.addAll(this.getDescriptorsRule1(source, originalSentence, nouns));
@@ -1131,8 +1106,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			String noun = iter.next();
 			noun = noun.toLowerCase();
 
-			Pattern p = Pattern.compile("\\b(" + this.PREPOSITION + "|"
-					+ this.STOP + ")\\b", Pattern.CASE_INSENSITIVE);
+			Pattern p = Pattern.compile("\\b(" + Constant.PREPOSITION + "|"
+					+ Constant.STOP + ")\\b", Pattern.CASE_INSENSITIVE);
 			Matcher m = p.matcher(noun);
 
 			if ((!m.lookingAt()) && (!rDescriptors.contains(noun))) {
@@ -1142,28 +1117,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return filtedNouns;
 	}
 
-	/**
-	 * 
-	 * @param text
-	 *            : string in which all punctuations to remove
-	 * @param c
-	 *            : a punctuatin to keep
-	 * @return: string after puctuations are removed except the one in c
-	 */
 
-	public String removePunctuation(String text, String c) {
-		//System.out.println("Old: " + text);
-		if (c == null) {
-			text = text.replaceAll("[\\p{Punct}]", "");
-		} else {
-			text = text.replaceAll(c, "aaa");
-			text = text.replaceAll("[\\p{Punct}]", "");
-			text = text.replaceAll("aaa", c);
-		}
-		//System.out.println("New: " + text);
-
-		return text;
-	}
 
 	
 	/**
@@ -1253,7 +1207,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public Set<String> getNounsRule2(String oSent) {
 		String copy = oSent;
 		String regex = "(.*?)\\b(a|an|the|some|any|this|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) +(\\w+)\\s*($|\\(|\\[|\\{|\\b"
-				+ this.PREPOSITION + "\\b)(.*)";
+				+ Constant.PREPOSITION + "\\b)(.*)";
 		Set<String> nouns = new HashSet<String>();
 
 		while (true) {
@@ -1292,7 +1246,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String[] segs = sentence.split("[()\\[\\]\\{\\}]");
 		for (int i1=0;i1<segs.length;i1++) {
 			String seg = segs[i1];
-			seg = this.removePunctuation(seg, "-");
+			seg = StringUtility.removePunctuation(seg, "-");
 			String[] tokens = seg.split("\\s+");
 
 			//#ignore the first word in character statements--this is normally capitalized
@@ -1328,7 +1282,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (m.lookingAt()) {
 				String t = m.group(2);
 				copy = m.group(3);
-				String regex2 = "\\b("+this.PREPOSITION+"|"+this.STOP+")\\b"; 
+				String regex2 = "\\b("+Constant.PREPOSITION+"|"+Constant.STOP+")\\b"; 
 				if (!t.matches(regex2)) {
 					t = t.toLowerCase();
 					nouns.add(t);
@@ -1556,16 +1510,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	public void addStopWords() {
 		List<String> stops = new ArrayList<String>();
-		stops.addAll(Arrays.asList(this.STOP.split("\\|")));
+		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
 		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
 				"]", "}", "\\\\d+" }));
 
 		System.out.println(stops);
-		System.out.println(this.FORBIDDEN);
+		System.out.println(Constant.FORBIDDEN);
 
 		for (int i = 0; i < stops.size(); i++) {
 			String word = stops.get(i);
-			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
@@ -1576,16 +1530,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	public void addCharacters() {
 		List<String> chars = new ArrayList<String>();
-		chars.addAll(Arrays.asList(this.CHARACTER.split("\\|")));
+		chars.addAll(Arrays.asList(Constant.CHARACTER.split("\\|")));
 
 		System.out.println(chars);
-		System.out.println(this.CHARACTER);
+		System.out.println(Constant.CHARACTER);
 
 		for (int i = 0; i < chars.size(); i++) {
 			String word = chars.get(i);
-			// String reg="\\b("+this.FORBIDDEN+")\\b";
+			// String reg="\\b("+Constant.FORBIDDEN+")\\b";
 			// boolean f = word.matches(reg);
-			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
@@ -1596,16 +1550,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	public void addNumbers() {
 		List<String> nums = new ArrayList<String>();
-		nums.addAll(Arrays.asList(this.NUMBER.split("\\|")));
+		nums.addAll(Arrays.asList(Constant.NUMBER.split("\\|")));
 
 		System.out.println(nums);
-		System.out.println(this.NUMBER);
+		System.out.println(Constant.NUMBER);
 
 		for (int i = 0; i < nums.size(); i++) {
 			String word = nums.get(i);
-			// String reg="\\b("+this.FORBIDDEN+")\\b";
+			// String reg="\\b("+Constant.FORBIDDEN+")\\b";
 			// boolean f = word.matches(reg);
-			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
@@ -1618,14 +1572,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	public void addClusterstrings() {
 		List<String> cltstrs = new ArrayList<String>();
-		cltstrs.addAll(Arrays.asList(this.CLUSTERSTRING.split("\\|")));
+		cltstrs.addAll(Arrays.asList(Constant.CLUSTERSTRING.split("\\|")));
 
 		System.out.println(cltstrs);
-		System.out.println(this.CLUSTERSTRING);
+		System.out.println(Constant.CLUSTERSTRING);
 
 		for (int i = 0; i < cltstrs.size(); i++) {
 			String word = cltstrs.get(i);
-			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
@@ -1640,7 +1594,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		for (int i = 0; i < ppnouns.size(); i++) {
 			String word = ppnouns.get(i);
-			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
@@ -1660,7 +1614,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// suffix is defined in global variable SUFFIX
 	public void posBySuffix() {
-		String p1 = "^[a-z_]+(" + this.SUFFIX + ")$";
+		String p1 = "^[a-z_]+(" + Constant.SUFFIX + ")$";
 		String p2 = "^[._.][a-z]+"; // , _nerved
 		Iterator<Map.Entry<String, String>> iterator = this.unknownWordTable
 				.entrySet().iterator();
@@ -1675,7 +1629,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (unknownWordTag.equals("unknown")) {
 				if (unknownWord.matches(p1)) {
 					Matcher matcher = Pattern.compile(
-							"(.*?)(" + this.SUFFIX + ")$").matcher(unknownWord);
+							"(.*?)(" + Constant.SUFFIX + ")$").matcher(unknownWord);
 					if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
 							&& matcher.matches()) {
 						if (this.containSuffix(unknownWord, matcher.group(1),
@@ -2020,8 +1974,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public List<POSInfo> checkPOSInfo(String word) {
 		List<POSInfo> POSInfoList = new ArrayList<POSInfo>();
 
-		word = this.removeAll(word, "^\\s*");
-		word = this.removeAll(word, "\\s+$");
+		word = StringUtility.removeAll(word, "^\\s*");
+		word = StringUtility.removeAll(word, "\\s+$");
 
 		if (word.matches("^\\d+.*$")) {
 			POSInfo p = new POSInfo("b", "", 1, 1);
@@ -2194,11 +2148,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 	
 	// ---------------CLASS Helper function----------------
-	public String trimString (String text){
-		String myText = text;
-		myText = myText.replaceAll("^\\s+|\\s+$", "");
-		return myText;
-	}
+
 	
 	/**
 	 * 
@@ -2224,14 +2174,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			int increment) {
 		int result = 0;
 
-		word = this.processWord(word);
+		word = StringUtility.processWord(word);
 		// empty word
 		if (word.length() < 1) {
 			return 0;
 		}
 
 		// forbidden word
-		if (word.matches("\\b(?:" + this.FORBIDDEN + ")\\b")) {
+		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
 			return 0;
 		}
 
@@ -2693,12 +2643,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// }
 
 		// forbidden word
-		if (word.matches("\\b(?:" + this.FORBIDDEN + ")\\b")) {
+		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
 			return 0;
 		}
 
 		// stop words
-		if (word.matches("^(" + this.STOP + ")$")) {
+		if (word.matches("^(" + Constant.STOP + ")$")) {
 			sign = sign
 					+ processNewWord(word, pos, role, table, word, increment);
 			return sign;
@@ -2706,13 +2656,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		sign = sign + processNewWord(word, pos, role, table, word, increment);
 
-		Pattern p = Pattern.compile("^(" + this.PREFIX + ")(\\S+).*$");
+		Pattern p = Pattern.compile("^(" + Constant.PREFIX + ")(\\S+).*$");
 		Matcher m = p.matcher(word);
 		if (m.lookingAt()) {
 			String g1 = m.group(1);
 			String g2 = m.group(2);
 			String temp = g2;
-			otherPrefix = this.PREFIX;
+			otherPrefix = Constant.PREFIX;
 			otherPrefix = otherPrefix.replace("\\b" + g1 + "\\b", "");
 			otherPrefix = otherPrefix.replace("\\|\\|", "|");
 			otherPrefix = otherPrefix.replace("^\\|", "");
@@ -2735,7 +2685,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (word.matches("^[a-z].*$")) {
 				spWords = "(" + escape(singularPluralVariations(word)) + ")";
 				// word=shrubs, pattern = (pre|sub)shrubs
-				pattern = "^(" + this.PREFIX + ")" + spWords + "\\$";
+				pattern = "^(" + Constant.PREFIX + ")" + spWords + "\\$";
 
 				Iterator<Map.Entry<String, String>> iter2 = this.unknownWordTable
 						.entrySet().iterator();
@@ -2798,7 +2748,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 
-		variations = this.removeAll(variations, "\\|+$");
+		variations = StringUtility.removeAll(variations, "\\|+$");
 		
 		return variations;
 	}
@@ -2855,8 +2805,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public int updatePOS(String newWord, String pos, String role, int increment) {
 		int n = 0;
 
-		if ((newWord.matches("^.*(\b|_)(NUM|" + this.NUMBER + "|"
-				+ this.CLUSTERSTRING + "|" + this.CHARACTER + ")\b.*$"))
+		if ((newWord.matches("^.*(\b|_)(NUM|" + Constant.NUMBER + "|"
+				+ Constant.CLUSTERSTRING + "|" + Constant.CHARACTER + ")\b.*$"))
 				&& (pos.matches("[nsp]"))) {
 			return 0;
 		}
@@ -3103,19 +3053,19 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		tag.replaceAll("<\\S+?>", "");
 
 		// remove stop and forbidden words from beginning
-		modifier = this.removeAll(modifier, "\\s*\\b(" + this.STOP + "|"
-				+ this.FORBIDDEN + "|\\w+ly)$");
-		tag = this.removeAll(tag, "\\s*\\b(" + this.STOP + "|" + this.FORBIDDEN
+		modifier = StringUtility.removeAll(modifier, "\\s*\\b(" + Constant.STOP + "|"
+				+ Constant.FORBIDDEN + "|\\w+ly)$");
+		tag = StringUtility.removeAll(tag, "\\s*\\b(" + Constant.STOP + "|" + Constant.FORBIDDEN
 				+ "|\\w+ly)$");
 
 		// remove stop and forbidden words from ending
-		modifier = this.removeAll(modifier, "\\s*\\b(" + this.STOP + "|"
-				+ this.FORBIDDEN + "|\\w+ly)$");
-		tag = this.removeAll(tag, "\\s*\\b(" + this.STOP + "|" + this.FORBIDDEN
+		modifier = StringUtility.removeAll(modifier, "\\s*\\b(" + Constant.STOP + "|"
+				+ Constant.FORBIDDEN + "|\\w+ly)$");
+		tag = StringUtility.removeAll(tag, "\\s*\\b(" + Constant.STOP + "|" + Constant.FORBIDDEN
 				+ "|\\w+ly)$");
 
 		// remove all pronoun words
-		modifier = this.removeAll(modifier, "\\b(" + this.PRONOUN + ")\\b");
+		modifier = StringUtility.removeAll(modifier, "\\b(" + Constant.PRONOUN + ")\\b");
 
 		Pattern p = Pattern.compile("^(\\w+ly)\\s*(.*)$");
 		Matcher m = p.matcher(modifier);
@@ -3131,8 +3081,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 
-		modifier = this.removeAll(modifier, "(^\\s*|\\s*$)");
-		tag = this.removeAll(tag, "(^\\s*|\\s*$)");
+		modifier = StringUtility.removeAll(modifier, "(^\\s*|\\s*$)");
+		tag = StringUtility.removeAll(tag, "(^\\s*|\\s*$)");
 
 		if (tag != null) {
 			if (tag.length() > this.tagLength) {
@@ -3343,7 +3293,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public int addModifier(String newWord, int increment) {
 		int isUpdate = 0;
 
-		if ((newWord.matches("(" + this.STOP + "|^.*\\w+ly$)"))
+		if ((newWord.matches("(" + Constant.STOP + "|^.*\\w+ly$)"))
 				|| (!(newWord.matches("^.*\\w.*$")))) {
 			return isUpdate;
 		}
@@ -3580,7 +3530,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 			
 			word = wordCopy;
-			word = word.replace("^(" + this.PREFIX + ")+", "");
+			word = word.replace("^(" + Constant.PREFIX + ")+", "");
 			// Case 1.2
 			if (word.equals(wordCopy)) {
 				return mode.equals("singular") ? word : "";
@@ -3647,39 +3597,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return "";
 	}
 
-	/**
-	 * Helper of method updateTable: process word
-	 * 
-	 * @param w
-	 * @return
-	 */
 
-	public String processWord(String word) {
-		//$word =~ s#<\S+?>##g; #remove tag from the word
-		//$word =~ s#\s+$##;
-		//$word =~ s#^\s*##;
-		
-		word = word.replaceAll("<\\S+?>", "");
-		word = word.replaceAll("\\s+$", "");
-		word = word.replaceAll("^\\s*", "");
-		
-		return word;
-	}
 	
 	
-	public String removeAll(String word, String regex) {
-		String newWord = word.replaceAll(regex, ""); 
-		return newWord;
-	}
-	public String getStopWords(){
-		return this.STOP;
-	}
-	public String getForbiddenWords(){
-		return this.FORBIDDEN;
-	}	
-	public String getPronounWords(){
-		return this.PRONOUN;
-	}
+
+
+
 	
 	
 	// ---------------TEST Helper function----------------

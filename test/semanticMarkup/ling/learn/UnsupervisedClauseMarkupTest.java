@@ -324,10 +324,7 @@ public class UnsupervisedClauseMarkupTest {
 		words.add("septum");
 		assertEquals("addHeuristicsNouns - handleSpecialCase 1", "septa[p]", tester.addHeuristicsNounsHelper("septa[s]", words));
 		
-		// Method strip
-		assertEquals("strip", "word1 word2", tester.strip("word1 <abc> word2"));
-		assertEquals("strip", "word1 word2", tester.strip("word1 <?abc?> word2"));
-		assertEquals("strip", "word1 word2", tester.strip("word1 &nbsp; word2"));
+
 		
 		// Method getPresentAbsentNouns
 		assertEquals("getPresentAbsentNouns - no present/absent", "",
@@ -366,12 +363,7 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("getRoot - computer", "comput", tester.getRoot("computers"));
 		assertEquals("getRoot - computer", "comput", tester.getRoot("computing"));
 		
-		// Method trimString
-		assertEquals("trimString head", "word", tester.trimString("	 	word"));
-		assertEquals("trimString tail", "word",
-				tester.trimString("word   		 	"));
-		assertEquals("trimString head and tail", "word",
-				tester.trimString("	 	word	 	 		  "));
+
 		
 		// Nouns rule 0: Taxon name nouns
 		Set<String> taxonNames = new HashSet<String>();
@@ -475,8 +467,7 @@ public class UnsupervisedClauseMarkupTest {
 		results.add("noun2");
 		assertEquals("filterOutDescriptors",results,tester.filterOutDescriptors(rNouns, rDescriptors));
 
-		// Method removePunctuation
-		assertEquals("removePunctuation", "word word word wo-rd cant Id end", tester.removePunctuation("word word, word&$% wo-rd can't I'd end.","-"));
+		
 		
 		// Method updateCheckedWords
 		String checkedWords = ":";
@@ -500,15 +491,7 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("updateTable - forbidden word", 0,
 				tester.updateTable("to", "", "", "", 0));
 		
-		// Method processWord
-		String word = "<word>word <\\iword>word word</word2>";
-		assertEquals("processWord", "word word word",
-				tester.processWord(word));
-		assertEquals("processWord", "word word word",
-				tester.processWord(" 	 word word word"));
-		assertEquals("processWord", "word word word",
-				tester.processWord("word word word 	 "));
-		//System.out.println(word);
+
 		
 		// Method markKnown
 		assertEquals("markKnown - forbidden word", 0,
@@ -668,23 +651,6 @@ public class UnsupervisedClauseMarkupTest {
 		pair.add("tag");		
 		assertEquals ("getMTFromParentTag - case 1: with []", pair, tester.getMTFromParentTag("[modifier tag]"));
 		assertEquals ("getMTFromParentTag - case 2: without []", pair, tester.getMTFromParentTag("modifier tag"));
-		
-		// TEST of Helpers
-		// Method removeAll
-		assertEquals("removeAll - begin", "word word ", tester.removeAll("   word word ", "^\\s+"));
-		assertEquals("removeAll - end", "word|word", tester.removeAll("word|word|", "\\|+$"));
-		assertEquals("removeAll - all", "wordword", tester.removeAll("|word|word|", "\\|"));
-		// this test cases is for method tagSentWMT
-		assertEquals("removeAll - remove beginning", "word", 
-				tester.removeAll("above word","^("+tester.getStopWords()+"|"+tester.getForbiddenWords()+")\\b\\s*"));
-		assertEquals("removeAll - remove ending 1", "word1 word2", 
-				tester.removeAll("word1 word2 or","\\s*\\b("+tester.getStopWords()+"|"+tester.getForbiddenWords()+"|\\w+ly)$"));
-		assertEquals("removeAll - remove ending 2", "word1 word2", 
-				tester.removeAll("word1 word2 usually","\\s*\\b("+tester.getStopWords()+"|"+tester.getForbiddenWords()+"|\\w+ly)$"));
-		assertEquals("removeAll - remove middle pronouns", "word1  word2", 
-				tester.removeAll("word1 each word2","\\b("+tester.getPronounWords()+")\\b"));
-		assertEquals("removeAll - remove beginning and ending", "word", 
-				tester.removeAll(" 	word	 	","(^\\s*|\\s*$)"));
 		
 	}
 }
