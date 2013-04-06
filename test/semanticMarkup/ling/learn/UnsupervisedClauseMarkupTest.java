@@ -324,6 +324,11 @@ public class UnsupervisedClauseMarkupTest {
 		words.add("septum");
 		assertEquals("addHeuristicsNouns - handleSpecialCase 1", "septa[p]", tester.addHeuristicsNounsHelper("septa[s]", words));
 		
+		// Method strip
+		assertEquals("strip", "word1 word2", tester.strip("word1 <abc> word2"));
+		assertEquals("strip", "word1 word2", tester.strip("word1 <?abc?> word2"));
+		assertEquals("strip", "word1 word2", tester.strip("word1 &nbsp; word2"));
+		
 		// Method getPresentAbsentNouns
 		assertEquals("getPresentAbsentNouns - no present/absent", "",
 				tester.getPresentAbsentNouns("only one pair of abcly presen"));

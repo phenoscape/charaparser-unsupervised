@@ -30,6 +30,19 @@ import semanticMarkup.knowledge.Stemmer;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {
+	/**************************************************
+	 * Debug variables used by Dongye Meng
+	 */
+	
+	// Control if output debug msg
+	private boolean populateSentence_debug = false;
+	// addHeuristicsNouns
+	private boolean addHeuristicsNouns_debug = false;
+	private boolean getHeuristicNouns_debug = true;
+	
+	
+	
+	
 	// directory of /descriptions folder
 	private String desDir = "";
 	// directory of /characters folder
@@ -133,12 +146,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// Msg Output Controllers
 	// Control if output feedback on which step is in
 	private boolean msg = false;
-	// Control if output debug msg
-	private boolean debug = false;
-	private boolean populateSent_debug = false;
-	// addHeuristicsNouns
-	private boolean hn = true;
-	
 	
 	private String NENDINGS = "\\w\\w(?:ist|sure)\\b";
 	private String VENDINGS = "(ing)\\b";	
@@ -231,7 +238,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @param treatments
 	 * @return
 	 */
-	public boolean populateSents(List<Treatment> treatments) {
+	public boolean populateSentences(List<Treatment> treatments) {
 		System.out.println("Reading sentences:\n");
 		
 		String fileName;
@@ -247,7 +254,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (text != null) {
 				// process this text
 				text = this.handleText(text);
-				if (populateSent_debug) System.out.println("Text: " + text);
+				if (populateSentence_debug) System.out.println("Text: " + text);
 				
 				// use Apache OpenNLP to do sentence segmentation
 				String sentences[] = {};
@@ -261,8 +268,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				
 				// for each sentence, do some operations
 				for (int j = 0; j < sentences.length; j++) {
-					if (populateSent_debug) System.out.println("Sentence " + j + ": " + sentences[j]);
-					if (populateSent_debug) System.out.println(sentences[j]);
+					if (populateSentence_debug) System.out.println("Sentence " + j + ": " + sentences[j]);
+					if (populateSentence_debug) System.out.println(sentences[j]);
 					
 					// if(!/\w+/){next;}					
 					if (!sentences[j].matches("^.*\\w+.*$")) {
@@ -776,51 +783,49 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	public void addHeuristicsNouns() {
 		// Get all sentences
-		if (this.hn)
+		if (this.addHeuristicsNouns_debug)
 			System.out.println("Enter addHeuristicsNouns:\n");
 
 		Set<String> nouns = this.getHeuristicsNouns();
 		//nouns = this.characterHeuristics(nouns);
 	}
 
-	
+	/**
+	 * 
+	 * @return nouns learned by heuristics
+	 */
 	public Set<String> getHeuristicsNouns() {
-
 		// Set of words
 		Set<String> words = new HashSet<String>();
 		
 		// Set of nouns
 		Set<String> nouns = new HashSet<String>();
 		
-		List<String> sents = new LinkedList<String> ();
+		List<String> sentences = new LinkedList<String> ();
 		for (int i=0;i<this.sentenceTable.size();i++) {
-			//String sent = this.sentenceTable.get(i).getSentence();
-			String oSent = this.sentenceTable.get(i).getOriginalSentence();
-			if (this.hn) {
-				//if (!sent.equals(oSent)) {
-				//System.out.println(sent+"\n");
-				System.out.println(oSent+"\n");
-				//}
+			String originalSentence = this.sentenceTable.get(i).getOriginalSentence();
+			if (this.getHeuristicNouns_debug) {
+				//System.out.println(originalSentence+"\n");
 			}
-			sents.add(oSent);
-			//if (this.d)
+			sentences.add(this.strip(originalSentence));
 		}
 		
-		// Now we have original sentences in sents
+		// Now we have original sentences in sentences
 		// Method addWords
-		for (int i=0;i<sents.size();i++) {
-			String noun = this.getPresentAbsentNouns(sents.get(i));
+		for (int i=0;i<sentences.size();i++) {
+			String noun = this.getPresentAbsentNouns(sentences.get(i).toLowerCase());
 			if (!noun.equals("")) {
 				nouns.add(noun);
 			}
 			
 			// add words
-			String[] tokens = this.myTokenizer.tokenize(sents.get(i));
+			String temp=sentences.get(i);
+			String[] tokens = this.myTokenizer.tokenize(sentences.get(i));
 			for (int j=0;j<tokens.length;j++) {
 				String token = tokens[j];
-				
-				
 				if (isWord(token)) {
+					//if (token.equals("arch"))
+					//	token="arch";
 					words.add(token);
 				}
 			}
@@ -843,6 +848,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		while (wordsIterator.hasNext()) {
 			String word = wordsIterator.next();
 			String root = this.getRoot(word);
+			//if (root.equals("arch"))
+			//	root="arch";
 			if (wordMap.containsKey(root)) {
 				List<String> wordList = wordMap.get(root);
 				wordList.add(word);
@@ -908,6 +915,72 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 
 		return nouns;
+	}
+	
+	public String strip(String text) {				
+		text=text.replaceAll("<(([^ >]|\n)*)>", " ");
+		text=text.replaceAll("<\\?[^>]*\\?>", " "); //<? ... ?>
+		text=text.replaceAll("&[^ ]{2,5};", " "); //remove &nbsp;
+		text=text.replaceAll("\\s+", " ");
+		
+		return text;
+	}
+	
+	//if($t !~ /\b(?:$STOP)\b/ && $t =~/\w/ && $t !~ /\d/ && length $t > 1){
+	public boolean isWord(String token) {
+		String regex = "\\b("+this.STOP+")\\b";
+		if (token.matches(regex)) {
+			return false;
+		}
+		
+		if (!token.matches("\\w+")) {
+			return false;
+		}
+		
+		if (token.length()<=1) {
+			return false;
+		}	
+		
+		return true;
+	}
+	
+
+	/**
+	 * any word preceeding "present"/"absent" would be a n
+	 * 
+	 * @param text
+	 *            the content to learn from
+	 * @return nouns learned
+	 */
+	public String getPresentAbsentNouns(String text) {
+		String pachecked = "and|or|to";		
+		
+		if (text.matches("(\\w+?)\\s+(present|absent)")) {
+			System.out.println(text);
+		}
+
+		Matcher matcher = Pattern.compile("^.*?(\\w+?)\\s+(present|absent).*$")
+				.matcher(text);
+		if (matcher.lookingAt()) {
+			String word = matcher.group(1);
+			if ((!word.matches("\\b(" + pachecked + ")\\b"))
+					&& (!word.matches("\\b(" + this.STOP + ")\\b"))
+					&& (!word.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
+				if (this.getHeuristicNouns_debug) System.out.println("present/absent "+word+"\n");
+
+				if (((word.matches("^.*" + this.PENDINGS))
+						|| (word.matches("^.*[^s]s$")) 
+						|| (word.matches("teeth")))
+					&& (!word.matches(this.SENDINGS))) {
+					return word+"[p]";
+				}
+				else {
+					return word+"[s]";
+				}
+			}			
+		}
+		
+		return "";
 	}
 	
 	/**
@@ -1452,24 +1525,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 	}
 	
-	//if($t !~ /\b(?:$STOP)\b/ && $t =~/\w/ && $t !~ /\d/ && length $t > 1){
-	public boolean isWord(String token) {
-		String regex = "\\b("+this.STOP+")\\b";
-		if (token.matches(regex)) {
-			return false;
-		}
-		
-		if (!token.matches("\\w+")) {
-			return false;
-		}
-		
-		if (token.length()<=1) {
-			return false;
-		}	
-		
-		return true;
-	}
-	
 	public String getRoot (String word) {
 		String root;
 		this.myStemmer.add(word.toCharArray(), word.length());
@@ -1478,67 +1533,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return root;
 	}
 
-	public String getPresentAbsentNouns(String text) {
-		
-		String pachecked = "and|or|to";
-		
-//		if($text =~ /(\w+?)\s+(present|absent)/){
-//			my $n = $1;
-//			if($n !~ /\b($pachecked)\b/ && $n!~/\b($STOP)\b/ && $n !~/\b(always|often|seldom|sometimes|[a-z]+ly)\b/){
-//				print "present/absent [$n]\n";
-//				
-//				if(($n =~/$PENDINGS/ or $n =~/[^s]s$/ or $n =~ /teeth/) and $n !~/$SENDINGS/){
-//					push(@NOUNS, $n."[p]");
-//				}else{
-//					push(@NOUNS, $n."[s]");
-//				}
-//				$pachecked .= "|$n";
-//			}
-//		}
-		
-		if (text.matches("(\\w+?)\\s+(present|absent)")) {
-			System.out.println(text);
-		}
-
-		// Matcher matcher = Pattern.compile("(^.*?)\\s+([:;\\.].*$)")
-		Matcher matcher = Pattern.compile("^.*?(\\w+?)\\s+(present|absent).*$")
-				.matcher(text);
-		if (matcher.lookingAt()) {
-
-			String word = matcher.group(1);
-			//String word1 = matcher.group();
-			//String word2= matcher.group(2);
-			
-			/**
-			 * if($n !~ /\b($pachecked)\b/ && $n!~/\b($STOP)\b/ && $n
-			 * !~/\b(always|often|seldom|sometimes|[a-z]+ly)\b/){
-			 **/
-			if ((!word.matches("\\b(" + pachecked + ")\\b"))
-					&& (!word.matches("\\b(" + this.STOP + ")\\b"))
-					&& (!word.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
-				
-				//print "present/absent [$n]\n";
-				System.out.println("present/absent "+word+"\n");
-				
-				/**
-				 * if(($n =~/$PENDINGS/ or $n =~/[^s]s$/ or $n =~ /teeth/) and
-				 * $n !~/$SENDINGS/){
-				 **/
-				if (((word.matches("^.*" + this.PENDINGS))
-						|| (word.matches("^.*[^s]s$")) 
-						|| (word.matches("teeth")))
-					&& (!word.matches(this.SENDINGS))) {
-					return word+"[p]";
-				}
-				else {
-					return word+"[s]";
-				}
-			}			
-		}
-
-		//only one pair of uroneurals present			
-		return "";
-	}
 	
 
 	// ---------------addHeuristicsNouns Help Function----
@@ -2148,7 +2142,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		
 		// process treatments
-		this.populateSents(treatments);
+		this.populateSentences(treatments);
 		
 		// pre load words
 		this.addHeuristicsNouns();
