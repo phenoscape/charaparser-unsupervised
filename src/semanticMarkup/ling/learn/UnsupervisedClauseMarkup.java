@@ -62,7 +62,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private int NUM_LEAD_WORDS = 3; // $N leading words
 	private int SENTID = 0;
 	private int DECISIONID = 0;
-	private String PROPERNOUN = "propernouns"; // EOL
+	
 
 	private Map<String, String> numberRecords = new HashMap<String, String>(); // word->(p|s)
 	private Map<String, String> singularRecords = new HashMap<String, String>();// word->singular
@@ -74,7 +74,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private Hashtable<String, String> PLURALS = new Hashtable<String, String>();
 
 	private String TAGS = "";
-	private String PLENDINGS = "[^aeiou]ies|i|ia|(x|ch|sh)es|ves|ices|ae|s";
+	
 	
 	// grouped #may contain q but not the last m, unless it is followed by a p
 	private String mptn = "((?:[mbq][,&]*)*(?:m|b|q(?=[pon])))";
@@ -1590,7 +1590,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	public void addProperNouns() {
 		List<String> ppnouns = new ArrayList<String>();
-		ppnouns.addAll(Arrays.asList(this.PROPERNOUN.split("\\|")));
+		ppnouns.addAll(Arrays.asList(Constant.PROPERNOUN.split("\\|")));
 
 		for (int i = 0; i < ppnouns.size(); i++) {
 			String word = ppnouns.get(i);
@@ -2894,7 +2894,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		for (int i = 0; i < this.sentenceTable.size(); i++) {
 			Sentence sent = this.sentenceTable.get(i);
 			if ((!sent.getTag().equals("ignore")) || (sent.getTag() != null)) {
-				Pattern p = Pattern.compile("([a-z]+(" + this.PLENDINGS
+				Pattern p = Pattern.compile("([a-z]+(" + Constant.PLENDINGS
 						+ ")) (" + newWord + ")", Pattern.CASE_INSENSITIVE);
 				Matcher m = p.matcher(newWord);
 				if (m.lookingAt()) {
