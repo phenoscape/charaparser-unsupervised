@@ -26,6 +26,12 @@ public class Constant {
 	
 	public static final String STOP = "state|page|fig|"
 			+ "a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
+	
+
+	public static final String NENDINGS = "\\w\\w(?:ist|sure)\\b";
+	public static final String VENDINGS = "(ing)\\b";
+	public static final String SENDINGS = "(on|is|ex|ix|um|us|a)\\b";
+	public static final String PENDINGS = "(ia|es|ices|i|ae)\\b";
  
 
 	public Constant() {

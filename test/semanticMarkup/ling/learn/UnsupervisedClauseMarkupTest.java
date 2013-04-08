@@ -363,7 +363,13 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("getRoot - computer", "comput", tester.getRoot("computers"));
 		assertEquals("getRoot - computer", "comput", tester.getRoot("computing"));
 		
-
+		
+		// Method getSingularPluralPair
+		List<String> pairSP = new ArrayList<String>();
+		pairSP.add("area");
+		pairSP.add("areas");
+		assertEquals("getSingularPluralPair - case 2", pairSP, tester.getSingularPluralPair("area", "areas"));
+		
 		
 		// Nouns rule 0: Taxon name nouns
 		Set<String> taxonNames = new HashSet<String>();
