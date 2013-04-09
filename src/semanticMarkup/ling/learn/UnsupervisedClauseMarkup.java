@@ -140,9 +140,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 */
 	public UnsupervisedClauseMarkup(String learningMode, String wordnetDir) {
 		/**
-		 * 1. Store 1) learning mode and 2) prefix 2. Get WordNet instance 3.
-		 * Get OpenNLP sentence detector 4. Get OpenNLP tokenizer 5. Get JWI
-		 * simple stemmer
+		 * 1. Store 1) learning mode and 2) prefix
+		 * 2. Get WordNet instance
+		 * 3. Get OpenNLP sentence detector
+		 * 4. Get OpenNLP tokenizer
+		 * 5. Get JWI simple stemmer
 		 */
 		// System.out.println("Initialized:\n");
 
@@ -1444,7 +1446,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 
 		if ((word2.matches("^.*" + Constant.SENDINGS))
-				&& (word1.matches("^.*" + Constant.PENDINGS))) {
+				&& (word1.matches("^.*" + Constant.PENDINGS))) {	
 			if (word1.matches("^.*" + "es$") && word2.matches("^.*" + "is$")
 					&& Math.abs(len1 - len2) == 0) {
 				singular = word2;
@@ -2554,58 +2556,58 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			Matcher m = p.matcher(word);
 			if (m.lookingAt()) {
 				singular = m.group(1) + "y";
-			} else {
-				// Case 2
-				p = Pattern.compile("(^.*?)i$");
-				m = p.matcher(word);
-				if (m.lookingAt()) {
-					singular = m.group(1) + "us";
-				} else {
-					// Case 3
-					p = Pattern.compile("(^.*?)ia$");
-					m = p.matcher(word);
-					if (m.lookingAt()) {
-						singular = m.group(1) + "ium";
-					} else {
-						// Case 4
-						p = Pattern.compile("(^.*?(x|ch|sh|ss))es$");
-						m = p.matcher(word);
-						if (m.lookingAt()) {
-							singular = m.group(1);
-						} else {
-							// Case 5
-							p = Pattern.compile("(^.*?)ves$");
-							m = p.matcher(word);
-							if (m.lookingAt()) {
-								singular = m.group(1) + "f";
-							} else {
-								// Case 6
-								p = Pattern.compile("(^.*?)ices");
-								m = p.matcher(word);
-								if (m.lookingAt()) {
-									singular = m.group(1) + "ex";
-								} else {
-									// Case 7.1
-									// pinnae ->pinna
-									p = Pattern.compile("(^.*?a)e$");
-									m = p.matcher(word);
-									if (m.lookingAt()) {
-										singular = m.group(1);
-									} else {
-										// Case 7.2
-										// fruits->fruit
-										p = Pattern.compile("(^.*?)s$");
-										m = p.matcher(word);
-										if (m.lookingAt()) {
-											singular = m.group(1);
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
+			} 
+			else {
+			// Case 2
+			p = Pattern.compile("(^.*?)i$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1) + "us";
+			} 
+			else {	
+			// Case 3				
+			p = Pattern.compile("(^.*?)ia$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1) + "ium";
+			} 
+			else {
+			// Case 4	
+			p = Pattern.compile("(^.*?(x|ch|sh|ss))es$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1);
+			} 
+			else {
+			// Case 5	
+			p = Pattern.compile("(^.*?)ves$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1) + "f";
+				} 
+			else {
+			// Case 6	
+			p = Pattern.compile("(^.*?)ices");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1) + "ex";
+			} 
+			else {
+			// Case 7.1
+			// pinnae ->pinna
+			p = Pattern.compile("(^.*?a)e$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1);
+			} 
+			else {
+			// Case 7.2
+			// fruits->fruit
+			p = Pattern.compile("(^.*?)s$");
+			m = p.matcher(word);
+			if (m.lookingAt()) {
+				singular = m.group(1);
+			}}}}}}}}
 		}
 
 		if (singular.matches("^.*\\w.*$")) {
@@ -3202,16 +3204,17 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 */
 	public void discount(String newWord, String oldPOS, String newPOS,
 			String mode) {
-
 		/**
-		 * 1. Find the flag of newWord in unknownWords table 1. Select all words
-		 * from unknownWords table who have the same flag (including newWord) 1.
-		 * From wordPOS table, select certaintyU of the (word, oldPOS) where
-		 * word is in the words list For each of them 1.1 Case 1: certaintyu
-		 * less than 1, AND mode is "all" 1.1.1 Delete the entry from wordpos
-		 * table 1.1.1 Update unknownwords 1.1.1.1 Case 1: the pos is "s" or "p"
-		 * Delete all entries contains word from singularplural table as well
-		 * 1.1.1 Insert (word, oldpos, newpos) into discounted table
+		 * 1. Find the flag of newWord in unknownWords table
+		 * 1. Select all words from unknownWords table who have the same flag (including newWord)
+		 * 1. From wordPOS table, select certaintyU of the (word, oldPOS) where word is in the words list
+		 *     For each of them
+		 *     1.1 Case 1: certaintyu less than 1, AND mode is "all"
+		 *         1.1.1 Delete the entry from wordpos table
+		 *         1.1.1 Update unknownwords
+		 *             1.1.1.1 Case 1: the pos is "s" or "p"
+		 *                 Delete all entries contains word from singularplural table as well
+		 *         1.1.1 Insert (word, oldpos, newpos) into discounted table
 		 */
 
 		String flag = this.unknownWordTable.get(newWord);
@@ -3428,13 +3431,20 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 *         3) mode "pos": return n [p,s], v, a, r, "" (not in WN).
 	 */
 	public String checkWN(String word, String mode) {
-
-		/**
-		 * 0.0 If the word contains nothing but non-word characters, such as <>,
-		 * return empty 0.1 Check singularRecordsprevious records 0.2 Special
-		 * cases 1 Word not in WordNet 1.1 1.2 1.3 2. Word in WordNet 2.1 mode
-		 * is singular or number 2.1.1 2.1.2 2.2 mode is pos
-		 */
+		 /**
+		  * 0.0 If the word contains nothing but non-word characters, such as <>, return empty
+		  * 0.1 Check singularRecordsprevious records
+		  * 0.2 Special cases
+		  * 1   Word not in WordNet
+		  *   1.1
+		  *   1.2
+		  *   1.3
+		  * 2.  Word in WordNet
+		  *   2.1 mode is singular or number
+		  *     2.1.1
+		  *     2.1.2
+		  *  2.2 mode is pos
+		  */
 
 		// this.myWN.getMostLikleyPOS(word);
 

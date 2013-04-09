@@ -369,6 +369,14 @@ public class UnsupervisedClauseMarkupTest {
 		pairSP.add("area");
 		pairSP.add("areas");
 		assertEquals("getSingularPluralPair - case 2", pairSP, tester.getSingularPluralPair("area", "areas"));
+		pairSP.remove("area");
+		pairSP.remove("areas");
+		
+		pairSP.add("thesis");		
+		pairSP.add("theses");	
+		assertEquals("getSingularPluralPair - case 1.1", pairSP, tester.getSingularPluralPair("theses", "thesis"));		
+		pairSP.remove("theses");
+		pairSP.remove("thesis");
 		
 		
 		// Nouns rule 0: Taxon name nouns
