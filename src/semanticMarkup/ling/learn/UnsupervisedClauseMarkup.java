@@ -1444,35 +1444,56 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			len1 = len2;
 			len2 = temp_len;
 		}
+		
+		if ((word1.matches("^.*" + Constant.SENDINGS))
+				&& (word2.matches("^.*" + Constant.PENDINGS))) {		
+			// case 1.1.1
+			if (word2.matches("^.*" + "es$")
+					&& word1.matches("^.*" + "is$")
+					&& Math.abs(len1 - len2) == 0) {
+				singular = word1;
+				plural = word2;
+			} 
+			// case 1.5
+			else if (word1.matches("^.*" + "us$")
+					&& word2.matches("^.*" + "a$")
+					&& Math.abs(len1 - len2) < 2) {
+				singular = word1;
+				plural = word2;
+			}
 
-		if ((word2.matches("^.*" + Constant.SENDINGS))
-				&& (word1.matches("^.*" + Constant.PENDINGS))) {	
-			if (word1.matches("^.*" + "es$") && word2.matches("^.*" + "is$")
+		}
+		else if ((word1.matches("^.*" + Constant.PENDINGS))
+				&& (word2.matches("^.*" + Constant.SENDINGS))) {
+			// case 1.1.2
+			if (word1.matches("^.*" + "es$") 
+					&& word2.matches("^.*" + "is$")
 					&& Math.abs(len1 - len2) == 0) {
 				singular = word2;
 				plural = word1;
-			} else if (word1.matches("^.*" + "a$")
+				
+			}
+			// case 1.2
+			else if (word1.matches("^.*" + "a$")
 					&& word2.matches("^.*" + "on$")
 					&& Math.abs(len1 - len2) < 2) {
 				singular = word2;
 				plural = word1;
-			} else if (word1.matches("^.*" + "a$")
+			}
+			// case 1.3
+			else if (word1.matches("^.*" + "a$")
 					&& word2.matches("^.*" + "um$")
 					&& Math.abs(len1 - len2) < 2) {
 				singular = word2;
 				plural = word1;
-			} else if (word1.matches("^.*" + "i$")
-					&& word2.matches("^.*" + "us$")
-					&& Math.abs(len1 - len2) < 2) {
-				singular = word2;
-				plural = word1;
-			} else if (word1.matches("^.*" + "a$")
-					&& word2.matches("^.*" + "us$")
-					&& Math.abs(len1 - len2) < 2) {
-				singular = word2;
-				plural = word1;
 			}
-
+			// case 1.4
+			else if (word1.matches("^.*" + "i$")
+					&& word2.matches("^.*" + "us$")
+					&& Math.abs(len1 - len2) < 2) {
+				singular = word2;
+				plural = word1;
+			} 
 		} else {
 			// thicker, thickness; species, specimens; tomentulose, tomentulous;
 			// later laterals

@@ -30,8 +30,8 @@ public class Constant {
 
 	public static final String NENDINGS = "\\w\\w(?:ist|sure)\\b";
 	public static final String VENDINGS = "(ing)\\b";
-	public static final String SENDINGS = "(on|is|ex|ix|um|us|a)\\b";
-	public static final String PENDINGS = "(ia|es|ices|i|ae)\\b";
+	public static final String SENDINGS = "(on|is|ex|ix|um|us)\\b";
+	public static final String PENDINGS = "(a|ia|es|ices|i|ae)\\b";
  
 
 	public Constant() {

@@ -366,17 +366,54 @@ public class UnsupervisedClauseMarkupTest {
 		
 		// Method getSingularPluralPair
 		List<String> pairSP = new ArrayList<String>();
+		
+		// case 1.1 ellipsis/ellipses
+		pairSP.add("ellipsis");		
+		pairSP.add("ellipses");	
+		assertEquals("getSingularPluralPair - case 1.1.1", pairSP, tester.getSingularPluralPair("ellipsis", "ellipses"));
+		assertEquals("getSingularPluralPair - case 1.1.2", pairSP, tester.getSingularPluralPair("ellipses", "ellipsis"));
+		pairSP.remove("ellipsis");
+		pairSP.remove("ellipses");
+		
+		// case 1.2 phenomenon/phenomena
+		pairSP.add("phenomenon");		
+		pairSP.add("phenomena");	
+		assertEquals("getSingularPluralPair - case 1.2", pairSP, tester.getSingularPluralPair("phenomena", "phenomenon"));
+		assertEquals("getSingularPluralPair - case 1.2", pairSP, tester.getSingularPluralPair("phenomenon", "phenomena"));	
+		pairSP.remove("phenomenon");
+		pairSP.remove("phenomena");
+		
+		// case 1.3 bacterium/bacteria
+		pairSP.add("bacterium");		
+		pairSP.add("bacteria");	
+		assertEquals("getSingularPluralPair - case 1.3", pairSP, tester.getSingularPluralPair("bacterium", "bacteria"));
+		assertEquals("getSingularPluralPair - case 1.3", pairSP, tester.getSingularPluralPair("bacteria", "bacterium"));
+		pairSP.remove("bacterium");
+		pairSP.remove("bacteria");
+
+		// case 1.4 bacillus/bacilli
+		pairSP.add("bacillus");		
+		pairSP.add("bacilli");	
+		assertEquals("getSingularPluralPair - case 1.4", pairSP, tester.getSingularPluralPair("bacillus", "bacilli"));	
+		assertEquals("getSingularPluralPair - case 1.4", pairSP, tester.getSingularPluralPair("bacilli", "bacillus"));			
+		pairSP.remove("bacilli");
+		pairSP.remove("bacillus");			
+		
+		// case 1.5 genus/genera
+		pairSP.add("genus");		
+		pairSP.add("genera");	
+		assertEquals("getSingularPluralPair - case 1.5", pairSP, tester.getSingularPluralPair("genera", "genus"));
+		assertEquals("getSingularPluralPair - case 1.5", pairSP, tester.getSingularPluralPair("genus", "genera"));	
+		pairSP.remove("genus");
+		pairSP.remove("genera");		
+		
+		// case 2 area/areas
 		pairSP.add("area");
 		pairSP.add("areas");
 		assertEquals("getSingularPluralPair - case 2", pairSP, tester.getSingularPluralPair("area", "areas"));
+		assertEquals("getSingularPluralPair - case 2", pairSP, tester.getSingularPluralPair("areas", "area"));
 		pairSP.remove("area");
 		pairSP.remove("areas");
-		
-		pairSP.add("thesis");		
-		pairSP.add("theses");	
-		assertEquals("getSingularPluralPair - case 1.1", pairSP, tester.getSingularPluralPair("theses", "thesis"));		
-		pairSP.remove("theses");
-		pairSP.remove("thesis");
 		
 		
 		// Nouns rule 0: Taxon name nouns
