@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import semanticMarkup.knowledge.Stemmer;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
 public class WordFormUtility {
@@ -19,12 +20,10 @@ public class WordFormUtility {
 	private Map<String, String> POSRecords = new HashMap<String, String>(); // word->POSs
 	
 	private Map<String, Integer> WORDS = new HashMap<String, Integer>();	
-	private Hashtable<String, String> PLURALS = new Hashtable<String, String>();	
+	private Hashtable<String, String> PLURALS = new Hashtable<String, String>();
 	
-	private final String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
-	private final String PREFIX = "ab|ad|bi|deca|de|dis|di|dodeca|endo|end|e|hemi|hetero|hexa|homo|infra|inter|ir|macro|mega|meso|micro|mid|mono|multi|ob|octo|over|penta|poly|postero|post|ptero|pseudo|quadri|quinque|semi|sub|sur|syn|tetra|tri|uni|un|xero|[a-z0-9]+_";
-	private final String SUFFIX = "er|est|fid|form|ish|less|like|ly|merous|most|shaped";
-	private final String FORBIDDEN = "to|and|or|nor";	
+	// Porter Stemmer
+	private Stemmer myStemmer;
 	
 	public WordFormUtility(String wnDir) {
 		try {
@@ -33,6 +32,8 @@ public class WordFormUtility {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		this.myStemmer = new Stemmer();
 	}
 	
 	/**
@@ -168,7 +169,7 @@ public class WordFormUtility {
 			}
 			
 			word = wordCopy;
-			word = word.replace("^(" + this.PREFIX + ")+", "");
+			word = word.replace("^(" + Constant.PREFIX + ")+", "");
 			// Case 1.2
 			if (word.equals(wordCopy)) {
 				return mode.equals("singular") ? word : "";
@@ -672,6 +673,116 @@ public class WordFormUtility {
 
 		return "";
 	}
+	
+
+	List<String> getSingularPluralPair(String word1, String word2) {
+		List<String> pair = new ArrayList<String>();
+		String singular = "";
+		String plural = "";
+		
+		// put the shorter word at first
+		int len1 = word1.length();
+		int len2 = word2.length();
+		if (len1 > len2) {
+			String temp_word = word1;
+			word1 = word2;
+			word2 = temp_word;
+			int temp_len = len1;
+			len1 = len2;
+			len2 = temp_len;
+		}
+		
+		if ((word1.matches("^.*" + Constant.SENDINGS))
+				&& (word2.matches("^.*" + Constant.PENDINGS))) {		
+			// case 1.1.1
+			if (word2.matches("^.*" + "es$")
+					&& word1.matches("^.*" + "is$")
+					&& Math.abs(len1 - len2) == 0) {
+				singular = word1;
+				plural = word2;
+			} 
+			// case 1.5
+			else if (word1.matches("^.*" + "us$")
+					&& word2.matches("^.*" + "a$")
+					&& Math.abs(len1 - len2) < 2) {
+				singular = word1;
+				plural = word2;
+			}
+
+		}
+		else if ((word1.matches("^.*" + Constant.PENDINGS))
+				&& (word2.matches("^.*" + Constant.SENDINGS))) {
+			// case 1.1.2
+			if (word1.matches("^.*" + "es$") 
+					&& word2.matches("^.*" + "is$")
+					&& Math.abs(len1 - len2) == 0) {
+				singular = word2;
+				plural = word1;
+				
+			}
+			// case 1.2
+			else if (word1.matches("^.*" + "a$")
+					&& word2.matches("^.*" + "on$")
+					&& Math.abs(len1 - len2) < 2) {
+				singular = word2;
+				plural = word1;
+			}
+			// case 1.3
+			else if (word1.matches("^.*" + "a$")
+					&& word2.matches("^.*" + "um$")
+					&& Math.abs(len1 - len2) < 2) {
+				singular = word2;
+				plural = word1;
+			}
+			// case 1.4
+			else if (word1.matches("^.*" + "i$")
+					&& word2.matches("^.*" + "us$")
+					&& Math.abs(len1 - len2) < 2) {
+				singular = word2;
+				plural = word1;
+			} 
+		} else {
+			// thicker, thickness; species, specimens; tomentulose, tomentulous;
+			// later laterals
+			if (word2.matches("^.*s$")) {
+				if (getSingularPluralPairHelper(word1, word2)) {
+					singular = word1;
+					plural = word2;
+				}
+			}
+		}
+
+		if ((!singular.equals("")) && (!plural.equals(""))) {
+			pair.add(singular);
+			pair.add(plural);
+		}
+
+		return pair;
+	}
+
+	// word2 has no other letters except those appearing in word1 or ies, and
+	// vice versa.
+	public boolean getSingularPluralPairHelper(String word1, String word2) {
+		int len1 = word1.length();
+		int len2 = word2.length();
+
+		if ((!word2.matches("^\\[^" + word1 + "yies" + "\\]*&"))
+				&& (!word1.matches("^\\[^" + word2 + "yies" + "\\]*&"))
+				&& (Math.abs(len1 - len2) > 0) && (Math.abs(len1 - len2) < 3)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	public String getRoot(String word) {
+		String root;
+		this.myStemmer.add(word.toCharArray(), word.length());
+		this.myStemmer.stem();
+		root = this.myStemmer.toString();
+		return root;
+	}
+	
 
 	public Map<String, Integer> getWORDS() {
 		return WORDS;

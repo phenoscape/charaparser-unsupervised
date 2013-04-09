@@ -67,4 +67,15 @@ public class StringUtilityTest {
 				StringUtility.removeAll(" 	word	 	","(^\\s*|\\s*$)"));
 	}
 
+	@Test
+	public void testIsWord() {
+		// Method isWord
+		assertEquals("isWord - Length not > 1", false, StringUtility.isWord("a"));
+		assertEquals("isWord - not all word characters", false, StringUtility.isWord("%^"));
+		assertEquals("isWord - all word characters", true, StringUtility.isWord("ab"));
+		assertEquals("isWord - STOP word", false, StringUtility.isWord("state"));
+		assertEquals("isWord - STOP word", false, StringUtility.isWord("page"));
+		assertEquals("isWord - STOP word", false, StringUtility.isWord("fig"));
+	}
+
 }

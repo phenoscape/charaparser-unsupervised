@@ -68,4 +68,22 @@ public class StringUtility {
 		return newWord;
 	}
 	
+	// if($t !~ /\b(?:$STOP)\b/ && $t =~/\w/ && $t !~ /\d/ && length $t > 1){
+	public static boolean isWord(String token) {
+		String regex = "\\b(" + Constant.STOP + ")\\b";
+		if (token.matches(regex)) {
+			return false;
+		}
+
+		if (!token.matches("\\w+")) {
+			return false;
+		}
+
+		if (token.length() <= 1) {
+			return false;
+		}
+
+		return true;
+	}
+	
 }
