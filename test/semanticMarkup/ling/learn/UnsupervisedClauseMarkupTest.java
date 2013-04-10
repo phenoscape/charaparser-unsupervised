@@ -138,95 +138,12 @@ public class UnsupervisedClauseMarkupTest {
 				
 		//UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain","test","res/WordNet/WordNet-3.0/dict");
 		
-		/*
-		assertEquals("Result", null, tester.getAdjNouns());
-		assertEquals("Result", null, tester.getAdjNounSent());
-		assertEquals("Result", null, tester.getBracketTags());
-		assertEquals("Result", null, tester.getHeuristicNouns());
-		assertEquals("Result", null, tester.getRoleToWords());
-		assertEquals("Result", null, tester.getSentences());
-		assertEquals("Result", null, tester.getSentencesForOrganStateMarker());
-		assertEquals("Result", null, tester.getSentenceTags());
-		assertEquals("Result", null, tester.getTermCategories());
-		assertEquals("Result", null, tester.getWordRoleTags());
-		assertEquals("Result", null, tester.getWordsToRoles());
-		assertEquals("Result", null, tester.getWordToSources());
-		assertEquals("Result", true, tester.populatesents());
-		*/
-		
 		//FileLoader sentLoader = new FileLoader(str);
 		//sentLoader.load();
 		//sentLoader.getUnknownWordList();
 		//assertEquals("Result", 1, sentLoader.GetType("Buckup_1998.xml_5c157037-01e4-4d48-8014-b1ebfc9dc120_8210ee00-8026-4fd9-974f-2f4cf6ce389f.txt"));
 		//assertEquals("Result", 0, sentLoader.GetType("Buckup_1998.xml_8d819b51-b88a-459e-bcb2-c6137d8b95d7.txt"));
 		
-		/******** Method populateSent ***************************************************/
-		// getType
-		assertEquals("PopulateSent Helper - getType: character", 1, tester.getType("Brazeau_2009.xml_states737.txt"));
-		assertEquals("PopulateSent Helper - getType: description", 2, tester.getType("Brazeau_2009.xml_states737_state739.txt"));
-		assertEquals("PopulateSent Helper - getType: otherwise", 0, tester.getType("saf_saiflkds)dsljf_fls.txt"));
-		
-		// getFirstNWords
-		List<String> nWords = new ArrayList<String>();
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords(null,-1));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords("",-1));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords(null, 1));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords("", 1));
-		nWords.add("word1");
-		nWords.add("word2");
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords("word1 word2 word3 word4", 2));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords, tester.getFirstNWords("word1 word2", 3));
-		
-		// getAllWords
-		Map<String, Integer> wordsBefore = new HashMap<String, Integer>();
-		wordsBefore.put("word1", 1);
-		wordsBefore.put("word2", 2);
-		Map<String, Integer> wordsAfter = new HashMap<String, Integer>();
-		wordsAfter.put("word1", 2);
-		wordsAfter.put("word2", 4);
-		wordsAfter.put("word3", 2);
-		wordsAfter.put("word4", 1);
-		wordsAfter.put("word5", 1);
-		assertEquals("PopulateSent Helper - getAllWords", wordsAfter, tester.getAllWords("word1 word2 word3 word2 word3 word4 word5", wordsBefore));
-		
-		// addSpace
-		// null
-		assertEquals("Result", null, tester.addSpace(null,null));
-		// ""
-		assertEquals("Result", "", tester.addSpace("", ""));
-		assertEquals("Result", "word , word ; word : word ! word ? word . ",tester.addSpace("word,word;word:word!word?word.", "\\W"));
-		
-		// hideMarksInBrackets
-		assertEquals("Result", null, 
-				tester.hideMarksInBrackets(null));
-		assertEquals("Result", "", 
-				tester.hideMarksInBrackets(""));
-		assertEquals("Result", "before (word[DOT]  word) after",
-				tester.hideMarksInBrackets("before (word. word) after"));
-		assertEquals("Result", "before (word[QST]  word) after",
-				tester.hideMarksInBrackets("before (word? word) after"));
-		assertEquals("Result", "before (word[SQL]  word) after",
-				tester.hideMarksInBrackets("before (word; word) after"));
-		assertEquals("Result", "before (word[QLN]  word) after",
-				tester.hideMarksInBrackets("before (word: word) after"));
-		assertEquals("Result", "before (word[EXM]  word) after",
-				tester.hideMarksInBrackets("before (word! word) after"));
-		
-		// restoreMarksInBrackets
-		assertEquals("Result", null,
-				tester.restoreMarksInBrackets(null));
-		assertEquals("Result", "",
-				tester.restoreMarksInBrackets(""));	
-		assertEquals("Result", "before (word.  word) after",
-				tester.restoreMarksInBrackets("before (word[DOT]  word) after"));	
-		assertEquals("Result", "before (word?  word) after",
-				tester.restoreMarksInBrackets("before (word[QST]  word) after"));
-		assertEquals("Result", "before (word;  word) after",
-				tester.restoreMarksInBrackets("before (word[SQL]  word) after"));
-		assertEquals("Result", "before (word:  word) after",
-				tester.restoreMarksInBrackets("before (word[QLN]  word) after"));
-		assertEquals("Result", "before (word!  word) after",
-				tester.restoreMarksInBrackets("before (word[EXM]  word) after"));
 		
 		// handleTest (Fully finished - Dongye 01/08)
 		// null
@@ -488,18 +405,18 @@ public class UnsupervisedClauseMarkupTest {
 		
 		// Method inSingularPluralPair
 		assertEquals ("inSingularPluralPair - null", false, tester.inSingularPluralPair("word"));
-		tester.singularPluralTable.add(new SingularPluralPair("word1", ""));
+		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair("word1", ""));
 		assertEquals ("inSingularPluralPair - singular match", true, tester.inSingularPluralPair("word1"));
-		tester.singularPluralTable.add(new SingularPluralPair("", "word2"));
+		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair("", "word2"));
 		assertEquals ("inSingularPluralPair - plural match", true, tester.inSingularPluralPair("word2"));
-		tester.singularPluralTable.add(new SingularPluralPair("word3", "word3"));
+		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair("word3", "word3"));
 		assertEquals ("inSingularPluralPair - both match", true, tester.inSingularPluralPair("word3"));	
 		
 		// Method addSingularPluralPair
 		assertEquals("addSigularPluralPair - pair not exist", true, tester.addSingularPluralPair("sword", "pword"));
-		tester.singularPluralTable.add(new SingularPluralPair("sword2",""));
+		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair("sword2",""));
 		assertEquals("addSigularPluralPair - one word exist", true, tester.addSingularPluralPair("sword2", "pword2"));
-		tester.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
+		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
 		assertEquals("addSigularPluralPair - pair exist", false, tester.addSingularPluralPair("sword3", "pword3"));	
 		
 		

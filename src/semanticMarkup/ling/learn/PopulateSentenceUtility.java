@@ -6,14 +6,17 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.tokenize.Tokenizer;
 
 public class PopulateSentenceUtility {
 
 	private Tokenizer myTokenizer;
+	private SentenceDetectorME mySentenceDetector;
 
-	public PopulateSentenceUtility(Tokenizer t) {
-		this.myTokenizer = t;
+	public PopulateSentenceUtility(SentenceDetectorME sDetector, Tokenizer tokenizer) {
+		this.myTokenizer = tokenizer;
+		this.mySentenceDetector = sDetector;
 	}
 
 	/**
@@ -40,6 +43,12 @@ public class PopulateSentenceUtility {
 		}
 
 		return 0;
+	}
+	
+	String[] segmentSentence(String text) {
+		String sentences[] = {};
+		sentences = this.mySentenceDetector.sentDetect(text);
+		return sentences;
 	}
 
 	/**

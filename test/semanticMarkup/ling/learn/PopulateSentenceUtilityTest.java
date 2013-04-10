@@ -29,7 +29,27 @@ public class PopulateSentenceUtilityTest {
 	public void initialize() {
 		// Get OpenNLP tokenizer
 		InputStream tokenModelIn;
+		
+		SentenceDetectorME mySentenceDetector = null;
 		Tokenizer myTokenizer = null;
+		
+		// Get OpenNLP sentence detector
+		InputStream sentModelIn;
+		try {
+			sentModelIn = new FileInputStream("res/en-sent.bin");
+			SentenceModel model = new SentenceModel(sentModelIn);
+		    mySentenceDetector = new SentenceDetectorME(model);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		try {
 			tokenModelIn = new FileInputStream("res/en-token.bin");
 			TokenizerModel model = new TokenizerModel(tokenModelIn);
@@ -45,7 +65,7 @@ public class PopulateSentenceUtilityTest {
 			e.printStackTrace();
 		}
 
-		tester = new PopulateSentenceUtility(myTokenizer);
+		tester = new PopulateSentenceUtility(mySentenceDetector, myTokenizer);
 	}
 
 	@Test

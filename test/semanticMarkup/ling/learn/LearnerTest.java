@@ -29,7 +29,7 @@ public class LearnerTest {
 		List<Sentence> mySentenceTable = results.getSentenceTable();
 		mySentenceTable.add(new Sentence("source1", "sentence1", "originalSentence", "lead1", "status1", "tag1", "modifier1", "type1"));
 		
-		Learner tester = new Learner();
+		Learner tester = new Learner("plain","res/WordNet/WordNet-3.0/dict");
 		
 		assertEquals ("learner", results, tester.Learn(tms));
 		

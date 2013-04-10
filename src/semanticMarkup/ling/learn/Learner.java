@@ -7,8 +7,16 @@ import semanticMarkup.core.Treatment;
 
 public class Learner {
 
-	public Learner() {
-		// TODO Auto-generated constructor stub
+	private String learningMode;
+	
+	// Utilities
+	private WordFormUtility myWordFormUtility;
+
+	public Learner(String learningMode, String wordnetDir) {
+		this.learningMode = learningMode;
+		
+		// Utilities
+		this.myWordFormUtility = new WordFormUtility(wordnetDir);
 	}
 
 	public DataHolder Learn(List<Treatment> treatments) {
