@@ -555,7 +555,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public void addHeuristicsNouns() {
-		// Get all sentences
 		if (this.addHeuristicsNouns_debug)
 			System.out.println("Enter addHeuristicsNouns:\n");
 

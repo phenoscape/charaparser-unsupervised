@@ -1,7 +1,6 @@
 package semanticMarkup.ling.learn;
 
-public class SingularPluralPair {
-	
+public class SingularPluralPair {	
 	private String singular;
 	private String plural;
 

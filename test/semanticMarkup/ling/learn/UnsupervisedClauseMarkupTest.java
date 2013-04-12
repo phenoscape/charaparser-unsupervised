@@ -413,9 +413,6 @@ public class UnsupervisedClauseMarkupTest {
 		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair("word3", "word3"));
 		assertEquals ("inSingularPluralPair - both match", true, tester.inSingularPluralPair("word3"));	
 		
-
-		
-		
 		// Method updatePOS
 		//assertEquals ("getPluralRuleHelper - ves plural", 0, tester.updatePOS("", "", "", 0));
 		

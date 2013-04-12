@@ -9,11 +9,12 @@ import java.util.Map;
 import java.util.Set;
 
 public class DataHolder {
-
 	// Data Holders
 	// Table sentence
 	public List<Sentence> sentenceTable = new LinkedList<Sentence>();
 
+	
+	
 	// Table unknownwords
 	public Map<String, String> unknownWordTable = new HashMap<String, String>();
 
