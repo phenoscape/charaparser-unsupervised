@@ -30,6 +30,34 @@ import semanticMarkup.knowledge.Stemmer;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {
+	public DataHolder myDataHolder;
+	
+	// WordNet
+	private WordNetAPI myWN;
+	// OpenNLP sentence detector
+	private SentenceDetectorME mySentenceDetector;
+	// OpenNLP tokenizer
+	private Tokenizer myTokenizer;
+	
+	// Utilities
+	private WordFormUtility myWordFormUtility; 
+	private PopulateSentenceUtility myPopulateSentenceUtility;
+	
+	
+	/**************************************************
+	 * Debug variables used by Dongye Meng
+	 */
+
+	// Control if output debug msg
+	private boolean populateSentence_debug = false;
+	// addHeuristicsNouns
+	private boolean addHeuristicsNouns_debug = false;
+	private boolean getHeuristicNouns_debug = true;
+	
+	
+	
+	/***************************************************************************/
+
 	// directory of /descriptions folder
 	private String desDir = "";
 	// directory of /characters folder
@@ -49,42 +77,25 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private int NUM_LEAD_WORDS = 3; // $N leading words
 	private int SENTID = 0;
 	private int DECISIONID = 0;
-	private String PROPERNOUN = "propernouns"; // EOL
 
 	private Map<String, String> numberRecords = new HashMap<String, String>(); // word->(p|s)
 	private Map<String, String> singularRecords = new HashMap<String, String>();// word->singular
 	private Map<String, String> POSRecords = new HashMap<String, String>(); // word->POSs
-	//private Map<String, String> POSRecordsRECORDS = new HashMap<String, String>();
+	// private Map<String, String> POSRecordsRECORDS = new HashMap<String,
+	// String>();
 	private String NEWDESCRIPTION = ""; // record the index of sentences that
 										// ends a description
-	
-	public Map<String, Integer> WORDS = new HashMap<String, Integer>();
+
 	private Hashtable<String, String> PLURALS = new Hashtable<String, String>();
 
-	private String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
-
-	// the following two patterns are used in mySQL rlike
-	private String PREFIX = "ab|ad|bi|deca|de|dis|di|dodeca|endo|end|e|hemi|hetero|hexa|homo|infra|inter|ir|macro|mega|meso|micro|mid|mono|multi|ob|octo|over|penta|poly|postero|post|ptero|pseudo|quadri|quinque|semi|sub|sur|syn|tetra|tri|uni|un|xero|[a-z0-9]+_";
-
-	// 3_nerved, )_nerved, dealt with in subroutine
-	private String SUFFIX = "er|est|fid|form|ish|less|like|ly|merous|most|shaped";
-
-	// words in this list can not be treated as boundaries "to|a|b" etc.
-	private String FORBIDDEN = "to|and|or|nor";
-
-	private String PRONOUN = "all|each|every|some|few|individual|both|other";
-	private String CHARACTER = "lengths|length|lengthed|width|widths|widthed|heights|height|character|characters|distribution|distributions|outline|outlines|profile|profiles|feature|features|form|forms|mechanism|mechanisms|nature|natures|shape|shapes|shaped|size|sizes|sized";
-	private String PREPOSITION = "above|across|after|along|around|as|at|before|below|beneath|between|beyond|by|during|for|from|in|into|near|of|off|on|onto|out|outside|over|than|through|throughout|toward|towards|up|upward|with|without";
 	private String TAGS = "";
-	private String PLENDINGS = "[^aeiou]ies|i|ia|(x|ch|sh)es|ves|ices|ae|s";
-	private String CLUSTERSTRING = "group|groups|clusters|cluster|arrays|array|series|fascicles|fascicle|pairs|pair|rows|number|numbers|\\d+";
-	private String SUBSTRUCTURESTRING = "part|parts|area|areas|portion|portions";
+
 	// grouped #may contain q but not the last m, unless it is followed by a p
 	private String mptn = "((?:[mbq][,&]*)*(?:m|b|q(?=[pon])))";
 	// grouped #must present, no q allowed
 	private String nptn = "((?:[nop][,&]*)*[nop])";
 	// grouped #when following a p, a b could be a q
-	private String bptn = "([,;:\\\\.]*\\$|,*[bm]|(?<=[pon]),*q)"; 
+	private String bptn = "([,;:\\\\.]*\\$|,*[bm]|(?<=[pon]),*q)";
 	private String SEGANDORPTN = "(?:" + mptn + nptn + ")";
 	private String ANDORPTN = "^(?:" + SEGANDORPTN + "[,&]+)*" + SEGANDORPTN
 			+ bptn;
@@ -92,65 +103,41 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// private String stop =
 	// "state|page|fig|"+"a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
 
-	private String STOP = "state|page|fig|"
-			+ "a|about|above|across|after|along|also|although|amp|an|and|are|as|at|be|because|become|becomes|becoming|been|before|behind|being|beneath|between|beyond|but|by|ca|can|could|did|do|does|doing|done|during|for|from|had|has|have|hence|here|how|if|in|into|inside|inward|is|it|its|least|may|might|more|most|near|no|not|of|off|on|onto|or|out|outside|outward|over|should|so|than|that|the|then|there|these|this|those|throughout|to|toward|towards|under|up|upward|via|was|were|what|when|where|whereas|which|why|with|within|without|would";
- 
 	// Data Holders
 	// Table sentence
-	private List<Sentence> sentenceTable = new LinkedList<Sentence>();
-	
+	//private List<Sentence> sentenceTable = new LinkedList<Sentence>();
+
 	// Table unknownwords
-	private Map<String, String> unknownWordTable = new HashMap<String, String>();
-	
+	// private Map<String, String> unknownWordTable = new HashMap<String, String>();
+
 	// Table wordpos
-	private Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
-	
+	//private Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
+
 	// Table heuristicnouns
-	private Map<String, String> heuristicNounTable = new HashMap<String, String>();
-	
+	// private Map<String, String> heuristicNounTable = new HashMap<String, String>();
+
 	// Table singularPlural
-	Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
-	
+	//Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
+
 	// Table modifier
-	private Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
-	
+	//private Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
+
 	// Table discounted
-	private Map<DiscountedKey,String> discountedTable = new HashMap<DiscountedKey,String>();
+	//private Map<DiscountedKey, String> discountedTable = new HashMap<DiscountedKey, String>();
 
-	// Third Tools
-	// WordNet
-	private WordNetAPI myWN;
-	// OpenNLP sentence detector
-	private SentenceDetectorME mySentDetector;
-	// OpenNLP tokenizer
-	private Tokenizer myTokenizer;
-	// JWI Stemmer
-	// SimpleStemmer myStemmer;
-	// Porter Stemmer
-	private Stemmer myStemmer;
-
-	// Msg Output Controllers
-	// Control if output feedback on which step is in
-	private boolean msg = false;
-	// Control if output debug msg
-	private boolean debug = false;
-	// addHeuristicsNouns
-	private boolean hn = true;
-	
-	
-	private String NENDINGS = "\\w\\w(?:ist|sure)\\b";
-	private String VENDINGS = "(ing)\\b";	
-	private String SENDINGS = "(on|is|ex|ix|um|us|a)\\b";
-	private String PENDINGS = "(ia|es|ices|i|ae)\\b";
+	// WordFormUility
+	public Map<String, Integer> WORDS = new HashMap<String, Integer>();
 
 	/**
-	 * Constructor of UnsupervisedClauseMarkup class. Create a new UnsupervisedClauseMarkup object.
-	 * @param lm learning mode, can be "plain"
-	 * @param p prefix
-	 * @param wnDir directory of WordNet dictionary
+	 * Constructor of UnsupervisedClauseMarkup class. Create a new
+	 * UnsupervisedClauseMarkup object.
+	 * 
+	 * @param learningMode
+	 *            learning mode. There two legal values, "adj" and "plain"
+	 * @param wordnetDir
+	 *            directory of WordNet dictionary
 	 */
-	public UnsupervisedClauseMarkup(String lm, String p,
-			String wnDir) {
+	public UnsupervisedClauseMarkup(String learningMode, String wordnetDir) {
 		/**
 		 * 1. Store 1) learning mode and 2) prefix
 		 * 2. Get WordNet instance
@@ -158,17 +145,20 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		 * 4. Get OpenNLP tokenizer
 		 * 5. Get JWI simple stemmer
 		 */
-		//System.out.println("Initialized:\n");
+		// System.out.println("Initialized:\n");
 
 		this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
-		this.learningMode = lm;
-		this.prefix = p;
-		System.out.println(String.format("Learning Mode: %s", this.learningMode));
-		System.out.println(String.format("Prefix: %s", this.prefix));
+		this.learningMode = learningMode;
+		// this.prefix = prefix;
+		System.out.println(String
+				.format("Learning Mode: %s", this.learningMode));
+
+		// Get DataHolder
+		myDataHolder = new DataHolder();
 
 		// Get WordNetAPI instance
 		try {
-			myWN = new WordNetAPI(wnDir, false);
+			myWN = new WordNetAPI(wordnetDir, false);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -179,7 +169,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		try {
 			sentModelIn = new FileInputStream("res/en-sent.bin");
 			SentenceModel model = new SentenceModel(sentModelIn);
-			this.mySentDetector = new SentenceDetectorME(model);
+			this.mySentenceDetector = new SentenceDetectorME(model);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -209,101 +199,158 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 
 		// Get JWI simple stemmer
-		//this.myStemmer = new SimpleStemmer();
+		// this.myStemmer = new SimpleStemmer();
 		// Get Porter Stemmer
-		this.myStemmer = new Stemmer();
-
+		
+		// my utilities
+		this.myWordFormUtility = new WordFormUtility(wordnetDir);
+		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.mySentenceDetector, this.myTokenizer);
 	}
 
-	// replace '.', '?', ';', ':', '!' within brackets by some special markers,
-	// to avoid split within brackets during sentence segmentation
-	public String hideMarksInBrackets(String text) {
+	/**
+	 * 
+	 * @param treatments
+	 * @return
+	 */
+	public boolean populateSentences(List<Treatment> treatments) {
+		System.out.println("Reading sentences:\n");
 
-		if (text == null || text == "") {
-			return text;
-		}
+		String fileName;
+		int type;
+		String text;
 
-		String hide = "";
-		int lRound = 0;
-		int lSquare = 0;
-		int lCurly = 0;
+		for (int i = 0; i < treatments.size(); i++) {
+			Treatment tm = treatments.get(i);
+			fileName = tm.getFileName();
+			text = tm.getDescription();
+			type = this.myPopulateSentenceUtility.getType(fileName);
 
-		for (int i = 0; i < text.length(); i++) {
-			char c = text.charAt(i);
-			switch (c) {
-			case '(':
-				lRound++;
-				hide = hide + c;
-				break;
-			case ')':
-				lRound--;
-				hide = hide + c;
-				break;
-			case '[':
-				lSquare++;
-				hide = hide + c;
-				break;
-			case ']':
-				lSquare--;
-				hide = hide + c;
-				break;
-			case '{':
-				lCurly++;
-				hide = hide + c;
-				break;
-			case '}':
-				lCurly--;
-				hide = hide + c;
-				break;
-			default:
-				if (lRound + lSquare + lCurly > 0) {
-					if (c == '.') {
-						hide = hide + "[DOT] ";
-					} else if (c == '?') {
-						hide = hide + "[QST] ";
-					} else if (c == ';') {
-						hide = hide + "[SQL] ";
-					} else if (c == ':') {
-						hide = hide + "[QLN] ";
-					} else if (c == '!') {
-						hide = hide + "[EXM] ";
-					} else {
-						hide = hide + c;
+			if (text != null) {
+				// process this text
+				text = this.handleText(text);
+				if (populateSentence_debug)
+					System.out.println("Text: " + text);
+
+				// use Apache OpenNLP to do sentence segmentation
+				String sentences[] = {};
+				sentences = this.myPopulateSentenceUtility.segmentSentence(text);
+
+				Map<Integer, String> leadMap = new HashMap<Integer, String>();
+				List<String> sentCopy = new LinkedList<String>();
+				List<Integer> validIndex = new LinkedList<Integer>();
+				int index = 0;
+
+				// for each sentence, do some operations
+				for (int j = 0; j < sentences.length; j++) {
+					if (populateSentence_debug)
+						System.out.println("Sentence " + j + ": "
+								+ sentences[j]);
+					if (populateSentence_debug)
+						System.out.println(sentences[j]);
+
+					// if(!/\w+/){next;}
+					if (!sentences[j].matches("^.*\\w+.*$")) {
+						continue;
 					}
-				} else {
-					hide = hide + c;
+
+					// This is a valid sentence, save the index
+					validIndex.add(j);
+
+					// restore marks in brackets
+					sentences[j] = this.myPopulateSentenceUtility.restoreMarksInBrackets(sentences[j]);
+					// Make a copy of the sentence
+					sentCopy.add(sentences[j]);
+
+					// process the sentence
+					sentences[j] = this.handleSentence(sentences[j]);
+
+					// store all words
+					this.WORDS = this.myPopulateSentenceUtility.getAllWords(sentences[j], this.WORDS);
+
+					// Index increase by 1
+					index++;
+				}
+
+				for (int j = 0; j < validIndex.size(); j++) {
+					String line = sentences[validIndex.get(j)];
+					String oline = sentCopy.get(j);
+
+					// handle line first
+					// remove all ' to avoid escape problems
+					// $line =~ s#'# #g;
+					line.replaceAll("\'", " ");
+
+					// then handle oline
+					Matcher matcher = Pattern.compile(
+							"(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)").matcher(
+							oline);
+					if (matcher.lookingAt()) {
+						oline = oline.replaceAll(
+								"(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)",
+								matcher.group(1) + matcher.group(2));
+					}
+
+					// restore ".", "?", ";", ":", "."
+					oline = this.myPopulateSentenceUtility.restoreMarksInBrackets(oline);
+					oline = oline.replaceAll("\'", " ");
+
+					List<String> nWords = this.myPopulateSentenceUtility.getFirstNWords(line,
+							this.NUM_LEAD_WORDS);
+					String lead = "";
+					Iterator<String> iter = nWords.iterator();
+					while (iter.hasNext()) {
+						String w = iter.next();
+						lead = lead + w + " ";
+					}
+					lead = lead.replaceAll("\\s$", "");
+
+					String status = "";
+					if (myWordFormUtility.getNumber(nWords.get(0)).equals("p")) {
+						status = "start";
+					} else {
+						status = "normal";
+					}
+
+					lead = StringUtility.removeAll(lead, "\\s+$");
+					lead = StringUtility.removeAll(lead, "^\\s*");
+					lead = lead.replaceAll("\\s+", " ");
+
+					String source = fileName + "-" + Integer.toString(j);
+					if (oline.length() >= 2000) { // EOL
+						oline = line;
+					}
+					String typeStr = null;
+					switch (type) {
+					case 1:
+						typeStr = "character";
+						break;
+					case 2:
+						typeStr = "description";
+						break;
+					}
+
+					Sentence newSent = new Sentence(source, line, oline, lead,
+							status, null, null, typeStr);
+					this.myDataHolder.sentenceTable.add(newSent);
+
+					this.SENTID++;
 				}
 			}
 		}
-		return hide;
 
+		int numWord = this.populateUnknownWordsTable(WORDS);
+
+		System.out.println("Total sentences = " + SENTID);
+		System.out.println("Total words = " + numWord);
+
+		return true;
 	}
 
-	public String restoreMarksInBrackets(String text) {
-
-		if (text == null || text == "") {
-			return text;
-		}
-
-		// restore "." from "[DOT]"
-		// s#\[\s*DOT\s*\]#.#g;
-		text = text.replaceAll("\\[\\s*DOT\\s*\\]", ".");
-		// restore "?" from "[QST]"
-		// s#\[\s*QST\s*\]#?#g;
-		text = text.replaceAll("\\[\\s*QST\\s*\\]", "?");
-		// restore ";" from "[SQL]"
-		// s#\[\s*SQL\s*\]#;#g;
-		text = text.replaceAll("\\[\\s*SQL\\s*\\]", ";");
-		// restore ":" from "[QLN]"
-		// s#\[\s*QLN\s*\]#:#g;
-		text = text.replaceAll("\\[\\s*QLN\\s*\\]", ":");
-		// restore "." from "[DOT]"
-		// s#\[\s*EXM\s*\]#!#g;
-		text = text.replaceAll("\\[\\s*EXM\\s*\\]", "!");
-
-		return text;
-	}
-
+	/**
+	 * 
+	 * @param t
+	 * @return
+	 */
 	public String handleText(String t) {
 
 		if (t == null || t == "") {
@@ -345,17 +392,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// special markers, to avoid split within brackets during
 		// sentence segmentation
 		// System.out.println("Before Hide: "+text);
-		text = hideMarksInBrackets(text);
+		text = this.myPopulateSentenceUtility.hideMarksInBrackets(text);
 		// System.out.println("After Hide: "+text+"\n");
 
 		text = text.replaceAll("_", "-"); // _ to -
 		text = text.replaceAll("", ""); //
-
-		//
-		// Matcher matcher1 = Pattern.compile("\\s+([:;\\.])").matcher(text);
-		// if (matcher1.lookingAt()) {
-		// text = text.replaceAll("\\s+([:;\\.])", matcher1.group(1));
-		// }
 
 		// absent ; => absent;
 		while (true) {
@@ -424,28 +465,52 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		return text;
 	}
+	
+	/**
+	 * Insert all words in WORDS into unknownWordTable. Insert those formed by
+	 * non words characters into wordPOSTable
+	 * 
+	 * @param WORDS
+	 * @return
+	 */
+	public int populateUnknownWordsTable(Map<String, Integer> WORDS) {
+		int count = 0;
 
-	// add space before and after all occurance of the regex in the string str
-	public String addSpace(String str, String regex) {
+		Iterator<String> iter = WORDS.keySet().iterator();
 
-		if (str == null || str == "" || regex == null || regex == "") {
-			return str;
+		while (iter.hasNext()) {
+			String word = iter.next();
+			if ((!word.matches("^.*\\w.*$")) || (word.matches("^.*ous$"))) {
+				insertUnknown(word, word);
+				this.updateTable(word, "b", "", "wordpos", 1);
+			} else {
+				insertUnknown(word, "unknown");
+			}
+			count++;
 		}
 
-		Matcher matcher = Pattern.compile("(^.*)(" + regex + ")(.*$)").matcher(
-				str);
-		if (matcher.lookingAt()) {
-			str = addSpace(matcher.group(1), regex) + " " + matcher.group(2)
-					+ " " + addSpace(matcher.group(3), regex);
-			return str;
-		} else {
-			return str;
-		}
-
+		return count;
 	}
 
-	public String handleSentence(String s) {
+	/**
+	 * 
+	 * @param word
+	 * @param tag
+	 */
+	public void insertUnknown(String word, String tag) {
+		this.myDataHolder.unknownWordTable.put(word, tag);
+	}
 
+	/**
+	 * remove bracketed text from sentence (keep those in originalsent). Tthis
+	 * step will not be able to remove nested brackets, such as (petioles
+	 * (2-)4-8 cm). Nested brackets will be removed after threedsent step in
+	 * POSTagger4StanfordParser.java
+	 * 
+	 * @param s
+	 * @return
+	 */
+	public String handleSentence(String s) {
 		if (s == null || s == "") {
 			return s;
 		}
@@ -463,7 +528,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		sentence = sentence.replaceAll("\\{[^{}]*?[a-zA-Z][^{}]*?\\}", " ");
 
 		// to fix basi- and hypobranchial
-		// s#\s*[-]+\s*([a-z])#_ $1#g;
 		while (true) {
 			Matcher matcher = Pattern.compile("(^.*?)\\s*[-]+\\s*([a-z].*$)")
 					.matcher(sentence);
@@ -475,34 +539,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 
 		// add space around nonword char
-		// s#(\W)# $1 #g;
-		/*
-		 * while (true) { Matcher matcher8
-		 * =Pattern.compile("(^.*)(\\S\\W\\S)(.*$)").matcher( sentence); if
-		 * (matcher8.lookingAt()) { //sentence = sentence.replaceAll("\\W", " "+
-		 * // matcher8.group(1) // + " "); sentence = matcher8.group(1) + " "+
-		 * matcher8.group(2) + " " + matcher8.group(3); } else { break; } } /
-		 */
-		sentence = this.addSpace(sentence, "\\W");
-
-		// String [] substrings=
-		// Pattern.compile("(\\W)").split(sentence);//matcher(sentence);
-		// matcher8.replaceAll(" " + matcher8.group(1) + " ");
-		// sentence="";
-		// for (int i=0;i<substrings.length;i++) {
-		// sentence=sentence+" "+substrings[i]+" ";
-		// }
+		sentence = this.myPopulateSentenceUtility.addSpace(sentence, "\\W");
 
 		// multiple spaces => 1 space
-		// s#\s+# #g;
 		sentence = sentence.replaceAll("\\s+", " ");
 
-		// trim
-		// s#^\s*##;
+		// trim: remove leading and ending spaces
 		sentence = sentence.replaceAll("^\\s*", "");
-
-		// trim
-		// s#\s*$##;
 		sentence = sentence.replaceAll("\\s*$", "");
 
 		// all to lower case
@@ -511,445 +554,486 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return sentence;
 	}
 
-	public boolean populateSents(List<Treatment> treatments) {
-		System.out.println("Reading sentences:\n");
-		//FileLoader fileLoader = new FileLoader(this.desDir);
-		//if (!fileLoader.load())
-		//	return false;
-
-		//List<String> fileNameList = fileLoader.getFileNameList();
-		//List<Integer> typeList = fileLoader.getTypeList();
-		
-		//List<String> textList = fileLoader.getTextList();
-		
-		//List<String>
-
-		String text;
-		//for (int i = 0; i < fileLoader.getCount(); i++) {
-		for (int i=0;i<treatments.size();i++){
-			//text = textList.get(i);
-			Treatment tm = treatments.get(i);
-			text = tm.getDescription();
-			if (text != null) {
-				// process this text
-				text = this.handleText(text);
-				// use Apache OpenNLP to do sentence segmentation
-				String sentences[] = {};
-				sentences = this.segmentSentence(text);
-
-				Map<Integer, String> leadMap = new HashMap<Integer, String>();
-
-				if (debug)
-					System.out.println("Text: " + text);
-
-				List<String> sentCopy = new LinkedList<String>();
-				List<Integer> validIndex = new LinkedList<Integer>();
-				int index = 0;
-				// for each sentence, do some operations
-				for (int j = 0; j < sentences.length; j++) {
-
-					if (debug)
-						System.out.println("Sentence " + j + ": "
-								+ sentences[j]);
-
-					// if(!/\w+/){next;}
-					if (debug)
-						System.out.println(sentences[j]);
-					if (!sentences[j].matches("^.*\\w+.*$")) {
-						continue;
-					}
-					validIndex.add(j);
-					// restore ".", "?", ";", ":", "."
-					sentences[j] = this.restoreMarksInBrackets(sentences[j]);
-					// push(@sentcopy, $_);
-					sentCopy.add(sentences[j]);
-
-					// remove bracketed text from sentence (keep those in
-					// originalsent); this step will not be able to remove
-					// nested brackets, such as (petioles (2-)4-8 cm).
-					// nested brackets will be removed after threedsent
-					// step in POSTagger4StanfordParser.java
-					sentences[j] = this.handleSentence(sentences[j]);
-
-					getAllWords(sentences[j]);
-
-					// first tokenize this sentence
-					String tokens[] = this.myTokenizer.tokenize(sentences[j]);
-					for (int i1 = 0; i1 < tokens.length; i1++) {
-						this.unknownWordTable.put(tokens[i1], "unknown");
-					}
-
-					// Get the leading NUM_LEAD_WORDS words
-					String lead = "";
-					int minL = tokens.length > this.NUM_LEAD_WORDS ? this.NUM_LEAD_WORDS
-							: tokens.length;
-					for (int i2 = 0; i2 < minL; i2++) {
-						lead = lead + tokens[i2] + " ";
-					}
-					lead = lead.replaceAll("\\s$", "");
-					leadMap.put(j, lead);
-
-					// Index increase by 1
-					index++;
-
-				}
-
-				for (int j = 0; j < validIndex.size(); j++) {
-					String line = sentences[validIndex.get(j)];
-					String oline = sentCopy.get(validIndex.get(j));
-
-					// handle line first
-					// remove all ' to avoid escape problems
-					// $line =~ s#'# #g;
-					line.replaceAll("\'", " ");
-
-					// then handle oline
-					Matcher matcher = Pattern.compile(
-							"(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)").matcher(
-							oline);
-					if (matcher.lookingAt()) {
-						oline = oline.replaceAll(
-								"(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)",
-								matcher.group(1) + matcher.group(2));
-					}
-
-					// restore ".", "?", ";", ":", "."
-					oline = this.restoreMarksInBrackets(oline);
-					oline = oline.replaceAll("\'", " ");
-					
-					String lead = leadMap.get(j);
-					
-					String status = "";
-			
-					/**
-					 	if(getnumber($words[0]) eq "p"){
-					     $status = "start";
-						}else{
-					     $status = "normal";
-					}
-					
-					if (this.getNumber(lead)
-					
-					if(getnumber($words[0]) eq "p"){
-					     $status = "start";
-						}else{
-					     $status = "normal";
-					}
-					
-					if (this.getNumber(lead)
- */
-					if (oline.length() >= 2000) { // EOL
-						oline = line;
-					}
-
-					this.sentenceTable.add(new Sentence(line, oline, lead,
-							null, null, null, null));
-
-					this.SENTID++;
-				}
-			}
-
-		}
-		System.out.println("Total sentences = " + SENTID);
-		return true;
-	}
-
-	private void getAllWords(String sent) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	String[] segmentSentence(String text) {
-		String sentences[] = {};
-		sentences = this.mySentDetector.sentDetect(text);
-		return sentences;
-	}
-
 	public void addHeuristicsNouns() {
-		// Get all sentences
-		if (this.hn)
+		if (this.addHeuristicsNouns_debug)
 			System.out.println("Enter addHeuristicsNouns:\n");
 
+		// part 1
+		List<Set<String>> results = this.characterHeuristics();
+		Set<String> rnouns = results.get(0);
+		Set<String> descriptors = results.get(1);
+		
+		addDescriptors(descriptors);
+		addNouns(rnouns);
+		
+		// part 2
 		Set<String> nouns = this.getHeuristicsNouns();
-		//nouns = this.characterHeuristics(nouns);
+		Map<String, SingularPluralPair> rootMap = new HashMap<String, SingularPluralPair>();
+		Iterator<String> iter = nouns.iterator();
+		while (iter.hasNext()) {
+			String e = iter.next();
+			if ((e.matches("^.*\\w.*$"))
+					&& (!this.isMatchedWords(e, "NUM|" + Constant.NUMBER
+							+ "|" + Constant.CLUSTERSTRING + "|"
+							+ Constant.CHARACTER + "|" + Constant.PROPERNOUN))) {
+				// same word may have two different pos tags
+				String[] nounArray = e.split("\\|");
+				for (int i = 0; i < nounArray.length; i++) {
+					String nounAndPOS = nounArray[i];
+					Pattern p = Pattern.compile("(\\w+)\\[([spn])\\]");
+					Matcher m = p.matcher(nounAndPOS);
+					if (m.lookingAt()) {
+						String word = m.group(1);
+						String pos = m.group(2);
+						this.updateTable(word, pos, "*", "wordpos", 0);
+
+						if (pos.equals("p")) {
+							String plural = word;
+							String singular = this.myWordFormUtility
+									.getSingular(plural);
+							if (singular != null) {
+								if (!singular.equals("")) {
+									this.myDataHolder.addSingularPluralPair(singular, plural);
+								}
+							}
+						}
+
+						if (pos.equals("s")) {
+							String singular = word;
+							List<String> pluralList = this.myWordFormUtility
+									.getPlural(singular);
+							iter = pluralList.iterator();
+							while (iter.hasNext()) {
+								String plural = iter.next();
+								if (plural != null) {
+									if (!plural.equals("")) {
+										this.myDataHolder.addSingularPluralPair(singular, plural);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
+	/**
+	 * check if a word is a word in the wordList
+	 * 
+	 * @param word
+	 *            the word to check
+	 * 
+	 * @param wordList
+	 *            the words to match to
+	 * @return a boolean variable. true mean word is a word in the list. false
+	 *         means it is not
+	 */
+	public boolean isMatchedWords(String word, String wordList){
+		return word.matches("^.*\\b(?:"+wordList+")\\b.*$");
+	}
 	
-	public Set<String> getHeuristicsNouns() {
-
-		// Set of words
-		Set<String> words = new HashSet<String>();
-		
-		// Set of nouns
-		Set<String> nouns = new HashSet<String>();
-		
-		List<String> sents = new LinkedList<String> ();
-		for (int i=0;i<this.sentenceTable.size();i++) {
-			//String sent = this.sentenceTable.get(i).getSentence();
-			String oSent = this.sentenceTable.get(i).getOriginalSentence();
-			if (this.hn) {
-				//if (!sent.equals(oSent)) {
-				//System.out.println(sent+"\n");
-				System.out.println(oSent+"\n");
-				//}
+	/**
+	 * 
+	 * @param descriptors
+	 */
+	public void addDescriptors(Set<String> descriptors) {
+		Iterator<String> iter = descriptors.iterator();
+		while (iter.hasNext()) {
+			String descriptor = iter.next();
+			if (!this.isMatchedWords(descriptor, Constant.FORBIDDEN)) {
+				this.updateTable(descriptor, "b", "", "wordpos", 1);
 			}
-			sents.add(oSent);
-			//if (this.d)
 		}
 		
-		// Now we have original sentences in sents
+	}
+	
+	/**
+	 * 
+	 * @param rnouns
+	 */
+	public void addNouns(Set<String> rnouns) {
+		// TODO Auto-generated method stub
+		Iterator<String> iter = rnouns.iterator();
+		while (iter.hasNext()) {
+			String noun = iter.next();
+			if (!this.isMatchedWords(noun, Constant.FORBIDDEN)) {
+				this.updateTable(noun, "n", "", "wordpos", 1);
+			}
+		}
+	}
+
+
+
+	/**
+	 * 
+	 * @return nouns learned by heuristics
+	 */
+	public Set<String> getHeuristicsNouns() {
+		// Set of words
+		Set<String> words = new HashSet<String>();
+
+		// Set of nouns
+		Set<String> nouns = new HashSet<String>();
+
+		List<String> sentences = new LinkedList<String>();
+		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
+			String originalSentence = this.myDataHolder.sentenceTable.get(i)
+					.getOriginalSentence();
+			if (this.getHeuristicNouns_debug) {
+				 System.out.println(originalSentence+"\n");
+			}
+			sentences.add(StringUtility.strip(originalSentence));
+		}
+
+		// Now we have original sentences in sentences
 		// Method addWords
-		for (int i=0;i<sents.size();i++) {
-			String noun = this.getPresentAbsentNouns(sents.get(i));
+		for (int i = 0; i < sentences.size(); i++) {
+			String sentence = sentences.get(i);
+			sentence = sentence.toLowerCase();
+			String noun = this.getPresentAbsentNouns(sentence);
 			if (!noun.equals("")) {
 				nouns.add(noun);
 			}
-			
+
 			// add words
-			String[] tokens = this.myTokenizer.tokenize(sents.get(i));
-			for (int j=0;j<tokens.length;j++) {
+			String[] tokens = this.myTokenizer.tokenize(sentence);
+			for (int j = 0; j < tokens.length; j++) {
 				String token = tokens[j];
-				
-				
-				if (isWord(token)) {
+				if (StringUtility.isWord(token)) {
+					// if (token.equals("arch"))
+					// token="arch";
 					words.add(token);
+					if (this.getHeuristicNouns_debug) {
+						System.out.println("Add a word into words:");
+						System.out.println(token);
+					}
 				}
 			}
 		}
-		
+
 		// solve the problem: septa and septum are both s
-		Iterator<String> nounsIterator= nouns.iterator();
+		Iterator<String> nounsIterator = nouns.iterator();
 		while (nounsIterator.hasNext()) {
 			String oldNoun = nounsIterator.next();
-			String newNoun = this.addHeuristicsNounsHelper(oldNoun, nouns);
+			String newNoun = this.getHeuristicsNounsHelper(oldNoun, nouns);
 			if (!newNoun.equals(oldNoun)) {
 				nouns.remove(oldNoun);
 				nouns.add(newNoun);
 			}
 		}
-		
+
 		// sort all words
-		Map<String, List<String>> wordMap = new HashMap<String, List<String>>();
+		Map<String, Set<String>> wordMap = new HashMap<String, Set<String>>();
 		Iterator<String> wordsIterator = words.iterator();
 		while (wordsIterator.hasNext()) {
 			String word = wordsIterator.next();
-			String root = this.getRoot(word);
+			String root = myWordFormUtility.getRoot(word);
 			if (wordMap.containsKey(root)) {
-				List<String> wordList = wordMap.get(root);
+				Set<String> wordList = wordMap.get(root);
 				wordList.add(word);
-			}
-			else {
-				List<String> wordList = new LinkedList<String>();
+				//List<String> wordList2 = wordMap.get(root);
+				//System.out.println(wordList2);
+			} else {
+				Set<String> wordList = new HashSet<String>();
 				wordList.add(word);
 				wordMap.put(root, wordList);
 			}
 		}
 
-		// find nouns
-		// getnouns
-		Iterator<String> wordsIterator2 = words.iterator();
-		while (wordsIterator2.hasNext()) {
-			String word = wordsIterator2.next();
-			//word = "sgdsgsddcdfembraseure";
-			if (word.matches("^.*"+this.NENDINGS)) {
-				int dsgi=0;
-				dsgi=90;
-				nouns.add(word+"[s]");
-				if (words.contains(word+"s")) {
-					nouns.add(word+"s"+"[p]");
-				}
-				if (words.contains(word+"es")) {
-					nouns.add(word+"es"+"[p]");
-				}
+		// print out the wordMap
+		if (getHeuristicNouns_debug) {
+			Iterator<Map.Entry<String, Set<String>>> iter = wordMap.entrySet().iterator();
+			while (iter.hasNext()){
+				Map.Entry<String, Set<String>> e = iter.next();
+				System.out.println(e.getKey());
+				System.out.println(e.getValue());
 			}
 		}
 		
-		//Iterator<LinkedList> wordMapIterator = wordMap.i
-		Iterator<Map.Entry<String, List<String>>> wordMapIterator = wordMap.entrySet().iterator();
-		if (wordMapIterator.hasNext()) {
-			Map.Entry<String, List<String>> wordMapEntry = wordMapIterator.next();
-			List<String> wordList = wordMapEntry.getValue();
-			
+		// find nouns
+		Iterator<Map.Entry<String, Set<String>>> iter = wordMap.entrySet().iterator();
+		while (iter.hasNext()){
+			Map.Entry<String, Set<String>> e = iter.next();
+			Set<String> wordSet = e.getValue();
+			Iterator<String> wordIterator = wordSet.iterator();
+			while(wordIterator.hasNext()){
+				String word = wordIterator.next();
+				
+				// getnouns
+				if (word.matches("^.*" + Constant.NENDINGS)) {
+					nouns.add(word + "[s]");
+					if (wordSet.contains(word + "s")) {
+						nouns.add(word + "s" + "[p]");
+						this.myDataHolder.addSingularPluralPair(word, word+"s");						
+					}
+					if (wordSet.contains(word + "es")) {
+						nouns.add(word + "es" + "[p]");
+						this.myDataHolder.addSingularPluralPair(word, word+"es");
+					}
+				}
+			}
+		}
+
+		// Iterator<LinkedList> wordMapIterator = wordMap.i
+		Iterator<Map.Entry<String, Set<String>>> wordMapIterator = wordMap
+				.entrySet().iterator();
+		while (wordMapIterator.hasNext()) {
+			Map.Entry<String, Set<String>> wordMapEntry = wordMapIterator
+					.next();
+			Set<String> wordSet = wordMapEntry.getValue();
+
 			// check if there is a word with Vending
 			boolean hasVending = false;
-			for (int i1=0;i1<wordList.size();i1++) {
-				if (wordList.get(i1).matches("^.*"+this.VENDINGS)) {
+			//for (int i1 = 0; i1 < wordList.size(); i1++) {
+			Iterator<String> wordIterator = wordSet.iterator();
+			while(wordIterator.hasNext()){
+				String tempWord =wordIterator.next(); 
+				if (tempWord.matches("^.*" + Constant.VENDINGS)) {
 					hasVending = true;
 					break;
 				}
 			}
-			
+
 			// at least two words without verb endings
-			if ((!hasVending) && (wordList.size()>1)) {
-				for (int i=0;i<wordList.size();i++) {
-					for (int j=i+1;j<wordList.size();j++) {
+			if ((!hasVending) && (wordSet.size() > 1)) {
+				List<String> wordList = new LinkedList<String>(wordSet);
+				for (int i = 0; i < wordList.size(); i++) {
+					for (int j = i + 1; j < wordList.size(); j++) {
 						String word1 = wordList.get(i);
 						String word2 = wordList.get(j);
-						List<String> pair = getSingularPluralPair(word1,
-								word2);
-						if (pair.size()==2) {
-							String singular = pair.get(1);
-							String plural = pair.get(2);
-							nouns.add(singular+"[s]");
-							nouns.add(plural+"[p]");
+						List<String> pair = myWordFormUtility.getSingularPluralPair(word1, word2);
+						if (pair.size() == 2) {
+							String singular = pair.get(0);
+							String plural = pair.get(1);
+							nouns.add(singular + "[s]");
+							nouns.add(plural + "[p]");
+							this.myDataHolder.addSingularPluralPair(singular, plural);
 						}
 					}
 				}
-			}	
+			}
 		}
-
+		
+		//print out nouns
+		if (this.getHeuristicNouns_debug) {
+			System.out.println("Nouns:\n");
+			System.out.println(nouns);
+		}
+				
 		return nouns;
 	}
 	
-	public void characterHeuristics() {
-		int sent_num = this.sentenceTable.size();
-		
+	// ---------------addHeuristicsNouns Help Function----
+	// #solve the problem: septa and septum are both s
+	// septum - Singular
+	// septa -Plural
+	// septa[s] => septa[p]
+	public String getHeuristicsNounsHelper(String oldNoun, Set<String> words) {
+		String newNoun = oldNoun;
+
+		if (oldNoun.matches("^.*a\\[s\\]$")) {
+			String noun = oldNoun.replaceAll("\\[s\\]", "");
+			System.out.println(noun);
+			if (words.contains(noun)) {
+				newNoun = noun + "[p]";
+			}
+		}
+
+		return newNoun;
+	}
+
+	/**
+	 * any word preceeding "present"/"absent" would be a n
+	 * 
+	 * @param text
+	 *            the content to learn from
+	 * @return nouns learned
+	 */
+	public String getPresentAbsentNouns(String text) {
+		String pachecked = "and|or|to";
+
+		if (text.matches("(\\w+?)\\s+(present|absent)")) {
+			System.out.println(text);
+		}
+
+		Matcher matcher = Pattern.compile("^.*?(\\w+?)\\s+(present|absent).*$")
+				.matcher(text);
+		if (matcher.lookingAt()) {
+			String word = matcher.group(1);
+			if ((!word.matches("\\b(" + pachecked + ")\\b"))
+					&& (!word.matches("\\b(" + Constant.STOP + ")\\b"))
+					&& (!word
+							.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
+				if (this.getHeuristicNouns_debug)
+					System.out.println("present/absent " + word + "\n");
+
+				if (((word.matches("^.*" + Constant.PENDINGS))
+						|| (word.matches("^.*[^s]s$")) || (word
+							.matches("teeth")))
+						&& (!word.matches(Constant.SENDINGS))) {
+					return word + "[p]";
+				} else {
+					return word + "[s]";
+				}
+			}
+		}
+
+		return "";
+	}
+
+	/**
+	 * Discover nouns and descriptors according to a set of rules
+	 * 
+	 * @return a linked list, whose first element is a set of nouns, and second
+	 *         element is a set of descriptors
+	 */
+	public List<Set<String>> characterHeuristics() {
+		boolean ifDebugCharacterHeuristics = true;
+
 		Set<String> taxonNames = new HashSet<String>();
 		Set<String> nouns = new HashSet<String>();
-		
-		// Noun rule 3
 		Set<String> anouns = new HashSet<String>();
 		Set<String> pnouns = new HashSet<String>();
-		
-		// Descriptor rule 2
 		Set<String> descriptors = new HashSet<String>();
-		
-		for (int i=0;i<sent_num;i++) {
-			
-			// noun rule 0: taxon names
-			Sentence sent = this.sentenceTable.get(i);
+		Map<String, Boolean> descriptorMap = new HashMap<String, Boolean>();
+
+		int sent_num = this.myDataHolder.sentenceTable.size();
+		for (int i = 0; i < sent_num; i++) {
+
+			// taxon rule
+			Sentence sent = this.myDataHolder.sentenceTable.get(i);
+			String source = sent.getSource();
 			String sentence = sent.getSentence();
-			String oSentence = sent.getOriginalSentence();
-			oSentence = this.trimString(oSentence);
-			taxonNames = this.getTaxonNameNouns(oSentence);
-			//if (taxonNames.size()>0) {
-			//	Iterator<String> taxonNameIterator= taxonNames.iterator();
-			//	while ()
-			//}
-			//$sentence =~ s#<\s*/?\s*i\s*>##g;
-			//$originalsent =~ s#<\s*/?\s*i\s*>##g;
+			String originalSentence = sent.getOriginalSentence();
+
+			if (ifDebugCharacterHeuristics)
+				System.out.println(source);
+			if (ifDebugCharacterHeuristics)
+				System.out.println(sentence);
+			if (ifDebugCharacterHeuristics)
+				System.out.println(originalSentence + "\n");
+
+			originalSentence = StringUtility.trimString(originalSentence);
+
+			// noun rule 0: taxon names
+			taxonNames = this.getTaxonNameNouns(originalSentence);
 			sentence = sentence.replaceAll("<\\s*/?\\s*i\\s*>", "");
-			oSentence = oSentence.replaceAll("\\s*/?\\s*i\\s*", "");
+			originalSentence = originalSentence.replaceAll("\\s*/?\\s*i\\s*",
+					"");
 			// Update sentenceTable
-			this.sentenceTable.get(i).setSentence(sentence);
-			
+			this.myDataHolder.sentenceTable.get(i).setSentence(sentence);
+
 			// noun rule 0.5: Meckle#s cartilage
-			
-			Set<String> nouns1 = this.getNounsMecklesCartilage(oSentence);
-			nouns.addAll(nouns1);
+
+			Set<String> nouns0 = this
+					.getNounsMecklesCartilage(originalSentence);
+			nouns.addAll(nouns0);
 			sentence = sentence.replaceAll("#", "");
 			// Update sentenceTable
-			this.sentenceTable.get(i).setSentence(sentence);	
-			
-			// noun rule 2: end of sentence nouns (a|an|the|some|any|this|that|those|these) noun$
+			this.myDataHolder.sentenceTable.get(i).setSentence(sentence);
 
-			/**
-			my $cp = $originalsent;
-			while($cp =~ /(.*?)\b(a|an|the|some|any|this|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) +(\w+)\s*($|\(|\[|{|\b($PREPOSITION)\b)(.*)/){
-				my $t = $3;
-				$cp = $5;
-				my $prep = $4;
-				if($prep =~/\w/ && $t =~/\b(length|width|presence|\w+tion)\b/){next;}
-				$t =~ tr/A-Z/a-z/;
-				$nouns{$t} = 1;
-				if($debugnouns){ print "[noun2:$t] $originalsent\n";}
-			}
-			**/
-			
-			Set<String> nouns2 = this.getNounsEndOfSentence(oSentence);
+			// noun rule 2: end of sentence nouns
+			// (a|an|the|some|any|this|that|those|these) noun$
+			Set<String> nouns2 = this.getNounsRule2(originalSentence);
 			nouns.addAll(nouns2);
-			
-			// noun rule 3: proper nouns and acronyms
 
-			
-			String copy = oSentence;
-			String[] segs = copy.split("[()\\[\\]\\{\\}]");
-			for (int i1=0;i1<segs.length;i1++) {
-				String seg = segs[i1];
-				// seg = seg.replaceAll("-", "aaa");
-				// seg = seg.replaceAll("[\\p{Punct}]",""); 
-				// seg = seg.replaceAll("aaa","-");
-				seg = this.removePunctuation(seg, "-");
-				String[] tokens = seg.split("\\s+");
-				tokens[0]="";
-				
-				for (int j=0;j<tokens.length;j++) {
-					/**
-					 * 				if($t =~ /[A-Z].+/ and $t!~/-\w+ed$/){#proper nouns and acronyms, S-shaped
-					if($t=~/^[A-Z0-9]+$/){
-						$t =~ tr/A-Z/a-z/;
-						$anouns{$t} =1;
-					}else{
-						$t =~ tr/A-Z/a-z/;
-						$pnouns{$t} =1;
-					}			
-					$nouns{$t}=1;
-					if($debugnouns) {print "[noun3:$t] $originalsent\n";}
-				}
-					 */
-					
-					String token = tokens[j];
-					if (token.matches("^.*[A-Z].+$") && (!token.matches("^.*-\\w+ed$"))) {
-						if (token.matches("^[A-Z0-9]+$")) {
-							token = token.toLowerCase();
-							anouns.add(token);
-						}
-						else {
-							token = token.toLowerCase();
-							pnouns.add(token);
-						}
-						nouns.add(token);
+			// noun rule 3: proper nouns and acronyms
+			String copy = originalSentence;
+			Set<String> nouns_temp = this.getNounsRule3Helper(copy);
+			Iterator<String> iter = nouns_temp.iterator();
+			while (iter.hasNext()) {
+				String token = iter.next();
+				if (token.matches("^.*[A-Z].+$")
+						&& (!token.matches("^.*-\\w+ed$"))) {
+					if (token.matches("^[A-Z0-9]+$")) {
+						token = token.toLowerCase();
+						anouns.add(token);
+					} else {
+						token = token.toLowerCase();
+						pnouns.add(token);
 					}
+					nouns.add(token);
 				}
 			}
-			
-			// noun rule 4: non-stop/prep followed by a number: epibranchial 4 descriptor heuristics 
-			Set<String> nouns4 = this.getNounsRule4(oSentence);
+
+			// noun rule 1: sources with 1 _ are character statements, 2 _ are
+			// descriptions
+			Set<String> nouns1 = getNounsRule1(source, originalSentence,
+					descriptorMap);
+			nouns.addAll(nouns1);
+
+			// noun rule 4: non-stop/prep followed by a number: epibranchial 4
+			// descriptor heuristics
+			Set<String> nouns4 = this.getNounsRule4(originalSentence);
 			nouns.addAll(nouns4);
-			
-			/**
-			 * 			
-			$originalsent =~ s#-#aaa#g;
-			$originalsent =~ s#[[:punct:]]##g; #keep "-"
-			$originalsent =~ s#aaa#-#g;
-			 */
-			
+
 			// remove puncts for descriptor rules
-			//oSentence.replaceAll("-", "aaa");
-			//oSentence.replaceAll("[\\p{Punct}]", "");
-			//oSentence.replaceAll("aaa", "-");
-			oSentence = this.removePunctuation(oSentence, "-");
-			
-			/**
-			 * 		
-		if($source =~ /\.xml_\S+_/ and $originalsent !~ /\s/){#single word
-			if(grep(/^$originalsent$/, keys(%nouns)) < 1){
-				$originalsent =~ tr/A-Z/a-z/;
-				$descriptors{$originalsent}=1;
-				if($debugnouns){ print "[desp:$originalsent] $originalsent\n";}
-			}
-		}	
-			 */
+			originalSentence = StringUtility.removePunctuation(
+					originalSentence, "-");
+
 			// Descriptor rule 1: single term descriptions are descriptors
-			// ???
-			
-			// Descriptor rule 2: (is|are) red: isDescriptor 
-			/**
-			 * 		@tokens = split(/\s+/, $originalsent);
-		foreach my $t (@tokens){
-			if(isDescriptor($t)){
-				$t =~ tr/A-Z/a-z/;
-				$descriptors{$t}=1;
-				if($debugnouns) {print "[desp:$t] $originalsent\n";}
-			}
+			descriptors.addAll(this.getDescriptorsRule1(source,
+					originalSentence, nouns));
+
+			// Descriptor rule 2: (is|are) red: isDescriptor
+			descriptors.addAll(this.getDescriptorsRule2(originalSentence,
+					descriptorMap));
 		}
-			 */
-			
-			descriptors.addAll(this.getNounsDescriptorsRule2(oSentence));
-		}
+
+		nouns = this.filterOutDescriptors(nouns, descriptors);
+		anouns = this.filterOutDescriptors(anouns, descriptors);
+		pnouns = this.filterOutDescriptors(pnouns, descriptors);
+
+		this.add2HeuristicNounTable(nouns, "organ");
+		this.add2HeuristicNounTable(anouns, "acronyms");
+		this.add2HeuristicNounTable(pnouns, "propernouns");
+		this.add2HeuristicNounTable(taxonNames, "taxonnames");
+
+		nouns.addAll(anouns);
+		nouns.addAll(pnouns);
+		nouns.addAll(taxonNames);
+
+		List<Set<String>> results = new LinkedList<Set<String>>();
+		results.add(nouns);
+		results.add(descriptors);
+
+		return results;
 	}
-	
-	Set<String> filteOutDescriptors(Set<String> rNouns, Set<String> descriptors) {
+
+	/**
+	 * Add the terms into the heuristicNounTable with the type specified
+	 * 
+	 * @param terms
+	 *            set of terms
+	 * @param type
+	 *            type of the terms
+	 * @return number of the terms that have been added
+	 */
+	public int add2HeuristicNounTable(Set<String> terms, String type) {
+		int count = 0;
+
+		Iterator<String> iter = terms.iterator();
+		while (iter.hasNext()) {
+			String term = iter.next();
+			this.myDataHolder.heuristicNounTable.put(term, type);
+			count++;
+		}
+
+		return count;
+	}
+
+	/**
+	 * filter out descriptors from nouns, and return remaining nouns
+	 * 
+	 * @param rNouns
+	 *            set of nouns
+	 * @param rDescriptors
+	 *            set of descriptors
+	 * @return set of nouns that are not descriptors
+	 */
+	Set<String> filterOutDescriptors(Set<String> rNouns,
+			Set<String> rDescriptors) {
 		Set<String> filtedNouns = new HashSet<String>();
 
 		Iterator<String> iter = rNouns.iterator();
@@ -957,11 +1041,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			String noun = iter.next();
 			noun = noun.toLowerCase();
 
-			Pattern p = Pattern.compile("\\b(" + this.PREPOSITION + "|"
-					+ this.STOP + ")\\b", Pattern.CASE_INSENSITIVE);
+			Pattern p = Pattern.compile("\\b(" + Constant.PREPOSITION + "|"
+					+ Constant.STOP + ")\\b", Pattern.CASE_INSENSITIVE);
 			Matcher m = p.matcher(noun);
 
-			if ((!m.lookingAt()) && (!descriptors.contains(noun))) {
+			if ((!m.lookingAt()) && (!rDescriptors.contains(noun))) {
 				filtedNouns.add(noun);
 			}
 		}
@@ -969,126 +1053,44 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	/**
+	 * Nouns rule 0: get <i></i> enclosed taxon names
 	 * 
-	 * @param text
-	 *            : string in which all punctuations to remove
-	 * @param c
-	 *            : a punctuatin to keep
-	 * @return: string after puctuations are removed except the one in c
+	 * @param oSent
+	 * @return
 	 */
-
-	public String removePunctuation(String text, String c) {
-		//System.out.println("Old: " + text);
-		if (c == null) {
-			text = text.replaceAll("[\\p{Punct}]", "");
-		} else {
-			text = text.replaceAll(c, "aaa");
-			text = text.replaceAll("[\\p{Punct}]", "");
-			text = text.replaceAll("aaa", c);
-		}
-		//System.out.println("New: " + text);
-
-		return text;
-	}
-
-	public Set<String> getNounsDescriptorsRule2(String oSent) {
-		Set<String> descriptors = new HashSet<String>();
-		
-		String[] tokens = oSent.split("\\s+");
-		
-		for (int i=0;i<tokens.length;i++) {
-			String token = tokens[i];
-			//if (isDescriptor(token)) {
-			if (true) {
-				token = token.toLowerCase();
-				descriptors.add(token);
-			}
-		}
-				
-		return descriptors;
-	}
-	
-	
-	
-	// noun rule 4: non-stop/prep followed by a number: epibranchial 4 descriptor heuristics 
-	public Set<String> getNounsRule4(String oSent) {
-		Set<String> nouns = new HashSet<String>();
-		
-		/**
-		 * 		
-	$cp = $originalsent;
-	while($cp =~ /(.*?)\s(\w+)\s+\d+(.*)/){
-		my $t = $2;
-		$cp = $3;
-		if($t !~ /\b($PREPOSITION|$stop)\b/){
-			$t =~ tr/A-Z/a-z/;
-			$nouns{$t} = 1;
-			if($debugnouns){ print "[noun4:$t] $originalsent\n";}
-		}
-	}	
-		 */
-		
+	public Set<String> getTaxonNameNouns(String oSent) {
+		Set<String> taxonNames = new HashSet<String>();
+		String regex = "(.*?)<\\s*i\\s*>\\s*([^<]*)\\s*<\\s*\\/\\s*i\\s*>(.*)";
 		String copy = oSent;
-		String regex = "(.*?)\\s(\\w+)\\s+\\d+(.*)";
-				
-		while (true) {
-			if (copy==null) {
-				break;
-			}
-			Matcher m = Pattern.compile(regex).matcher(copy);
-			if (m.lookingAt()) {
-				String t = m.group(2);
-				copy = m.group(3);
-				String regex2 = "\\b("+this.PREPOSITION+"|"+this.STOP+")\\b"; 
-				if (!t.matches(regex2)) {
-					t.toLowerCase();
-					nouns.add(t);
-				}
-			}
-			else {
-				break;
-			}
-		}		
-		
-		return nouns;
-	}
-
-	public Set<String> getNounsEndOfSentence(String oSent) {
-		String copy = oSent;
-		String regex = "(.*?)\\b(a|an|the|some|any|this|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) +(\\w+)\\s*($|\\(|\\[|\\{|\\b"
-				+ this.PREPOSITION + "\\b)(.*)";
-		Set<String> nouns = new HashSet<String>();
 
 		while (true) {
-			if (copy == null) {
-				break;
-			}
-			Matcher m = Pattern.compile(regex).matcher(copy);
-			if (m.lookingAt()) {
-				String t = m.group(3);
-				String prep = m.group(4);
-				copy = m.group(5);
-				// String t6 = m.group(6);
-				// copy = m.group(5);
-				// String prep = m.group(4);
-				if (prep.matches("^.*\\w.*$")
-						&& t.matches("^.*\\b(length|width|presence|\\w+tion)\\b.*$")) {
-					continue;
+			Matcher matcher = Pattern.compile(regex).matcher(copy);
+			if (matcher.lookingAt()) {
+				String taxonName = matcher.group(2);
+				if (taxonName.length() > 0) {
+					taxonNames.add(taxonName);
+					String[] taxonNameArray = taxonName.split("\\s+");
+					for (int i = 0; i < taxonNameArray.length; i++) {
+						taxonNames.add(taxonNameArray[i]);
+					}
+					copy = matcher.group(3);
+				} else {
+					break;
 				}
-				t = t.toLowerCase();
-				nouns.add(t);
 			} else {
 				break;
 			}
 		}
 
-		return nouns;
+		return taxonNames;
 	}
 
 	/**
-	 * Meckle#s cartilage
+	 * Nouns rule 0.5: Meckle#s cartilage
+	 * 
+	 * @param oSent
+	 * @return
 	 */
-	
 	public Set<String> getNounsMecklesCartilage(String oSent) {
 		Set<String> nouns = new HashSet<String>();
 		String regex = "^.*\\b(\\w+#s)\\b.*$";
@@ -1109,319 +1111,330 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		return nouns;
 	}
-	
-	
-	/** 
-	 * <i></i> enclosed taxon names  
-	 **/
-	public Set<String> getTaxonNameNouns (String oSent) {
-		Set<String> taxonNames = new HashSet<String>();
-		String regex = "(.*?)<\\s*i\\s*>\\s*([^<]*)\\s*<\\s*\\/\\s*i\\s*>(.*)";
+
+	/**
+	 * 
+	 * @param source
+	 * @param originalSentence
+	 * @param descriptorMap
+	 * @return
+	 */
+	public Set<String> getNounsRule1(String source, String originalSentence,
+			Map<String, Boolean> descriptorMap) {
+		Set<String> nouns = new HashSet<String>();
+
+		if ((!(source.matches("^.*\\.xml_\\S+_.*$")))
+				&& (!(originalSentence.matches("^.*\\s.*$")))) {
+			if (!this.isDescriptor(originalSentence, descriptorMap)) {
+				originalSentence = originalSentence.toLowerCase();
+				nouns.add(originalSentence);
+			}
+		}
+
+		return nouns;
+	}
+
+	/**
+	 * 
+	 * @param oSent
+	 * @return
+	 */
+	public Set<String> getNounsRule2(String oSent) {
 		String copy = oSent;
-		//<\\s*/?\\s*i\\s*>
-		
+		String regex = "(.*?)\\b(a|an|the|some|any|this|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) +(\\w+)\\s*($|\\(|\\[|\\{|\\b"
+				+ Constant.PREPOSITION + "\\b)(.*)";
+		Set<String> nouns = new HashSet<String>();
+
 		while (true) {
-			Matcher matcher = Pattern.compile(regex).matcher(copy);
-			if (matcher.lookingAt()) {
-				String taxonName = matcher.group(2);
-				if (taxonName.length() > 0) {
-					taxonNames.add(taxonName);
-					String[] taxonNameArray = taxonName.split("\\s+");
-					for (int i = 0; i < taxonNameArray.length; i++) {
-						taxonNames.add(taxonNameArray[i]);
-					}
-					copy = matcher.group(3);
-				} else {
-					break;
+			if (copy == null) {
+				break;
+			}
+			Matcher m = Pattern.compile(regex).matcher(copy);
+			if (m.lookingAt()) {
+				String t = m.group(3);
+				String prep = m.group(4);
+				copy = m.group(5);
+
+				if (prep.matches("^.*\\w.*$")
+						&& t.matches("^.*\\b(length|width|presence|\\w+tion)\\b.*$")) {
+					continue;
+				}
+				t = t.toLowerCase();
+				nouns.add(t);
+			} else {
+				break;
+			}
+		}
+
+		return nouns;
+	}
+
+	/**
+	 * 
+	 * @param sentence
+	 * @return
+	 */
+	public Set<String> getNounsRule3Helper(String sentence) {
+		Set<String> nouns = new HashSet<String>();
+
+		String[] segs = sentence.split("[()\\[\\]\\{\\}]");
+		for (int i1 = 0; i1 < segs.length; i1++) {
+			String seg = segs[i1];
+			seg = StringUtility.removePunctuation(seg, "-");
+			String[] tokens = seg.split("\\s+");
+
+			// #ignore the first word in character statements--this is normally
+			// capitalized
+			for (int j = 1; j < tokens.length; j++) {
+				String token = tokens[j];
+				if (token.matches("^.*[A-Z].+$")
+						&& (!token.matches("^.*-\\w+ed$"))) {
+					nouns.add(token);
+				}
+			}
+		}
+
+		return nouns;
+	}
+
+	/**
+	 * noun rule 4: non-stop/prep followed by a number: epibranchial 4
+	 * descriptor heuristics
+	 * 
+	 * @param oSent
+	 * @return a set of nouns
+	 */
+	public Set<String> getNounsRule4(String oSent) {
+		Set<String> nouns = new HashSet<String>();
+
+		String copy = oSent;
+		String regex = "(.*?)\\s(\\w+)\\s+\\d+(.*)";
+
+		while (true) {
+			if (copy == null) {
+				break;
+			}
+			Matcher m = Pattern.compile(regex).matcher(copy);
+			if (m.lookingAt()) {
+				String t = m.group(2);
+				copy = m.group(3);
+				String regex2 = "\\b(" + Constant.PREPOSITION + "|"
+						+ Constant.STOP + ")\\b";
+				if (!t.matches(regex2)) {
+					t = t.toLowerCase();
+					nouns.add(t);
 				}
 			} else {
 				break;
 			}
 		}
-		
-		return taxonNames;
+
+		return nouns;
 	}
 
-	List<String> getSingularPluralPair(String word1, String word2) {
-		List<String> pair = new ArrayList<String>();
-		String singular = "";
-		String plural = "";
-		int len1 = word1.length();
-		int len2 = word2.length();
-		if (len1 < len2) {
-			String temp_word = word1;
-			word1 = word2;
-			word2 = temp_word;
-			int temp_len = len1;
-			len1 = len2;
-			len2 = temp_len;
-		}
+	/**
+	 * 
+	 * @param source
+	 * @param sentence
+	 * @param nouns
+	 * @return
+	 */
+	public Set<String> getDescriptorsRule1(String source, String sentence,
+			Set<String> nouns) {
+		Set<String> descriptors = new HashSet<String>();
 
-		if ((word2.matches("^.*" + this.SENDINGS))
-				&& (word1.matches("^.*" + this.PENDINGS))) {
-
-			if (word1.matches("^.*" + "es$") && word2.matches("^.*" + "is$")
-					&& Math.abs(len1 - len2) == 0) {
-				singular = word2;
-				plural = word1;
-			} else if (word1.matches("^.*" + "a$")
-					&& word2.matches("^.*" + "on$")
-					&& Math.abs(len1 - len2) < 2) {
-				singular = word2;
-				plural = word1;
-			} else if (word1.matches("^.*" + "a$")
-					&& word2.matches("^.*" + "um$")
-					&& Math.abs(len1 - len2) < 2) {
-				singular = word2;
-				plural = word1;
-			} else if (word1.matches("^.*" + "i$")
-					&& word2.matches("^.*" + "us$")
-					&& Math.abs(len1 - len2) < 2) {
-				singular = word2;
-				plural = word1;
-			} else if (word1.matches("^.*" + "a$")
-					&& word2.matches("^.*" + "us$")
-					&& Math.abs(len1 - len2) < 2) {
-				singular = word2;
-				plural = word1;
-			}
-
-		} else {
-			// thicker, thickness; species, specimens; tomentulose, tomentulous;
-			// later laterals
-			if (word2.matches("^.*s$")) {
-				if (getSingularPluralPairHelper(word1, word2)) {
-					singular = word1;
-					plural = word2;
+		if (source.matches("^.*\\.xml_\\S+_.*$") && (!sentence.matches("\\s"))) {// single
+																					// word
+			Iterator<String> iter = nouns.iterator();
+			boolean isExist = false;
+			while (iter.hasNext()) {
+				String noun = iter.next();
+				if (noun.equals(sentence)) {
+					isExist = true;
+					break;
 				}
 			}
+			if (isExist == false) {
+				sentence = sentence.toLowerCase();
+				descriptors.add(sentence);
+			}
 		}
 
-		if ((!singular.equals("")) && (!plural.equals(""))) {
-			pair.add(singular);
-			pair.add(plural);
-		}
-
-		return pair;
+		return descriptors;
 	}
 
-	// word2 has no other letters except those appearing in word1 or ies, and
-	// vice versa.
-	public boolean getSingularPluralPairHelper(String word1, String word2) {
-		int len1 = word1.length();
-		int len2 = word2.length();
+	/**
+	 * 
+	 * @param oSent
+	 * @return
+	 */
+	public Set<String> getDescriptorsRule2(String sentence,
+			Map<String, Boolean> descriptorMap) {
+		Set<String> descriptors = new HashSet<String>();
 
-		if ((!word2.matches("^\\[^" + word1 + "yies" + "\\]*&"))
-				&& (!word1.matches("^\\[^" + word2 + "yies" + "\\]*&"))
-				&& (Math.abs(len1 - len2) > 0) 
-				&& (Math.abs(len1 - len2) < 3)) {
+		String[] tokens = sentence.split("\\s+");
+
+		for (int i = 0; i < tokens.length; i++) {
+			String token = tokens[i];
+			token = token.toLowerCase();
+			if (isDescriptor(token, descriptorMap)) {
+				token = token.toLowerCase();
+				descriptors.add(token);
+			}
+		}
+
+		return descriptors;
+	}
+
+	/**
+	 * Check if the term is a descriptor
+	 * 
+	 * @param term
+	 * @param descriptorMap
+	 *            descriptors have already learned
+	 * @return a boolean value indicating whether the term is a descriptor. This
+	 *         result will be stored in the descriptorMap for future use
+	 */
+	public boolean isDescriptor(String term, Map<String, Boolean> descriptorMap) {
+		if (descriptorMap.containsKey(term)) {
+			if (descriptorMap.get(term).booleanValue()) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
+				String originalSentence = this.myDataHolder.sentenceTable.get(i)
+						.getOriginalSentence();
+				if (isMatched(originalSentence, term, descriptorMap)) {
+					return true;
+				}
+			}
+			term = term.toLowerCase();
+			descriptorMap.put(term, false);
+			return false;
+		}
+
+	}
+
+	/**
+	 * Check if the term matches the sentence
+	 * 
+	 * @param sentence
+	 * @param term
+	 * @param descriptorMap
+	 * @return a boolean value indicating whether the term matches the sentence
+	 */
+	public boolean isMatched(String sentence, String term,
+			Map<String, Boolean> descriptorMap) {
+		if (sentence.matches("^.*" + " (is|are|was|were|be|being) " + term
+				+ ".*$")) {
+			term = term.toLowerCase();
+			descriptorMap.put(term, true);
 			return true;
 		} else {
-
 			return false;
 		}
 	}
 	
-	//if($t !~ /\b(?:$STOP)\b/ && $t =~/\w/ && $t !~ /\d/ && length $t > 1){
-	public boolean isWord(String token) {
-		String regex = "\\b("+this.STOP+")\\b";
-		if (token.matches(regex)) {
-			return false;
-		}
-		
-		if (!token.matches("\\w+")) {
-			return false;
-		}
-		
-		if (token.length()<=1) {
-			return false;
-		}	
-		
-		return true;
-	}
-	
-	public String getRoot (String word) {
-		String root;
-		this.myStemmer.add(word.toCharArray(), word.length());
-		this.myStemmer.stem();
-		root = this.myStemmer.toString();
-		return root;
-	}
-
-	public String getPresentAbsentNouns(String text) {
-		
-		String pachecked = "and|or|to";
-		
-//		if($text =~ /(\w+?)\s+(present|absent)/){
-//			my $n = $1;
-//			if($n !~ /\b($pachecked)\b/ && $n!~/\b($STOP)\b/ && $n !~/\b(always|often|seldom|sometimes|[a-z]+ly)\b/){
-//				print "present/absent [$n]\n";
-//				
-//				if(($n =~/$PENDINGS/ or $n =~/[^s]s$/ or $n =~ /teeth/) and $n !~/$SENDINGS/){
-//					push(@NOUNS, $n."[p]");
-//				}else{
-//					push(@NOUNS, $n."[s]");
-//				}
-//				$pachecked .= "|$n";
-//			}
-//		}
-		
-		if (text.matches("(\\w+?)\\s+(present|absent)")) {
-			System.out.println(text);
-		}
-
-		// Matcher matcher = Pattern.compile("(^.*?)\\s+([:;\\.].*$)")
-		Matcher matcher = Pattern.compile("^.*?(\\w+?)\\s+(present|absent).*$")
-				.matcher(text);
-		if (matcher.lookingAt()) {
-
-			String word = matcher.group(1);
-			//String word1 = matcher.group();
-			//String word2= matcher.group(2);
-			
-			/**
-			 * if($n !~ /\b($pachecked)\b/ && $n!~/\b($STOP)\b/ && $n
-			 * !~/\b(always|often|seldom|sometimes|[a-z]+ly)\b/){
-			 **/
-			if ((!word.matches("\\b(" + pachecked + ")\\b"))
-					&& (!word.matches("\\b(" + this.STOP + ")\\b"))
-					&& (!word.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
-				
-				//print "present/absent [$n]\n";
-				System.out.println("present/absent "+word+"\n");
-				
-				/**
-				 * if(($n =~/$PENDINGS/ or $n =~/[^s]s$/ or $n =~ /teeth/) and
-				 * $n !~/$SENDINGS/){
-				 **/
-				if (((word.matches("^.*" + this.PENDINGS))
-						|| (word.matches("^.*[^s]s$")) 
-						|| (word.matches("teeth")))
-					&& (!word.matches(this.SENDINGS))) {
-					return word+"[p]";
-				}
-				else {
-					return word+"[s]";
-				}
-			}			
-		}
-
-		//only one pair of uroneurals present			
-		return "";
-	}
-	
-
-	// ---------------addHeuristicsNouns Help Function----
-	// #solve the problem: septa and septum are both s
-	// septum - Singular
-	// septa -Plural
-	// septa[s] => septa[p]
-	public String addHeuristicsNounsHelper(String oldNoun, Set<String> words) {
-		String newNoun = oldNoun;
-
-		if (oldNoun.matches("^.*a\\[s\\]$")) {
-			String noun = oldNoun.replaceAll("\\[s\\]", "");
-			System.out.println(noun);
-			if (words.contains(noun)) {
-				newNoun = noun + "[p]";
-			}
-		}
-
-		return newNoun;
-	}
-
 	public void addStopWords() {
 		List<String> stops = new ArrayList<String>();
-		stops.addAll(Arrays.asList(this.STOP.split("\\|")));
+		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
 		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
 				"]", "}", "\\\\d+" }));
 
 		System.out.println(stops);
-		System.out.println(this.FORBIDDEN);
+		System.out.println(Constant.FORBIDDEN);
 
 		for (int i = 0; i < stops.size(); i++) {
 			String word = stops.get(i);
-			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
-			//this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue("*", 0, 0, null, null));
-			//System.out.println("Add Stop Word: " + word+"\n");
+			// this.wordPOSTable.put(new WordPOSKey(word, "b"), new
+			// WordPOSValue("*", 0, 0, null, null));
+			// System.out.println("Add Stop Word: " + word+"\n");
 		}
 	}
 
 	public void addCharacters() {
 		List<String> chars = new ArrayList<String>();
-		chars.addAll(Arrays.asList(this.CHARACTER.split("\\|")));
+		chars.addAll(Arrays.asList(Constant.CHARACTER.split("\\|")));
 
 		System.out.println(chars);
-		System.out.println(this.CHARACTER);
+		System.out.println(Constant.CHARACTER);
 
 		for (int i = 0; i < chars.size(); i++) {
 			String word = chars.get(i);
-			// String reg="\\b("+this.FORBIDDEN+")\\b";
+			// String reg="\\b("+Constant.FORBIDDEN+")\\b";
 			// boolean f = word.matches(reg);
-			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
-			//this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue("", 0, 0, null, null));
-			//System.out.println("addCharacter word: " + word);
+			// this.wordPOSTable.put(new WordPOSKey(word, "b"), new
+			// WordPOSValue("", 0, 0, null, null));
+			// System.out.println("addCharacter word: " + word);
 		}
 	}
 
 	public void addNumbers() {
 		List<String> nums = new ArrayList<String>();
-		nums.addAll(Arrays.asList(this.NUMBER.split("\\|")));
+		nums.addAll(Arrays.asList(Constant.NUMBER.split("\\|")));
 
 		System.out.println(nums);
-		System.out.println(this.NUMBER);
+		System.out.println(Constant.NUMBER);
 
 		for (int i = 0; i < nums.size(); i++) {
 			String word = nums.get(i);
-			// String reg="\\b("+this.FORBIDDEN+")\\b";
+			// String reg="\\b("+Constant.FORBIDDEN+")\\b";
 			// boolean f = word.matches(reg);
-			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
-			//this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue("*", 0, 0, null, null));
-			//System.out.println("add Number: " + word);
+			// this.wordPOSTable.put(new WordPOSKey(word, "b"), new
+			// WordPOSValue("*", 0, 0, null, null));
+			// System.out.println("add Number: " + word);
 		}
 		this.updateTable("NUM", "b", "*", "wordpos", 0);
-		//this.wordPOSTable.put(new WordPOSKey("NUM", "b"), new WordPOSValue("*",0, 0, null, null));
+		// this.wordPOSTable.put(new WordPOSKey("NUM", "b"), new
+		// WordPOSValue("*",0, 0, null, null));
 	}
 
 	public void addClusterstrings() {
 		List<String> cltstrs = new ArrayList<String>();
-		cltstrs.addAll(Arrays.asList(this.CLUSTERSTRING.split("\\|")));
+		cltstrs.addAll(Arrays.asList(Constant.CLUSTERSTRING.split("\\|")));
 
 		System.out.println(cltstrs);
-		System.out.println(this.CLUSTERSTRING);
+		System.out.println(Constant.CLUSTERSTRING);
 
 		for (int i = 0; i < cltstrs.size(); i++) {
 			String word = cltstrs.get(i);
-			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
-			//this.wordPOSTable.put(new WordPOSKey(word, "b"), new WordPOSValue("*", 1, 1, null, null));
-			//System.out.println("addClusterString: " + word);
+			// this.wordPOSTable.put(new WordPOSKey(word, "b"), new
+			// WordPOSValue("*", 1, 1, null, null));
+			// System.out.println("addClusterString: " + word);
 		}
 	}
 
 	public void addProperNouns() {
 		List<String> ppnouns = new ArrayList<String>();
-		ppnouns.addAll(Arrays.asList(this.PROPERNOUN.split("\\|")));
+		ppnouns.addAll(Arrays.asList(Constant.PROPERNOUN.split("\\|")));
 
 		for (int i = 0; i < ppnouns.size(); i++) {
 			String word = ppnouns.get(i);
-			if (word.matches("\\b(" + this.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
-			//this.wordPOSTable.put(new WordPOSKey(word, "z"), new WordPOSValue("*", 0, 0, null, null));
-			System.out.println("Add ProperNoun: " + word);
+			// this.wordPOSTable.put(new WordPOSKey(word, "z"), new
+			// WordPOSValue("*", 0, 0, null, null));
+			// System.out.println("Add ProperNoun: " + word);
 		}
 	}
 
@@ -1436,9 +1449,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// suffix is defined in global variable SUFFIX
 	public void posBySuffix() {
-		String p1 = "^[a-z_]+(" + this.SUFFIX + ")$";
+		String p1 = "^[a-z_]+(" + Constant.SUFFIX + ")$";
 		String p2 = "^[._.][a-z]+"; // , _nerved
-		Iterator<Map.Entry<String, String>> iterator = this.unknownWordTable
+		Iterator<Map.Entry<String, String>> iterator = this.myDataHolder.unknownWordTable
 				.entrySet().iterator();
 
 		while (iterator.hasNext()) {
@@ -1451,12 +1464,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (unknownWordTag.equals("unknown")) {
 				if (unknownWord.matches(p1)) {
 					Matcher matcher = Pattern.compile(
-							"(.*?)(" + this.SUFFIX + ")$").matcher(unknownWord);
+							"(.*?)(" + Constant.SUFFIX + ")$").matcher(
+							unknownWord);
 					if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
 							&& matcher.matches()) {
 						if (this.containSuffix(unknownWord, matcher.group(1),
 								matcher.group(2))) {
-							this.wordPOSTable.put(new WordPOSKey(unknownWord,
+							this.myDataHolder.wordPOSTable.put(new WordPOSKey(unknownWord,
 									"b"), new WordPOSValue("*", 0, 0, null,
 									null));
 							System.out
@@ -1467,7 +1481,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 				if (unknownWord.matches(p2)) {
 					// unknownWordTable.put(unknownWord, "b");
-					this.wordPOSTable.put(new WordPOSKey(unknownWord, "b"),
+					this.myDataHolder.wordPOSTable.put(new WordPOSKey(unknownWord, "b"),
 							new WordPOSValue("*", 0, 0, null, null));
 					System.out
 							.println("posbysuffix set $unknownword a boundary word\n");
@@ -1518,7 +1532,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				}
 			}
 			// if the word is in unknown word set, return true
-			if (this.unknownWordTable.containsKey(base)) {
+			if (this.myDataHolder.unknownWordTable.containsKey(base)) {
 				return true;
 			}
 		}
@@ -1548,7 +1562,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (baseInWN) {
 				return true;
 			}
-			if (this.unknownWordTable.containsKey(base)) {
+			if (this.myDataHolder.unknownWordTable.containsKey(base)) {
 				return true;
 			}
 		}
@@ -1559,67 +1573,67 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public void markupByPattern() {
 		System.out.println("markupbypattern start");
 		// int cap=this.sentence.size();
-		int cap = this.sentenceTable.size();
+		int cap = this.myDataHolder.sentenceTable.size();
 		// ((ArrayList)this.tag).ensureCapacity(cap);
 		// ((ArrayList)this.modifier).ensureCapacity(cap);
 		// for (int i=0;i<this.originalSent.size();i++) {
 		for (int i = 0; i < cap; i++) {
 			// case 1
 			// if (this.originalSent.get(i).matches("^x=.*")) {
-			if (this.sentenceTable.get(i).getOriginalSentence()
+			if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
 					.matches("^x=.*")) {
 				// tag.set(i, "chromosome");
 				// modifier.set(i, "");
-				this.sentenceTable.get(i).setTag("chromosome");
-				this.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.sentenceTable.get(i).setTag("chromosome");
+				this.myDataHolder.sentenceTable.get(i).setModifier("");
 			}
 			// case 2
-			else if (this.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
 					.matches("^2n=.*")) {
 				// tag.set(i, "chromosome");
 				// modifier.set(i, "");
-				this.sentenceTable.get(i).setTag("chromosome");
-				this.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.sentenceTable.get(i).setTag("chromosome");
+				this.myDataHolder.sentenceTable.get(i).setModifier("");
 			}
 			// case 3
-			else if (this.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
 					.matches("^x .*")) {
 				// tag.set(i, "chromosome");
 				// modifier.set(i, "");
-				this.sentenceTable.get(i).setTag("chromosome");
-				this.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.sentenceTable.get(i).setTag("chromosome");
+				this.myDataHolder.sentenceTable.get(i).setModifier("");
 			}
 			// case 4
-			else if (this.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
 					.matches("^2n .*")) {
 				// tag.set(i, "chromosome");
 				// modifier.set(i, "");
-				this.sentenceTable.get(i).setTag("chromosome");
-				this.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.sentenceTable.get(i).setTag("chromosome");
+				this.myDataHolder.sentenceTable.get(i).setModifier("");
 			}
 			// case 5
-			else if (this.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
 					.matches("^2 n.*")) {
 				// tag.set(i, "chromosome");
 				// modifier.set(i, "");
-				this.sentenceTable.get(i).setTag("chromosome");
-				this.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.sentenceTable.get(i).setTag("chromosome");
+				this.myDataHolder.sentenceTable.get(i).setModifier("");
 			}
 			// case 6
-			else if (this.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
 					.matches("^fl.*")) {
 				// tag.set(i, "flowerTime");
 				// modifier.set(i, "");
-				this.sentenceTable.get(i).setTag("flowerTime");
-				this.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.sentenceTable.get(i).setTag("flowerTime");
+				this.myDataHolder.sentenceTable.get(i).setModifier("");
 			}
 			// case 7
-			else if (this.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
 					.matches("^fr.*")) {
 				// tag.set(i, "flowerTime");
 				// modifier.set(i, "");
-				this.sentenceTable.get(i).setTag("flowerTime");
-				this.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.sentenceTable.get(i).setTag("flowerTime");
+				this.myDataHolder.sentenceTable.get(i).setModifier("");
 			}
 		}
 		System.out.println("markupbypattern end");
@@ -1629,22 +1643,22 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public void markupIgnore() {
 		// $sth =
 		// $dbh->prepare("update ".$prefix."_sentence set tag = 'ignore', modifier='' where originalsent rlike '(^| )$IGNOREPTN ' ");
-		for (int i = 0; i < this.sentenceTable.size(); i++) {
-			String thisSent = this.sentenceTable.get(i).getOriginalSentence();
+		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
+			String thisSent = this.myDataHolder.sentenceTable.get(i).getOriginalSentence();
 			String p = "(^| )" + this.IGNOREPTN;
 			if (thisSent.matches("(^|^ )" + this.IGNOREPTN + ".?")) {
-				sentenceTable.get(i).setTag("ignore");
-				sentenceTable.get(i).setModifier("");
+				this.myDataHolder.sentenceTable.get(i).setTag("ignore");
+				this.myDataHolder.sentenceTable.get(i).setModifier("");
 			}
 		}
 	}
-	
-	public int discover (String s) {
+
+	public int discover(String s) {
 		int newDisc = 0;
-		
-		for (int i=0;i<this.sentenceTable.size();i++) {
-			Sentence sentEntry = sentenceTable.get(i);
-			//sentid
+
+		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
+			Sentence sentEntry = this.myDataHolder.sentenceTable.get(i);
+			// sentid
 			String sent = sentEntry.getSentence();
 			String lead = sentEntry.getLead();
 			String tag = sentEntry.getTag();
@@ -1652,28 +1666,28 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (!(tag == null || !tag.equals("ignore") && status.equals(s))) {
 				continue;
 			}
-			
+
 			String[] startWords = lead.split("\\s+");
-			//@startwords = split(/\s+/,$lead);
-			
-			//$pattern = buildpattern(@startwords);
+			// @startwords = split(/\s+/,$lead);
+
+			// $pattern = buildpattern(@startwords);
 			String pattern = buildPattern(startWords);
-			
+
 			if (pattern.matches("^.*\\w+.*$")) {
 				// ids of untagged sentences that match the pattern
-				Set<Integer> matched = matchPattern(pattern, status, false); 
+				Set<Integer> matched = matchPattern(pattern, status, false);
 				int round = 0;
 				int numNew = 0;
-				
+
 				do {
 					numNew = ruleBasedLearn(matched);
-					newDisc= newDisc+numNew;
+					newDisc = newDisc + numNew;
 					round++;
-				} while(numNew>0);
+				} while (numNew > 0);
 			}
 
 		}
-		
+
 		return newDisc;
 	}
 
@@ -1686,7 +1700,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @return
 	 */
 	public int ruleBasedLearn(Set<Integer> matched) {
-		
+
 		int sign = 0;
 		int numNew = 0;
 		String tag = "";
@@ -1694,16 +1708,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Iterator<Integer> iter = matched.iterator();
 		while (iter.hasNext()) {
 			int sentID = iter.next().intValue();
-			Sentence sent = this.sentenceTable.get(sentID);
+			Sentence sent = this.myDataHolder.sentenceTable.get(sentID);
 			if (sent.getTag() != null) {
 				// ($tag, $new) = doit($sentid);
 				doIt(sentID);
 				// tag($sentid, $tag);
-				tagIt(sentID,tag);
-				sign = sign+numNew;
+				tagIt(sentID, tag);
+				sign = sign + numNew;
 			}
-		}		
-		
+		}
+
 		return 0;
 	}
 
@@ -1713,55 +1727,53 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// tag need to be adjusted (not by doit function), also need to adjust
 	// certainty counts.
 	public void doIt(int sentID) {
-		int sign =0;
-		
-		Sentence sentEntry = this.sentenceTable.get(sentID);
+		int sign = 0;
+
+		Sentence sentEntry = this.myDataHolder.sentenceTable.get(sentID);
 		String sent = sentEntry.getSentence();
 		String lead = sentEntry.getLead();
-		
+
 		String[] words = lead.split("\\s+");
 		String ptn = this.getPOSptn(words);
-		
+
 		Pattern p;
 		Matcher m;
-		
+
 		// Case 1: single word case
 		if (ptn.matches("^[pns]$")) {
 			String tag = words[0];
-			sign = sign+updateTable(tag,ptn,"-","wordpos",1);
+			sign = sign + updateTable(tag, ptn, "-", "wordpos", 1);
 		}
-		
+
 		// Case 2: the POSs are "ps"
 		else {
-		p = Pattern.compile("^.*ps.*$");
-		m = p.matcher(ptn);
-		if (m.find()) {
-			int start = m.start();
-			int end = m.end();
-			String pWord = words[start];
-			String sWord = words[end-1];
-			
-			sign += updateTable(pWord, "p", "-", "wordpos",1);
-			sign += updateTable(sWord, "s", "", "wordpos", 1);
-			
+			p = Pattern.compile("^.*ps.*$");
+			m = p.matcher(ptn);
+			if (m.find()) {
+				int start = m.start();
+				int end = m.end();
+				String pWord = words[start];
+				String sWord = words[end - 1];
 
-			//$sign += updatenn(0, $#tws+1, @tws); #up to the "p" inclusive
+				sign += updateTable(pWord, "p", "-", "wordpos", 1);
+				sign += updateTable(sWord, "s", "", "wordpos", 1);
 
-			
-			
-		}
-		else {
-		p = Pattern.compile("^.*p(\\?).*$");
-		m = p.matcher(ptn);
-		if (m.find()) {
-			int start = m.start();
-		}
+				// $sign += updatenn(0, $#tws+1, @tws); #up to the "p" inclusive
+
+			} else {
+				p = Pattern.compile("^.*p(\\?).*$");
+				m = p.matcher(ptn);
+				if (m.find()) {
+					int start = m.start();
+				}
 			}
-		}		
+		}
 	}
-	
+
 	/**
-	 * The length of the ptn must be the same as the number of words in words. If certainty is < 50%, replace POS with ?.
+	 * The length of the ptn must be the same as the number of words in words.
+	 * If certainty is < 50%, replace POS with ?.
+	 * 
 	 * @param words
 	 * @return
 	 */
@@ -1790,14 +1802,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	/**
 	 * It usually return all
+	 * 
 	 * @param word
-	 * @return a list of POSInfo objects in descending order of certaintyU/certaintyL
+	 * @return a list of POSInfo objects in descending order of
+	 *         certaintyU/certaintyL
 	 */
 	public List<POSInfo> checkPOSInfo(String word) {
 		List<POSInfo> POSInfoList = new ArrayList<POSInfo>();
 
-		word = this.removeAll(word, "^\\s*");
-		word = this.removeAll(word, "\\s+$");
+		word = StringUtility.removeAll(word, "^\\s*");
+		word = StringUtility.removeAll(word, "\\s+$");
 
 		if (word.matches("^\\d+.*$")) {
 			POSInfo p = new POSInfo("b", "", 1, 1);
@@ -1805,7 +1819,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return POSInfoList;
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.wordPOSTable
 				.entrySet().iterator();
 		while (iter.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter.next();
@@ -1824,11 +1838,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (POSInfoList.size() == 0) {
 			return new ArrayList<POSInfo>();
 		} else {
-			// sort the list in  ascending order of certaintyU/certaintyL
+			// sort the list in ascending order of certaintyU/certaintyL
 			Collections.sort(POSInfoList);
 			// reverse it into descending order
 			Collections.reverse(POSInfoList);
-			
+
 			return POSInfoList;
 		}
 	}
@@ -1838,27 +1852,27 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public Set<Integer> matchPattern(String pattern, String s, boolean hasTag) {
-		
+
 		Set<Integer> matchedIDs = new HashSet<Integer>();
-		
-		for (int i =0;i<this.sentenceTable.size();i++) {
-			Sentence sent = this.sentenceTable.get(i);
+
+		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
+			Sentence sent = this.myDataHolder.sentenceTable.get(i);
 			String sentence = sent.getSentence();
 			String status = sent.getStatus();
 			String tag = sent.getTag();
-			if ((hasTag && (tag != null) && (status.equals(s)) ) 
-					|| ((!hasTag) && (tag == null) && (status.equals(s))) ) {
+			if ((hasTag && (tag != null) && (status.equals(s)))
+					|| ((!hasTag) && (tag == null) && (status.equals(s)))) {
 				Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 				Matcher m = p.matcher(sentence);
 				if (m.lookingAt()) {
 					matchedIDs.add(i);
 				}
 			}
-		}	
-		
+		}
+
 		return matchedIDs;
 	}
-	
+
 	/**
 	 * 
 	 * @param startWords
@@ -1869,13 +1883,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String temp = "";
 		String prefix = "\\w+\\s";
 		String pattern = "";
-		
+
 		for (int i = 0; i < startWords.length; i++) {
 			String word = startWords[i];
 			Pattern p = Pattern.compile(":" + word + ":",
 					Pattern.CASE_INSENSITIVE);
 			Matcher m = p.matcher(this.CHECKEDWORDS);
-			// TODO: This is not very sure, need to make sure - Dongye
+			// This is not very sure, need to make sure - Dongye
 			if ((!word.matches("[\\p{Punct}0-9]")) && (!m.lookingAt())) {
 				temp = temp + word + "|";
 				newWords.add(word);
@@ -1886,40 +1900,38 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (!temp.matches("^.*\\w.*$")) {
 			return "";
 		}
-		
+
 		// remove the last char, which is a '|'
-		temp = temp.substring(0, temp.length()-1);
-		temp = "\\b(?:"+temp+")\\b";
-		
-		pattern = "^"+temp+"|"; 
-		
-		for (int j=0;j<this.NUM_LEAD_WORDS-1;j++) {
-			temp = prefix+temp;
-			pattern = pattern + "^"+temp+"|";
+		temp = temp.substring(0, temp.length() - 1);
+		temp = "\\b(?:" + temp + ")\\b";
+
+		pattern = "^" + temp + "|";
+
+		for (int j = 0; j < this.NUM_LEAD_WORDS - 1; j++) {
+			temp = prefix + temp;
+			pattern = pattern + "^" + temp + "|";
 		}
-		
-		pattern = pattern.substring(0, pattern.length()-1);
-		
-		pattern = "(?:"+pattern+")";
-		
-		this.CHECKEDWORDS = this.updateCheckedWords(":", this.CHECKEDWORDS, newWords);
-		
+
+		pattern = pattern.substring(0, pattern.length() - 1);
+
+		pattern = "(?:" + pattern + ")";
+
+		this.CHECKEDWORDS = this.updateCheckedWords(":", this.CHECKEDWORDS,
+				newWords);
+
 		return pattern;
 	}
 
 	public void learn(List<Treatment> treatments) {
-		
 
+		// List<String> fileNameList = fileLoader.getFileNameList();
+		// List<Integer> typeList = fileLoader.getTypeList();
 
-		//List<String> fileNameList = fileLoader.getFileNameList();
-		//List<Integer> typeList = fileLoader.getTypeList();
-		
-		//List<String> textList = fileLoader.getTextList();
-		
-		
+		// List<String> textList = fileLoader.getTextList();
+
 		// process treatments
-		this.populateSents(treatments);
-		
+		this.populateSentences(treatments);
+
 		// pre load words
 		this.addHeuristicsNouns();
 		this.addStopWords();
@@ -1927,79 +1939,18 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		this.addNumbers();
 		this.addClusterstrings();
 		this.addProperNouns();
-		
+
 		// ???
 		this.posBySuffix();
 		this.markupByPattern();
 		this.markupIgnore();
-		
+
 		// learning rules with high certainty
 		this.discover("start");
 		// bootstrapping rules
 		this.discover("normal");
-				
+
 		System.out.println("Method: learn - Done!\n");
-	}
-
-	public Map<Treatment, List<String>> getSentences() {
-		System.out.println("Method: getSentences\n");
-		return null;
-	}
-
-	public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
-		System.out.println("Method: getSentencesForOrganStateMarker\n");
-		return null;
-	}
-
-	public List<String> getAdjNouns() {
-		System.out.println("Method: getAdjNouns\n");
-		return null;
-	}
-
-	public Map<String, String> getAdjNounSent() {
-		System.out.println("Method: getAdjNounsSent\n");
-		return null;
-	}
-
-	public Set<String> getBracketTags() {
-		System.out.println("Method: getAdjNounsSent\n");
-		return null;
-	}
-
-	public Set<String> getWordRoleTags() {
-		System.out.println("Method: getSentenceTags\n");
-		return null;
-	}
-
-	public Map<String, Set<String>> getWordToSources() {
-		System.out.println("Method: getBracketTags\n");
-		return null;
-	}
-
-	public Map<String, Set<String>> getRoleToWords() {
-		System.out.println("Method: getRoleToWords\n");
-		return null;
-
-	}
-
-	public Map<String, Set<String>> getWordsToRoles() {
-		System.out.println("Method: getWordsToRoles\n");
-		return null;
-	}
-
-	public Map<String, String> getHeuristicNouns() {
-		System.out.println("Method: getHeuristicNouns\n");
-		return null;
-	}
-
-	public Map<Treatment, List<String>> getSentenceTags() {
-		System.out.println("Method: getTermCategories\n");
-		return null;
-	}
-
-	public Map<String, Set<String>> getTermCategories() {
-		System.out.println("Method: getTermCategories\n");
-		return null;
 	}
 
 	public boolean testWN(String word) {
@@ -2022,19 +1973,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 			return true;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
 	}
-	
+
 	// ---------------CLASS Helper function----------------
-	public String trimString (String text){
-		String myText = text;
-		myText = myText.replaceAll("^\\s+|\\s+$", "");
-		return myText;
-	}
-	
+
 	/**
 	 * 
 	 * @param expr
@@ -2048,9 +1993,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Iterator<String> iter = list.iterator();
 
 		while (iter.hasNext()) {
-			newCheckedWords = newCheckedWords + iter.next()+":";
+			newCheckedWords = newCheckedWords + iter.next() + ":";
 		}
-		//newCheckedWords = newCheckedWords + ":";
+		// newCheckedWords = newCheckedWords + ":";
 
 		return newCheckedWords;
 	}
@@ -2059,20 +2004,20 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			int increment) {
 		int result = 0;
 
-		word = this.processWord(word);
+		word = StringUtility.processWord(word);
 		// empty word
 		if (word.length() < 1) {
 			return 0;
 		}
 
 		// forbidden word
-		if (word.matches("\\b(?:" + this.FORBIDDEN + ")\\b")) {
+		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
 			return 0;
 		}
 
 		if (pos.equals("n")) {
-			//	$pos = getnumber($word);
-			pos = getNumber(word);
+			// $pos = getnumber($word);
+			pos = myWordFormUtility.getNumber(word);
 		}
 
 		result = result + markKnown(word, pos, role, table, increment);
@@ -2081,15 +2026,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (!inSingularPluralPair(word)) {
 			if (pos.equals("p")) {
 				String pl = word;
-				word = getSingular(word);
+				word = myWordFormUtility.getSingular(word);
 				// add "*" and 0: pos for those words are inferred based on
 				// other clues, not seen directly from the text
 				result = result + this.markKnown(word, "s", "*", table, 0);
-				addSingularPluralPair(word, pl);
+				this.myDataHolder.addSingularPluralPair(word, pl);
 			}
 			if (pos.equals("s")) {
-				//List<String> words = getPlural(word);
-				List<String> words = this.getPlural(word);
+				// List<String> words = getPlural(word);
+				List<String> words = myWordFormUtility.getPlural(word);
 				String sg = word;
 				for (int i = 0; i < words.size(); i++) {
 					if (words.get(i).matches("^.*\\w.*$")) {
@@ -2097,391 +2042,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 								+ this.markKnown(words.get(i), "p", "*", table,
 										0);
 					}
-					addSingularPluralPair(sg, words.get(i));
+					this.myDataHolder.addSingularPluralPair(sg, words.get(i));
 				}
 			}
 		}
 
 		return result;
-	}
-
-	public List<String> getPlural(String word) {
-		
-		if (word.matches("^(n|2n|x)$")) {
-			return null;
-		}
-		
-		String plural = "";
-		if (this.PLURALS.containsKey(word)) {
-			plural = this.PLURALS.get(word);
-
-			if (plural.matches("^.*\\w+.*$")) {
-				String[] pArray = plural.split(" ");
-				List<String> pList = new ArrayList<String>();
-				Collections.addAll(pList, pArray);
-				return pList;
-			}
-		}
-		
-		plural = getPluralSpecialCaseHelper(word);
-		if (!plural.equals("")) {
-			;
-		}
-		else {
-			plural = getPluralRuleHelper(word);
-			plural = plural+" "+word+"s";
-		}
-
-		plural=plural.replaceAll("^\\s+", "");
-		plural=plural.replaceAll("\\s+$", "");
-		String[] pls = plural.split(" ");
-		String plStr = "";
-		for (int i = 0; i < pls.length; i++) {
-			if (this.WORDS.containsKey(pls[i])) {
-				if (this.WORDS.get(pls[i]) >= 1) {
-					plStr = plStr + pls[i] + " ";
-				}
-			}
-		}
-		plStr = plStr.replaceAll("\\s+$", "");
-		this.PLURALS.put(word, plStr);
-		
-		String[] pArray = plStr.split(" ");
-		List<String> pList = new ArrayList<String>();
-		Collections.addAll(pList, pArray);
-		return pList;
-	}
-
-	/**
-	 * A helper method used by method getPlural. Help to apply a number of rules
-	 * 
-	 * @param word
-	 * @return if the word has plural form(s), return it(them); otherwise return ""
-	 */
-	public String getPluralRuleHelper(String word) {
-		String plural;
-		Pattern p;
-		Matcher m;
-
-		// Case 1
-		p = Pattern.compile("(^.*?)(ex|ix)$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "ices";
-			plural = plural + " " + m.group(1) + m.group(2) + "es";
-			return plural;
-		}
-
-		// Case 2
-		p = Pattern.compile("^.*(x|ch|ss|sh)$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = word + "es";
-			return plural;
-		}
-
-		// Case 3
-		p = Pattern.compile("(^.*?)([^aeiouy])y$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + m.group(2) + "ies";
-			return plural;
-		}
-
-		// Case 4
-		p = Pattern.compile("(^.*?)(?:([^f])fe|([oaelr])f)$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			String s1 = m.group(1);
-			String s2 = m.group(2);
-			String s3 = m.group(3);
-			if (s2 != null) {
-				plural = s1 + s2 + "ves";
-			} else {
-				plural = s1 + s3 + "ves";
-			}
-			return plural;
-		}
-
-		// Case 5
-		p = Pattern.compile("(^.*?)(x|s)is$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + m.group(2) + "es";
-			return plural;
-		}
-
-		// Case 6
-		p = Pattern.compile("(^.*?)([tidlv])um$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + m.group(2) + "a";
-			return plural;
-		}
-
-		// Case 7
-		p = Pattern.compile("(^.*?)(ex|ix)$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "ices";
-			return plural;
-		}
-
-		// Case 8
-		p = Pattern.compile("(^.*?[^t][^i])on$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "a";
-			return plural;
-		}
-
-		// Case 9
-		p = Pattern.compile("(^.*?)a$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "ae";
-			return plural;
-		}
-
-		// Case 10
-		p = Pattern.compile("(^.*?)man$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "men";
-			return plural;
-		}
-
-		// Case 11
-		p = Pattern.compile("(^.*?)child$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "children";
-			return plural;
-		}
-
-		// Case 12
-		p = Pattern.compile("(^.*)status$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "statuses";
-			return plural;
-		}
-
-		// Case 13
-		p = Pattern.compile("(^.+?)us$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "i";
-			plural = plural + " " + m.group(1) + "uses";
-			return plural;
-		}
-
-		// Case 14
-		p = Pattern.compile("^.*s$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = word + "es";
-			return plural;
-		}
-
-		return "";
-	}
-
-	/**
-	 * A helper method used by method getPlural. Help to handle special cases.
-	 * 
-	 * @param word
-	 * @return if the word match any special case, return its plural form, return it; otherwise return ""
-	 */
-	public String getPluralSpecialCaseHelper(String word) {
-		String plural;
-		Pattern p;
-		Matcher m;
-
-		// Case 1
-		p = Pattern.compile("^.*series$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = word;
-			return plural;
-		}
-
-		// Case 2		
-		p = Pattern.compile("(^.*?)foot$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "feet";
-			return plural;
-		}
-		
-		// Case 3
-		p = Pattern.compile("(^.*?)tooth$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "teeth";
-			return plural;
-		}
-
-		// Case 4		
-		p = Pattern.compile("(^.*?)alga$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "algae";
-			return plural;
-		}
-
-		// Case 5		
-		p = Pattern.compile("(^.*?)genus$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "genera";
-			return plural;
-		}
-
-		// Case 6		
-		p = Pattern.compile("(^.*?)corpus$");
-		m = p.matcher(word);
-		if (m.lookingAt()) {
-			plural = m.group(1) + "corpora";
-			return plural;
-		}
-
-		return "";
-	}
-
-	/**
-	 * 
-	 * @param sgl
-	 * @param pl
-	 * @return if add a pair, return true; otherwise return false
-	 */
-	public boolean addSingularPluralPair(String sgl, String pl) {
-		boolean is_exist = false;
-		Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
-
-		while (iter.hasNext()) {
-			SingularPluralPair spp = iter.next();
-			if ((spp.getSingular().equals(sgl)) && (spp.getPlural().equals(pl))) {
-				is_exist = true;
-				break;
-			}
-		}
-
-		if (!is_exist) {
-			SingularPluralPair pair = new SingularPluralPair(sgl, pl);
-			this.singularPluralTable.add(pair);
-			return true;
-		}
-
-		return false;
-	}
-
-	/**
-	 * 
-	 * @param word
-	 * @return the singular form of the input word
-	 */
-	public String getSingular(String word) {
-		if (!word.matches("^.*\\w.*$")) {
-			return "";
-		}
-
-		if (word.equals("valves")) {
-			return "valve";
-		} else if (word.equals("media")) {
-			return "media";
-		} else if (word.equals("species")) {
-			return "species";
-		} else if (word.equals("axes")) {
-			return "axis";
-		} else if (word.equals("calyces")) {
-			return "calyx";
-		} else if (word.equals("frons")) {
-			return "frons";
-		} else if (word.equals("grooves")) {
-			return "groove";
-		} else if (word.equals("nerves")) {
-			return "nerve";
-		}
-
-		String singular = "";
-		if (getNumber(word).equals("p")) {
-			// Case 1
-			Pattern p = Pattern.compile("(^.*?[^aeiou])ies$");
-			Matcher m = p.matcher(word);
-			if (m.lookingAt()) {
-				singular = m.group(1) + "y";
-			} 
-			else {
-			// Case 2
-			p = Pattern.compile("(^.*?)i$");
-			m = p.matcher(word);
-			if (m.lookingAt()) {
-				singular = m.group(1) + "us";
-			} 
-			else {	
-			// Case 3				
-			p = Pattern.compile("(^.*?)ia$");
-			m = p.matcher(word);
-			if (m.lookingAt()) {
-				singular = m.group(1) + "ium";
-			} 
-			else {
-			// Case 4	
-			p = Pattern.compile("(^.*?(x|ch|sh|ss))es$");
-			m = p.matcher(word);
-			if (m.lookingAt()) {
-				singular = m.group(1);
-			} 
-			else {
-			// Case 5	
-			p = Pattern.compile("(^.*?)ves$");
-			m = p.matcher(word);
-			if (m.lookingAt()) {
-				singular = m.group(1) + "f";
-				} 
-			else {
-			// Case 6	
-			p = Pattern.compile("(^.*?)ices");
-			m = p.matcher(word);
-			if (m.lookingAt()) {
-				singular = m.group(1) + "ex";
-			} 
-			else {
-			// Case 7.1
-			// pinnae ->pinna
-			p = Pattern.compile("(^.*?a)e$");
-			m = p.matcher(word);
-			if (m.lookingAt()) {
-				singular = m.group(1);
-			} 
-			else {
-			// Case 7.2
-			// fruits->fruit
-			p = Pattern.compile("(^.*?)s$");
-			m = p.matcher(word);
-			if (m.lookingAt()) {
-				singular = m.group(1);
-			}
-			}
-			}
-			}
-			}
-			}
-			}
-			}
-		}
-
-		if (singular.matches("^.*\\w.*$")) {
-			return singular;
-		}
-
-		singular = checkWN(word, "singular");
-		if (singular.matches("^.*\\w.*$")) {
-			return singular;
-		}
-
-		return null;
 	}
 
 	/**
@@ -2491,8 +2057,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 */
 
 	public boolean inSingularPluralPair(String word) {
-		// TODO Auto-generated method stub
-		Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+		Iterator<SingularPluralPair> iter = this.myDataHolder.singularPluralTable.iterator();
 
 		while (iter.hasNext()) {
 			SingularPluralPair spp = iter.next();
@@ -2528,12 +2093,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// }
 
 		// forbidden word
-		if (word.matches("\\b(?:" + this.FORBIDDEN + ")\\b")) {
+		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
 			return 0;
 		}
 
 		// stop words
-		if (word.matches("^(" + this.STOP + ")$")) {
+		if (word.matches("^(" + Constant.STOP + ")$")) {
 			sign = sign
 					+ processNewWord(word, pos, role, table, word, increment);
 			return sign;
@@ -2541,20 +2106,20 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		sign = sign + processNewWord(word, pos, role, table, word, increment);
 
-		Pattern p = Pattern.compile("^(" + this.PREFIX + ")(\\S+).*$");
+		Pattern p = Pattern.compile("^(" + Constant.PREFIX + ")(\\S+).*$");
 		Matcher m = p.matcher(word);
 		if (m.lookingAt()) {
 			String g1 = m.group(1);
 			String g2 = m.group(2);
 			String temp = g2;
-			otherPrefix = this.PREFIX;
+			otherPrefix = Constant.PREFIX;
 			otherPrefix = otherPrefix.replace("\\b" + g1 + "\\b", "");
 			otherPrefix = otherPrefix.replace("\\|\\|", "|");
 			otherPrefix = otherPrefix.replace("^\\|", "");
 			spWords = "(" + escape(singularPluralVariations(temp)) + ")";
 			pattern = "^(" + otherPrefix + ")?" + spWords + "\\$";
 
-			Iterator<Map.Entry<String, String>> iter1 = this.unknownWordTable
+			Iterator<Map.Entry<String, String>> iter1 = this.myDataHolder.unknownWordTable
 					.entrySet().iterator();
 			while (iter1.hasNext()) {
 				Map.Entry<String, String> entry = iter1.next();
@@ -2570,9 +2135,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			if (word.matches("^[a-z].*$")) {
 				spWords = "(" + escape(singularPluralVariations(word)) + ")";
 				// word=shrubs, pattern = (pre|sub)shrubs
-				pattern = "^(" + this.PREFIX + ")" + spWords + "\\$";
+				pattern = "^(" + Constant.PREFIX + ")" + spWords + "\\$";
 
-				Iterator<Map.Entry<String, String>> iter2 = this.unknownWordTable
+				Iterator<Map.Entry<String, String>> iter2 = this.myDataHolder.unknownWordTable
 						.entrySet().iterator();
 				while (iter2.hasNext()) {
 					Map.Entry<String, String> entry = iter2.next();
@@ -2588,7 +2153,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				// word_$spwords
 				spWords = "(" + escape(singularPluralVariations(word)) + ")";
 				pattern = ".*_" + spWords + "\\$";
-				Iterator<Map.Entry<String, String>> iter3 = this.unknownWordTable
+				Iterator<Map.Entry<String, String>> iter3 = this.myDataHolder.unknownWordTable
 						.entrySet().iterator();
 				while (iter3.hasNext()) {
 					Map.Entry<String, String> entry = iter3.next();
@@ -2606,7 +2171,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return sign;
 	}
 
-	// in perl, it escape [] {} and () for mysql regexp, not perl regrexp. May not be necessary in Java
+	// in perl, it escape [] {} and () for mysql regexp, not perl regrexp. May
+	// not be necessary in Java
 	private String escape(String singularPluralVariations) {
 		// TODO Auto-generated method stub
 		return singularPluralVariations;
@@ -2617,24 +2183,24 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @param word
 	 * @return all variations of the word
 	 */
-	//return singular and plural variations of the word
-	public String singularPluralVariations(String word) {	
-		String variations = word+"|";
-		Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+	// return singular and plural variations of the word
+	public String singularPluralVariations(String word) {
+		String variations = word + "|";
+		Iterator<SingularPluralPair> iter = this.myDataHolder.singularPluralTable.iterator();
 		while (iter.hasNext()) {
 			SingularPluralPair pair = iter.next();
 			String sg = pair.getSingular();
 			String pl = pair.getPlural();
 			if (sg.equals(word)) {
-				variations = variations + pl+"|";
+				variations = variations + pl + "|";
 			}
 			if (pl.equals(word)) {
-				variations = variations + sg+"|";	
+				variations = variations + sg + "|";
 			}
 		}
 
-		variations = this.removeAll(variations, "\\|+$");
-		
+		variations = StringUtility.removeAll(variations, "\\|+$");
+
 		return variations;
 	}
 
@@ -2673,9 +2239,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 */
 	public boolean updateUnknownWords(String newWord, String flag) {
 		boolean result = false;
-		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
+		Iterator<Map.Entry<String, String>> iter = this.myDataHolder.unknownWordTable
 				.entrySet().iterator();
-		
+
 		while (iter.hasNext()) {
 			Map.Entry<String, String> unknownWord = iter.next();
 			if (unknownWord.getKey().equals(newWord)) {
@@ -2683,20 +2249,20 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				result = true;
 			}
 		}
-		
+
 		return result;
 	}
-	
+
 	public int updatePOS(String newWord, String pos, String role, int increment) {
 		int n = 0;
 
-		if ((newWord.matches("^.*(\b|_)(NUM|" + this.NUMBER + "|"
-				+ this.CLUSTERSTRING + "|" + this.CHARACTER + ")\b.*$"))
+		if ((newWord.matches("^.*(\b|_)(NUM|" + Constant.NUMBER + "|"
+				+ Constant.CLUSTERSTRING + "|" + Constant.CHARACTER + ")\b.*$"))
 				&& (pos.matches("[nsp]"))) {
 			return 0;
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.wordPOSTable
 				.entrySet().iterator();
 		// boolean isExist = false;
 		Map.Entry<WordPOSKey, WordPOSValue> targetWordPOS = null;
@@ -2710,7 +2276,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (targetWordPOS == null) {
 			int certaintyU = 0;
 			certaintyU += increment;
-			this.wordPOSTable.put(new WordPOSKey(newWord, pos),
+			this.myDataHolder.wordPOSTable.put(new WordPOSKey(newWord, pos),
 					new WordPOSValue(role, certaintyU, 0, null, null));
 			n = 1;
 		} else {
@@ -2730,7 +2296,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					WordPOSKey key = new WordPOSKey("newWord", "pos");
 					WordPOSValue value = new WordPOSValue(role, certaintyU, 0,
 							null, null);
-					this.wordPOSTable.put(key, value);
+					this.myDataHolder.wordPOSTable.put(key, value);
 				}
 			} else {
 				role = mergeRole(oldRole, role);
@@ -2738,11 +2304,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				WordPOSKey key = new WordPOSKey("newWord", "pos");
 				WordPOSValue value = new WordPOSValue(role, certaintyU, 0,
 						null, null);
-				this.wordPOSTable.put(key, value);
+				this.myDataHolder.wordPOSTable.put(key, value);
 			}
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.wordPOSTable
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.myDataHolder.wordPOSTable
 				.entrySet().iterator();
 		int certaintyL = 0;
 		while (iter2.hasNext()) {
@@ -2751,7 +2317,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				certaintyL += e.getValue().getCertaintyU();
 			}
 		}
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter3 = this.wordPOSTable
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter3 = this.myDataHolder.wordPOSTable
 				.entrySet().iterator();
 		while (iter3.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter3.next();
@@ -2764,7 +2330,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	}
 
-
 	/**
 	 * 
 	 * @param newWord
@@ -2772,19 +2337,18 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @param otherPOS
 	 * @return
 	 */
-	private String resolveConflicts(String newWord, String bPOS,
-			String otherPOS) {
+	private String resolveConflicts(String newWord, String bPOS, String otherPOS) {
 		int count = 0;
 
-		for (int i = 0; i < this.sentenceTable.size(); i++) {
-			Sentence sent = this.sentenceTable.get(i);
+		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
+			Sentence sent = this.myDataHolder.sentenceTable.get(i);
 			if ((!sent.getTag().equals("ignore")) || (sent.getTag() != null)) {
-				Pattern p = Pattern.compile("([a-z]+(" + this.PLENDINGS
+				Pattern p = Pattern.compile("([a-z]+(" + Constant.PLENDINGS
 						+ ")) (" + newWord + ")", Pattern.CASE_INSENSITIVE);
 				Matcher m = p.matcher(newWord);
 				if (m.lookingAt()) {
 					String pl = m.group(1).toLowerCase();
-					if (getNumber(pl).equals("p")) {
+					if (myWordFormUtility.getNumber(pl).equals("p")) {
 
 						count++;
 					}
@@ -2821,8 +2385,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (oldPOS.matches("^.*s.*$") && newPOS.matches("^.*m.*$")) {
 			discount(newWord, oldPOS, newPOS, "all");
 			sign += markKnown(newWord, "m", "", "modifiers", increment);
-			for (int i = 0; i < this.sentenceTable.size(); i++) {
-				Sentence sent = this.sentenceTable.get(i);
+			for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
+				Sentence sent = this.myDataHolder.sentenceTable.get(i);
 				if (sent.getTag().equals(newWord)) {
 					modifier = sent.getModifier();
 					tag = sent.getTag();
@@ -2846,8 +2410,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 			// case 2.1: (newWord, oldPOS)
 			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
-			if (this.wordPOSTable.containsKey(newOldKey)) {
-				WordPOSValue v = this.wordPOSTable.get(newOldKey);
+			if (this.myDataHolder.wordPOSTable.containsKey(newOldKey)) {
+				WordPOSValue v = this.myDataHolder.wordPOSTable.get(newOldKey);
 				certaintyU = v.getCertaintyU();
 				certaintyU += increment;
 				discount(newWord, oldPOS, newPOS, "all");
@@ -2855,15 +2419,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 			// case 2.2: (newWord, newPOS)
 			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
-			if (!this.wordPOSTable.containsKey(newOldKey)) {
-				this.wordPOSTable.put(newNewKey, new WordPOSValue(role,
+			if (!this.myDataHolder.wordPOSTable.containsKey(newOldKey)) {
+				this.myDataHolder.wordPOSTable.put(newNewKey, new WordPOSValue(role,
 						certaintyU, 0, "", ""));
 			}
 			sign++;
 
 			// for all sentences tagged with (newWord, "b"), re tag them
-			for (int i = 0; i < this.sentenceTable.size(); i++) {
-				Sentence sent = this.sentenceTable.get(i);
+			for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
+				Sentence sent = this.myDataHolder.sentenceTable.get(i);
 				if (sent.getTag().equals(newWord)) {
 					int sentID = i;
 					String s = sent.getSentence();
@@ -2878,8 +2442,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 			// case 3.1: (newWord, oldPOS)
 			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
-			if (this.wordPOSTable.containsKey(newOldKey)) {
-				WordPOSValue v = this.wordPOSTable.get(newOldKey);
+			if (this.myDataHolder.wordPOSTable.containsKey(newOldKey)) {
+				WordPOSValue v = this.myDataHolder.wordPOSTable.get(newOldKey);
 				certaintyU = v.getCertaintyU();
 				certaintyU += increment;
 				discount(newWord, oldPOS, newPOS, "all");
@@ -2887,15 +2451,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 			// case 3.2: (newWord, newPOS)
 			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
-			if (!this.wordPOSTable.containsKey(newOldKey)) {
-				this.wordPOSTable.put(newNewKey, new WordPOSValue(role,
+			if (!this.myDataHolder.wordPOSTable.containsKey(newOldKey)) {
+				this.myDataHolder.wordPOSTable.put(newNewKey, new WordPOSValue(role,
 						certaintyU, 0, "", ""));
 			}
 			sign++;
 		}
 
 		int sum_certaintyU = 0;
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter1 = this.wordPOSTable
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter1 = this.myDataHolder.wordPOSTable
 				.entrySet().iterator();
 		while (iter1.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter1.next();
@@ -2904,7 +2468,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 		if (sum_certaintyU > 0) {
-			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.wordPOSTable
+			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.myDataHolder.wordPOSTable
 					.entrySet().iterator();
 			while (iter2.hasNext()) {
 				Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
@@ -2929,28 +2493,28 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			String tag, String label) {
 
 		/**
-		 * 1. Do some preprocessing of modifier and tag 
-		 * 1. Remove -ly words 
-		 * 1. Update modifier and tag of sentence sentID in sentenceTable
+		 * 1. Do some preprocessing of modifier and tag 1. Remove -ly words 1.
+		 * Update modifier and tag of sentence sentID in sentenceTable
 		 */
 
 		modifier.replaceAll("<\\S+?>", "");
 		tag.replaceAll("<\\S+?>", "");
 
 		// remove stop and forbidden words from beginning
-		modifier = this.removeAll(modifier, "\\s*\\b(" + this.STOP + "|"
-				+ this.FORBIDDEN + "|\\w+ly)$");
-		tag = this.removeAll(tag, "\\s*\\b(" + this.STOP + "|" + this.FORBIDDEN
-				+ "|\\w+ly)$");
+		modifier = StringUtility.removeAll(modifier, "\\s*\\b(" + Constant.STOP
+				+ "|" + Constant.FORBIDDEN + "|\\w+ly)$");
+		tag = StringUtility.removeAll(tag, "\\s*\\b(" + Constant.STOP + "|"
+				+ Constant.FORBIDDEN + "|\\w+ly)$");
 
 		// remove stop and forbidden words from ending
-		modifier = this.removeAll(modifier, "\\s*\\b(" + this.STOP + "|"
-				+ this.FORBIDDEN + "|\\w+ly)$");
-		tag = this.removeAll(tag, "\\s*\\b(" + this.STOP + "|" + this.FORBIDDEN
-				+ "|\\w+ly)$");
+		modifier = StringUtility.removeAll(modifier, "\\s*\\b(" + Constant.STOP
+				+ "|" + Constant.FORBIDDEN + "|\\w+ly)$");
+		tag = StringUtility.removeAll(tag, "\\s*\\b(" + Constant.STOP + "|"
+				+ Constant.FORBIDDEN + "|\\w+ly)$");
 
 		// remove all pronoun words
-		modifier = this.removeAll(modifier, "\\b(" + this.PRONOUN + ")\\b");
+		modifier = StringUtility.removeAll(modifier, "\\b(" + Constant.PRONOUN
+				+ ")\\b");
 
 		Pattern p = Pattern.compile("^(\\w+ly)\\s*(.*)$");
 		Matcher m = p.matcher(modifier);
@@ -2958,7 +2522,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			String ly = m.group(1);
 			String rest = m.group(2);
 			WordPOSKey wp = new WordPOSKey(ly, "b");
-			if (this.wordPOSTable.containsKey(wp)) {
+			if (this.myDataHolder.wordPOSTable.containsKey(wp)) {
 				modifier = rest;
 				m = p.matcher(modifier);
 			} else {
@@ -2966,8 +2530,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 
-		modifier = this.removeAll(modifier, "(^\\s*|\\s*$)");
-		tag = this.removeAll(tag, "(^\\s*|\\s*$)");
+		modifier = StringUtility.removeAll(modifier, "(^\\s*|\\s*$)");
+		tag = StringUtility.removeAll(tag, "(^\\s*|\\s*$)");
 
 		if (tag != null) {
 			if (tag.length() > this.tagLength) {
@@ -2975,11 +2539,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			}
 		}
 
-		for (int i = 0; i < this.sentenceTable.size(); i++) {
-			Sentence sent = this.sentenceTable.get(i);
+		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
+			Sentence sent = this.myDataHolder.sentenceTable.get(i);
 		}
 
-		Sentence sent = this.sentenceTable.get(sentID);
+		Sentence sent = this.myDataHolder.sentenceTable.get(sentID);
 		sent.setTag(tag);
 		sent.setModifier(modifier);
 	}
@@ -3022,29 +2586,27 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 */
 	public String getParentSentenceTag(int sentID) {
 		/**
-		 * 1. Get the originalsent of sentence sentID
-		 * 1. Case 1: the originalsent of $sentence sentID starts with a [a-z\d]
-		 *     1.1 select modifier and tag from sentenceTable where
-		 *             tag is not "ignore" OR tag is null
-		 *             AND originalsent COLLATE utf8_bin regexp '^[A-Z].*' or originalsent rlike ': *\$'
-		 *             AND id < sentID
-		 *     1.1 take the tag of the first sentence (with smallest id), get its modifier and tag
-		 *     1.1 if modifier match \w, tag = modifier + space + tag
-		 *     1.1 remove [ and ] from tag
-		 * 1. if tag matches \w return [+tag+], else return [parenttag] 
+		 * 1. Get the originalsent of sentence sentID 1. Case 1: the
+		 * originalsent of $sentence sentID starts with a [a-z\d] 1.1 select
+		 * modifier and tag from sentenceTable where tag is not "ignore" OR tag
+		 * is null AND originalsent COLLATE utf8_bin regexp '^[A-Z].*' or
+		 * originalsent rlike ': *\$' AND id < sentID 1.1 take the tag of the
+		 * first sentence (with smallest id), get its modifier and tag 1.1 if
+		 * modifier match \w, tag = modifier + space + tag 1.1 remove [ and ]
+		 * from tag 1. if tag matches \w return [+tag+], else return [parenttag]
 		 */
 
 		String tag = "";
 
-		String originalSent = this.sentenceTable.get(sentID)
+		String originalSent = this.myDataHolder.sentenceTable.get(sentID)
 				.getOriginalSentence();
 		if (originalSent.matches("^\\s*([a-z]|\\d).*$")) {
-			for (int i = 0; i < this.sentenceTable.size(); i++) {
-				Sentence sent = this.sentenceTable.get(i);
+			for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
+				Sentence sent = this.myDataHolder.sentenceTable.get(i);
 				tag = sent.getTag();
 				if (((!tag.equals("ignore")) || (tag == null))
-						&& ((originalSent.matches("^[A-Z].*$")) || (originalSent.matches("^.*:\\s*\\$"))) 
-						&& (i < sentID)) {
+						&& ((originalSent.matches("^[A-Z].*$")) || (originalSent
+								.matches("^.*:\\s*\\$"))) && (i < sentID)) {
 					String modifier = sent.getModifier();
 					if (modifier.matches("^.*\\w.*$")) {
 						tag = modifier + " " + tag;
@@ -3065,12 +2627,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @param oldPOS
 	 * @param newPOS
 	 * @param mode
-	 *            "byone" - reduce certainty 1 by 1. 
-	 *            "all" - remove this POS
+	 *            "byone" - reduce certainty 1 by 1. "all" - remove this POS
 	 */
 	public void discount(String newWord, String oldPOS, String newPOS,
 			String mode) {
-		
 		/**
 		 * 1. Find the flag of newWord in unknownWords table
 		 * 1. Select all words from unknownWords table who have the same flag (including newWord)
@@ -3084,25 +2644,25 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		 *         1.1.1 Insert (word, oldpos, newpos) into discounted table
 		 */
 
-		String flag = this.unknownWordTable.get(newWord);
-		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
+		String flag = this.myDataHolder.unknownWordTable.get(newWord);
+		Iterator<Map.Entry<String, String>> iter = this.myDataHolder.unknownWordTable
 				.entrySet().iterator();
 		while (iter.hasNext()) {
 			Map.Entry<String, String> e = iter.next();
 			if (e.getValue().equals(flag)) {
 				String word = e.getKey();
 				WordPOSKey key = new WordPOSKey(word, oldPOS);
-				WordPOSValue value = this.wordPOSTable.get(key);
+				WordPOSValue value = this.myDataHolder.wordPOSTable.get(key);
 				int cU = value.getCertaintyU();
 				if (cU < 1 && mode.equals("all")) {
-					this.wordPOSTable.remove(key);
+					this.myDataHolder.wordPOSTable.remove(key);
 					this.updateUnknownWords(word, "unknown");
 					if (oldPOS.matches("^.*[sp].*$")) {
 						// list of entries to be deleted
 						ArrayList<SingularPluralPair> delList = new ArrayList<SingularPluralPair>();
 
 						// find entries to be deleted, put them into delList
-						Iterator<SingularPluralPair> iterSPTable = this.singularPluralTable
+						Iterator<SingularPluralPair> iterSPTable = this.myDataHolder.singularPluralTable
 								.iterator();
 						while (iterSPTable.hasNext()) {
 							SingularPluralPair spp = iterSPTable.next();
@@ -3115,12 +2675,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 						// delete all entries in delList from
 						// singularPluralTable
 						for (int i = 0; i < delList.size(); i++) {
-							this.singularPluralTable.remove(delList.get(i));
+							this.myDataHolder.singularPluralTable.remove(delList.get(i));
 						}
 					}
 
 					DiscountedKey dKey = new DiscountedKey(word, oldPOS);
-					this.discountedTable.put(dKey, newPOS);
+					this.myDataHolder.discountedTable.put(dKey, newPOS);
 				}
 			}
 		}
@@ -3135,9 +2695,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @return
 	 */
 	public String mergeRole(String oldRole, String role) {
-	String role1 = oldRole;
+		String role1 = oldRole;
 		String role2 = role;
-		
+
 		// if old role is "*", return the new role
 		if (role1.equals("*")) {
 			return role2;
@@ -3146,7 +2706,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		else if (role2.equals("*")) {
 			return role1;
 		}
-		
+
 		// if the old role is empty, return the new role
 		if (role1.equals("")) {
 			return role2;
@@ -3165,7 +2725,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 	}
 
-	
 	/**
 	 * Take a new word, insert it into modifer table, or update its count in
 	 * modifer table if the word already exist
@@ -3178,348 +2737,27 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public int addModifier(String newWord, int increment) {
 		int isUpdate = 0;
 
-		if ((newWord.matches("(" + this.STOP + "|^.*\\w+ly$)"))
+		if ((newWord.matches("(" + Constant.STOP + "|^.*\\w+ly$)"))
 				|| (!(newWord.matches("^.*\\w.*$")))) {
 			return isUpdate;
 		}
 
-		if (this.modifierTable.containsKey(newWord)) {
-			int count = this.modifierTable.get(newWord).getCount();
+		if (this.myDataHolder.modifierTable.containsKey(newWord)) {
+			int count = this.myDataHolder.modifierTable.get(newWord).getCount();
 			count = count + increment;
-			this.modifierTable.get(newWord).setCount(count);
-			//isUpdate = 1;
+			this.myDataHolder.modifierTable.get(newWord).setCount(count);
+			// isUpdate = 1;
 		} else {
-			this.modifierTable.put(newWord, new ModifierTableValue(1, false));
+			this.myDataHolder.modifierTable.put(newWord, new ModifierTableValue(1, false));
 			isUpdate = 1;
 		}
 
 		return isUpdate;
 	}
 
-	/**
-	 * Helper of method updateTable: Given a word, return [p] if it is a plural, [s] if it is singular
-	 * @param w
-	 * @return
-	 */
-	public String getNumber(String word) {
-		String number = checkWN(word, "number");
-		String rt = "";
-
-		// Case 1
-		rt = getNumberHelper1(number);
-		if (rt != null) {
-			return rt;
-		}
-
-		// Case 2
-		rt = getNumberHelper2(word);
-		if (rt != null) {
-			return rt;
-		} 
-		// Case 3
-		else {
-			return "s";
-		}
-	}
-
-	/**
-	 * First Helper of method getNumber
-	 * 
-	 * @param number
-	 * @return if match return the right number, otherwise return null means not
-	 *         match
-	 */
-	public String getNumberHelper1(String number) {
-		if (number.matches("^.*[sp].*$")) {
-			return number;
-		}
-		if (number.matches("^.*x.*$")) {
-			return "";
-		}
-		return null;
-	}
-
-	/**
-	 * Second Helper of method getNumber
-	 * 
-	 * @param word
-	 * @return if match return the right number, otherwise return null means not
-	 *         match
-	 */
-	public String getNumberHelper2(String word) {
-		// Calyculi => 1. Calyculus, pappi => pappus
-		if (word.matches("^.*i$")) {
-			return "p";
-		}
-		if (word.matches("^.*ss$")) {
-			return "s";
-		}
-		if (word.matches("^.*ia$")) {
-			return "p";
-		}
-		if (word.matches("^.*[it]um$")) {
-			return "s";
-		}
-		if (word.matches("^.*ae$")) {
-			return "p";
-		}
-		if (word.matches("^.*ous$")) {
-			return "";
-		}
-		// this case only handle three words: as, is, us
-		if (word.matches("^[aiu]s$")) {
-			return "";
-		}
-		if (word.matches("^.*us$")) {
-			return "s";
-		}
-		if (word.matches("^.*es$") || word.matches("^.*s$")) {
-			return "p";
-		}
-		if (word.matches("^.*ate$")) {
-			return "";
-		}
-		return null;
-	}
-
-	/**
-	 * 1) Check wordnet to gether information about a word 
-	 * 2) Save checked words in three hash tables, singularRecords (singular), numberRecords (number), and POSRecords (pos), respectively
-	 * 
-	 * @param word
-	 *            The word to check
-	 * @param mode
-	 *            The mode can be "signular", "number", "pos"
-	 * @return 1) mode "singular": if a plural noun, return its singular form, otherwise, return itself. 
-	 *         2) mode "number": if a noun, return "p" [plural] or "s"[singular], else if not in WN "", otherwise "x".
-	 *         3) mode "pos": return n [p,s], v, a, r, "" (not in WN).
-	 */
-	public String checkWN(String word, String mode) {
-		
-		/**
-		 * 0.0 If the word contains nothing but non-word characters, such as <>, return empty
-		 * 0.1 Check singularRecordsprevious records
-		 * 0.2 Special cases
-		 * 1   Word not in WordNet
-		 * 	1.1
-		 * 	1.2
-		 * 	1.3
-		 * 2.  Word in WordNet
-		 * 	2.1 mode is singular or number
-		 * 		2.1.1
-		 * 		2.1.2
-		 *  2.2 mode is pos
-		 */
-		
-		//this.myWN.getMostLikleyPOS(word);
-		
-		// If the word contains nothing but non-word characters, such as <>, return empty
-		word = word.replaceAll("\\W", "");
-		if (word.equals("")) {
-			return "";
-		}
-		
-		// Check previous records
-		// singular case
-		String singular = "";
-		if (mode.equals("singular")) {
-			singular = this.singularRecords.get(word);
-		}
-		if (singular != null) {
-			if (singular.matches("^.*\\w.*$")) {
-				return singular;
-			}
-		}
-
-		// number case
-		String number = "";
-		if (mode.equals("number")) {
-			number = this.numberRecords.get(word);
-		}
-		if (number != null) {
-			if (number.matches("^.*\\w.*$")) {
-				return number;
-			}
-		}
-
-		// pos case
-		String pos = "";
-		if (mode.equals("pos")) {
-			pos = this.POSRecords.get(word);
-		}
-		if (pos != null) {
-			if (pos.matches("^.*\\w.*$")) {
-				return pos;
-			}
-		}
-	
-		// Case 0: special cases
-		if (word.equals("teeth")) {
-			this.numberRecords.put("teeth", "p");
-			this.singularRecords.put("teeth", "tooth");
-			return mode.equals("singular")?"tooth":"p";
-		}
-		
-		if (word.equals("tooth")) {
-			this.numberRecords.put("tooth", "s");
-			this.singularRecords.put("tooth", "tooth");
-			return mode.equals("singular")?"tooth":"s";
-		}
-
-		if (word.equals("NUM")) {
-			return mode.equals("singular")?"NUM":"s";
-		}
-
-		if (word.equals("or")) {
-			return mode.equals("singular")?"or":"";
-		}
-
-		if (word.equals("and")) {
-			return mode.equals("singular")?"and":"";
-		}
-
-		// concentrically
-		if (word.matches("^.*[a-z]{3,}ly$")) {
-			if (mode.equals("singular")) {
-				return word;	
-			}
-			if (mode.equals("number")) {
-				return "";	
-			}
-			if (mode.equals("pos")) {
-				return "r";	
-			}
-		}
-		
-		// otherwise, call WordNet
-		// Case 1
-		if (!this.myWN.contains(word)) {// word not in WN
-			boolean f = this.myWN.contains(word);
-			this.POSRecords.put(word, "");
-			String wordCopy = word;
-			word = word.replaceAll("ed$", "");
-			// Case 1.1
-			if (!word.equals(wordCopy)) {
-				if (this.myWN.contains(word)) {
-					// Case 1.1.1-1.1.3
-					if (mode.equals("singular")) {
-						return word;
-					}
-					if (mode.equals("number")) {
-						return "";
-					}
-					if (mode.equals("pos")) {
-						return "a";
-					}
-				}
-			}
-			
-			word = wordCopy;
-			word = word.replace("^(" + this.PREFIX + ")+", "");
-			// Case 1.2
-			if (word.equals(wordCopy)) {
-				return mode.equals("singular") ? word : "";
-			} 
-			// Case 1.3
-			else {
-				if (!this.myWN.contains(word)) {
-					return mode.equals("singular") ? wordCopy : "";
-				}
-			}
-		}
-		else { if (mode.equals("singular") || mode.equals("number")) {
-			// Case 2.1.1: not a noun
-			if (!this.myWN.isNoun(word)) {
-				return mode.equals("singular") ? word : "x";
-			}
-			List<String> stemList = myWN.getSingulars(word);
-			int maxLength = 100;
-			String sWord = "";
-			for (int i=0;i<stemList.size();i++) {
-				String stem = stemList.get(i);
-				if (stem.length()<maxLength) {
-					maxLength = stem.length();
-					sWord = stem;
-				}
-			}
-			this.singularRecords.put(word, sWord);
-			// Case 2.1.2: singular
-			if (sWord.equals(word)) {
-				this.numberRecords.put(word, "s");
-				return mode.equals("singular")?sWord:"s";
-			}
-			// Case 2.1.3: pluarl
-			else {
-				this.numberRecords.put(word, "p");
-				return mode.equals("singular")?sWord:"p";
-			}		
-		}
-		// Case 2.2
-		else if (mode.equals("pos")) {
-			pos = "";
-			if (this.myWN.isNoun(word)){
-				pos = pos+"n";
-			}
-			if (this.myWN.isVerb(word)){
-				pos = pos+"v";
-			}
-			if (this.myWN.isAdjective(word)){
-				pos = pos+"a";
-			}
-			if (this.myWN.isAdverb(word)){
-				pos = pos+"r";
-			}
-			this.POSRecords.put(word, pos);
-			if ((this.myWN.isNoun(word)) 
-					&& (this.myWN.isVerb(word))
-					&& (word.matches("^.*(ed|ing)$"))) {
-				pos.replaceAll("n", "");
-			}
-			this.POSRecords.put(word, pos);
-			return pos;
-			}
-		}
-		return "";
-	}
-
-	/**
-	 * Helper of method updateTable: process word
-	 * 
-	 * @param w
-	 * @return
-	 */
-
-	public String processWord(String word) {
-		//$word =~ s#<\S+?>##g; #remove tag from the word
-		//$word =~ s#\s+$##;
-		//$word =~ s#^\s*##;
-		
-		word = word.replaceAll("<\\S+?>", "");
-		word = word.replaceAll("\\s+$", "");
-		word = word.replaceAll("^\\s*", "");
-		
-		return word;
-	}
-	
-	
-	public String removeAll(String word, String regex) {
-		String newWord = word.replaceAll(regex, ""); 
-		return newWord;
-	}
-	public String getStopWords(){
-		return this.STOP;
-	}
-	public String getForbiddenWords(){
-		return this.FORBIDDEN;
-	}	
-	public String getPronounWords(){
-		return this.PRONOUN;
-	}
-	
-	
 	// ---------------TEST Helper function----------------
 	public void printWordPOSTable() {
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = this.wordPOSTable
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = this.myDataHolder.wordPOSTable
 				.entrySet().iterator();
 		while (entries.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> entry = entries.next();
@@ -3532,6 +2770,119 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					+ entry.getValue().getSavedID());
 		}
 	}
-	
+
+	public DataHolder getDataHolder() {
+		return this.myDataHolder;
+	}
+
+	// interface metods
+	public Map<Treatment, List<String>> getSentences() {
+		System.out.println("Method: getSentences\n");
+		return null;
+	}
+
+	public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
+		System.out.println("Method: getSentencesForOrganStateMarker\n");
+		return null;
+	}
+
+	public List<String> getAdjNouns() {
+		Set<String> myAdjNounSet = new HashSet<String>();
+
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+				.iterator();
+
+		while (iter.hasNext()) {
+			Sentence sentence = iter.next();
+			String modifier = sentence.getModifier();
+			String tag = sentence.getTag();
+			if (tag.matches("^\\[.*$")) {
+				modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
+				myAdjNounSet.add(modifier);
+			}
+		}
+
+		List<String> myAdjNouns = new ArrayList<String>();
+		myAdjNouns.addAll(myAdjNounSet);
+
+		return myAdjNouns;
+	}
+
+	public Map<String, String> getAdjNounSent() {
+		Map<String, String> myAdjNounSent = new HashMap<String, String>();
+
+		// collect senteces that need adj-nn disambiguation
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+				.iterator();
+
+		while (iter.hasNext()) {
+			Sentence sentence = iter.next();
+			String modifier = sentence.getModifier();
+			String tag = sentence.getTag();
+			if ((!(modifier.equals(""))) && (tag.matches("^\\[.*$"))) {
+				modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
+				myAdjNounSent.put(tag, modifier);
+			}
+		}
+
+		return myAdjNounSent;
+	}
+
+	public Set<String> getBracketTags() {
+		System.out.println("Method: getAdjNounsSent\n");
+		return null;
+	}
+
+	public Set<String> getWordRoleTags() {
+		System.out.println("Method: getSentenceTags\n");
+		return null;
+	}
+
+	public Map<String, Set<String>> getWordToSources() {
+		Map<String, Set<String>> myWordToSources = new HashMap<String, Set<String>>();
+
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+				.iterator();
+
+		while (iter.hasNext()) {
+			Sentence sentenceElement = iter.next();
+			String source = sentenceElement.getSource();
+			String sentence = sentenceElement.getSentence();
+			String[] words = this.myTokenizer.tokenize(sentence);
+			for (int i = 0; i < words.length; i++) {
+				String word = words[i];
+				if (!myWordToSources.containsKey(word))
+					myWordToSources.put(word, new HashSet<String>());
+				myWordToSources.get(word).add(source);
+			}
+		}
+
+		return myWordToSources;
+	}
+
+	public Map<String, Set<String>> getRoleToWords() {
+		System.out.println("Method: getRoleToWords\n");
+		return null;
+
+	}
+
+	public Map<String, Set<String>> getWordsToRoles() {
+		System.out.println("Method: getWordsToRoles\n");
+		return null;
+	}
+
+	public Map<String, String> getHeuristicNouns() {
+		return this.myDataHolder.getHeuristicNounTable();
+	}
+
+	public Map<Treatment, List<String>> getSentenceTags() {
+		System.out.println("Method: getTermCategories\n");
+		return null;
+	}
+
+	public Map<String, Set<String>> getTermCategories() {
+		System.out.println("Method: getTermCategories\n");
+		return null;
+	}
 
 }

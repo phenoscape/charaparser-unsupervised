@@ -26,9 +26,25 @@ public class WordPOSKey {
 	//	this.pos=p;
 	//}
 	
-	public boolean equals(WordPOSKey wpk) {
-		return ((this.word.equals(wpk.getWord())) 
-				&& (this.pos.equals(wpk.getPOS())));
+	//public boolean equals(WordPOSKey wpk) {
+	//	return ((this.word.equals(wpk.getWord())) 
+	//			&& (this.pos.equals(wpk.getPOS())));
+	//}
+	
+	public boolean equals(Object obj){
+		if (obj==this){
+			return true;
+		}
+		
+		if (obj==null||obj.getClass()!=this.getClass()){
+			return false;
+		}
+		
+		WordPOSKey myWordPOSKey = (WordPOSKey) obj;
+		
+		return ((this.word.equals(myWordPOSKey.getWord())) 
+				&& (this.pos.equals(myWordPOSKey.getPOS())));
+		
 	}
 
 	public int hashCode() {
