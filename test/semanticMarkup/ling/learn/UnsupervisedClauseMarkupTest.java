@@ -233,13 +233,14 @@ public class UnsupervisedClauseMarkupTest {
 		assertEquals("containSuffix sole adj", true, tester.containSuffix("scalelike", "scale", "like"));
 		
 		// method addHeuristicsNouns
-		// test method getHeuristicsNouns
-		// test method handleSpecialCase
 		HashSet<String> words = new HashSet<String>();		
 		words.add("septa");
 		words.add("word1");
 		words.add("septum");
-		assertEquals("addHeuristicsNouns - handleSpecialCase 1", "septa[p]", tester.addHeuristicsNounsHelper("septa[s]", words));
+		assertEquals("getHeuristicsNouns - handleSpecialCase 1", "septa[p]", tester.getHeuristicsNounsHelper("septa[s]", words));
+		
+		assertEquals("isMatchedWords", true, tester.isMatchedWords("and", Constant.FORBIDDEN));
+		assertEquals("isMatchedWords", false, tester.isMatchedWords("kahgds", Constant.FORBIDDEN));
 		
 
 		

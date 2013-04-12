@@ -559,9 +559,76 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		if (this.addHeuristicsNouns_debug)
 			System.out.println("Enter addHeuristicsNouns:\n");
 
+		// part 1
+		List<Set<String>> results = this.characterHeuristics();
+		Set<String> rnouns = results.get(0);
+		Set<String> descriptors = results.get(1);
+		
+		addDescriptors(descriptors);
+		addNouns(rnouns);
+		
+		// part 2
 		Set<String> nouns = this.getHeuristicsNouns();
-		// nouns = this.characterHeuristics(nouns);
+		Iterator<String> iter = nouns.iterator();
+		while (iter.hasNext()) {
+			String noun = iter.next();
+			if ((noun.matches("^.*\\w.*$"))
+					&& (!this.isMatchedWords(noun, "NUM|" + Constant.NUMBER
+							+ "|" + Constant.CLUSTERSTRING + "|"
+							+ Constant.CHARACTER + "|" + Constant.PROPERNOUN))) {
+				
+				
+
+			}
+		}
 	}
+
+	/**
+	 * check if a word is a word in the wordList
+	 * 
+	 * @param word
+	 *            the word to check
+	 * 
+	 * @param wordList
+	 *            the words to match to
+	 * @return a boolean variable. true mean word is a word in the list. false
+	 *         means it is not
+	 */
+	public boolean isMatchedWords(String word, String wordList){
+		return word.matches("^.*\\b(?:"+wordList+")\\b.*$");
+	}
+	
+	/**
+	 * 
+	 * @param descriptors
+	 */
+	public void addDescriptors(Set<String> descriptors) {
+		Iterator<String> iter = descriptors.iterator();
+		while (iter.hasNext()) {
+			String descriptor = iter.next();
+			if (!this.isMatchedWords(descriptor, Constant.FORBIDDEN)) {
+				this.updateTable(descriptor, "b", "", "wordpos", 1);
+			}
+		}
+		
+	}
+	
+	/**
+	 * 
+	 * @param rnouns
+	 */
+	public void addNouns(Set<String> rnouns) {
+		// TODO Auto-generated method stub
+		Iterator<String> iter = rnouns.iterator();
+		while (iter.hasNext()) {
+			String noun = iter.next();
+			if (!this.isMatchedWords(noun, Constant.FORBIDDEN)) {
+				this.updateTable(noun, "n", "", "wordpos", 1);
+			}
+		}
+	}
+
+
 
 	/**
 	 * 
@@ -614,7 +681,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Iterator<String> nounsIterator = nouns.iterator();
 		while (nounsIterator.hasNext()) {
 			String oldNoun = nounsIterator.next();
-			String newNoun = this.addHeuristicsNounsHelper(oldNoun, nouns);
+			String newNoun = this.getHeuristicsNounsHelper(oldNoun, nouns);
 			if (!newNoun.equals(oldNoun)) {
 				nouns.remove(oldNoun);
 				nouns.add(newNoun);
@@ -669,7 +736,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					}
 				}
 			}
-			
 		}
 
 		// Iterator<LinkedList> wordMapIterator = wordMap.i
@@ -716,9 +782,27 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			System.out.println("Nouns:\n");
 			System.out.println(nouns);
 		}
-		
-		
+				
 		return nouns;
+	}
+	
+	// ---------------addHeuristicsNouns Help Function----
+	// #solve the problem: septa and septum are both s
+	// septum - Singular
+	// septa -Plural
+	// septa[s] => septa[p]
+	public String getHeuristicsNounsHelper(String oldNoun, Set<String> words) {
+		String newNoun = oldNoun;
+
+		if (oldNoun.matches("^.*a\\[s\\]$")) {
+			String noun = oldNoun.replaceAll("\\[s\\]", "");
+			System.out.println(noun);
+			if (words.contains(noun)) {
+				newNoun = noun + "[p]";
+			}
+		}
+
+		return newNoun;
 	}
 
 	/**
@@ -1214,27 +1298,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return false;
 		}
 	}
-
-
-	// ---------------addHeuristicsNouns Help Function----
-	// #solve the problem: septa and septum are both s
-	// septum - Singular
-	// septa -Plural
-	// septa[s] => septa[p]
-	public String addHeuristicsNounsHelper(String oldNoun, Set<String> words) {
-		String newNoun = oldNoun;
-
-		if (oldNoun.matches("^.*a\\[s\\]$")) {
-			String noun = oldNoun.replaceAll("\\[s\\]", "");
-			System.out.println(noun);
-			if (words.contains(noun)) {
-				newNoun = noun + "[p]";
-			}
-		}
-
-		return newNoun;
-	}
-
+	
 	public void addStopWords() {
 		List<String> stops = new ArrayList<String>();
 		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
