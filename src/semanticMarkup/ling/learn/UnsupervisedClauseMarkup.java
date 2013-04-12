@@ -571,11 +571,24 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Set<String> nouns = this.getHeuristicsNouns();
 		Iterator<String> iter = nouns.iterator();
 		while (iter.hasNext()) {
-			String noun = iter.next();
-			if ((noun.matches("^.*\\w.*$"))
-					&& (!this.isMatchedWords(noun, "NUM|" + Constant.NUMBER
+			String e = iter.next();
+			if ((e.matches("^.*\\w.*$"))
+					&& (!this.isMatchedWords(e, "NUM|" + Constant.NUMBER
 							+ "|" + Constant.CLUSTERSTRING + "|"
 							+ Constant.CHARACTER + "|" + Constant.PROPERNOUN))) {
+				// same word may have two different pos tags
+				String[] nounArray = e.split("\\|");
+				for (int i=0;i<nounArray.length;i++) {
+					String nounAndPOS= nounArray[i];
+					Pattern p = Pattern.compile("(\\w+)\\[([spn])\\]");
+					Matcher m = p.matcher(nounAndPOS);
+					if (m.lookingAt()) {
+						String word = m.group(1);
+						String pos = m.group(2);
+						this.updateTable(word, pos, "*", "wordpos", 0);
+						
+					}
+				}
 				
 				
 
