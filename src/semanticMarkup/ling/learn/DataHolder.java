@@ -2,6 +2,7 @@ package semanticMarkup.ling.learn;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,18 @@ public class DataHolder {
 				&& (this.unknownWordTable.equals(myDataHolder.unknownWordTable))
 				&& (this.wordPOSTable.equals(myDataHolder.wordPOSTable))
 				);
+	}
+
+	/**
+	 * 
+	 * @param sgl
+	 * @param pl
+	 * @return if add a pair, return true; otherwise return false
+	 */
+	public boolean addSingularPluralPair(String sgl, String pl) {
+		SingularPluralPair pair = new SingularPluralPair(sgl, pl);
+		boolean result = this.singularPluralTable.add(pair);
+		return result;
 	}
 	
 }

@@ -413,12 +413,7 @@ public class UnsupervisedClauseMarkupTest {
 		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair("word3", "word3"));
 		assertEquals ("inSingularPluralPair - both match", true, tester.inSingularPluralPair("word3"));	
 		
-		// Method addSingularPluralPair
-		assertEquals("addSigularPluralPair - pair not exist", true, tester.addSingularPluralPair("sword", "pword"));
-		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair("sword2",""));
-		assertEquals("addSigularPluralPair - one word exist", true, tester.addSingularPluralPair("sword2", "pword2"));
-		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair("sword3","pword3"));
-		assertEquals("addSigularPluralPair - pair exist", false, tester.addSingularPluralPair("sword3", "pword3"));	
+
 		
 		
 		// Method updatePOS

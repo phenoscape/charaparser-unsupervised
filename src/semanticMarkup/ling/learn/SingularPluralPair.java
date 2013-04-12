@@ -30,10 +30,21 @@ public class SingularPluralPair {
 		hash = hash * 31 + (this.plural == null ? 0 : this.plural.hashCode());
 		return hash;
 	}
-
-	public boolean equals(SingularPluralPair spp) {
-
-		return ((spp.singular == this.singular) && (spp.plural == this.plural));
+	
+	public boolean equals(Object obj){
+		if (obj==this){
+			return true;
+		}
+		
+		if (obj==null||obj.getClass()!=this.getClass()){
+			return false;
+		}
+		
+		SingularPluralPair mySingularPluralPair = (SingularPluralPair) obj;
+		
+		return ((this.singular.equals(mySingularPluralPair.getSingular())) 
+				&&(this.plural.equals(mySingularPluralPair.getPlural())));
+		
 	}
 
 }

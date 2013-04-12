@@ -569,6 +569,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		// part 2
 		Set<String> nouns = this.getHeuristicsNouns();
+		Map<String, SingularPluralPair> rootMap = new HashMap<String, SingularPluralPair>();
 		Iterator<String> iter = nouns.iterator();
 		while (iter.hasNext()) {
 			String e = iter.next();
@@ -578,20 +579,42 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 							+ Constant.CHARACTER + "|" + Constant.PROPERNOUN))) {
 				// same word may have two different pos tags
 				String[] nounArray = e.split("\\|");
-				for (int i=0;i<nounArray.length;i++) {
-					String nounAndPOS= nounArray[i];
+				for (int i = 0; i < nounArray.length; i++) {
+					String nounAndPOS = nounArray[i];
 					Pattern p = Pattern.compile("(\\w+)\\[([spn])\\]");
 					Matcher m = p.matcher(nounAndPOS);
 					if (m.lookingAt()) {
 						String word = m.group(1);
 						String pos = m.group(2);
 						this.updateTable(word, pos, "*", "wordpos", 0);
-						
+
+						if (pos.equals("p")) {
+							String plural = word;
+							String singular = this.myWordFormUtility
+									.getSingular(plural);
+							if (singular != null) {
+								if (!singular.equals("")) {
+									this.myDataHolder.addSingularPluralPair(singular, plural);
+								}
+							}
+						}
+
+						if (pos.equals("s")) {
+							String singular = word;
+							List<String> pluralList = this.myWordFormUtility
+									.getPlural(singular);
+							iter = pluralList.iterator();
+							while (iter.hasNext()) {
+								String plural = iter.next();
+								if (plural != null) {
+									if (!plural.equals("")) {
+										this.myDataHolder.addSingularPluralPair(singular, plural);
+									}
+								}
+							}
+						}
 					}
 				}
-				
-				
-
 			}
 		}
 	}
@@ -743,9 +766,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 					nouns.add(word + "[s]");
 					if (wordSet.contains(word + "s")) {
 						nouns.add(word + "s" + "[p]");
+						this.myDataHolder.addSingularPluralPair(word, word+"s");						
 					}
 					if (wordSet.contains(word + "es")) {
 						nouns.add(word + "es" + "[p]");
+						this.myDataHolder.addSingularPluralPair(word, word+"es");
 					}
 				}
 			}
@@ -784,6 +809,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 							String plural = pair.get(1);
 							nouns.add(singular + "[s]");
 							nouns.add(plural + "[p]");
+							this.myDataHolder.addSingularPluralPair(singular, plural);
 						}
 					}
 				}
@@ -2005,7 +2031,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				// add "*" and 0: pos for those words are inferred based on
 				// other clues, not seen directly from the text
 				result = result + this.markKnown(word, "s", "*", table, 0);
-				addSingularPluralPair(word, pl);
+				this.myDataHolder.addSingularPluralPair(word, pl);
 			}
 			if (pos.equals("s")) {
 				// List<String> words = getPlural(word);
@@ -2017,39 +2043,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 								+ this.markKnown(words.get(i), "p", "*", table,
 										0);
 					}
-					addSingularPluralPair(sg, words.get(i));
+					this.myDataHolder.addSingularPluralPair(sg, words.get(i));
 				}
 			}
 		}
 
 		return result;
-	}
-
-	/**
-	 * 
-	 * @param sgl
-	 * @param pl
-	 * @return if add a pair, return true; otherwise return false
-	 */
-	public boolean addSingularPluralPair(String sgl, String pl) {
-		boolean is_exist = false;
-		Iterator<SingularPluralPair> iter = this.myDataHolder.singularPluralTable.iterator();
-
-		while (iter.hasNext()) {
-			SingularPluralPair spp = iter.next();
-			if ((spp.getSingular().equals(sgl)) && (spp.getPlural().equals(pl))) {
-				is_exist = true;
-				break;
-			}
-		}
-
-		if (!is_exist) {
-			SingularPluralPair pair = new SingularPluralPair(sgl, pl);
-			this.myDataHolder.singularPluralTable.add(pair);
-			return true;
-		}
-
-		return false;
 	}
 
 	/**
