@@ -201,7 +201,7 @@ public class PopulateSentenceUtility {
 	 * 
 	 * @param sent
 	 * @param words
-	 *            a map mapping all words already known to its current count
+	 *            a map mapping all words already known to their counts
 	 * @return a new map of all words, including words in sent
 	 */
 	public Map<String, Integer> getAllWords(String sent,

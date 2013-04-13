@@ -9,11 +9,13 @@ import java.util.Map;
 import java.util.Set;
 
 public class DataHolder {
-	// Data Holders
+	// 
+	public Map<String, Integer> allWords;
+	
+	// Tables
+	
 	// Table sentence
 	public List<Sentence> sentenceTable = new LinkedList<Sentence>();
-
-	
 	
 	// Table unknownwords
 	public Map<String, String> unknownWordTable = new HashMap<String, String>();
@@ -32,15 +34,19 @@ public class DataHolder {
 
 	// Table discounted
 	public Map<DiscountedKey, String> discountedTable = new HashMap<DiscountedKey, String>();
+	
+
 
 	public DataHolder() {
-		sentenceTable = new LinkedList<Sentence>();
-		unknownWordTable = new HashMap<String, String>();
-		wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
-		heuristicNounTable = new HashMap<String, String>();
-		singularPluralTable = new HashSet<SingularPluralPair>();
-		modifierTable = new HashMap<String, ModifierTableValue>();
-		discountedTable = new HashMap<DiscountedKey, String>();
+		this.allWords = new HashMap<String, Integer>();
+		
+		this.sentenceTable = new LinkedList<Sentence>();
+		this.unknownWordTable = new HashMap<String, String>();
+		this.wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
+		this.heuristicNounTable = new HashMap<String, String>();
+		this.singularPluralTable = new HashSet<SingularPluralPair>();
+		this.modifierTable = new HashMap<String, ModifierTableValue>();
+		this.discountedTable = new HashMap<DiscountedKey, String>();
 	}
 	
 	public List<Sentence> getSentenceTable(){
@@ -51,7 +57,57 @@ public class DataHolder {
 		return this.heuristicNounTable;
 	}
 	
+	/**
+	 * 
+	 * @param sgl
+	 * @param pl
+	 * @return if add a pair, return true; otherwise return false
+	 */
+	public boolean addSingularPluralPair(String sgl, String pl) {
+		SingularPluralPair pair = new SingularPluralPair(sgl, pl);
+		boolean result = this.singularPluralTable.add(pair);
+		return result;
+	}
 	
+	/**
+	 * 
+	 * @param word
+	 * @param tag
+	 */
+	public void insertUnknown(String word, String tag) {
+		this.unknownWordTable.put(word, tag);
+	}
+	
+	/**
+	 * Take a new word, insert it into modifer table, or update its count in
+	 * modifer table if the word already exist
+	 * 
+	 * @param newWord
+	 * @param increment
+	 * @return if anything changed in modifer table, return true; otherwise
+	 *         return false
+	 */
+	public int addModifier(String newWord, int increment) {
+		int isUpdate = 0;
+
+		if ((newWord.matches("(" + Constant.STOP + "|^.*\\w+ly$)"))
+				|| (!(newWord.matches("^.*\\w.*$")))) {
+			return isUpdate;
+		}
+
+		if (this.modifierTable.containsKey(newWord)) {
+			int count = this.modifierTable.get(newWord).getCount();
+			count = count + increment;
+			this.modifierTable.get(newWord).setCount(count);
+			// isUpdate = 1;
+		} else {
+			this.modifierTable.put(newWord, new ModifierTableValue(1, false));
+			isUpdate = 1;
+		}
+
+		return isUpdate;
+	}
+
 	public boolean equals(Object obj) {
 		if (obj==this){
 			return true;
@@ -70,19 +126,8 @@ public class DataHolder {
 				&& (this.singularPluralTable.equals(myDataHolder.singularPluralTable))
 				&& (this.unknownWordTable.equals(myDataHolder.unknownWordTable))
 				&& (this.wordPOSTable.equals(myDataHolder.wordPOSTable))
+				&& (this.allWords.equals(myDataHolder.allWords))
 				);
-	}
-
-	/**
-	 * 
-	 * @param sgl
-	 * @param pl
-	 * @return if add a pair, return true; otherwise return false
-	 */
-	public boolean addSingularPluralPair(String sgl, String pl) {
-		SingularPluralPair pair = new SingularPluralPair(sgl, pl);
-		boolean result = this.singularPluralTable.add(pair);
-		return result;
-	}
+	}	
 	
 }

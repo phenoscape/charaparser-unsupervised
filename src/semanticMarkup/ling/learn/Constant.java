@@ -22,6 +22,8 @@ public class Constant {
 	public static final String SUBSTRUCTURESTRING = "part|parts|area|areas|portion|portions";
 	
 	public static final String PROPERNOUN = "propernouns"; // EOL
+	
+	public static final String IGNOREPTN = "(IGNOREPTN)"; // disabled
 
 	
 	public static final String STOP = "state|page|fig|"
