@@ -86,4 +86,30 @@ public class StringUtility {
 		return true;
 	}
 	
+	/**
+	 * in perl, it escape [] {} and () for mysql regexp, not perl regrexp. May
+	 * not be necessary in Java
+	 * 
+	 * @param singularPluralVariations
+	 * @return
+	 */
+	public static String escape(String singularPluralVariations) {
+		// TODO Auto-generated method stub
+		return singularPluralVariations;
+	}
+
+	/**
+	 * check if a word is a word in the wordList
+	 * 
+	 * @param word
+	 *            the word to check
+	 * 
+	 * @param wordList
+	 *            the words to match to
+	 * @return a boolean variable. true mean word is a word in the list. false
+	 *         means it is not
+	 */
+	public static boolean isMatchedWords(String word, String wordList){
+		return word.matches("^.*\\b(?:"+wordList+")\\b.*$");
+	}
 }

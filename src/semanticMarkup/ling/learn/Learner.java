@@ -1257,7 +1257,7 @@ public class Learner {
 		while (iter.hasNext()) {
 			String e = iter.next();
 			if ((e.matches("^.*\\w.*$"))
-					&& (!this.isMatchedWords(e, "NUM|" + Constant.NUMBER
+					&& (!StringUtility.isMatchedWords(e, "NUM|" + Constant.NUMBER
 							+ "|" + Constant.CLUSTERSTRING + "|"
 							+ Constant.CHARACTER + "|" + Constant.PROPERNOUN))) {
 				// same word may have two different pos tags
@@ -1302,20 +1302,7 @@ public class Learner {
 		}
 	}
 
-	/**
-	 * check if a word is a word in the wordList
-	 * 
-	 * @param word
-	 *            the word to check
-	 * 
-	 * @param wordList
-	 *            the words to match to
-	 * @return a boolean variable. true mean word is a word in the list. false
-	 *         means it is not
-	 */
-	public boolean isMatchedWords(String word, String wordList){
-		return word.matches("^.*\\b(?:"+wordList+")\\b.*$");
-	}
+
 	
 	/**
 	 * 
@@ -1325,7 +1312,7 @@ public class Learner {
 		Iterator<String> iter = descriptors.iterator();
 		while (iter.hasNext()) {
 			String descriptor = iter.next();
-			if (!this.isMatchedWords(descriptor, Constant.FORBIDDEN)) {
+			if (!StringUtility.isMatchedWords(descriptor, Constant.FORBIDDEN)) {
 				this.updateTable(descriptor, "b", "", "wordpos", 1);
 			}
 		}
@@ -1341,7 +1328,7 @@ public class Learner {
 		Iterator<String> iter = rnouns.iterator();
 		while (iter.hasNext()) {
 			String noun = iter.next();
-			if (!this.isMatchedWords(noun, Constant.FORBIDDEN)) {
+			if (!StringUtility.isMatchedWords(noun, Constant.FORBIDDEN)) {
 				this.updateTable(noun, "n", "", "wordpos", 1);
 			}
 		}
@@ -1926,9 +1913,8 @@ public class Learner {
 	public Set<String> getDescriptorsRule1(String source, String sentence,
 			Set<String> nouns) {
 		Set<String> descriptors = new HashSet<String>();
-
-		if (source.matches("^.*\\.xml_\\S+_.*$") && (!sentence.matches("\\s"))) {// single
-																					// word
+		// single word
+		if (source.matches("^.*\\.xml_\\S+_.*$") && (!sentence.matches("\\s"))) {
 			Iterator<String> iter = nouns.iterator();
 			boolean isExist = false;
 			while (iter.hasNext()) {

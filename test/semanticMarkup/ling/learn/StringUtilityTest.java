@@ -77,5 +77,13 @@ public class StringUtilityTest {
 		assertEquals("isWord - STOP word", false, StringUtility.isWord("page"));
 		assertEquals("isWord - STOP word", false, StringUtility.isWord("fig"));
 	}
+	
+	@Test
+	public void testIsMatchedWords() {
+		assertEquals("isMatchedWords", true,
+				StringUtility.isMatchedWords("and", Constant.FORBIDDEN));
+		assertEquals("isMatchedWords", false,
+				StringUtility.isMatchedWords("kahgds", Constant.FORBIDDEN));
+	}
 
 }
