@@ -145,142 +145,17 @@ public class UnsupervisedClauseMarkupTest {
 		//assertEquals("Result", 0, sentLoader.GetType("Buckup_1998.xml_8d819b51-b88a-459e-bcb2-c6137d8b95d7.txt"));
 		
 		
-		// handleTest (Fully finished - Dongye 01/08)
-		// null
-		assertEquals("Result", null, tester.handleText(null));
-		// ""
-		assertEquals("Result", "", tester.handleText(""));
-		// remove " and '
-		assertEquals("Result", "words word", tester.handleText("word's wo\"rd"));
-		// plano - to
-		assertEquals("Result", "word to word",
-				tester.handleText("word -to word"));
-		//
-		assertEquals("Result", "word -shaped",
-				tester.handleText("word ______shaped"));
-		// unhide <i>
-		assertEquals("Result", "word <i> word.",
-				tester.handleText("word &lt;i&gt; word."));
-		// unhide </i>
-		assertEquals("Result", "word </i> word.",
-				tester.handleText("word &lt;/i&gt; word."));
-		// remove 2a. (key marks)
-		assertEquals("Result", "word", tester.handleText("7b. word"));
-		// remove HTML entities
-		assertEquals("Result", "word   word", tester.handleText("word &amp; word"));
-		// " & " => " and "
-		assertEquals("Result", "word and word.",
-				tester.handleText("word & word."));
-		// "_" => "-"
-		assertEquals("Result", "word-word.", 
-				tester.handleText("word_word."));
-		// absent ; => absent;
-		assertEquals("Result", "word; word; word.", 
-				tester.handleText("word ;word ;word."));
-		// absent;blade => absent; blade
-		assertEquals("Result", "word; word; word.", 
-				tester.handleText("word;word;word."));
-		assertEquals("Result", "word: word. word.", 
-				tester.handleText("word:word.word."));
-		// 1 . 5 => 1.5
-		assertEquals("Result", "word 1.5 word 384739.84 word.", 
-				tester.handleText("word 1 . 5 word 384739 . 84 word."));
-		// #diam . =>diam.
-		assertEquals("Result", "word diam. word diam. word.", 
-				tester.handleText("word diam . word diam . word."));
-		// ca . =>ca.
-		assertEquals("Result", "word ca. word ca. word.", 
-				tester.handleText("word ca . word ca . word."));
-		// cm|mm|dm|m
-		assertEquals("Result", "word 12 cm[DOT] word 376 mm[DOT] word.", 
-				tester.handleText("word 12 cm . word 376 mm. word."));		
-
-		// handleString
-		// null
-		assertEquals("Result", null, tester.handleSentence(null));
-		// ""
-		assertEquals("Result", "", tester.handleSentence(""));
-		// remove (.a.)
-		assertEquals("Result", "word word word word .",
-				tester.handleSentence("word (.a.) word (a) word ( a ) word."));
-		// remove [.a.]
-		assertEquals("Result", "word word word word .",
-				tester.handleSentence("word [.a.] word [a] word [ a ] word."));
-		// remove {.a.}
-		assertEquals("Result", "word word word word .",
-				tester.handleSentence("word {.a.} word {a} word { a } word."));
-		// to fix basi- and hypobranchial 
-		assertEquals("Result", "word cup_ shaped word cup_ shaped word cup_ shaped word .",
-				tester.handleSentence("word cup --- shaped word cup-shaped word cup ---------        shaped word."));		
 		
-		// multiple spaces => 1 space
-		assertEquals("Result", "word word word .",
-				tester.handleSentence("word  word	 word."));
-		// remove multipe spaces at the beginning
-		assertEquals("Result", "word word .", tester.handleSentence("  	word word."));
-		// remove multipe spaces at the rear
-		assertEquals("Result", "word word .", tester.handleSentence("word word.    "));		
+		
 		
 		
 	
-		// test method containSuffix
-		assertEquals("containSuffix less", true, tester.containSuffix("less", "", "less"));
-		assertEquals("containSuffix ly", true, tester.containSuffix("slightly", "slight", "ly"));	
-		assertEquals("containSuffix er", true, tester.containSuffix("fewer", "few", "er"));
-		assertEquals("containSuffix est", true, tester.containSuffix("fastest", "fast", "est"));
-		
-		assertEquals("containSuffix base is in WN", true, tester.containSuffix("platform", "plat", "form"));
-		assertEquals("containSuffix sole adj", true, tester.containSuffix("scalelike", "scale", "like"));
-		
-		// method addHeuristicsNouns
-		HashSet<String> words = new HashSet<String>();		
-		words.add("septa");
-		words.add("word1");
-		words.add("septum");
-		assertEquals("getHeuristicsNouns - handleSpecialCase 1", "septa[p]", tester.getHeuristicsNounsHelper("septa[s]", words));
-		
-		assertEquals("isMatchedWords", true, tester.isMatchedWords("and", Constant.FORBIDDEN));
-		assertEquals("isMatchedWords", false, tester.isMatchedWords("kahgds", Constant.FORBIDDEN));
+	
+
 		
 
 		
-		// Method getPresentAbsentNouns
-		assertEquals("getPresentAbsentNouns - no present/absent", "",
-				tester.getPresentAbsentNouns("only one pair of abcly presen"));
-		assertEquals("getPresentAbsentNouns - and|or|to", "",
-				tester.getPresentAbsentNouns("only one pair of and present"));
-		assertEquals("getPresentAbsentNouns - STOP words", "",
-				tester.getPresentAbsentNouns("only one pair of without absent"));
-		assertEquals(
-				"getPresentAbsentNoun - always|often|seldom|sometimes|[a-z]+lys",
-				"",
-				tester.getPresentAbsentNouns("only one pair of abcly present"));
-		assertEquals("getPresentAbsentNouns - PENDINGS", "circuli[p]",
-				tester.getPresentAbsentNouns("only one pair of circuli absent"));
-		assertEquals("getPresentAbsentNouns - end with ss", "glass[s]",
-				tester.getPresentAbsentNouns("only one pair of glass absent"));
-		assertEquals("getPresentAbsentNouns - end with none ss", "computers[p]",
-				tester.getPresentAbsentNouns("only one pair of computers absent"));
-		assertEquals("getPresentAbsentNouns - teeth", "teeth[p]",
-				tester.getPresentAbsentNouns("only one pair of teeth present"));
-		assertEquals("getPresentAbsentNouns - not SENDINGS", "serum[s]",
-				tester.getPresentAbsentNouns("only one pair of serum absent"));
-		assertEquals("getPresentAbsentNouns - SENDINGS", "computer[s]",
-				tester.getPresentAbsentNouns("only one pair of computer absent"));
-	
-		// Nouns rule 0: Taxon name nouns
-		Set<String> taxonNames = new HashSet<String>();
-		// Method getTaxonNameNouns
-		assertEquals("getTaxonNameNouns - not match", taxonNames, tester.getTaxonNameNouns("word word word"));
-		assertEquals("getTaxonNameNouns - empty taxon name", taxonNames, tester.getTaxonNameNouns("< i >< / i >"));
-		taxonNames.add("word1 word2	word3");
-		taxonNames.add("word1");
-		taxonNames.add("word2");
-		taxonNames.add("word3");
-		taxonNames.add("word4 word5");
-		taxonNames.add("word4");
-		taxonNames.add("word5");
-		assertEquals("getTaxonNameNouns - match", taxonNames, tester.getTaxonNameNouns("< i	>word1 word2	word3< /	i>, < i >word4 word5<	/i>"));
+
 		
 		// Nouns rule 0.5: Method getNounsMecklesCartilage
 		Set<String> nouns = new HashSet<String>();
