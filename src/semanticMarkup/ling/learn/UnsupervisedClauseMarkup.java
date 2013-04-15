@@ -30,16 +30,15 @@ import semanticMarkup.knowledge.Stemmer;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {
-	
+
 	// Date holder
 	public DataHolder myDataHolder;
-	
+
 	// Learner
-	private Learner myLearner; 
-	
+	private Learner myLearner;
+
 	// OpenNLP tokenizer
 	private TokenizerME myTokenizer;
-
 
 	// unused variables
 	// directory of /descriptions folder
@@ -77,8 +76,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private String ANDORPTN = "^(?:" + SEGANDORPTN + "[,&]+)*" + SEGANDORPTN
 			+ bptn;
 
-
-
 	/**
 	 * Constructor of UnsupervisedClauseMarkup class. Create a new
 	 * UnsupervisedClauseMarkup object.
@@ -91,9 +88,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public UnsupervisedClauseMarkup(String learningMode, String wordnetDir) {
 		this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		// Get DataHolder
-		myDataHolder = new DataHolder();
+		// this.myDataHolder = null;// 
+		this.myDataHolder=new DataHolder();
 		myLearner = new Learner(learningMode, wordnetDir);
-		
+
 		// Get OpenNLP tokenizer
 		InputStream tokenModelIn;
 		try {
@@ -116,118 +114,164 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public void learn(List<Treatment> treatments) {
 		this.myDataHolder = this.myLearner.Learn(treatments);
 	}
-	
+
 	// interface metods
-		public Map<Treatment, List<String>> getSentences() {
-			System.out.println("Method: getSentences\n");
+	public Map<Treatment, List<String>> getSentences() {
+		if (this.myDataHolder == null) {
 			return null;
 		}
+		
+		System.out.println("Method: getSentences\n");
+		return null;
+	}
 
-		public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
-			System.out.println("Method: getSentencesForOrganStateMarker\n");
+	public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
+		if (this.myDataHolder == null) {
 			return null;
 		}
+		
+		System.out.println("Method: getSentencesForOrganStateMarker\n");
+		return null;
+	}
 
-		public List<String> getAdjNouns() {
-			Set<String> myAdjNounSet = new HashSet<String>();
+	public List<String> getAdjNouns() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		Set<String> myAdjNounSet = new HashSet<String>();
 
-			Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
-					.iterator();
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+				.iterator();
 
-			while (iter.hasNext()) {
-				Sentence sentence = iter.next();
-				String modifier = sentence.getModifier();
-				String tag = sentence.getTag();
-				if (tag.matches("^\\[.*$")) {
-					modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
-					myAdjNounSet.add(modifier);
-				}
+		while (iter.hasNext()) {
+			Sentence sentence = iter.next();
+			String modifier = sentence.getModifier();
+			String tag = sentence.getTag();
+			if (tag.matches("^\\[.*$")) {
+				modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
+				myAdjNounSet.add(modifier);
 			}
-
-			List<String> myAdjNouns = new ArrayList<String>();
-			myAdjNouns.addAll(myAdjNounSet);
-
-			return myAdjNouns;
 		}
 
-		public Map<String, String> getAdjNounSent() {
-			Map<String, String> myAdjNounSent = new HashMap<String, String>();
+		List<String> myAdjNouns = new ArrayList<String>();
+		myAdjNouns.addAll(myAdjNounSet);
 
-			// collect senteces that need adj-nn disambiguation
-			Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
-					.iterator();
+		return myAdjNouns;
+	}
 
-			while (iter.hasNext()) {
-				Sentence sentence = iter.next();
-				String modifier = sentence.getModifier();
-				String tag = sentence.getTag();
-				if ((!(modifier.equals(""))) && (tag.matches("^\\[.*$"))) {
-					modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
-					myAdjNounSent.put(tag, modifier);
-				}
+	public Map<String, String> getAdjNounSent() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		Map<String, String> myAdjNounSent = new HashMap<String, String>();
+
+		// collect senteces that need adj-nn disambiguation
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+				.iterator();
+
+		while (iter.hasNext()) {
+			Sentence sentence = iter.next();
+			String modifier = sentence.getModifier();
+			String tag = sentence.getTag();
+			if ((!(modifier.equals(""))) && (tag.matches("^\\[.*$"))) {
+				modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
+				myAdjNounSent.put(tag, modifier);
 			}
-
-			return myAdjNounSent;
 		}
 
-		public Set<String> getBracketTags() {
-			System.out.println("Method: getAdjNounsSent\n");
+		return myAdjNounSent;
+	}
+
+	public Set<String> getBracketTags() {
+		if (this.myDataHolder == null) {
 			return null;
 		}
+		
+		System.out.println("Method: getAdjNounsSent\n");
+		return null;
+	}
 
-		public Set<String> getWordRoleTags() {
-			System.out.println("Method: getSentenceTags\n");
+	public Set<String> getWordRoleTags() {
+		if (this.myDataHolder == null) {
 			return null;
 		}
+		
+		System.out.println("Method: getSentenceTags\n");
+		return null;
+	}
 
-		public Map<String, Set<String>> getWordToSources() {
-			Map<String, Set<String>> myWordToSources = new HashMap<String, Set<String>>();
+	public Map<String, Set<String>> getWordToSources() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		Map<String, Set<String>> myWordToSources = new HashMap<String, Set<String>>();
 
-			Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
-					.iterator();
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+				.iterator();
 
-			while (iter.hasNext()) {
-				Sentence sentenceElement = iter.next();
-				String source = sentenceElement.getSource();
-				String sentence = sentenceElement.getSentence();
-				String[] words = this.myTokenizer.tokenize(sentence);
-				for (int i = 0; i < words.length; i++) {
-					String word = words[i];
-					if (!myWordToSources.containsKey(word))
-						myWordToSources.put(word, new HashSet<String>());
-					myWordToSources.get(word).add(source);
-				}
+		while (iter.hasNext()) {
+			Sentence sentenceElement = iter.next();
+			String source = sentenceElement.getSource();
+			String sentence = sentenceElement.getSentence();
+			String[] words = this.myTokenizer.tokenize(sentence);
+			for (int i = 0; i < words.length; i++) {
+				String word = words[i];
+				if (!myWordToSources.containsKey(word))
+					myWordToSources.put(word, new HashSet<String>());
+				myWordToSources.get(word).add(source);
 			}
-
-			return myWordToSources;
 		}
 
-		public Map<String, Set<String>> getRoleToWords() {
-			System.out.println("Method: getRoleToWords\n");
-			return null;
+		return myWordToSources;
+	}
 
-		}
-
-		public Map<String, Set<String>> getWordsToRoles() {
-			System.out.println("Method: getWordsToRoles\n");
+	public Map<String, Set<String>> getRoleToWords() {
+		if (this.myDataHolder == null) {
 			return null;
 		}
+		
+		System.out.println("Method: getRoleToWords\n");
+		return null;
 
-		public Map<String, String> getHeuristicNouns() {
-			return this.myDataHolder.getHeuristicNounTable();
-		}
+	}
 
-		public Map<Treatment, List<String>> getSentenceTags() {
-			System.out.println("Method: getTermCategories\n");
+	public Map<String, Set<String>> getWordsToRoles() {
+		if (this.myDataHolder == null) {
 			return null;
 		}
+		
+		System.out.println("Method: getWordsToRoles\n");
+		return null;
+	}
 
-		public Map<String, Set<String>> getTermCategories() {
-			System.out.println("Method: getTermCategories\n");
+	public Map<String, String> getHeuristicNouns() {
+		if (this.myDataHolder == null) {
 			return null;
 		}
+		
+		return this.myDataHolder.getHeuristicNounTable();
+	}
 
+	public Map<Treatment, List<String>> getSentenceTags() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		System.out.println("Method: getTermCategories\n");
+		return null;
+	}
 
+	public Map<String, Set<String>> getTermCategories() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		System.out.println("Method: getTermCategories\n");
+		return null;
+	}
 
 	// ---------------CLASS Helper function----------------
 
@@ -256,35 +300,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 	}
 
-
-
-
-
-	
-
-
-
-	
-
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	// ---------------TEST Helper function----------------
 	public void printWordPOSTable() {
 		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = this.myDataHolder.wordPOSTable
@@ -304,7 +319,5 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public DataHolder getDataHolder() {
 		return this.myDataHolder;
 	}
-
-	
 
 }
