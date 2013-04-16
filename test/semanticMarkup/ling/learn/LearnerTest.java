@@ -162,25 +162,6 @@ public class LearnerTest {
 				tester.markKnown("page", "", "", "", 0));
 	}
 
-	@Test
-	public void testInSingularPluralPair() {
-		// Method inSingularPluralPair
-		assertEquals("inSingularPluralPair - null", false,
-				tester.inSingularPluralPair("word"));
-		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair(
-				"word1", ""));
-		assertEquals("inSingularPluralPair - singular match", true,
-				tester.inSingularPluralPair("word1"));
-		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair("",
-				"word2"));
-		assertEquals("inSingularPluralPair - plural match", true,
-				tester.inSingularPluralPair("word2"));
-		tester.myDataHolder.singularPluralTable.add(new SingularPluralPair(
-				"word3", "word3"));
-		assertEquals("inSingularPluralPair - both match", true,
-				tester.inSingularPluralPair("word3"));
-	}
-
 //	@Test
 //	public void testProcessNewWord() {
 //		fail("Not yet implemented");

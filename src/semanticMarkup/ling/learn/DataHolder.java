@@ -49,18 +49,49 @@ public class DataHolder {
 		this.discountedTable = new HashMap<DiscountedKey, String>();
 	}
 	
+	
+	/** Sentence Table Utility***************************************/
 	public List<Sentence> getSentenceTable(){
 		return this.sentenceTable;
 	}
 	
+	
+	/** Heuristic Noun Table Utility*********************************/
 	public Map<String, String> getHeuristicNounTable(){
 		return this.heuristicNounTable;
 	}
 	
+	
+	/** Singular Plural Table Utility********************************/
+	
 	/**
+	 * check if the word is in the singularPluralTable.
+	 * 
+	 * @param word
+	 *            the word to check
+	 * @return true if the word is in the SingularPluralTable; false otherwise.
+	 */
+	public boolean isInSingularPluralPair(String word) {
+		Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+
+		while (iter.hasNext()) {
+			SingularPluralPair spp = iter.next();
+			if ((spp.getSingular().equals(word))
+					|| (spp.getPlural().equals(word))) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * add the singular form and the plural form of a word into the
+	 * singularPluarlTable
 	 * 
 	 * @param sgl
+	 *            singular form
 	 * @param pl
+	 *            plural form
 	 * @return if add a pair, return true; otherwise return false
 	 */
 	public boolean addSingularPluralPair(String sgl, String pl) {
@@ -69,14 +100,20 @@ public class DataHolder {
 		return result;
 	}
 	
+	
+	/** Unknown Word Table Utility***********************************/
+	
 	/**
 	 * 
 	 * @param word
 	 * @param tag
 	 */
-	public void insertUnknown(String word, String tag) {
+	public void addUnknown(String word, String tag) {
 		this.unknownWordTable.put(word, tag);
 	}
+	
+	
+	/** Modifier Table Utility***************************************/
 	
 	/**
 	 * Take a new word, insert it into modifer table, or update its count in

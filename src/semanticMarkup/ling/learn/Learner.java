@@ -492,10 +492,10 @@ public class Learner {
 		while (iter.hasNext()) {
 			String word = iter.next();
 			if ((!word.matches("^.*\\w.*$")) || (word.matches("^.*ous$"))) {
-				this.myDataHolder.insertUnknown(word, word);
+				this.myDataHolder.addUnknown(word, word);
 				this.updateTable(word, "b", "", "wordpos", 1);
 			} else {
-				this.myDataHolder.insertUnknown(word, "unknown");
+				this.myDataHolder.addUnknown(word, "unknown");
 			}
 			count++;
 		}
@@ -535,7 +535,7 @@ public class Learner {
 		result = result + markKnown(word, pos, role, table, increment);
 
 		// to eliminate reduandent computation
-		if (!inSingularPluralPair(word)) {
+		if (!this.myDataHolder.isInSingularPluralPair(word)) {
 			if (pos.equals("p")) {
 				String pl = word;
 				word = myWordFormUtility.getSingular(word);
@@ -664,24 +664,7 @@ public class Learner {
 		return sign;
 	}
 	
-	/**
-	 * 
-	 * @param word
-	 * @return if the word is in the SingularPluralTable
-	 */
 
-	public boolean inSingularPluralPair(String word) {
-		Iterator<SingularPluralPair> iter = this.myDataHolder.singularPluralTable.iterator();
-
-		while (iter.hasNext()) {
-			SingularPluralPair spp = iter.next();
-			if ((spp.getSingular().equals(word))
-					|| (spp.getPlural().equals(word))) {
-				return true;
-			}
-		}
-		return false;
-	}
 	
 	/**
 	 * This method handles a new word when for updateTable method
