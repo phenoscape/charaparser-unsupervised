@@ -33,7 +33,9 @@ public class Learner {
 	 */
 	private boolean populateSentence_debug = false;
 	private boolean addHeuristicsNouns_debug = false;
-	private boolean getHeuristicNouns_debug = true;
+	private boolean getHeuristicNouns_debug = false;
+	private boolean posBySuffix_debug = false;
+	private boolean characterHeuristics_debug = false;
 	/**************************************************
 	 */
 	
@@ -62,8 +64,6 @@ public class Learner {
 	// leading three words of sentences
 	private String CHECKEDWORDS = ":"; 
 	
-
-
 	public Learner(String learningMode, String wordnetDir) {
 		this.learningMode = learningMode;
 		
@@ -141,7 +141,7 @@ public class Learner {
 		// List<String> textList = fileLoader.getTextList();
 
 		// process treatments
-		this.populateSentences(treatments);
+		//this.populateSentences(treatments);
 		
 
 		// pre load words
@@ -154,15 +154,15 @@ public class Learner {
 
 		// ???
 		this.posBySuffix();
-		this.markupByPattern();
-		this.markupIgnore();
+		//this.markupByPattern();
+		//this.markupIgnore();
 
 		// learning rules with high certainty
-		this.discover("start");
+		//this.discover("start");
 		// bootstrapping rules
-		this.discover("normal");
+		//this.discover("normal");
 
-		System.out.println("Method: learn - Done!\n");
+		//System.out.println("Method: learn - Done!\n");
 
 		return myDataHolder;
 	}
@@ -856,7 +856,10 @@ public class Learner {
 
 		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
 			Sentence sent = this.myDataHolder.sentenceTable.get(i);
-			if ((!sent.getTag().equals("ignore")) || (sent.getTag() != null)) {
+			if(sent.getTag()==null){
+				continue;
+			}
+			if (!sent.getTag().equals("ignore")) {
 				Pattern p = Pattern.compile("([a-z]+(" + Constant.PLENDINGS
 						+ ")) (" + newWord + ")", Pattern.CASE_INSENSITIVE);
 				Matcher m = p.matcher(newWord);
@@ -872,6 +875,7 @@ public class Learner {
 				}
 			}
 		}
+		
 		return null;
 	}
 
@@ -1560,8 +1564,7 @@ public class Learner {
 	 *         element is a set of descriptors
 	 */
 	public List<Set<String>> characterHeuristics() {
-		boolean ifDebugCharacterHeuristics = true;
-
+		
 		Set<String> taxonNames = new HashSet<String>();
 		Set<String> nouns = new HashSet<String>();
 		Set<String> anouns = new HashSet<String>();
@@ -1578,12 +1581,11 @@ public class Learner {
 			String sentence = sent.getSentence();
 			String originalSentence = sent.getOriginalSentence();
 
-			if (ifDebugCharacterHeuristics)
+			if (this.characterHeuristics_debug) {
 				System.out.println(source);
-			if (ifDebugCharacterHeuristics)
 				System.out.println(sentence);
-			if (ifDebugCharacterHeuristics)
 				System.out.println(originalSentence + "\n");
+			}
 
 			originalSentence = StringUtility.trimString(originalSentence);
 
@@ -2114,10 +2116,17 @@ public class Learner {
 	// -ly (adv), -er (advj), -est (advj),
 	// foreach unknownword in unknownwords table
 	// seperate root and suffix
-	// if root is a word in WN or unknownwords table
+	// if root is a word in WN or in unknownwords table
 	// make the unknowword a "b" boundary
 
-	// suffix is defined in global variable SUFFIX
+	/**
+	 * for each unknownword in unknownwords table seperate root and suffix if
+	 * root is a word in WN or in unknownwords table make the unknowword a "b"
+	 * boundary
+	 * 
+	 * suffix: -fid(adj), -form (adj), -ish(adj), -less(adj), -like (adj)),
+	 * -merous(adj), -most(adj), -shaped(adj), -ous(adj)
+	 */
 	public void posBySuffix() {
 		String p1 = "^[a-z_]+(" + Constant.SUFFIX + ")$";
 		String p2 = "^[._.][a-z]+"; // , _nerved
@@ -2128,9 +2137,7 @@ public class Learner {
 			Map.Entry<String, String> unknownWordEntry = iterator.next();
 			String unknownWord = unknownWordEntry.getKey();
 			String unknownWordTag = unknownWordEntry.getValue();
-			// String unknownWord = "anteriorly";
-			// String unknownWordTag = "unknown";
-			// the tag of this word is unknown
+
 			if (unknownWordTag.equals("unknown")) {
 				if (unknownWord.matches(p1)) {
 					Matcher matcher = Pattern.compile(
@@ -2138,13 +2145,18 @@ public class Learner {
 							unknownWord);
 					if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
 							&& matcher.matches()) {
-						if (this.containSuffix(unknownWord, matcher.group(1),
-								matcher.group(2))) {
-							this.myDataHolder.wordPOSTable.put(new WordPOSKey(unknownWord,
-									"b"), new WordPOSValue("*", 0, 0, null,
-									null));
-							System.out
-									.println("posBySuffix set $unknownword a boundary word\n");
+						if (this.posBySuffix_debug) {
+							System.out.println("posBySuffix - check word:");
+							System.out.println(unknownWord);
+						}
+						String base = matcher.group(1);
+						String suffix = matcher.group(2);
+						if (this.containSuffix(unknownWord, base, suffix)) {
+							this.updateTable(unknownWord, "b", "*", "wordpos", 0);
+							if (this.posBySuffix_debug) {
+								System.out.println("posBySuffix - set word:");
+								System.out.println(unknownWord);
+							}
 						}
 					}
 				}
