@@ -153,7 +153,7 @@ public class Learner {
 		this.addProperNouns();
 
 		// ???
-		this.posBySuffix();
+		//this.posBySuffix();
 		//this.markupByPattern();
 		//this.markupIgnore();
 
@@ -538,6 +538,9 @@ public class Learner {
 			pos = myWordFormUtility.getNumber(word);
 		}
 
+//		if (word.equals("mesodentine")) {
+//			System.out.println(word);
+//		}
 		result = result + markKnown(word, pos, role, table, increment);
 
 		// 1) if the word is a singular form n word, find its plural form, then add
@@ -610,10 +613,11 @@ public class Learner {
 		sign = sign + processNewWord(word, pos, role, table, word, increment);
 
 		System.out.println(word);
-//		if (word.equals("mesodentine")){
-//			System.out.println("Find One!");
-//		}
+		if (word.equals("mesodentine")){
+			System.out.println("Find One!");
+		}
 		
+		// case 1: have benn tested by Dongye
 		Pattern p = Pattern.compile("^(" + Constant.PREFIX + ")(\\S+).*$");
 		Matcher m = p.matcher(word);
 		if (m.lookingAt()) {
@@ -634,10 +638,18 @@ public class Learner {
 
 			Iterator<Map.Entry<String, String>> iter1 = this.myDataHolder.unknownWordTable
 					.entrySet().iterator();
+			if (this.myDataHolder.unknownWordTable.containsKey("semidentine")) {
+				System.out.println(this.myDataHolder.unknownWordTable.get("semidentine"));
+			}
+			
 			while (iter1.hasNext()) {
 				Map.Entry<String, String> entry = iter1.next();
 				String newWord = entry.getKey();
 				String flag = entry.getValue();
+				
+				if (newWord.equals("semidentine")){
+					System.out.println("Find Two!");
+				}
 
 				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
 					sign = sign
@@ -700,6 +712,11 @@ public class Learner {
 	 */
 	public int processNewWord(String newWord, String pos, String role,
 			String table, String flag, int increment) {
+		
+		if (newWord.equals("semidentine"))
+			System.out.println("update");
+		
+		
 		int sign = 0;
 		// remove $newword from unknownwords
 		updateUnknownWords(newWord, flag);
