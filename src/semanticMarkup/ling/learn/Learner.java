@@ -206,7 +206,9 @@ public class Learner {
 								+ sentences[j]);
 					if (populateSentence_debug)
 						System.out.println(sentences[j]);
-
+//					if (sentences[j].equals("mesodentine")) {
+//						System.out.println(sentences[j]);
+//					}
 					// if(!/\w+/){next;}
 					if (!sentences[j].matches("^.*\\w+.*$")) {
 						continue;
@@ -230,6 +232,9 @@ public class Learner {
 				for (int j = 0; j < validIndex.size(); j++) {
 					String line = sentences[validIndex.get(j)];
 					String oline = sentCopy.get(j);
+//					if (oline.equals("mesodentine")) {
+//						System.out.println(oline);
+//					}
 
 					// handle line first
 					// remove all ' to avoid escape problems
@@ -527,14 +532,20 @@ public class Learner {
 			return 0;
 		}
 
+		// if it is a n word, check if it is singular or plural, and update the
+		// pos
 		if (pos.equals("n")) {
-			// $pos = getnumber($word);
 			pos = myWordFormUtility.getNumber(word);
 		}
 
 		result = result + markKnown(word, pos, role, table, increment);
 
-		// to eliminate reduandent computation
+		// 1) if the word is a singular form n word, find its plural form, then add
+		// the plural form, and add the singular - pluarl pair into
+		// singularPluarlTable;
+		// 2) if the word is a plural form n word, find its singular form, then add
+		// the singular form, and add the singular - pluarl pair into
+		// singularPluarlTable;
 		if (!this.myDataHolder.isInSingularPluralPair(word)) {
 			if (pos.equals("p")) {
 				String pl = word;
@@ -545,7 +556,6 @@ public class Learner {
 				this.myDataHolder.addSingularPluralPair(word, pl);
 			}
 			if (pos.equals("s")) {
-				// List<String> words = getPlural(word);
 				List<String> words = myWordFormUtility.getPlural(word);
 				String sg = word;
 				for (int i = 0; i < words.size(); i++) {
@@ -563,11 +573,16 @@ public class Learner {
 	}
 	
 	/**
+	 * mark a word an its pos and role
 	 * 
 	 * @param word
+	 *            the word to mark
 	 * @param pos
+	 *            the pos of the word
 	 * @param role
+	 *            the role of the word
 	 * @param table
+	 *            which table to mark
 	 * @param increment
 	 * @return
 	 */
@@ -579,11 +594,6 @@ public class Learner {
 		int sign = 0;
 		String otherPrefix = "";
 		String spWords = "";
-
-		// empty word
-		// if (word.length() < 1) {
-		// return 0;
-		// }
 
 		// forbidden word
 		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
@@ -599,18 +609,28 @@ public class Learner {
 
 		sign = sign + processNewWord(word, pos, role, table, word, increment);
 
+		System.out.println(word);
+//		if (word.equals("mesodentine")){
+//			System.out.println("Find One!");
+//		}
+		
 		Pattern p = Pattern.compile("^(" + Constant.PREFIX + ")(\\S+).*$");
 		Matcher m = p.matcher(word);
 		if (m.lookingAt()) {
-			String g1 = m.group(1);
-			String g2 = m.group(2);
-			String temp = g2;
-			otherPrefix = Constant.PREFIX;
-			otherPrefix = otherPrefix.replace("\\b" + g1 + "\\b", "");
-			otherPrefix = otherPrefix.replace("\\|\\|", "|");
-			otherPrefix = otherPrefix.replace("^\\|", "");
-			spWords = "(" + StringUtility.escape(singularPluralVariations(temp)) + ")";
-			pattern = "^(" + otherPrefix + ")?" + spWords + "\\$";
+			String g1 = m.group(1); // the prefix
+			String g2 = m.group(2); // the remaining
+			//String temp = g2;
+			
+			// remove g1 from the prefix
+//			otherPrefix = Constant.PREFIX;
+//			otherPrefix = otherPrefix.replace("\\b" + g1 + "\\b", "");
+//			otherPrefix = otherPrefix.replace("\\|\\|", "|");
+//			otherPrefix = otherPrefix.replace("^\\|", "");
+			
+			otherPrefix = StringUtility.removeFromWordList(g1, Constant.PREFIX);
+			
+			spWords = "(" + StringUtility.escape(singularPluralVariations(g2)) + ")";
+			pattern = "^(" + otherPrefix + ")?" + spWords + "$";
 
 			Iterator<Map.Entry<String, String>> iter1 = this.myDataHolder.unknownWordTable
 					.entrySet().iterator();
@@ -618,13 +638,14 @@ public class Learner {
 				Map.Entry<String, String> entry = iter1.next();
 				String newWord = entry.getKey();
 				String flag = entry.getValue();
+
 				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
 					sign = sign
 							+ processNewWord(newWord, pos, "*", table, word, 0);
 				}
 			}
 
-			// word starts with a lowercase letter
+			// word starts with a lower case letter
 			if (word.matches("^[a-z].*$")) {
 				spWords = "(" + StringUtility.escape(singularPluralVariations(word)) + ")";
 				// word=shrubs, pattern = (pre|sub)shrubs
@@ -784,7 +805,15 @@ public class Learner {
 					&& ((oldPOS.equals("b")) || (pos.equals("b")))) {
 				String otherPOS = pos.equals("b") ? oldPOS : pos;
 				pos = resolveConflicts(newWord, "b", otherPOS);
-				if (!pos.equals(oldPOS)) { // new pos win
+
+				boolean flag = false;
+				if (pos != null) {
+					if (!pos.equals(oldPOS)) {
+						flag = true;
+					}
+				}
+
+				if (flag) { // new pos win
 					role = role.equals("*") ? "" : role;
 					n = n + changePOS(newWord, oldPOS, pos, role, increment);
 				} else { // olde pos win
@@ -1563,6 +1592,11 @@ public class Learner {
 			String source = sent.getSource();
 			String sentence = sent.getSentence();
 			String originalSentence = sent.getOriginalSentence();
+			
+//			if (originalSentence.equals("mesodentine")){
+//				System.out.println("oSent:");
+//				System.out.println(originalSentence);
+//			}
 
 			if (this.characterHeuristics_debug) {
 				System.out.println(source);
@@ -1574,8 +1608,12 @@ public class Learner {
 
 			// noun rule 0: taxon names
 			taxonNames = this.getTaxonNameNouns(originalSentence);
+			
+			//$sentence =~ s#<\s*/?\s*i\s*>##g;
+			//$originalsent =~ s#<\s*/?\s*i\s*>##g;
+			
 			sentence = sentence.replaceAll("<\\s*/?\\s*i\\s*>", "");
-			originalSentence = originalSentence.replaceAll("\\s*/?\\s*i\\s*",
+			originalSentence = originalSentence.replaceAll("<\\s*/?\\s*i\\s*>",
 					"");
 			// Update sentenceTable
 			this.myDataHolder.sentenceTable.get(i).setSentence(sentence);
@@ -1627,7 +1665,16 @@ public class Learner {
 			// remove puncts for descriptor rules
 			originalSentence = StringUtility.removePunctuation(
 					originalSentence, "-");
-
+//			System.out.println("oSent:");
+//			System.out.println(originalSentence);
+//			if (originalSentence.equals("mesodentine")){
+//				System.out.println("oSent:");
+//				System.out.println(originalSentence);
+//			}
+			
+//			if (originalSentence.equals("Body scale profile")) {
+//				System.out.println("Body scale profile");
+//			}
 			// Descriptor rule 1: single term descriptions are descriptors
 			descriptors.addAll(this.getDescriptorsRule1(source,
 					originalSentence, nouns));
@@ -1899,7 +1946,7 @@ public class Learner {
 			Set<String> nouns) {
 		Set<String> descriptors = new HashSet<String>();
 		// single word
-		if (source.matches("^.*\\.xml_\\S+_.*$") && (!sentence.matches("\\s"))) {
+		if (source.matches("^.*\\.xml_\\S+_.*$") && (!sentence.matches("^.*\\s.*$"))) {
 			Iterator<String> iter = nouns.iterator();
 			boolean isExist = false;
 			while (iter.hasNext()) {
@@ -1919,6 +1966,7 @@ public class Learner {
 	}
 
 	/**
+	 * (is|are) red: isDescriptor
 	 * 
 	 * @param oSent
 	 * @return
