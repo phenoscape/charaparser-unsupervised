@@ -146,11 +146,8 @@ public class Learner {
 
 		// pre load words
 		this.addHeuristicsNouns();
-		this.addStopWords();
-		this.addCharacters();
-		this.addNumbers();
-		this.addClusterstrings();
-		this.addProperNouns();
+		this.addPredefinedWords();
+
 
 		// ???
 		//this.posBySuffix();
@@ -167,6 +164,14 @@ public class Learner {
 		return myDataHolder;
 	}
 	
+	private void addPredefinedWords() {
+		this.addStopWords();
+		this.addCharacters();
+		this.addNumbers();
+		this.addClusterstrings();
+		this.addProperNouns();		
+	}
+
 	/**
 	 * 
 	 * @param treatments
@@ -612,10 +617,10 @@ public class Learner {
 
 		sign = sign + processNewWord(word, pos, role, table, word, increment);
 
-		System.out.println(word);
-		if (word.equals("mesodentine")){
-			System.out.println("Find One!");
-		}
+//		System.out.println(word);
+//		if (word.equals("mesodentine")){
+//			System.out.println("Find One!");
+//		}
 		
 		// case 1: have benn tested by Dongye
 		Pattern p = Pattern.compile("^(" + Constant.PREFIX + ")(\\S+).*$");
@@ -633,7 +638,7 @@ public class Learner {
 			
 			otherPrefix = StringUtility.removeFromWordList(g1, Constant.PREFIX);
 			
-			spWords = "(" + StringUtility.escape(singularPluralVariations(g2)) + ")";
+			spWords = "(" + StringUtility.escape(singularPluralVariations(g2, this.myDataHolder.singularPluralTable)) + ")";
 			pattern = "^(" + otherPrefix + ")?" + spWords + "$";
 
 			Iterator<Map.Entry<String, String>> iter1 = this.myDataHolder.unknownWordTable
@@ -647,9 +652,9 @@ public class Learner {
 				String newWord = entry.getKey();
 				String flag = entry.getValue();
 				
-				if (newWord.equals("semidentine")){
-					System.out.println("Find Two!");
-				}
+//				if (newWord.equals("semidentine")){
+//					System.out.println("Find Two!");
+//				}
 
 				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
 					sign = sign
@@ -659,7 +664,7 @@ public class Learner {
 
 			// word starts with a lower case letter
 			if (word.matches("^[a-z].*$")) {
-				spWords = "(" + StringUtility.escape(singularPluralVariations(word)) + ")";
+				spWords = "(" + StringUtility.escape(singularPluralVariations(word, this.myDataHolder.singularPluralTable)) + ")";
 				// word=shrubs, pattern = (pre|sub)shrubs
 				pattern = "^(" + Constant.PREFIX + ")" + spWords + "\\$";
 
@@ -677,7 +682,7 @@ public class Learner {
 				}
 
 				// word_$spwords
-				spWords = "(" + StringUtility.escape(singularPluralVariations(word)) + ")";
+				spWords = "(" + StringUtility.escape(singularPluralVariations(word, this.myDataHolder.singularPluralTable)) + ")";
 				pattern = ".*_" + spWords + "\\$";
 				Iterator<Map.Entry<String, String>> iter3 = this.myDataHolder.unknownWordTable
 						.entrySet().iterator();
@@ -736,10 +741,9 @@ public class Learner {
 	 * @param word
 	 * @return all variations of the word
 	 */
-	public String singularPluralVariations(String word) {
+	public String singularPluralVariations(String word, Set<SingularPluralPair> singularPluralTable) {
 		String variations = word + "|";
-		Iterator<SingularPluralPair> iter = this.myDataHolder.singularPluralTable
-				.iterator();
+		Iterator<SingularPluralPair> iter = singularPluralTable.iterator();
 		while (iter.hasNext()) {
 			SingularPluralPair pair = iter.next();
 			String sg = pair.getSingular();
@@ -1285,7 +1289,7 @@ public class Learner {
 		addNouns(rnouns);
 		
 		// part 2
-		Set<String> nouns = this.getHeuristicsNouns();
+		Set<String> nouns = this.learnHeuristicsNouns();
 		Iterator<String> iter = nouns.iterator();
 		while (iter.hasNext()) {
 			String e = iter.next();
@@ -1373,7 +1377,7 @@ public class Learner {
 	 * 
 	 * @return nouns learned by heuristics
 	 */
-	public Set<String> getHeuristicsNouns() {
+	public Set<String> learnHeuristicsNouns() {
 		// Set of words
 		Set<String> words = new HashSet<String>();
 

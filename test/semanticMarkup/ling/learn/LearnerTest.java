@@ -588,5 +588,17 @@ public class LearnerTest {
 		assertEquals("updateCheckedWords", ":two:one:three:",
 				tester.updateCheckedWords(":", checkedWords, list));
 	}
+	
+	@Test
+	public void testSingularPluralVariations(){
+		Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair> ();
+		singularPluralTable.add(new SingularPluralPair("vertebra", "vertebrae"));
+		singularPluralTable.add(new SingularPluralPair("curimatidae","curimatida"));
+		singularPluralTable.add(new SingularPluralPair("bone","bones"));
+		assertEquals("singularPluralVariations", "vertebra|vertebrae", tester.singularPluralVariations("vertebra", singularPluralTable));
+		assertEquals("singularPluralVariations", "curimatidae|curimatida", tester.singularPluralVariations("curimatidae", singularPluralTable));
+		assertEquals("singularPluralVariations", "curimatida|curimatidae", tester.singularPluralVariations("curimatida", singularPluralTable));
+		assertEquals("singularPluralVariations", "bones|bone", tester.singularPluralVariations("bones", singularPluralTable));
+	}
 
 }
