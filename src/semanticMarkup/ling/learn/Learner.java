@@ -628,80 +628,92 @@ public class Learner {
 		if (m.lookingAt()) {
 			String g1 = m.group(1); // the prefix
 			String g2 = m.group(2); // the remaining
-			//String temp = g2;
-			
+			// String temp = g2;
+
 			// remove g1 from the prefix
-//			otherPrefix = Constant.PREFIX;
-//			otherPrefix = otherPrefix.replace("\\b" + g1 + "\\b", "");
-//			otherPrefix = otherPrefix.replace("\\|\\|", "|");
-//			otherPrefix = otherPrefix.replace("^\\|", "");
-			
+			// otherPrefix = Constant.PREFIX;
+			// otherPrefix = otherPrefix.replace("\\b" + g1 + "\\b", "");
+			// otherPrefix = otherPrefix.replace("\\|\\|", "|");
+			// otherPrefix = otherPrefix.replace("^\\|", "");
+
 			otherPrefix = StringUtility.removeFromWordList(g1, Constant.PREFIX);
-			
-			spWords = "(" + StringUtility.escape(singularPluralVariations(g2, this.myDataHolder.singularPluralTable)) + ")";
+
+			spWords = "("
+					+ StringUtility.escape(singularPluralVariations(g2,
+							this.myDataHolder.singularPluralTable)) + ")";
 			pattern = "^(" + otherPrefix + ")?" + spWords + "$";
 
 			Iterator<Map.Entry<String, String>> iter1 = this.myDataHolder.unknownWordTable
 					.entrySet().iterator();
-			if (this.myDataHolder.unknownWordTable.containsKey("semidentine")) {
-				System.out.println(this.myDataHolder.unknownWordTable.get("semidentine"));
-			}
-			
+			// if
+			// (this.myDataHolder.unknownWordTable.containsKey("semidentine")) {
+			// System.out.println(this.myDataHolder.unknownWordTable.get("semidentine"));
+			// }
+
+			// case 1
 			while (iter1.hasNext()) {
 				Map.Entry<String, String> entry = iter1.next();
 				String newWord = entry.getKey();
 				String flag = entry.getValue();
-				
-//				if (newWord.equals("semidentine")){
-//					System.out.println("Find Two!");
-//				}
+
+				// if (newWord.equals("semidentine")){
+				// System.out.println("Find Two!");
+				// }
 
 				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
 					sign = sign
 							+ processNewWord(newWord, pos, "*", table, word, 0);
 				}
 			}
+		}
 
-			// word starts with a lower case letter
-			if (word.matches("^[a-z].*$")) {
-				spWords = "(" + StringUtility.escape(singularPluralVariations(word, this.myDataHolder.singularPluralTable)) + ")";
-				// word=shrubs, pattern = (pre|sub)shrubs
-				pattern = "^(" + Constant.PREFIX + ")" + spWords + "\\$";
+		// word starts with a lower case letter
+		if (word.matches("^[a-z].*$")) {
+			spWords = "("
+					+ StringUtility.escape(singularPluralVariations(word,
+							this.myDataHolder.singularPluralTable)) + ")";
+			// word=shrubs, pattern = (pre|sub)shrubs
+			pattern = "^(" + Constant.PREFIX + ")" + spWords + "$";
 
-				Iterator<Map.Entry<String, String>> iter2 = this.myDataHolder.unknownWordTable
-						.entrySet().iterator();
-				while (iter2.hasNext()) {
-					Map.Entry<String, String> entry = iter2.next();
-					String newWord = entry.getKey();
-					String flag = entry.getValue();
-					if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
-						sign = sign
-								+ processNewWord(newWord, pos, "*", table,
-										word, 0);
-					}
+			Iterator<Map.Entry<String, String>> iter2 = this.myDataHolder.unknownWordTable
+					.entrySet().iterator();
+			if (word.equals("pair")) {
+				System.out.println();
+			}
+			// case 2
+			while (iter2.hasNext()) {
+				Map.Entry<String, String> entry = iter2.next();
+				String newWord = entry.getKey();
+				if (newWord.equals("semicircular")) {
+					System.out.println();
 				}
+				String flag = entry.getValue();
+				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
+					sign = sign
+							+ processNewWord(newWord, pos, "*", table, word, 0);
+				}
+			}
 
-				// word_$spwords
-				spWords = "(" + StringUtility.escape(singularPluralVariations(word, this.myDataHolder.singularPluralTable)) + ")";
-				pattern = ".*_" + spWords + "\\$";
-				Iterator<Map.Entry<String, String>> iter3 = this.myDataHolder.unknownWordTable
-						.entrySet().iterator();
-				while (iter3.hasNext()) {
-					Map.Entry<String, String> entry = iter3.next();
-					String newWord = entry.getKey();
-					String flag = entry.getValue();
-					if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
-						sign = sign
-								+ processNewWord(newWord, pos, "*", table,
-										word, 0);
-					}
+			// word_$spwords
+			spWords = "("
+					+ StringUtility.escape(singularPluralVariations(word,
+							this.myDataHolder.singularPluralTable)) + ")";
+			pattern = ".*_" + spWords + "\\$";
+			Iterator<Map.Entry<String, String>> iter3 = this.myDataHolder.unknownWordTable
+					.entrySet().iterator();
+			while (iter3.hasNext()) {
+				Map.Entry<String, String> entry = iter3.next();
+				String newWord = entry.getKey();
+				String flag = entry.getValue();
+				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
+					sign = sign
+							+ processNewWord(newWord, pos, "*", table, word, 0);
 				}
 			}
 		}
 
 		return sign;
 	}
-	
 
 	
 	/**
@@ -718,8 +730,8 @@ public class Learner {
 	public int processNewWord(String newWord, String pos, String role,
 			String table, String flag, int increment) {
 		
-		if (newWord.equals("semidentine"))
-			System.out.println("update");
+//		if (newWord.equals("semidentine"))
+//			System.out.println("update");
 		
 		
 		int sign = 0;
@@ -1349,6 +1361,9 @@ public class Learner {
 		Iterator<String> iter = descriptors.iterator();
 		while (iter.hasNext()) {
 			String descriptor = iter.next();
+//			if (descriptor.equals("circular")){
+//				System.out.println();
+//			}
 			if (!StringUtility.isMatchedWords(descriptor, Constant.FORBIDDEN)) {
 				this.updateTable(descriptor, "b", "", "wordpos", 1);
 			}
