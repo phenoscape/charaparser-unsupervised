@@ -597,6 +597,8 @@ public class Learner {
 	public int markKnown(String word, String pos, String role, String table,
 			int increment) {
 
+		boolean markknown_debug=true;
+		
 		String sth = "";
 		String pattern = "";
 		int sign = 0;
@@ -663,10 +665,18 @@ public class Learner {
 				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
 					sign = sign
 							+ processNewWord(newWord, pos, "*", table, word, 0);
+
+					if (markknown_debug) {
+						System.out.print("case 1");
+						System.out.println("by removing prefix of" + word
+								+ ", know " + newWord + " is a [" + pos + "]");
+					}
 				}
 			}
 		}
-
+//		if (word.equals("pair")) {
+//			System.out.println();
+//		}
 		// word starts with a lower case letter
 		if (word.matches("^[a-z].*$")) {
 			spWords = "("
@@ -677,28 +687,33 @@ public class Learner {
 
 			Iterator<Map.Entry<String, String>> iter2 = this.myDataHolder.unknownWordTable
 					.entrySet().iterator();
-			if (word.equals("pair")) {
-				System.out.println();
-			}
+
 			// case 2
 			while (iter2.hasNext()) {
 				Map.Entry<String, String> entry = iter2.next();
 				String newWord = entry.getKey();
-				if (newWord.equals("semicircular")) {
-					System.out.println();
-				}
+//				if (newWord.equals("semicircular")) {
+//					System.out.println();
+//				}
 				String flag = entry.getValue();
 				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
 					sign = sign
 							+ processNewWord(newWord, pos, "*", table, word, 0);
+					
+					if (markknown_debug) {
+						System.out.print("case 2");
+						System.out.println("by removing prefix of" + word
+								+ ", know " + newWord + " is a [" + pos + "]");
+					}
+				
 				}
 			}
 
-			// word_$spwords
+			// case 3: word_$spwords
 			spWords = "("
 					+ StringUtility.escape(singularPluralVariations(word,
 							this.myDataHolder.singularPluralTable)) + ")";
-			pattern = ".*_" + spWords + "\\$";
+			pattern = "^.*_" + spWords + "$";
 			Iterator<Map.Entry<String, String>> iter3 = this.myDataHolder.unknownWordTable
 					.entrySet().iterator();
 			while (iter3.hasNext()) {
@@ -708,6 +723,12 @@ public class Learner {
 				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
 					sign = sign
 							+ processNewWord(newWord, pos, "*", table, word, 0);
+					
+					if (markknown_debug) {
+						System.out.print("case 3");
+						System.out.println("by removing prefix of" + word
+								+ ", know " + newWord + " is a [" + pos + "]");
+					}
 				}
 			}
 		}
@@ -760,10 +781,10 @@ public class Learner {
 			SingularPluralPair pair = iter.next();
 			String sg = pair.getSingular();
 			String pl = pair.getPlural();
-			if (sg.equals(word)) {
+			if (sg.equals(word) && (!pl.equals(""))) {
 				variations = variations + pl + "|";
 			}
-			if (pl.equals(word)) {
+			if (pl.equals(word) && (!sg.equals(""))) {
 				variations = variations + sg + "|";
 			}
 		}
@@ -2082,8 +2103,8 @@ public class Learner {
 		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
 				"]", "}", "\\\\d+" }));
 
-		System.out.println(stops);
-		System.out.println(Constant.FORBIDDEN);
+//		System.out.println(stops);
+//		System.out.println(Constant.FORBIDDEN);
 
 		for (int i = 0; i < stops.size(); i++) {
 			String word = stops.get(i);
@@ -2100,9 +2121,9 @@ public class Learner {
 	public void addCharacters() {
 		List<String> chars = new ArrayList<String>();
 		chars.addAll(Arrays.asList(Constant.CHARACTER.split("\\|")));
-
-		System.out.println(chars);
-		System.out.println(Constant.CHARACTER);
+//
+//		System.out.println(chars);
+//		System.out.println(Constant.CHARACTER);
 
 		for (int i = 0; i < chars.size(); i++) {
 			String word = chars.get(i);
@@ -2122,8 +2143,8 @@ public class Learner {
 		List<String> nums = new ArrayList<String>();
 		nums.addAll(Arrays.asList(Constant.NUMBER.split("\\|")));
 
-		System.out.println(nums);
-		System.out.println(Constant.NUMBER);
+//		System.out.println(nums);
+//		System.out.println(Constant.NUMBER);
 
 		for (int i = 0; i < nums.size(); i++) {
 			String word = nums.get(i);
@@ -2146,8 +2167,8 @@ public class Learner {
 		List<String> cltstrs = new ArrayList<String>();
 		cltstrs.addAll(Arrays.asList(Constant.CLUSTERSTRING.split("\\|")));
 
-		System.out.println(cltstrs);
-		System.out.println(Constant.CLUSTERSTRING);
+//		System.out.println(cltstrs);
+//		System.out.println(Constant.CLUSTERSTRING);
 
 		for (int i = 0; i < cltstrs.size(); i++) {
 			String word = cltstrs.get(i);
