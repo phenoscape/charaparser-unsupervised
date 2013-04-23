@@ -1178,27 +1178,30 @@ public class Learner {
 	 */
 	public String getParentSentenceTag(int sentID) {
 		/**
-		 * 1. Get the originalsent of sentence sentID 1. Case 1: the
-		 * originalsent of $sentence sentID starts with a [a-z\d] 1.1 select
-		 * modifier and tag from sentenceTable where tag is not "ignore" OR tag
-		 * is null AND originalsent COLLATE utf8_bin regexp '^[A-Z].*' or
-		 * originalsent rlike ': *\$' AND id < sentID 1.1 take the tag of the
-		 * first sentence (with smallest id), get its modifier and tag 1.1 if
-		 * modifier match \w, tag = modifier + space + tag 1.1 remove [ and ]
-		 * from tag 1. if tag matches \w return [+tag+], else return [parenttag]
+		 * 1. Get the originalsent of sentence sentID 
+		 * 1. Case 1: the originalsent of $sentence sentID starts with a [a-z\d] 
+		 * 1.1 select modifier and tag from sentenceTable where tag is not "ignore" 
+		 *     	OR tag is null 
+		 *      AND originalsent COLLATE utf8_bin regexp '^[A-Z].*' 
+		 *      OR originalsent rlike ': *\$' AND id < sentID 
+		 * 1.1 take the tag of the first sentence (with smallest id), get its modifier and tag 
+		 * 1.1 if modifier match \w, tag = modifier + space + tag 
+		 * 1.1 remove [ and ] from tag 
+		 * 1. if tag matches \w return [+tag+], else return [parenttag]
 		 */
 
 		String tag = "";
 
 		String originalSent = this.myDataHolder.sentenceTable.get(sentID)
 				.getOriginalSentence();
-		if (originalSent.matches("^\\s*([a-z]|\\d).*$")) {
+		if (originalSent.matches("^\\s*[^A-Z].*$")) {
+		//if (originalSent.matches("^\\s*([a-z]|\\d).*$")) {
 			for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
 				Sentence sent = this.myDataHolder.sentenceTable.get(i);
 				tag = sent.getTag();
 				if (((!tag.equals("ignore")) || (tag == null))
 						&& ((originalSent.matches("^[A-Z].*$")) || (originalSent
-								.matches("^.*:\\s*\\$"))) && (i < sentID)) {
+								.matches("^.*:\\s*$"))) && (i < sentID)) {
 					String modifier = sent.getModifier();
 					if (modifier.matches("^.*\\w.*$")) {
 						tag = modifier + " " + tag;
