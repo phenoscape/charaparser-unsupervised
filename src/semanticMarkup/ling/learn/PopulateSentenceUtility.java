@@ -47,7 +47,19 @@ public class PopulateSentenceUtility {
 	
 	String[] segmentSentence(String text) {
 		String sentences[] = {};
+		
+		//hide abbreviations
+		text = this.hideAbbreviations(text);
+		
+		// do sentence segmentation
 		sentences = this.mySentenceDetector.sentDetect(text);
+		
+		// restore Abbreviations
+		
+		for (int i = 0; i<sentences.length;i++){
+			sentences[i] = this.restoreAbbreviations(sentences[i]); 
+		}
+		
 		return sentences;
 	}
 

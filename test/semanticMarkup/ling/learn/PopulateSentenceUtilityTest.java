@@ -168,7 +168,18 @@ public class PopulateSentenceUtilityTest {
 		assertEquals("hideAbbreviations", "Word1 jr. name word2.", tester.restoreAbbreviations("Word1 jr[DOT] name word2."));
 		assertEquals("hideAbbreviations", "Word1 Gen. name word2.", tester.restoreAbbreviations("Word1 Gen[DOT] name word2."));
 		assertEquals("hideAbbreviations", "Word1 uNiV. name word2.", tester.restoreAbbreviations("Word1 uNiV[DOT] name word2."));
-		assertEquals("hideAbbreviations", "Word1 uNiV. name coRp. word 3 name word2.", tester.restoreAbbreviations("Word1 uNiV[DOT] name coRp[DOT] word 3 name word2."));				
+		assertEquals("hideAbbreviations", "Word1 uNiV. name coRp. word 3 name word2.", tester.restoreAbbreviations("Word1 uNiV[DOT] name coRp[DOT] word 3 name word2."));		
 	}
+	
+	@Test
+	public void testSegmentSentence(){
+		assertEquals("segmentSentence - handle abbreviations", "This is jr. Gates.", tester.segmentSentence("This is jr. Gates. This is second sentence.")[0]);
+		assertEquals("segmentSentence - handle abbreviations", "This is second sentence.", tester.segmentSentence("This is jr. Gates. This is second sentence.")[1]);
+		assertEquals("The Energy DEPT. is holding a work shop now.", tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ")[0]);
+		assertEquals("This is second sentence.", tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ")[1]);
+		assertEquals("Mr. Gates from the Energy DEPT. is holding a work shop now.", tester.segmentSentence("Mr. Gates from the Energy DEPT. is holding a work shop now. This is second sentence. ")[0]);
+		
+	}
+	
 
 }
