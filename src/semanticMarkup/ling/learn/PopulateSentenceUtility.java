@@ -221,5 +221,67 @@ public class PopulateSentenceUtility {
 
 		return words;
 	}
+	
+	public String hideAbbreviations(String text) {
+		String pattern = "(^.*)("
+				+Constant.PEOPLE_ABBR
+				+"|"+Constant.ARMY_ABBR
+				+"|"+Constant.INSTITUTES_ABBR
+				+"|"+Constant.COMPANIES_ABBR
+				+"|"+Constant.PLACES_ABBR
+				+"|"+Constant.MONTHS_ABBR
+				+"|"+Constant.MISC_ABBR
+				+"|"+Constant.BOT1_ABBR
+				+"|"+Constant.BOT2_ABBR
+				+"|"+Constant.LATIN_ABBR
+				+")(\\.)(.*$)";
+		//pattern = "(^.*)(jr|abc)(\\.)(.*$)";
+		
+		Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+		Matcher m;
+		m= p.matcher(text);
+		while (m.matches()){
+			String head = m.group(1);
+			String abbr = m.group(2);
+			String dot = m.group(3);
+			String remaining = m.group(4);
+			dot = "[DOT]";
+			text= head+abbr+dot+remaining;
+			m=p.matcher(text);
+		}
+		
+		return text;
+	}
+	
+	public String restoreAbbreviations(String text) {
+		String pattern = "(^.*)("
+				+Constant.PEOPLE_ABBR
+				+"|"+Constant.ARMY_ABBR
+				+"|"+Constant.INSTITUTES_ABBR
+				+"|"+Constant.COMPANIES_ABBR
+				+"|"+Constant.PLACES_ABBR
+				+"|"+Constant.MONTHS_ABBR
+				+"|"+Constant.MISC_ABBR
+				+"|"+Constant.BOT1_ABBR
+				+"|"+Constant.BOT2_ABBR
+				+"|"+Constant.LATIN_ABBR
+				+")(\\[DOT\\])(.*$)";
+		//pattern = "(^.*)(jr|abc)(\\.)(.*$)";
+		
+		Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+		Matcher m;
+		m= p.matcher(text);
+		while (m.matches()){
+			String head = m.group(1);
+			String abbr = m.group(2);
+			String dot = m.group(3);
+			String remaining = m.group(4);
+			dot = ".";
+			text= head+abbr+dot+remaining;
+			m=p.matcher(text);
+		}
+		
+		return text;
+	}
 
 }
