@@ -22,6 +22,8 @@ public class Constant {
 	public static final String SUBSTRUCTURESTRING = "part|parts|area|areas|portion|portions";
 	
 	public static final String PROPERNOUN = "propernouns"; // EOL
+	
+	public static final String IGNOREPTN = "(IGNOREPTN)"; // disabled
 
 	
 	public static final String STOP = "state|page|fig|"
@@ -32,6 +34,19 @@ public class Constant {
 	public static final String VENDINGS = "(ing)\\b";
 	public static final String SENDINGS = "(on|is|ex|ix|um|us)\\b";
 	public static final String PENDINGS = "(a|ia|es|ices|i|ae)\\b";
+	
+	//public static final String PEOPLE_ABBR = "jr|mr|mrs|ms|dr|prof|sr|sens?|reps?|gov|attys?|supt|det|rev";
+	public static final String PEOPLE_ABBR = "jr|mr|mrs|ms|dr|prof|sr|sens|reps|gov|attys|supt|det|rev";
+	public static final String ARMY_ABBR= "col|gen|lt|cmdr|adm|capt|sgt|cpl|maj";
+	public static final String INSTITUTES_ABBR = "dept|univ|assn|bros";
+	public static final String COMPANIES_ABBR = "inc|ltd|co|corp";
+	//public static final String PLACES_ABBR = "arc|al|ave|blv?d|cl|ct|cres|dr|expy?|dist|mt|ft|fw?y|hwa?y|la|pde?|pl|plz|rd|st|tce|Ala|Ariz|Ark|Cal|Calif|Col|Colo|Conn|Del|Fed|Fla|Ga|Ida|Id|Ill|Ind|Ia|Kan|Kans|Ken|Ky|La|Me|Md|Is|Mass|Mich|Minn|Miss|Mo|Mont|Neb|Nebr|Nev|Mex|Okla|Ok|Ore|Penna|Penn|Pa|Dak|Tenn|Tex|Ut|Vt|Va|Wash|Wis|Wisc|Wy|Wyo|USAFA|Alta|Man|Ont|Qu¨¦|Sask|Yuk";
+	public static final String PLACES_ABBR = "arc|al|ave|blvd|cl|ct|cres|dr|expy|dist|mt|ft|fwy|hway|la|pde|pl|plz|rd|st|tce|Ala|Ariz|Ark|Cal|Calif|Col|Colo|Conn|Del|Fed|Fla|Ga|Ida|Id|Ill|Ind|Ia|Kan|Kans|Ken|Ky|La|Me|Md|Is|Mass|Mich|Minn|Miss|Mo|Mont|Neb|Nebr|Nev|Mex|Okla|Ok|Ore|Penna|Penn|Pa|Dak|Tenn|Tex|Ut|Vt|Va|Wash|Wis|Wisc|Wy|Wyo|USAFA|Alta|Man|Ont|Qu¨¦|Sask|Yuk";
+	public static final String MONTHS_ABBR = "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|sept";
+	public static final String MISC_ABBR = "vs|etc|no|esp";
+	public static final String BOT1_ABBR = "diam|sq|Rottb";
+	public static final String BOT2_ABBR = "ca|fl|Fl|Fr|fr|var";
+	public static final String LATIN_ABBR = "et al";
  
 
 	public Constant() {

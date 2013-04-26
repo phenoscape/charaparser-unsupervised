@@ -433,7 +433,7 @@ public class WordFormUtility {
 	public List<String> getPlural(String word) {
 		
 		if (word.matches("^(n|2n|x)$")) {
-			return null;
+			return new ArrayList<String>();
 		}
 		
 		String plural = "";

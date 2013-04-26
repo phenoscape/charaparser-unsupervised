@@ -86,4 +86,52 @@ public class StringUtility {
 		return true;
 	}
 	
+	/**
+	 * in perl, it escape [] {} and () for mysql regexp, not perl regrexp. May
+	 * not be necessary in Java
+	 * 
+	 * @param singularPluralVariations
+	 * @return
+	 */
+	public static String escape(String singularPluralVariations) {
+		// TODO Auto-generated method stub
+		return singularPluralVariations;
+	}
+
+	/**
+	 * check if a word is a word in the wordList
+	 * 
+	 * @param word
+	 *            the word to check
+	 * 
+	 * @param wordList
+	 *            the words to match to
+	 * @return a boolean variable. true mean word is a word in the list. false
+	 *         means it is not
+	 */
+	public static boolean isMatchedWords(String word, String wordList){
+		return word.matches("^.*\\b(?:"+wordList+")\\b.*$");
+	}
+
+	/**
+	 * Given a list of words in one string in the form of
+	 * "(word1|word2|...|wordn)", remove the word from the list if it is in the
+	 * list.
+	 * 
+	 * @param word
+	 *            the word to remove
+	 * @param wordList
+	 *            the list to remove the word from
+	 * @return the list after remove the word
+	 */
+	public static String removeFromWordList(String word, String wordList) {
+		String newWordList = wordList;
+		
+		newWordList = newWordList.replaceAll("\\b" + word + "\\b", "");
+		newWordList = newWordList.replaceAll("^\\|", "");
+		newWordList = newWordList.replaceAll("\\|\\|", "|");
+		newWordList = newWordList.replaceAll("\\|$", "");
+		
+		return newWordList;
+	}
 }
