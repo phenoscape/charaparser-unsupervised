@@ -13,7 +13,7 @@ public class Configuration {
 
 	public Configuration(String learningMode) {
 		this.learningMode = learningMode;
-		this.wordNetDictDir = System.getProperty("charaparser.wordnet.dir");
+		this.wordNetDictDir = System.getProperty("charaparser.wordnet.dict.dir");
 		if (this.wordNetDictDir == null) {
 			this.wordNetDictDir = Configuration.defaultWordNetDictDir;
 		}

@@ -31,11 +31,16 @@ import semanticMarkup.knowledge.lib.WordNetAPI;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
+	// Configuration
+	private Configuration myConfiguration;
+	
 	// Date holder
 	public DataHolder myDataHolder;
 
 	// Learner
 	private Learner myLearner;
+	
+	
 
 	// OpenNLP tokenizer
 	private TokenizerME myTokenizer;
@@ -89,7 +94,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		// Get DataHolder
 		// this.myDataHolder = null;// 
-		this.myDataHolder=new DataHolder();
+		
+		this.myConfiguration = new Configuration(learningMode);
+		this.myDataHolder = new DataHolder();
 		myLearner = new Learner(learningMode, wordnetDir);
 
 		// Get OpenNLP tokenizer

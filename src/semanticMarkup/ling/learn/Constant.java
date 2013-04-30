@@ -35,6 +35,7 @@ public class Constant {
 	public static final String SENDINGS = "(on|is|ex|ix|um|us)\\b";
 	public static final String PENDINGS = "(a|ia|es|ices|i|ae)\\b";
 	
+	// abbreviations may appear in original sentence 
 	//public static final String PEOPLE_ABBR = "jr|mr|mrs|ms|dr|prof|sr|sens?|reps?|gov|attys?|supt|det|rev";
 	public static final String PEOPLE_ABBR = "jr|mr|mrs|ms|dr|prof|sr|sens|reps|gov|attys|supt|det|rev";
 	public static final String ARMY_ABBR= "col|gen|lt|cmdr|adm|capt|sgt|cpl|maj";
