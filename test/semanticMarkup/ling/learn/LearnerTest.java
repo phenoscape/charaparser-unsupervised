@@ -20,7 +20,7 @@ public class LearnerTest {
 
 	@Before
 	public void initialize() {
-		this.tester = new Learner("plain", "res/WordNet/WordNet-3.0/dict");
+		this.tester = new Learner(new Configuration());
 	}
 
 	@Test

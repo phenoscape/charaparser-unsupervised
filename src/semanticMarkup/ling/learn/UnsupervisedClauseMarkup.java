@@ -42,9 +42,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	
 
-	// OpenNLP tokenizer
-	private TokenizerME myTokenizer;
-
 	// unused variables
 	// directory of /descriptions folder
 	private String desDir = "";
@@ -95,27 +92,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// Get DataHolder
 		// this.myDataHolder = null;// 
 		
-		this.myConfiguration = new Configuration(learningMode);
+		this.myConfiguration = new Configuration();
 		this.myDataHolder = new DataHolder();
-		myLearner = new Learner(learningMode, wordnetDir);
-
-		// Get OpenNLP tokenizer
-		InputStream tokenModelIn;
-		try {
-			tokenModelIn = new FileInputStream("res/en-token.bin");
-			TokenizerModel model = new TokenizerModel(tokenModelIn);
-			this.myTokenizer = new TokenizerME(model);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
+		myLearner = new Learner(this.myConfiguration);
+		
 	}
 
 	public void learn(List<Treatment> treatments) {
@@ -219,11 +199,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
 				.iterator();
 
+		TokenizerME myTokenizer = this.myConfiguration.getTokenizer();
 		while (iter.hasNext()) {
 			Sentence sentenceElement = iter.next();
 			String source = sentenceElement.getSource();
-			String sentence = sentenceElement.getSentence();
-			String[] words = this.myTokenizer.tokenize(sentence);
+			String sentence = sentenceElement.getSentence();			
+			String[] words = myTokenizer.tokenize(sentence);
 			for (int i = 0; i < words.length; i++) {
 				String word = words[i];
 				if (!myWordToSources.containsKey(word))

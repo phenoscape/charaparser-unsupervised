@@ -38,15 +38,8 @@ public class Learner {
 	private boolean characterHeuristics_debug = false;
 	/**************************************************
 	 */
-	
-	private String learningMode;
-	
-	// WordNet
-	private WordNetAPI myWN;
-	// OpenNLP sentence detector
-	private SentenceDetectorME mySentenceDetector;
-	// OpenNLP tokenizer
-	private Tokenizer myTokenizer;
+
+	private Configuration myConfiguration;
 	
 	// Data holder
 	DataHolder myDataHolder = new DataHolder();
@@ -64,57 +57,15 @@ public class Learner {
 	// leading three words of sentences
 	private String CHECKEDWORDS = ":"; 
 	
-	public Learner(String learningMode, String wordnetDir) {
-		this.learningMode = learningMode;
+	public Learner(Configuration configuration) {
+		this.myConfiguration = configuration;
 		
 		// Data holder
 		myDataHolder = new DataHolder();
 		
-		// Get WordNetAPI instance
-		try {
-			this.myWN = new WordNetAPI(wordnetDir, false);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		// Get OpenNLP sentence detector
-		InputStream sentModelIn;
-		try {
-			sentModelIn = new FileInputStream("res/en-sent.bin");
-			SentenceModel model = new SentenceModel(sentModelIn);
-			this.mySentenceDetector = new SentenceDetectorME(model);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		// Get OpenNLP tokenizer
-		InputStream tokenModelIn;
-		try {
-			tokenModelIn = new FileInputStream("res/en-token.bin");
-			TokenizerModel model = new TokenizerModel(tokenModelIn);
-			this.myTokenizer = new TokenizerME(model);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 		// Utilities
-		this.myWordFormUtility = new WordFormUtility(wordnetDir);
-		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.mySentenceDetector, this.myTokenizer);
+		this.myWordFormUtility = new WordFormUtility(this.myConfiguration.getWordNetDictDir());
+		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.myConfiguration.getSentenceDetector(), this.myConfiguration.getTokenizer());
 		
 		// Class variables
 		NUM_LEAD_WORDS = 3; // Set the number of leading words be 3
@@ -123,7 +74,7 @@ public class Learner {
 
 	public DataHolder Learn(List<Treatment> treatments) {
 		System.out.println(String
-				.format("Learning Mode: %s", this.learningMode));
+				.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
 		this.populateSentences(treatments);
 		this.populateUnknownWordsTable(this.myDataHolder.allWords);
 
@@ -1444,7 +1395,7 @@ public class Learner {
 			}
 
 			// add words
-			String[] tokens = this.myTokenizer.tokenize(sentence);
+			String[] tokens = this.myConfiguration.getTokenizer().tokenize(sentence);
 			for (int j = 0; j < tokens.length; j++) {
 				String token = tokens[j];
 				if (StringUtility.isWord(token)) {
@@ -2279,7 +2230,8 @@ public class Learner {
 
 		base.replaceAll("_", ""); // cup_shaped
 
-		if (this.myWN.contains(word)) {
+		myWN = this.myConfiguration.getWordNet();
+		if (myWN.contains(word)) {
 			wordInWN = true; // word is in WordNet
 		} else {
 			// $wnoutputword =~ s#\n# #g;
@@ -2287,7 +2239,7 @@ public class Learner {
 			wordInWN = false;
 		}
 
-		if (this.myWN.contains(base)) {
+		if (myWN.contains(base)) {
 			baseInWN = true;
 		} else {
 			// $wnoutputbase =~ s#\n# #g;
@@ -2300,7 +2252,7 @@ public class Learner {
 		if (suffix.equals("ly")) {
 			if (wordInWN) {
 				// if($wnoutputword =~/Overview of adv $word/){
-				if (this.myWN.isAdverb(word)) {
+				if (myWN.isAdverb(word)) {
 					return true;
 				}
 			}
@@ -2318,7 +2270,7 @@ public class Learner {
 				// softer,
 				// $1 = soft vs. $word=$1=neuter
 				// $word = softer, $1 = soft vs. $word=$1=neuter
-				if (this.myWN.isAdjective(word) || this.myWN.isAdverb(word)) {
+				if (myWN.isAdjective(word) || myWN.isAdverb(word)) {
 					return true;
 				}
 				// return 1 if $word=~/^$1\w+/;
@@ -2329,7 +2281,7 @@ public class Learner {
 		// adj
 		// in WN, return 1: e.g. scalelike
 		else {
-			if (this.myWN.isSoleAdjective(word)) {
+			if (myWN.isSoleAdjective(word)) {
 				return true;
 			}
 			if (baseInWN) {
