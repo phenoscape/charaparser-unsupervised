@@ -9,33 +9,39 @@ import java.util.Map;
 import java.util.Set;
 
 public class DataHolder {
-	// 
+	// all unique words in the input treatments
 	public Map<String, Integer> allWords;
 	
-	// Tables
+	// Data holders
 	
 	// Table sentence
 	public List<Sentence> sentenceTable = new LinkedList<Sentence>();
+	public static final byte SENTENCE = 0;
 	
-	// Table unknownwords
+	// Table unknownword
 	public Map<String, String> unknownWordTable = new HashMap<String, String>();
+	public static final byte UNKNOWNWORD = 1;
 
 	// Table wordpos
 	public Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
+	public static final byte WORDPOS = 2;
 
-	// Table heuristicnouns
+	// Table heuristicnoun
 	public Map<String, String> heuristicNounTable = new HashMap<String, String>();
+	public static final byte HEURISTICNOUN = 3;
 
 	// Table singularPlural
 	public Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
+	public static final byte SINGULAR_PLURAL = 4;
 
 	// Table modifier
 	public Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
+	public static final byte MODIFIER = 5;
 
 	// Table discounted
 	public Map<DiscountedKey, String> discountedTable = new HashMap<DiscountedKey, String>();
+	public static final byte DISCOUNTED = 6;
 	
-
 
 	public DataHolder() {
 		this.allWords = new HashMap<String, Integer>();
@@ -116,12 +122,12 @@ public class DataHolder {
 	/** Modifier Table Utility***************************************/
 	
 	/**
-	 * Take a new word, insert it into modifer table, or update its count in
-	 * modifer table if the word already exist
+	 * Take a new word, insert it into the modifier holder, or update its count in
+	 * modifier holder if it already exists
 	 * 
 	 * @param newWord
 	 * @param increment
-	 * @return if anything changed in modifer table, return true; otherwise
+	 * @return if anything changed in modifier holder, return true; otherwise
 	 *         return false
 	 */
 	public int addModifier(String newWord, int increment) {
@@ -143,6 +149,29 @@ public class DataHolder {
 		}
 
 		return isUpdate;
+	}
+	
+	/**
+	 * This method updates a new word in the unknownWord table
+	 * 
+	 * @param newWord
+	 * @param sourceWord
+	 * @return if any updates occurred, returns true; otherwise, returns false
+	 */
+	public boolean updateUnknownWord(String newWord, String flag) {
+		boolean result = false;
+		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
+				.entrySet().iterator();
+
+		while (iter.hasNext()) {
+			Map.Entry<String, String> unknownWord = iter.next();
+			if (unknownWord.getKey().equals(newWord)) {
+				unknownWord.setValue(flag);
+				result = true;
+			}
+		}
+
+		return result;
 	}
 
 	public boolean equals(Object obj) {

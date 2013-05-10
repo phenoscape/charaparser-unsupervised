@@ -2,6 +2,9 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,6 +44,26 @@ public class DataHolderTest {
 				"word3", "word3"));
 		assertEquals("inSingularPluralPair - both match", true,
 				tester.isInSingularPluralPair("word3"));
+	}
+	
+	@Test
+	public void testAddModifier(){
+		Map<String, ModifierTableValue> target = new HashMap<String, ModifierTableValue>();
+		target.put("word", new ModifierTableValue(1,false));
+		tester.addModifier("word", 10);
+		assertEquals("addModifier - add", target, tester.modifierTable);
+		target.put("word", new ModifierTableValue(10,false));
+		tester.addModifier("word", 9);
+		assertEquals("addModifier - add", target, tester.modifierTable);
+	}
+	
+	@Test
+	public void testUpdateUnknownWord(){
+		Map<String, String> target = new HashMap<String, String>();
+		target.put("word", "word");
+		tester.unknownWordTable.put("word", "unknown");
+		tester.updateUnknownWord("word", "word");
+		assertEquals("updateUnknownWord - add", target, tester.unknownWordTable);
 	}
 
 }

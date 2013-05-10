@@ -545,7 +545,6 @@ public class Learner {
 
 		boolean markknown_debug=true;
 		
-		String sth = "";
 		String pattern = "";
 		int sign = 0;
 		String otherPrefix = "";
@@ -563,26 +562,15 @@ public class Learner {
 			return sign;
 		}
 
+		// process this new word
 		sign = sign + processNewWord(word, pos, role, table, word, increment);
-
-//		System.out.println(word);
-//		if (word.equals("mesodentine")){
-//			System.out.println("Find One!");
-//		}
 		
-		// case 1: have benn tested by Dongye
+		// Then we try to learn those new words based on this one
 		Pattern p = Pattern.compile("^(" + Constant.PREFIX + ")(\\S+).*$");
 		Matcher m = p.matcher(word);
 		if (m.lookingAt()) {
 			String g1 = m.group(1); // the prefix
 			String g2 = m.group(2); // the remaining
-			// String temp = g2;
-
-			// remove g1 from the prefix
-			// otherPrefix = Constant.PREFIX;
-			// otherPrefix = otherPrefix.replace("\\b" + g1 + "\\b", "");
-			// otherPrefix = otherPrefix.replace("\\|\\|", "|");
-			// otherPrefix = otherPrefix.replace("^\\|", "");
 
 			otherPrefix = StringUtility.removeFromWordList(g1, Constant.PREFIX);
 
@@ -593,20 +581,12 @@ public class Learner {
 
 			Iterator<Map.Entry<String, String>> iter1 = this.myDataHolder.unknownWordTable
 					.entrySet().iterator();
-			// if
-			// (this.myDataHolder.unknownWordTable.containsKey("semidentine")) {
-			// System.out.println(this.myDataHolder.unknownWordTable.get("semidentine"));
-			// }
 
 			// case 1
 			while (iter1.hasNext()) {
 				Map.Entry<String, String> entry = iter1.next();
 				String newWord = entry.getKey();
 				String flag = entry.getValue();
-
-				// if (newWord.equals("semidentine")){
-				// System.out.println("Find Two!");
-				// }
 
 				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
 					sign = sign
@@ -620,9 +600,7 @@ public class Learner {
 				}
 			}
 		}
-//		if (word.equals("pair")) {
-//			System.out.println();
-//		}
+
 		// word starts with a lower case letter
 		if (word.matches("^[a-z].*$")) {
 			spWords = "("
@@ -638,9 +616,7 @@ public class Learner {
 			while (iter2.hasNext()) {
 				Map.Entry<String, String> entry = iter2.next();
 				String newWord = entry.getKey();
-//				if (newWord.equals("semicircular")) {
-//					System.out.println();
-//				}
+
 				String flag = entry.getValue();
 				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
 					sign = sign
@@ -684,27 +660,24 @@ public class Learner {
 
 	
 	/**
-	 * This method handles a new word when for updateTable method
+	 * This method handles a new word when the updateTable method is called
 	 * 
 	 * @param newWord
 	 * @param pos
 	 * @param role
-	 * @param table
+	 * @param table which table to update. "wordpos" or "modifiers"
 	 * @param flag
 	 * @param increment
-	 * @return
+	 * @return if a new word was added, returns 1; otherwise returns 0
 	 */
 	public int processNewWord(String newWord, String pos, String role,
 			String table, String flag, int increment) {
-		
-//		if (newWord.equals("semidentine"))
-//			System.out.println("update");
-		
-		
+				
 		int sign = 0;
-		// remove $newword from unknownwords
-		updateUnknownWords(newWord, flag);
-		// insert $newword to the specified table
+		// remove the new word from unknownword holder
+		this.myDataHolder.updateUnknownWord(newWord, flag);
+		
+		// insert the new word to the data holder specified.
 		if (table.equals("wordpos")) {
 			sign = sign + updatePOS(newWord, pos, role, increment);
 		} else if (table.equals("modifiers")) {
@@ -740,28 +713,7 @@ public class Learner {
 		return variations;
 	}
 	
-	/**
-	 * This method updates a new word in the unknownWord table
-	 * 
-	 * @param newWord
-	 * @param sourceWord
-	 * @return if any updates occured, return true; otherwise, return false
-	 */
-	public boolean updateUnknownWords(String newWord, String flag) {
-		boolean result = false;
-		Iterator<Map.Entry<String, String>> iter = this.myDataHolder.unknownWordTable
-				.entrySet().iterator();
 
-		while (iter.hasNext()) {
-			Map.Entry<String, String> unknownWord = iter.next();
-			if (unknownWord.getKey().equals(newWord)) {
-				unknownWord.setValue(flag);
-				result = true;
-			}
-		}
-
-		return result;
-	}
 	
 	/**
 	 * 
@@ -1086,7 +1038,7 @@ public class Learner {
 				int cU = value.getCertaintyU();
 				if (cU < 1 && mode.equals("all")) {
 					this.myDataHolder.wordPOSTable.remove(key);
-					this.updateUnknownWords(word, "unknown");
+					this.myDataHolder.updateUnknownWord(word, "unknown");
 					if (oldPOS.matches("^.*[sp].*$")) {
 						// list of entries to be deleted
 						ArrayList<SingularPluralPair> delList = new ArrayList<SingularPluralPair>();
@@ -1527,7 +1479,6 @@ public class Learner {
 
 		if (oldNoun.matches("^.*a\\[s\\]$")) {
 			String noun = oldNoun.replaceAll("\\[s\\]", "");
-			System.out.println(noun);
 			if (words.contains(noun)) {
 				newNoun = noun + "[p]";
 			}
