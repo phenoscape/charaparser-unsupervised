@@ -38,7 +38,7 @@ public class LearnerTest {
 				.getHeuristicNounTable();
 		myHeuristicNounTable.put("word1", "type1");
 
-		List<Sentence> mySentenceTable = results.getSentenceTable();
+		List<Sentence> mySentenceTable = results.getSentenceHolder();
 		mySentenceTable.add(new Sentence("source1", "sentence1",
 				"originalSentence", "lead1", "status1", "tag1", "modifier1",
 				"type1"));
@@ -177,12 +177,20 @@ public class LearnerTest {
 //		fail("Not yet implemented");
 //	}
 
-//	@Test
-//	public void testUpdatePOS() {
-//		// Method updatePOS
-//		// assertEquals ("getPluralRuleHelper - ves plural", 0,
-//		// tester.updatePOS("", "", "", 0));
-//	}
+	@Test
+	public void testUpdatePOS() {
+		Learner myTester = new Learner(new Configuration());
+		assertEquals("updatePOS - no update", 0, myTester.updatePOS("NUM", "n", "", 1));
+		assertEquals("updatePOS - no update", 0, myTester.updatePOS("two", "s", "", 1));
+		assertEquals("updatePOS - no update", 0, myTester.updatePOS("series", "p", "", 1));
+		assertEquals("updatePOS - no update", 0, myTester.updatePOS("heights", "n", "", 1));
+		
+		Map<WordPOSKey, WordPOSValue> target = new HashMap<WordPOSKey, WordPOSValue>();
+		target.put(new WordPOSKey("word1", "n"), new WordPOSValue("role1", 2, 0, null, null));
+		myTester.updatePOS("word1", "n", "role1", 2);
+		assertEquals("updatePOS - add", target, myTester.myDataHolder.getWordPOSHolder());
+		
+	}
 
 //	@Test
 //	public void testChangePOS() {

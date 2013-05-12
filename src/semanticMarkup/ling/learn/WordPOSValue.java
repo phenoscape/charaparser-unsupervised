@@ -55,4 +55,45 @@ public class WordPOSValue {
 	public void setSavedID(String si) {
 		this.savedID=si;
 	}
+	
+
+	public boolean equals(Object obj){
+		if (obj==this){
+			return true;
+		}
+		
+		if (obj==null||obj.getClass()!=this.getClass()){
+			return false;
+		}
+		
+		WordPOSValue myWordPOSValue = (WordPOSValue) obj;
+		
+		//newRole = newRole.equals("*") ? "" : newRole;
+		boolean case1 = 
+				(role == null ? 
+					myWordPOSValue.role == null : this.role.equals(myWordPOSValue.role)
+				);
+		boolean case2 = (this.certaintyU == myWordPOSValue.certaintyU);
+		boolean case3 = (this.certaintyL == myWordPOSValue.certaintyL);
+		boolean case4 = 
+				(savedFlag == null ? 
+					myWordPOSValue.savedFlag == null: this.savedFlag.equals(myWordPOSValue.savedFlag)
+				);
+		boolean case5 = 
+				(savedID == null ? 
+					myWordPOSValue.savedID == null: this.savedID.equals(myWordPOSValue.savedID)
+				);
+
+		return (case1 && case2 && case3 && case4 && case5);
+
+	}
+
+	public int hashCode() {
+		int hash = 1;
+		hash = hash * 31 + (this.role == null ? 0 : this.role.hashCode());
+		hash = hash * 31 + (this.savedFlag == null ? 0 : this.savedFlag.hashCode());
+		hash = hash * 31 + (this.savedID == null ? 0 : this.savedID.hashCode());
+		hash = hash + (new Integer(this.certaintyU)).hashCode() + (new Integer(this.certaintyL)).hashCode();
+		return hash;
+	}
 }

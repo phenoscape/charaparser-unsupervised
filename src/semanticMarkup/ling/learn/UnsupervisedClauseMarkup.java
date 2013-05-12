@@ -128,7 +128,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Set<String> myAdjNounSet = new HashSet<String>();
 
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 
 		while (iter.hasNext()) {
@@ -155,7 +155,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Map<String, String> myAdjNounSent = new HashMap<String, String>();
 
 		// collect senteces that need adj-nn disambiguation
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 
 		while (iter.hasNext()) {
@@ -196,7 +196,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Map<String, Set<String>> myWordToSources = new HashMap<String, Set<String>>();
 
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 
 		TokenizerME myTokenizer = this.myConfiguration.getTokenizer();
@@ -290,8 +290,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// ---------------TEST Helper function----------------
 	public void printWordPOSTable() {
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = this.myDataHolder.wordPOSTable
-				.entrySet().iterator();
+		Map<WordPOSKey, WordPOSValue> myWordPOSHolder = this.myDataHolder.getWordPOSHolder();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = myWordPOSHolder.entrySet().iterator();
 		while (entries.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> entry = entries.next();
 			System.out.println(entry.getKey().getWord() + ", "

@@ -15,31 +15,31 @@ public class DataHolder {
 	// Data holders
 	
 	// Table sentence
-	public List<Sentence> sentenceTable = new LinkedList<Sentence>();
+	private List<Sentence> sentenceTable = new LinkedList<Sentence>();
 	public static final byte SENTENCE = 0;
 	
 	// Table unknownword
-	public Map<String, String> unknownWordTable = new HashMap<String, String>();
+	private Map<String, String> unknownWordTable = new HashMap<String, String>();
 	public static final byte UNKNOWNWORD = 1;
 
 	// Table wordpos
-	public Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
+	private Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
 	public static final byte WORDPOS = 2;
 
 	// Table heuristicnoun
-	public Map<String, String> heuristicNounTable = new HashMap<String, String>();
+	private Map<String, String> heuristicNounTable = new HashMap<String, String>();
 	public static final byte HEURISTICNOUN = 3;
 
 	// Table singularPlural
-	public Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
+	private Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
 	public static final byte SINGULAR_PLURAL = 4;
 
 	// Table modifier
-	public Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
+	private Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
 	public static final byte MODIFIER = 5;
 
 	// Table discounted
-	public Map<DiscountedKey, String> discountedTable = new HashMap<DiscountedKey, String>();
+	private Map<DiscountedKey, String> discountedTable = new HashMap<DiscountedKey, String>();
 	public static final byte DISCOUNTED = 6;
 	
 
@@ -55,10 +55,78 @@ public class DataHolder {
 		this.discountedTable = new HashMap<DiscountedKey, String>();
 	}
 	
-	
+	/**
+	 * This method updates a new word in the unknownWord table
+	 * 
+	 * @param newWord
+	 * @param sourceWord
+	 * @return if any updates occurred, returns true; otherwise, returns false
+	 */
+	public boolean updateUnknownWord(String newWord, String flag) {
+		boolean result = false;
+		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
+				.entrySet().iterator();
+
+		while (iter.hasNext()) {
+			Map.Entry<String, String> unknownWord = iter.next();
+			if (unknownWord.getKey().equals(newWord)) {
+				unknownWord.setValue(flag);
+				result = true;
+			}
+		}
+
+		return result;
+	}
+
+	public boolean equals(Object obj) {
+		if (obj==this){
+			return true;
+		}
+		
+		if (obj==null||obj.getClass()!=this.getClass()){
+			return false;
+		}
+		
+		DataHolder myDataHolder = (DataHolder) obj;
+		
+		return ((this.discountedTable.equals(myDataHolder.discountedTable))
+				&& (this.heuristicNounTable.equals(myDataHolder.heuristicNounTable))
+				&& (this.modifierTable.equals(myDataHolder.modifierTable))
+				&& (this.sentenceTable.equals(myDataHolder.sentenceTable))
+				&& (this.singularPluralTable.equals(myDataHolder.singularPluralTable))
+				&& (this.unknownWordTable.equals(myDataHolder.unknownWordTable))
+				&& (this.wordPOSTable.equals(myDataHolder.wordPOSTable))
+				&& (this.allWords.equals(myDataHolder.allWords))
+				);
+	}	
+
 	/** Sentence Table Utility***************************************/
-	public List<Sentence> getSentenceTable(){
+	public List<Sentence> getSentenceHolder(){
 		return this.sentenceTable;
+	}
+
+	public Map<String, String> getUnknownWordHolder(){
+		return this.unknownWordTable;
+	}
+
+	public Map<WordPOSKey, WordPOSValue> getWordPOSHolder(){
+		return this.wordPOSTable;
+	}
+
+	public Map<String, String> getHeuristicNounHolder(){
+		return this.heuristicNounTable;
+	}
+
+	public Set<SingularPluralPair> getSingularPluralHolder(){
+		return this.singularPluralTable;
+	}
+
+	public Map<String, ModifierTableValue> getModifierHolder(){
+		return this.modifierTable;
+	}
+
+	public Map<DiscountedKey, String> getDiscountedHolder(){
+		return this.discountedTable;
 	}
 	
 	
@@ -150,52 +218,5 @@ public class DataHolder {
 
 		return isUpdate;
 	}
-	
-	/**
-	 * This method updates a new word in the unknownWord table
-	 * 
-	 * @param newWord
-	 * @param sourceWord
-	 * @return if any updates occurred, returns true; otherwise, returns false
-	 */
-	public boolean updateUnknownWord(String newWord, String flag) {
-		boolean result = false;
-		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
-				.entrySet().iterator();
-
-		while (iter.hasNext()) {
-			Map.Entry<String, String> unknownWord = iter.next();
-			if (unknownWord.getKey().equals(newWord)) {
-				unknownWord.setValue(flag);
-				result = true;
-			}
-		}
-
-		return result;
-	}
-
-	public boolean equals(Object obj) {
-		if (obj==this){
-			return true;
-		}
-		
-		if (obj==null||obj.getClass()!=this.getClass()){
-			return false;
-		}
-		
-		DataHolder myDataHolder = (DataHolder) obj;
-		
-		return ((this.discountedTable.equals(myDataHolder.discountedTable))
-				&& (this.heuristicNounTable.equals(myDataHolder.heuristicNounTable))
-				&& (this.modifierTable.equals(myDataHolder.modifierTable))
-				&& (this.sentenceTable.equals(myDataHolder.sentenceTable))
-				&& (this.singularPluralTable.equals(myDataHolder.singularPluralTable))
-				&& (this.unknownWordTable.equals(myDataHolder.unknownWordTable))
-				&& (this.wordPOSTable.equals(myDataHolder.wordPOSTable))
-				&& (this.allWords.equals(myDataHolder.allWords))
-				);
-	}	
-
-	
 	
 }

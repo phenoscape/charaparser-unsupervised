@@ -29,7 +29,7 @@ public class UnsupervisedClauseMarkupTest {
 	@Test
 	public void testGetAdjNouns() {
 		DataHolder myDataHolder = tester.getDataHolder();
-		List<Sentence> sentenceTable = myDataHolder.getSentenceTable();
+		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
 		sentenceTable.add(new Sentence("source1", "word1 word2", "", "", "",
 				"tag1", "modifier1", ""));
 		sentenceTable.add(new Sentence("source2", "word2 word3", "", "", "",
@@ -52,7 +52,7 @@ public class UnsupervisedClauseMarkupTest {
 		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
 				"res/WordNet/WordNet-3.0/dict");
 		DataHolder myDataHolder = tester.getDataHolder();
-		List<Sentence> sentenceTable = myDataHolder.getSentenceTable();
+		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
 		sentenceTable.add(new Sentence("source1", "word1 word2", "", "", "",
 				"tag1", "modifier1", ""));
 		sentenceTable.add(new Sentence("source2", "word2 word3", "", "", "",
@@ -76,7 +76,7 @@ public class UnsupervisedClauseMarkupTest {
 		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
 				"res/WordNet/WordNet-3.0/dict");
 		DataHolder myDataHolder = tester.getDataHolder();
-		List<Sentence> sentenceTable = myDataHolder.getSentenceTable();
+		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
 		sentenceTable.add(new Sentence("source1", "word1 word2", "", "", "",
 				"tag1", "modifier1", ""));
 		sentenceTable.add(new Sentence("source2", "word2 word3", "", "", "",

@@ -17,6 +17,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+
 
 
 import semanticMarkup.core.Treatment;
@@ -74,11 +77,11 @@ public class Learner {
 		this.populateUnknownWordsTable(this.myDataHolder.allWords);
 
 		/*
-		Map<String, String> myHeuristicNounTable = myDataHolder.getHeuristicNounTable();
+		Map<String, String> mygetHeuristicNounHolder() = myDataHolder.getgetHeuristicNounHolder()();
 		myHeuristicNounTable.put("word1", "type1");
 		
-		List<Sentence> mySentenceTable = myDataHolder.getSentenceTable();
-		mySentenceTable.add(new Sentence("source1", "sentence1", "originalSentence", "lead1", "status1", "tag1", "modifier1", "type1"));
+		List<Sentence> mygetSentenceHolder() = myDataHolder.getgetSentenceHolder()();
+		mygetSentenceHolder().add(new Sentence("source1", "sentence1", "originalSentence", "lead1", "status1", "tag1", "modifier1", "type1"));
 		*/
 		
 		// List<String> fileNameList = fileLoader.getFileNameList();
@@ -243,7 +246,7 @@ public class Learner {
 
 					Sentence newSent = new Sentence(source, line, oline, lead,
 							status, null, null, typeStr);
-					this.myDataHolder.sentenceTable.add(newSent);
+					this.myDataHolder.getSentenceHolder().add(newSent);
 
 					SENTID++;
 				}
@@ -434,8 +437,8 @@ public class Learner {
 	}
 	
 	/**
-	 * Insert all words in WORDS into unknownWordTable. Insert those formed by
-	 * non words characters into wordPOSTable
+	 * Insert all words in WORDS into getUnknownWordHolder(). Insert those formed by
+	 * non words characters into getWordPOSHolder()
 	 * 
 	 * @param WORDS
 	 * @return
@@ -489,9 +492,6 @@ public class Learner {
 			pos = myWordFormUtility.getNumber(word);
 		}
 
-//		if (word.equals("mesodentine")) {
-//			System.out.println(word);
-//		}
 		result = result + markKnown(word, pos, role, table, increment);
 
 		// 1) if the word is a singular form n word, find its plural form, then add
@@ -576,10 +576,10 @@ public class Learner {
 
 			spWords = "("
 					+ StringUtility.escape(singularPluralVariations(g2,
-							this.myDataHolder.singularPluralTable)) + ")";
+							this.myDataHolder.getSingularPluralHolder())) + ")";
 			pattern = "^(" + otherPrefix + ")?" + spWords + "$";
 
-			Iterator<Map.Entry<String, String>> iter1 = this.myDataHolder.unknownWordTable
+			Iterator<Map.Entry<String, String>> iter1 = this.myDataHolder.getUnknownWordHolder()
 					.entrySet().iterator();
 
 			// case 1
@@ -605,11 +605,11 @@ public class Learner {
 		if (word.matches("^[a-z].*$")) {
 			spWords = "("
 					+ StringUtility.escape(singularPluralVariations(word,
-							this.myDataHolder.singularPluralTable)) + ")";
+							this.myDataHolder.getSingularPluralHolder())) + ")";
 			// word=shrubs, pattern = (pre|sub)shrubs
 			pattern = "^(" + Constant.PREFIX + ")" + spWords + "$";
 
-			Iterator<Map.Entry<String, String>> iter2 = this.myDataHolder.unknownWordTable
+			Iterator<Map.Entry<String, String>> iter2 = this.myDataHolder.getUnknownWordHolder()
 					.entrySet().iterator();
 
 			// case 2
@@ -634,9 +634,9 @@ public class Learner {
 			// case 3: word_$spwords
 			spWords = "("
 					+ StringUtility.escape(singularPluralVariations(word,
-							this.myDataHolder.singularPluralTable)) + ")";
+							this.myDataHolder.getSingularPluralHolder())) + ")";
 			pattern = "^.*_" + spWords + "$";
-			Iterator<Map.Entry<String, String>> iter3 = this.myDataHolder.unknownWordTable
+			Iterator<Map.Entry<String, String>> iter3 = this.myDataHolder.getUnknownWordHolder()
 					.entrySet().iterator();
 			while (iter3.hasNext()) {
 				Map.Entry<String, String> entry = iter3.next();
@@ -660,42 +660,14 @@ public class Learner {
 
 	
 	/**
-	 * This method handles a new word when the updateTable method is called
-	 * 
-	 * @param newWord
-	 * @param pos
-	 * @param role
-	 * @param table which table to update. "wordpos" or "modifiers"
-	 * @param flag
-	 * @param increment
-	 * @return if a new word was added, returns 1; otherwise returns 0
-	 */
-	public int processNewWord(String newWord, String pos, String role,
-			String table, String flag, int increment) {
-				
-		int sign = 0;
-		// remove the new word from unknownword holder
-		this.myDataHolder.updateUnknownWord(newWord, flag);
-		
-		// insert the new word to the data holder specified.
-		if (table.equals("wordpos")) {
-			sign = sign + updatePOS(newWord, pos, role, increment);
-		} else if (table.equals("modifiers")) {
-			sign = sign + this.myDataHolder.addModifier(newWord, increment);
-		}
-
-		return sign;
-	}
-	
-	/**
 	 * return singular and plural variations of the word
 	 * 
 	 * @param word
 	 * @return all variations of the word
 	 */
-	public String singularPluralVariations(String word, Set<SingularPluralPair> singularPluralTable) {
+	public String singularPluralVariations(String word, Set<SingularPluralPair> singularPluralHolder) {
 		String variations = word + "|";
-		Iterator<SingularPluralPair> iter = singularPluralTable.iterator();
+		Iterator<SingularPluralPair> iter = singularPluralHolder.iterator();
 		while (iter.hasNext()) {
 			SingularPluralPair pair = iter.next();
 			String sg = pair.getSingular();
@@ -713,26 +685,66 @@ public class Learner {
 		return variations;
 	}
 	
-
-	
 	/**
+	 * This method handles a new word when the updateTable method is called
 	 * 
 	 * @param newWord
 	 * @param pos
 	 * @param role
+	 * @param table which table to update. "wordpos" or "modifiers"
+	 * @param flag
+	 * @param increment
+	 * @return if a new word was added, returns 1; otherwise returns 0
+	 */
+	public int processNewWord(String newWord, String pos, String role,
+			String table, String flag, int increment) {
+				
+		int sign = 0;
+		// remove the new word from unknownword holder
+		this.myDataHolder.updateUnknownWord(newWord, flag);
+		
+		// insert the new word to the specified data holder
+		if (table.equals("wordpos")) {
+			sign = sign + updatePOS(newWord, pos, role, increment);
+		} else if (table.equals("modifiers")) {
+			sign = sign + this.myDataHolder.addModifier(newWord, increment);
+		}
+
+		return sign;
+	}
+	
+	/**
+	 * update the pos of a word
+	 * 
+	 * @param newWord
+	 * @param newPOS
+	 * @param newRole
 	 * @param increment
 	 * @return
 	 */
-	public int updatePOS(String newWord, String pos, String role, int increment) {
+	public int updatePOS(String newWord, String newPOS, String newRole, int increment) {
+		
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("updateTable.markKnown.updatePOS");
+		
+		myLogger.trace("Enter updatePOS");
+		myLogger.trace("Word: "+newWord+", POS: "+newPOS);
+		
+		
 		int n = 0;
-
-		if ((newWord.matches("^.*(\b|_)(NUM|" + Constant.NUMBER + "|"
-				+ Constant.CLUSTERSTRING + "|" + Constant.CHARACTER + ")\b.*$"))
-				&& (pos.matches("[nsp]"))) {
+				
+		String regex = "^.*(\\b|_)(NUM|" + Constant.NUMBER + "|"
+				+ Constant.CLUSTERSTRING + "|" + Constant.CHARACTER + ")\\b.*$";
+		//regex = "(NUM|" + "rows" + ")";
+		boolean case1 = newWord.matches(regex);
+		boolean case2 = newPOS.matches("[nsp]"); 
+		if (case1 && case2) {
+			myLogger.trace("Case 0");
+			myLogger.trace("Quite updatePOS");
 			return 0;
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.wordPOSTable
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.getWordPOSHolder()
 				.entrySet().iterator();
 		// boolean isExist = false;
 		Map.Entry<WordPOSKey, WordPOSValue> targetWordPOS = null;
@@ -743,50 +755,63 @@ public class Learner {
 				break;
 			}
 		}
+		// case 1: the word does not exist, add it
 		if (targetWordPOS == null) {
+			myLogger.trace("Case 1");
 			int certaintyU = 0;
 			certaintyU += increment;
-			this.myDataHolder.wordPOSTable.put(new WordPOSKey(newWord, pos),
-					new WordPOSValue(role, certaintyU, 0, null, null));
+			this.myDataHolder.getWordPOSHolder().put(new WordPOSKey(newWord, newPOS),
+					new WordPOSValue(newRole, certaintyU, 0, null, null));
 			n = 1;
+		// case 2: the word already exists, update it
 		} else {
+			myLogger.trace("Case 2");
 			String oldPOS = targetWordPOS.getKey().getPOS();
 			String oldRole = targetWordPOS.getValue().getRole();
 			int certaintyU = targetWordPOS.getValue().getCertaintyU();
-			if ((!oldPOS.equals(pos))
-					&& ((oldPOS.equals("b")) || (pos.equals("b")))) {
-				String otherPOS = pos.equals("b") ? oldPOS : pos;
-				pos = resolveConflicts(newWord, "b", otherPOS);
+			// case 2.1 
+			// 		the old POS is NOT same as the new POS, 
+			// 	AND	the old POS is b or the new POS is b
+			if ((!oldPOS.equals(newPOS))
+					&& ((oldPOS.equals("b")) || (newPOS.equals("b")))) {
+				myLogger.trace("Case 2.1");
+				String otherPOS = newPOS.equals("b") ? oldPOS : newPOS;
+				newPOS = resolveConflicts(newWord, "b", otherPOS);
 
 				boolean flag = false;
-				if (pos != null) {
-					if (!pos.equals(oldPOS)) {
+				if (newPOS != null) {
+					if (!newPOS.equals(oldPOS)) {
 						flag = true;
 					}
 				}
 
-				if (flag) { // new pos win
-					role = role.equals("*") ? "" : role;
-					n = n + changePOS(newWord, oldPOS, pos, role, increment);
-				} else { // olde pos win
-					role = oldRole.equals("*") ? role : oldRole;
+				// new pos win
+				if (flag) { 
+					newRole = newRole.equals("*") ? "" : newRole;
+					n = n + changePOS(newWord, oldPOS, newPOS, newRole, increment);
+				// olde pos win
+				} else { 
+					newRole = oldRole.equals("*") ? newRole : oldRole;
 					certaintyU = certaintyU + increment;
 					WordPOSKey key = new WordPOSKey("newWord", "pos");
-					WordPOSValue value = new WordPOSValue(role, certaintyU, 0,
+					WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
 							null, null);
-					this.myDataHolder.wordPOSTable.put(key, value);
+					this.myDataHolder.getWordPOSHolder().put(key, value);
 				}
+				
+			// case 2.2: the old POS and the new POS are all [n],  update role and certaintyU
 			} else {
-				role = mergeRole(oldRole, role);
+				myLogger.trace("Case 2.2");
+				newRole = mergeRole(oldRole, newRole);
 				certaintyU += increment;
-				WordPOSKey key = new WordPOSKey("newWord", "pos");
-				WordPOSValue value = new WordPOSValue(role, certaintyU, 0,
+				WordPOSKey key = new WordPOSKey(newWord, newPOS);
+				WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
 						null, null);
-				this.myDataHolder.wordPOSTable.put(key, value);
+				this.myDataHolder.getWordPOSHolder().put(key, value);
 			}
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.myDataHolder.wordPOSTable
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.myDataHolder.getWordPOSHolder()
 				.entrySet().iterator();
 		int certaintyL = 0;
 		while (iter2.hasNext()) {
@@ -795,7 +820,7 @@ public class Learner {
 				certaintyL += e.getValue().getCertaintyU();
 			}
 		}
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter3 = this.myDataHolder.wordPOSTable
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter3 = this.myDataHolder.getWordPOSHolder()
 				.entrySet().iterator();
 		while (iter3.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter3.next();
@@ -804,8 +829,8 @@ public class Learner {
 			}
 		}
 
+		myLogger.trace("Quite updatePOS");
 		return n;
-
 	}
 	
 	/**
@@ -818,12 +843,13 @@ public class Learner {
 	private String resolveConflicts(String newWord, String bPOS, String otherPOS) {
 		int count = 0;
 
-		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
-			Sentence sent = this.myDataHolder.sentenceTable.get(i);
-			if(sent.getTag()==null){
+		List<Sentence> mySentenceHolder = this.myDataHolder.getSentenceHolder();
+		for (int i = 0; i < mySentenceHolder.size(); i++) {
+			Sentence sentence = mySentenceHolder.get(i);
+			if(sentence.getTag()==null){
 				continue;
 			}
-			if (!sent.getTag().equals("ignore")) {
+			if (!sentence.getTag().equals("ignore")) {
 				Pattern p = Pattern.compile("([a-z]+(" + Constant.PLENDINGS
 						+ ")) (" + newWord + ")", Pattern.CASE_INSENSITIVE);
 				Matcher m = p.matcher(newWord);
@@ -867,8 +893,8 @@ public class Learner {
 		if (oldPOS.matches("^.*s.*$") && newPOS.matches("^.*m.*$")) {
 			discount(newWord, oldPOS, newPOS, "all");
 			sign += markKnown(newWord, "m", "", "modifiers", increment);
-			for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
-				Sentence sent = this.myDataHolder.sentenceTable.get(i);
+			for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
+				Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
 				if (sent.getTag().equals(newWord)) {
 					modifier = sent.getModifier();
 					tag = sent.getTag();
@@ -892,8 +918,8 @@ public class Learner {
 
 			// case 2.1: (newWord, oldPOS)
 			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
-			if (this.myDataHolder.wordPOSTable.containsKey(newOldKey)) {
-				WordPOSValue v = this.myDataHolder.wordPOSTable.get(newOldKey);
+			if (this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
+				WordPOSValue v = this.myDataHolder.getWordPOSHolder().get(newOldKey);
 				certaintyU = v.getCertaintyU();
 				certaintyU += increment;
 				discount(newWord, oldPOS, newPOS, "all");
@@ -901,15 +927,15 @@ public class Learner {
 
 			// case 2.2: (newWord, newPOS)
 			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
-			if (!this.myDataHolder.wordPOSTable.containsKey(newOldKey)) {
-				this.myDataHolder.wordPOSTable.put(newNewKey, new WordPOSValue(role,
+			if (!this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
+				this.myDataHolder.getWordPOSHolder().put(newNewKey, new WordPOSValue(role,
 						certaintyU, 0, "", ""));
 			}
 			sign++;
 
 			// for all sentences tagged with (newWord, "b"), re tag them
-			for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
-				Sentence sent = this.myDataHolder.sentenceTable.get(i);
+			for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
+				Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
 				if (sent.getTag().equals(newWord)) {
 					int sentID = i;
 					String s = sent.getSentence();
@@ -924,8 +950,8 @@ public class Learner {
 
 			// case 3.1: (newWord, oldPOS)
 			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
-			if (this.myDataHolder.wordPOSTable.containsKey(newOldKey)) {
-				WordPOSValue v = this.myDataHolder.wordPOSTable.get(newOldKey);
+			if (this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
+				WordPOSValue v = this.myDataHolder.getWordPOSHolder().get(newOldKey);
 				certaintyU = v.getCertaintyU();
 				certaintyU += increment;
 				discount(newWord, oldPOS, newPOS, "all");
@@ -933,15 +959,15 @@ public class Learner {
 
 			// case 3.2: (newWord, newPOS)
 			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
-			if (!this.myDataHolder.wordPOSTable.containsKey(newOldKey)) {
-				this.myDataHolder.wordPOSTable.put(newNewKey, new WordPOSValue(role,
+			if (!this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
+				this.myDataHolder.getWordPOSHolder().put(newNewKey, new WordPOSValue(role,
 						certaintyU, 0, "", ""));
 			}
 			sign++;
 		}
 
 		int sum_certaintyU = 0;
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter1 = this.myDataHolder.wordPOSTable
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter1 = this.myDataHolder.getWordPOSHolder()
 				.entrySet().iterator();
 		while (iter1.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter1.next();
@@ -950,7 +976,7 @@ public class Learner {
 			}
 		}
 		if (sum_certaintyU > 0) {
-			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.myDataHolder.wordPOSTable
+			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.myDataHolder.getWordPOSHolder()
 					.entrySet().iterator();
 			while (iter2.hasNext()) {
 				Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
@@ -1003,7 +1029,7 @@ public class Learner {
 	}
 
 	/**
-	 * Discount existing pos, but do not establish $suggestedpos
+	 * Discount existing pos, but do not establish suggested pos
 	 * 
 	 * @param newWord
 	 * @param oldPOS
@@ -1026,25 +1052,25 @@ public class Learner {
 		 *         1.1.1 Insert (word, oldpos, newpos) into discounted table
 		 */
 
-		String flag = this.myDataHolder.unknownWordTable.get(newWord);
-		Iterator<Map.Entry<String, String>> iter = this.myDataHolder.unknownWordTable
+		String flag = this.myDataHolder.getUnknownWordHolder().get(newWord);
+		Iterator<Map.Entry<String, String>> iter = this.myDataHolder.getUnknownWordHolder()
 				.entrySet().iterator();
 		while (iter.hasNext()) {
 			Map.Entry<String, String> e = iter.next();
 			if (e.getValue().equals(flag)) {
 				String word = e.getKey();
 				WordPOSKey key = new WordPOSKey(word, oldPOS);
-				WordPOSValue value = this.myDataHolder.wordPOSTable.get(key);
+				WordPOSValue value = this.myDataHolder.getWordPOSHolder().get(key);
 				int cU = value.getCertaintyU();
 				if (cU < 1 && mode.equals("all")) {
-					this.myDataHolder.wordPOSTable.remove(key);
+					this.myDataHolder.getWordPOSHolder().remove(key);
 					this.myDataHolder.updateUnknownWord(word, "unknown");
 					if (oldPOS.matches("^.*[sp].*$")) {
 						// list of entries to be deleted
 						ArrayList<SingularPluralPair> delList = new ArrayList<SingularPluralPair>();
 
 						// find entries to be deleted, put them into delList
-						Iterator<SingularPluralPair> iterSPTable = this.myDataHolder.singularPluralTable
+						Iterator<SingularPluralPair> iterSPTable = this.myDataHolder.getSingularPluralHolder()
 								.iterator();
 						while (iterSPTable.hasNext()) {
 							SingularPluralPair spp = iterSPTable.next();
@@ -1055,14 +1081,14 @@ public class Learner {
 						}
 
 						// delete all entries in delList from
-						// singularPluralTable
+						// getSingularPluralHolder()
 						for (int i = 0; i < delList.size(); i++) {
-							this.myDataHolder.singularPluralTable.remove(delList.get(i));
+							this.myDataHolder.getSingularPluralHolder().remove(delList.get(i));
 						}
 					}
 
 					DiscountedKey dKey = new DiscountedKey(word, oldPOS);
-					this.myDataHolder.discountedTable.put(dKey, newPOS);
+					this.myDataHolder.getDiscountedHolder().put(dKey, newPOS);
 				}
 			}
 		}
@@ -1078,7 +1104,7 @@ public class Learner {
 		/**
 		 * 1. Get the originalsent of sentence sentID 
 		 * 1. Case 1: the originalsent of $sentence sentID starts with a [a-z\d] 
-		 * 1.1 select modifier and tag from sentenceTable where tag is not "ignore" 
+		 * 1.1 select modifier and tag from getSentenceHolder() where tag is not "ignore" 
 		 *     	OR tag is null 
 		 *      AND originalsent COLLATE utf8_bin regexp '^[A-Z].*' 
 		 *      OR originalsent rlike ': *\$' AND id < sentID 
@@ -1090,12 +1116,12 @@ public class Learner {
 
 		String tag = "";
 
-		String originalSent = this.myDataHolder.sentenceTable.get(sentID)
+		String originalSent = this.myDataHolder.getSentenceHolder().get(sentID)
 				.getOriginalSentence();
 		if (originalSent.matches("^\\s*[^A-Z].*$")) {
 		//if (originalSent.matches("^\\s*([a-z]|\\d).*$")) {
-			for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
-				Sentence sent = this.myDataHolder.sentenceTable.get(i);
+			for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
+				Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
 				tag = sent.getTag();
 				if (((!tag.equals("ignore")) || (tag == null))
 						&& ((originalSent.matches("^[A-Z].*$")) || (originalSent
@@ -1126,7 +1152,7 @@ public class Learner {
 
 		/**
 		 * 1. Do some preprocessing of modifier and tag 1. Remove -ly words 1.
-		 * Update modifier and tag of sentence sentID in sentenceTable
+		 * Update modifier and tag of sentence sentID in getSentenceHolder()
 		 */
 
 		modifier.replaceAll("<\\S+?>", "");
@@ -1154,7 +1180,7 @@ public class Learner {
 			String ly = m.group(1);
 			String rest = m.group(2);
 			WordPOSKey wp = new WordPOSKey(ly, "b");
-			if (this.myDataHolder.wordPOSTable.containsKey(wp)) {
+			if (this.myDataHolder.getWordPOSHolder().containsKey(wp)) {
 				modifier = rest;
 				m = p.matcher(modifier);
 			} else {
@@ -1171,11 +1197,11 @@ public class Learner {
 			}
 		}
 
-		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
-			Sentence sent = this.myDataHolder.sentenceTable.get(i);
+		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
+			Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
 		}
 
-		Sentence sent = this.myDataHolder.sentenceTable.get(sentID);
+		Sentence sent = this.myDataHolder.getSentenceHolder().get(sentID);
 		sent.setTag(tag);
 		sent.setModifier(modifier);
 	}
@@ -1322,8 +1348,8 @@ public class Learner {
 		Set<String> nouns = new HashSet<String>();
 
 		List<String> sentences = new LinkedList<String>();
-		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
-			String originalSentence = this.myDataHolder.sentenceTable.get(i)
+		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
+			String originalSentence = this.myDataHolder.getSentenceHolder().get(i)
 					.getOriginalSentence();
 			if (this.getHeuristicNouns_debug) {
 				 System.out.println(originalSentence+"\n");
@@ -1541,11 +1567,11 @@ public class Learner {
 		Set<String> descriptors = new HashSet<String>();
 		Map<String, Boolean> descriptorMap = new HashMap<String, Boolean>();
 
-		int sent_num = this.myDataHolder.sentenceTable.size();
+		int sent_num = this.myDataHolder.getSentenceHolder().size();
 		for (int i = 0; i < sent_num; i++) {
 
 			// taxon rule
-			Sentence sent = this.myDataHolder.sentenceTable.get(i);
+			Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
 			String source = sent.getSource();
 			String sentence = sent.getSentence();
 			String originalSentence = sent.getOriginalSentence();
@@ -1572,8 +1598,8 @@ public class Learner {
 			sentence = sentence.replaceAll("<\\s*/?\\s*i\\s*>", "");
 			originalSentence = originalSentence.replaceAll("<\\s*/?\\s*i\\s*>",
 					"");
-			// Update sentenceTable
-			this.myDataHolder.sentenceTable.get(i).setSentence(sentence);
+			// Update getSentenceHolder()
+			this.myDataHolder.getSentenceHolder().get(i).setSentence(sentence);
 
 			// noun rule 0.5: Meckle#s cartilage
 
@@ -1581,8 +1607,8 @@ public class Learner {
 					.getNounsMecklesCartilage(originalSentence);
 			nouns.addAll(nouns0);
 			sentence = sentence.replaceAll("#", "");
-			// Update sentenceTable
-			this.myDataHolder.sentenceTable.get(i).setSentence(sentence);
+			// Update getSentenceHolder()
+			this.myDataHolder.getSentenceHolder().get(i).setSentence(sentence);
 
 			// noun rule 2: end of sentence nouns
 			// (a|an|the|some|any|this|that|those|these) noun$
@@ -1668,7 +1694,6 @@ public class Learner {
 	 *            set of terms
 	 * @param type
 	 *            type of the terms
-	 * @return number of the terms that have been added
 	 */
 	public int add2HeuristicNounTable(Set<String> terms, String type) {
 		int count = 0;
@@ -1676,7 +1701,7 @@ public class Learner {
 		Iterator<String> iter = terms.iterator();
 		while (iter.hasNext()) {
 			String term = iter.next();
-			this.myDataHolder.heuristicNounTable.put(term, type);
+			this.myDataHolder.getHeuristicNounHolder().put(term, type);
 			count++;
 		}
 
@@ -1963,8 +1988,8 @@ public class Learner {
 				return false;
 			}
 		} else {
-			for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
-				String originalSentence = this.myDataHolder.sentenceTable.get(i)
+			for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
+				String originalSentence = this.myDataHolder.getSentenceHolder().get(i)
 						.getOriginalSentence();
 				if (isMatched(originalSentence, term, descriptorMap)) {
 					return true;
@@ -2012,7 +2037,7 @@ public class Learner {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
-			// this.wordPOSTable.put(new WordPOSKey(word, "b"), new
+			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 0, 0, null, null));
 			// System.out.println("Add Stop Word: " + word+"\n");
 		}
@@ -2033,7 +2058,7 @@ public class Learner {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
-			// this.wordPOSTable.put(new WordPOSKey(word, "b"), new
+			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("", 0, 0, null, null));
 			// System.out.println("addCharacter word: " + word);
 		}
@@ -2054,12 +2079,12 @@ public class Learner {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
-			// this.wordPOSTable.put(new WordPOSKey(word, "b"), new
+			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 0, 0, null, null));
 			// System.out.println("add Number: " + word);
 		}
 		this.updateTable("NUM", "b", "*", "wordpos", 0);
-		// this.wordPOSTable.put(new WordPOSKey("NUM", "b"), new
+		// this.getWordPOSHolder().put(new WordPOSKey("NUM", "b"), new
 		// WordPOSValue("*",0, 0, null, null));
 	}
 
@@ -2076,7 +2101,7 @@ public class Learner {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
-			// this.wordPOSTable.put(new WordPOSKey(word, "b"), new
+			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 1, 1, null, null));
 			// System.out.println("addClusterString: " + word);
 		}
@@ -2092,7 +2117,7 @@ public class Learner {
 				continue;
 			}
 			this.updateTable(word, "b", "*", "wordpos", 0);
-			// this.wordPOSTable.put(new WordPOSKey(word, "z"), new
+			// this.getWordPOSHolder().put(new WordPOSKey(word, "z"), new
 			// WordPOSValue("*", 0, 0, null, null));
 			// System.out.println("Add ProperNoun: " + word);
 		}
@@ -2118,7 +2143,7 @@ public class Learner {
 	public void posBySuffix() {
 		String p1 = "^[a-z_]+(" + Constant.SUFFIX + ")$";
 		String p2 = "^[._.][a-z]+"; // , _nerved
-		Iterator<Map.Entry<String, String>> iterator = this.myDataHolder.unknownWordTable
+		Iterator<Map.Entry<String, String>> iterator = this.myDataHolder.getUnknownWordHolder()
 				.entrySet().iterator();
 
 		while (iterator.hasNext()) {
@@ -2150,8 +2175,8 @@ public class Learner {
 				}
 
 				if (unknownWord.matches(p2)) {
-					// unknownWordTable.put(unknownWord, "b");
-					this.myDataHolder.wordPOSTable.put(new WordPOSKey(unknownWord, "b"),
+					// getUnknownWordHolder().put(unknownWord, "b");
+					this.myDataHolder.getWordPOSHolder().put(new WordPOSKey(unknownWord, "b"),
 							new WordPOSValue("*", 0, 0, null, null));
 					System.out
 							.println("posbysuffix set $unknownword a boundary word\n");
@@ -2203,7 +2228,7 @@ public class Learner {
 				}
 			}
 			// if the word is in unknown word set, return true
-			if (this.myDataHolder.unknownWordTable.containsKey(base)) {
+			if (this.myDataHolder.getUnknownWordHolder().containsKey(base)) {
 				return true;
 			}
 		}
@@ -2233,7 +2258,7 @@ public class Learner {
 			if (baseInWN) {
 				return true;
 			}
-			if (this.myDataHolder.unknownWordTable.containsKey(base)) {
+			if (this.myDataHolder.getUnknownWordHolder().containsKey(base)) {
 				return true;
 			}
 		}
@@ -2244,67 +2269,67 @@ public class Learner {
 	public void markupByPattern() {
 		System.out.println("markupbypattern start");
 		// int cap=this.sentence.size();
-		int cap = this.myDataHolder.sentenceTable.size();
+		int cap = this.myDataHolder.getSentenceHolder().size();
 		// ((ArrayList)this.tag).ensureCapacity(cap);
 		// ((ArrayList)this.modifier).ensureCapacity(cap);
 		// for (int i=0;i<this.originalSent.size();i++) {
 		for (int i = 0; i < cap; i++) {
 			// case 1
 			// if (this.originalSent.get(i).matches("^x=.*")) {
-			if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
+			if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
 					.matches("^x=.*")) {
 				// tag.set(i, "chromosome");
 				// modifier.set(i, "");
-				this.myDataHolder.sentenceTable.get(i).setTag("chromosome");
-				this.myDataHolder.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.getSentenceHolder().get(i).setTag("chromosome");
+				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
 			}
 			// case 2
-			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
 					.matches("^2n=.*")) {
 				// tag.set(i, "chromosome");
 				// modifier.set(i, "");
-				this.myDataHolder.sentenceTable.get(i).setTag("chromosome");
-				this.myDataHolder.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.getSentenceHolder().get(i).setTag("chromosome");
+				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
 			}
 			// case 3
-			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
 					.matches("^x .*")) {
 				// tag.set(i, "chromosome");
 				// modifier.set(i, "");
-				this.myDataHolder.sentenceTable.get(i).setTag("chromosome");
-				this.myDataHolder.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.getSentenceHolder().get(i).setTag("chromosome");
+				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
 			}
 			// case 4
-			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
 					.matches("^2n .*")) {
 				// tag.set(i, "chromosome");
 				// modifier.set(i, "");
-				this.myDataHolder.sentenceTable.get(i).setTag("chromosome");
-				this.myDataHolder.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.getSentenceHolder().get(i).setTag("chromosome");
+				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
 			}
 			// case 5
-			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
 					.matches("^2 n.*")) {
 				// tag.set(i, "chromosome");
 				// modifier.set(i, "");
-				this.myDataHolder.sentenceTable.get(i).setTag("chromosome");
-				this.myDataHolder.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.getSentenceHolder().get(i).setTag("chromosome");
+				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
 			}
 			// case 6
-			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
 					.matches("^fl.*")) {
 				// tag.set(i, "flowerTime");
 				// modifier.set(i, "");
-				this.myDataHolder.sentenceTable.get(i).setTag("flowerTime");
-				this.myDataHolder.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.getSentenceHolder().get(i).setTag("flowerTime");
+				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
 			}
 			// case 7
-			else if (this.myDataHolder.sentenceTable.get(i).getOriginalSentence()
+			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
 					.matches("^fr.*")) {
 				// tag.set(i, "flowerTime");
 				// modifier.set(i, "");
-				this.myDataHolder.sentenceTable.get(i).setTag("flowerTime");
-				this.myDataHolder.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.getSentenceHolder().get(i).setTag("flowerTime");
+				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
 			}
 		}
 		System.out.println("markupbypattern end");
@@ -2314,12 +2339,12 @@ public class Learner {
 	public void markupIgnore() {
 		// $sth =
 		// $dbh->prepare("update ".$prefix."_sentence set tag = 'ignore', modifier='' where originalsent rlike '(^| )$IGNOREPTN ' ");
-		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
-			String thisSent = this.myDataHolder.sentenceTable.get(i).getOriginalSentence();
+		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
+			String thisSent = this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence();
 			String p = "(^| )" + Constant.IGNOREPTN;
 			if (thisSent.matches("(^|^ )" + Constant.IGNOREPTN + ".?")) {
-				this.myDataHolder.sentenceTable.get(i).setTag("ignore");
-				this.myDataHolder.sentenceTable.get(i).setModifier("");
+				this.myDataHolder.getSentenceHolder().get(i).setTag("ignore");
+				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
 			}
 		}
 	}
@@ -2327,8 +2352,8 @@ public class Learner {
 	public int discover(String s) {
 		int newDisc = 0;
 
-		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
-			Sentence sentEntry = this.myDataHolder.sentenceTable.get(i);
+		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
+			Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(i);
 			// sentid
 			String sent = sentEntry.getSentence();
 			String lead = sentEntry.getLead();
@@ -2379,7 +2404,7 @@ public class Learner {
 		Iterator<Integer> iter = matched.iterator();
 		while (iter.hasNext()) {
 			int sentID = iter.next().intValue();
-			Sentence sent = this.myDataHolder.sentenceTable.get(sentID);
+			Sentence sent = this.myDataHolder.getSentenceHolder().get(sentID);
 			if (sent.getTag() != null) {
 				// ($tag, $new) = doit($sentid);
 				doIt(sentID);
@@ -2400,7 +2425,7 @@ public class Learner {
 	public void doIt(int sentID) {
 		int sign = 0;
 
-		Sentence sentEntry = this.myDataHolder.sentenceTable.get(sentID);
+		Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(sentID);
 		String sent = sentEntry.getSentence();
 		String lead = sentEntry.getLead();
 
@@ -2490,7 +2515,7 @@ public class Learner {
 			return POSInfoList;
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.wordPOSTable
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.getWordPOSHolder()
 				.entrySet().iterator();
 		while (iter.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter.next();
@@ -2526,8 +2551,8 @@ public class Learner {
 
 		Set<Integer> matchedIDs = new HashSet<Integer>();
 
-		for (int i = 0; i < this.myDataHolder.sentenceTable.size(); i++) {
-			Sentence sent = this.myDataHolder.sentenceTable.get(i);
+		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
+			Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
 			String sentence = sent.getSentence();
 			String status = sent.getStatus();
 			String tag = sent.getTag();
