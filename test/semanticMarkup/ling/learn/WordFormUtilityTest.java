@@ -14,7 +14,9 @@ public class WordFormUtilityTest {
 		
 	@Before
 	public void initialize(){
-		tester = new WordFormUtility("res/WordNet/WordNet-3.0/dict");
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		tester = new WordFormUtility(myUtility.getWordNet());
 	}
 
 	@Test

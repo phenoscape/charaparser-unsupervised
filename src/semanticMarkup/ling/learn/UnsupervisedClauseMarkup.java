@@ -29,13 +29,15 @@ import semanticMarkup.core.Treatment;
 import semanticMarkup.knowledge.Stemmer;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
-public class UnsupervisedClauseMarkup implements ITerminologyLearner {
-
-	// Configuration
-	private Configuration myConfiguration;
-	
+public class UnsupervisedClauseMarkup implements ITerminologyLearner {	
 	// Date holder
 	public DataHolder myDataHolder;
+	
+	// Configuration
+		private Configuration myConfiguration;
+		
+		// Utility
+		private Utility myUtility;
 
 	// Learner
 	private Learner myLearner;
@@ -93,8 +95,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// this.myDataHolder = null;// 
 		
 		this.myConfiguration = new Configuration();
-		this.myDataHolder = new DataHolder();
-		myLearner = new Learner(this.myConfiguration);
+		this.myUtility = new Utility(myConfiguration);
+		this.myDataHolder = new DataHolder(this.myUtility);
+		myLearner = new Learner(this.myConfiguration, this.myUtility);
 		
 	}
 
@@ -199,7 +202,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 
-		TokenizerME myTokenizer = this.myConfiguration.getTokenizer();
+		TokenizerME myTokenizer = this.myUtility.getTokenizer();
 		while (iter.hasNext()) {
 			Sentence sentenceElement = iter.next();
 			String source = sentenceElement.getSource();

@@ -20,7 +20,9 @@ public class LearnerTest {
 
 	@Before
 	public void initialize() {
-		this.tester = new Learner(new Configuration());
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		this.tester = new Learner(myConfiguration, myUtility);
 	}
 
 	@Test
@@ -32,7 +34,9 @@ public class LearnerTest {
 
 		List<Treatment> tms = fileLoader.getTreatmentList();
 
-		DataHolder results = new DataHolder();
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		DataHolder results = new DataHolder(myUtility);
 
 		Map<String, String> myHeuristicNounTable = results
 				.getHeuristicNounTable();
@@ -179,7 +183,9 @@ public class LearnerTest {
 
 	@Test
 	public void testUpdatePOS() {
-		Learner myTester = new Learner(new Configuration());
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
 		assertEquals("updatePOS - no update", 0, myTester.updatePOS("NUM", "n", "", 1));
 		assertEquals("updatePOS - no update", 0, myTester.updatePOS("two", "s", "", 1));
 		assertEquals("updatePOS - no update", 0, myTester.updatePOS("series", "p", "", 1));
@@ -188,7 +194,7 @@ public class LearnerTest {
 		Map<WordPOSKey, WordPOSValue> target = new HashMap<WordPOSKey, WordPOSValue>();
 		target.put(new WordPOSKey("word1", "n"), new WordPOSValue("role1", 2, 0, null, null));
 		myTester.updatePOS("word1", "n", "role1", 2);
-		assertEquals("updatePOS - add", target, myTester.myDataHolder.getWordPOSHolder());
+		assertEquals("updatePOS - add", target, myTester.getDataHolder().getWordPOSHolder());
 		
 	}
 

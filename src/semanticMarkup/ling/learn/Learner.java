@@ -38,9 +38,10 @@ public class Learner {
 	 */
 
 	private Configuration myConfiguration;
+	private Utility myUtility;
 	
 	// Data holder
-	DataHolder myDataHolder = new DataHolder();
+	private DataHolder myDataHolder;
 	
 	// Utilities
 	private WordFormUtility myWordFormUtility;
@@ -55,15 +56,16 @@ public class Learner {
 	// leading three words of sentences
 	private String CHECKEDWORDS = ":"; 
 	
-	public Learner(Configuration configuration) {
+	public Learner(Configuration configuration, Utility utility) {
 		this.myConfiguration = configuration;
+		this.myUtility = utility;
 		
 		// Data holder
-		myDataHolder = new DataHolder();
+		myDataHolder = new DataHolder(myUtility);
 		
 		// Utilities
-		this.myWordFormUtility = new WordFormUtility(this.myConfiguration.getWordNetDictDir());
-		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.myConfiguration.getSentenceDetector(), this.myConfiguration.getTokenizer());
+		this.myWordFormUtility = new WordFormUtility(this.myUtility.getWordNet());
+		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.myUtility.getSentenceDetector(), this.myUtility.getTokenizer());
 		
 		// Class variables
 		NUM_LEAD_WORDS = 3; // Set the number of leading words be 3
@@ -119,6 +121,14 @@ public class Learner {
 		this.addNumbers();
 		this.addClusterstrings();
 		this.addProperNouns();		
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public DataHolder getDataHolder(){
+		return this.myDataHolder;
 	}
 
 	/**
@@ -722,8 +732,7 @@ public class Learner {
 	 * @param increment
 	 * @return
 	 */
-	public int updatePOS(String newWord, String newPOS, String newRole, int increment) {
-		
+	public int updatePOS(String newWord, String newPOS, String newRole, int increment) {		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("updateTable.markKnown.updatePOS");
 		
@@ -776,7 +785,7 @@ public class Learner {
 					&& ((oldPOS.equals("b")) || (newPOS.equals("b")))) {
 				myLogger.trace("Case 2.1");
 				String otherPOS = newPOS.equals("b") ? oldPOS : newPOS;
-				newPOS = resolveConflicts(newWord, "b", otherPOS);
+				newPOS = this.myDataHolder.resolveConflict(newWord, "b", otherPOS);
 
 				boolean flag = false;
 				if (newPOS != null) {
@@ -833,41 +842,7 @@ public class Learner {
 		return n;
 	}
 	
-	/**
-	 * 
-	 * @param newWord
-	 * @param bPOS
-	 * @param otherPOS
-	 * @return
-	 */
-	private String resolveConflicts(String newWord, String bPOS, String otherPOS) {
-		int count = 0;
 
-		List<Sentence> mySentenceHolder = this.myDataHolder.getSentenceHolder();
-		for (int i = 0; i < mySentenceHolder.size(); i++) {
-			Sentence sentence = mySentenceHolder.get(i);
-			if(sentence.getTag()==null){
-				continue;
-			}
-			if (!sentence.getTag().equals("ignore")) {
-				Pattern p = Pattern.compile("([a-z]+(" + Constant.PLENDINGS
-						+ ")) (" + newWord + ")", Pattern.CASE_INSENSITIVE);
-				Matcher m = p.matcher(newWord);
-				if (m.lookingAt()) {
-					String pl = m.group(1).toLowerCase();
-					if (myWordFormUtility.getNumber(pl).equals("p")) {
-
-						count++;
-					}
-					if (count >= 1) {
-						return bPOS;
-					}
-				}
-			}
-		}
-		
-		return null;
-	}
 
 	/**
 	 * This method corrects the pos of the word from N to M (establish newPOS)
@@ -1368,7 +1343,7 @@ public class Learner {
 			}
 
 			// add words
-			String[] tokens = this.myConfiguration.getTokenizer().tokenize(sentence);
+			String[] tokens = this.myUtility.getTokenizer().tokenize(sentence);
 			for (int j = 0; j < tokens.length; j++) {
 				String token = tokens[j];
 				if (StringUtility.isWord(token)) {
@@ -2201,7 +2176,7 @@ public class Learner {
 
 		base.replaceAll("_", ""); // cup_shaped
 
-		myWN = this.myConfiguration.getWordNet();
+		myWN = this.myUtility.getWordNet();
 		if (myWN.contains(word)) {
 			wordInWN = true; // word is in WordNet
 		} else {

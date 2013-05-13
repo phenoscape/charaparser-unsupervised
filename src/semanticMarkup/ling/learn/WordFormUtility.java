@@ -24,15 +24,9 @@ public class WordFormUtility {
 	
 	// Porter Stemmer
 	private Stemmer myStemmer;
-	
-	public WordFormUtility(String wnDir) {
-		try {
-			this.myWN = new WordNetAPI(wnDir, false);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+
+	public WordFormUtility(WordNetAPI wn) {
+		this.myWN = wn;
 		this.myStemmer = new Stemmer();
 	}
 	

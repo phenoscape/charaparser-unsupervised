@@ -7,13 +7,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 public class DataHolder {
 	// all unique words in the input treatments
 	public Map<String, Integer> allWords;
 	
-	// Data holders
-	
+	// Data holders	
 	// Table sentence
 	private List<Sentence> sentenceTable = new LinkedList<Sentence>();
 	public static final byte SENTENCE = 0;
@@ -42,8 +46,10 @@ public class DataHolder {
 	private Map<DiscountedKey, String> discountedTable = new HashMap<DiscountedKey, String>();
 	public static final byte DISCOUNTED = 6;
 	
-
-	public DataHolder() {
+	private Utility myUtility;
+	
+	public DataHolder(Utility myUtility) {
+		this.myUtility = myUtility;
 		this.allWords = new HashMap<String, Integer>();
 		
 		this.sentenceTable = new LinkedList<Sentence>();
@@ -99,7 +105,7 @@ public class DataHolder {
 				&& (this.allWords.equals(myDataHolder.allWords))
 				);
 	}	
-
+	
 	/** Sentence Table Utility***************************************/
 	public List<Sentence> getSentenceHolder(){
 		return this.sentenceTable;
@@ -217,6 +223,52 @@ public class DataHolder {
 		}
 
 		return isUpdate;
+	}
+
+	/**
+	 * Pick one from bPOS and otherPOS and return it
+	 * 
+	 * @param newWord
+	 * @param bPOS
+	 * @param otherPOS
+	 * @return if the newWord appears after a plural noun in the corpus, return the
+	 *         bPOS; otherwise, return the otherPOS
+	 */
+	public String resolveConflict(String newWord, String bPOS, String otherPOS) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("updateTable.markKnown.updatePOS.resolveConflict");
+		
+		myLogger.trace("Enter resolveConflict");
+
+		int count = 0;
+		List<Sentence> mySentenceHolder = this.getSentenceHolder();
+		for (int i = 0; i < mySentenceHolder.size(); i++) {
+			Sentence sentence = mySentenceHolder.get(i);
+			boolean flag = false;
+			flag = sentence.getTag() == null ? 
+					true : (!sentence.getTag().equals("ignore"));
+			if (flag) {
+				String regex = "^.*([a-z]+(" + Constant.PLENDINGS + ")) ("
+						+ newWord + ").*$";
+				Pattern p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+				String originalSentence = sentence.getOriginalSentence();
+				Matcher m = p.matcher(originalSentence);
+				if (m.lookingAt()) {
+					String plural = m.group(1).toLowerCase();
+					if (this.myUtility.getWordFormUtility().getNumber(plural)
+							.equals("p")) {
+						count++;
+					}
+					if (count >= 1) {
+						myLogger.trace("Quite resolveConflict, return " + bPOS);
+						return bPOS;
+					}
+				}
+			}
+		}
+		
+		myLogger.trace("Quite resolveConflict, return otherPOS");
+		return otherPOS;
 	}
 	
 }

@@ -20,10 +20,6 @@ public class Configuration {
 	private String openNLPSentenceDetectorDir;
 	private String openNLPTokenizerDir;
 	
-	private WordNetAPI myWN = null;
-	private SentenceDetectorME mySentenceDetector = null;
-	private TokenizerME myTokenizer = null;
-	
 	private static final String defaultWordNetDictDir = "res/WordNet/WordNet-3.0/dict";
 	private static final String defaultOpenNLPModelDir = "res";
 	private static final String defaultLearningMode = "plain";
@@ -54,48 +50,7 @@ public class Configuration {
 			this.setOpenNLPModelDir(tempOpenNLPModelDir);
 		}
 		
-		// get those tools
-		// Get WordNetAPI instance
-		try {
-			this.myWN = new WordNetAPI(this.wordNetDictDir, false);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		// Get OpenNLP sentence detector
-		InputStream sentModelIn;
-		try {
-			sentModelIn = new FileInputStream("res/en-sent.bin");
-			SentenceModel model = new SentenceModel(sentModelIn);
-			this.mySentenceDetector = new SentenceDetectorME(model);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
-		// Get OpenNLP tokenizer
-		InputStream tokenModelIn;
-		try {
-			tokenModelIn = new FileInputStream("res/en-token.bin");
-			TokenizerModel model = new TokenizerModel(tokenModelIn);
-			this.myTokenizer = new TokenizerME(model);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 	
 	public String getLearningMode() {
@@ -141,17 +96,5 @@ public class Configuration {
 		this.openNLPSentenceDetectorDir = this.openNLPModelDir+"//en-sent.bin";
 		this.openNLPTokenizerDir=this.openNLPModelDir+"//en-token.bin";
 	}
-	
-	public WordNetAPI getWordNet() {
-		return this.myWN;
-	}
-	
-	public TokenizerME getTokenizer() {
-		return this.myTokenizer;
-	}
-	
-	public SentenceDetectorME getSentenceDetector(){
-		return this.mySentenceDetector;
-	}
-	
+
 }
