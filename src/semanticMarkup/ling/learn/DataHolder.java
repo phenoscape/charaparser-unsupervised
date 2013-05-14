@@ -1,5 +1,6 @@
 package semanticMarkup.ling.learn;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -61,27 +62,36 @@ public class DataHolder {
 		this.discountedTable = new HashMap<DiscountedKey, String>();
 	}
 	
+//	/**
+//	 * This method updates a new word in the unknownWord table
+//	 * 
+//	 * @param newWord
+//	 * @param sourceWord
+//	 * @return if any updates occurred, returns true; otherwise, returns false
+//	 */
+//	public boolean updateUnknownWord(String newWord, String flag) {
+//		boolean result = false;
+//		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
+//				.entrySet().iterator();
+//
+//		while (iter.hasNext()) {
+//			Map.Entry<String, String> unknownWord = iter.next();
+//			if (unknownWord.getKey().equals(newWord)) {
+//				unknownWord.setValue(flag);
+//				result = true;
+//			}
+//		}
+//
+//		return result;
+//	}
+	
 	/**
-	 * This method updates a new word in the unknownWord table
 	 * 
-	 * @param newWord
-	 * @param sourceWord
-	 * @return if any updates occurred, returns true; otherwise, returns false
+	 * @param word
+	 * @param flag
 	 */
-	public boolean updateUnknownWord(String newWord, String flag) {
-		boolean result = false;
-		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
-				.entrySet().iterator();
-
-		while (iter.hasNext()) {
-			Map.Entry<String, String> unknownWord = iter.next();
-			if (unknownWord.getKey().equals(newWord)) {
-				unknownWord.setValue(flag);
-				result = true;
-			}
-		}
-
-		return result;
+	public void updateUnknownWord(String word, String flag){
+		this.unknownWordTable.put(word, flag);
 	}
 
 	public boolean equals(Object obj) {
@@ -236,7 +246,7 @@ public class DataHolder {
 	 */
 	public String resolveConflict(String newWord, String bPOS, String otherPOS) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("updateTable.markKnown.updatePOS.resolveConflict");
+		Logger myLogger = Logger.getLogger("updateTable.resolveConflict");
 		
 		myLogger.trace("Enter resolveConflict");
 
@@ -271,4 +281,216 @@ public class DataHolder {
 		return otherPOS;
 	}
 	
+	/**
+	 * Discount existing pos, but do not establish suggested pos
+	 * 
+	 * @param newWord
+	 * @param oldPOS
+	 * @param newPOS
+	 * @param mode
+	 *            "byone" - reduce certainty 1 by 1. "all" - remove this POS
+	 */
+	public void discountPOS(String newWord, String oldPOS, String newPOS,
+			String mode) {
+		/**
+		 * 1. Find the flag of newWord in unknownWords table
+		 * 1. Select all words from unknownWords table who has the same flag (including newWord)
+		 * 1. From wordPOS table, select certaintyU of the (word, oldPOS) where word is in the words list
+		 *     For each of them
+		 *     1.1 Case 1: certaintyu less than 1, AND mode is "all"
+		 *         1.1.1 Delete the entry from wordpos table
+		 *         1.1.1 Update unknownwords
+		 *             1.1.1.1 Case 1: the pos is "s" or "p"
+		 *                 Delete all entries contains word from singularplural table as well
+		 *         1.1.1 Insert (word, oldpos, newpos) into discounted table
+		 */
+		
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("updateTable.discountPOS");
+		
+		myLogger.trace("Enter discountPOS");
+		
+		// get the flag of the newWord
+		String flag = this.unknownWordTable.get(newWord);
+
+		// get the word list
+		List<String> wordList = new ArrayList<String>();
+		Iterator<Map.Entry<String, String>> unknownWordIter = this.unknownWordTable.entrySet().iterator();
+		while (unknownWordIter.hasNext()) {
+			Map.Entry<String, String> e = unknownWordIter.next();
+			if (e.getValue().equals(flag)) {
+				wordList.add(e.getKey());
+			}
+		}
+		myLogger.debug(wordList.toString());
+		
+		//wordList.add(newWord);
+		
+		for (int i=0;i<wordList.size();i++) {
+			String word = wordList.get(i);
+			WordPOSKey key = new WordPOSKey(word, oldPOS);
+			if (this.wordPOSTable.containsKey(key)) {
+				WordPOSValue value = this.wordPOSTable.get(key);
+				int cU = value.getCertaintyU();
+				if (cU <= 1 && mode.equals("all")) {
+					this.wordPOSTable.remove(key);
+					this.updateUnknownWord(word, "unknown");
+					// delete from SingularPluralHolder
+					if (oldPOS.matches("^.*[sp].*$")) {
+						// list of entries to be deleted
+						ArrayList<SingularPluralPair> delList = new ArrayList<SingularPluralPair>();
+
+						// find entries to be deleted, put them into delList
+						Iterator<SingularPluralPair> iterSPTable = this.singularPluralTable.iterator();
+						while (iterSPTable.hasNext()) {
+							SingularPluralPair spp = iterSPTable.next();
+							if (spp.getSingular().equals(word)
+									|| spp.getPlural().equals(word)) {
+								delList.add(spp);
+							}
+						}
+
+						// delete all entries in delList from singularPluralTable
+						Iterator<SingularPluralPair> delListIter = delList.iterator();
+						while (delListIter.hasNext()) {
+							SingularPluralPair del = delListIter.next();
+							this.singularPluralTable.remove(del);
+						}
+					}
+					
+					DiscountedKey dKey = new DiscountedKey(word, oldPOS);
+					this.discountedTable.put(dKey, newPOS);
+				}
+				else {
+					WordPOSValue temp = this.wordPOSTable.get(key);
+					int certaintyU = temp.getCertaintyU();
+					temp.setCertiantyU(certaintyU-1);
+					this.wordPOSTable.put(key, temp);
+				}
+			}
+		}
+		
+		/*
+		Iterator<String> wordListIter = wordList.iterator();
+		while (wordListIter.hasNext()){
+			String word = wordListIter.next();
+			WordPOSKey myWordPOSkey = new WordPOSKey(word, oldPOS);
+			WordPOSValue myWordPOSValue = this.myDataHolder.getWordPOSHolder().get(myWordPOSkey);
+			
+		}
+		
+		
+		
+		
+		while (iter.hasNext()) {
+			Map.Entry<String, String> e = iter.next();
+			if (e.getValue().equals(flag)) {
+				String word = e.getKey();
+				WordPOSKey key = new WordPOSKey(word, oldPOS);
+				WordPOSValue value = this.myDataHolder.getWordPOSHolder().get(key);
+				int cU = value.getCertaintyU();
+				if (cU < 1 && mode.equals("all")) {
+					this.myDataHolder.getWordPOSHolder().remove(key);
+					this.myDataHolder.updateUnknownWord(word, "unknown");
+					if (oldPOS.matches("^.*[sp].*$")) {
+						// list of entries to be deleted
+						ArrayList<SingularPluralPair> delList = new ArrayList<SingularPluralPair>();
+
+						// find entries to be deleted, put them into delList
+						Iterator<SingularPluralPair> iterSPTable = this.myDataHolder.getSingularPluralHolder()
+								.iterator();
+						while (iterSPTable.hasNext()) {
+							SingularPluralPair spp = iterSPTable.next();
+							if (spp.getSingular().equals(word)
+									|| spp.getPlural().equals(word)) {
+								delList.add(spp);
+							}
+						}
+
+						// delete all entries in delList from
+						// getSingularPluralHolder()
+						for (int i = 0; i < delList.size(); i++) {
+							this.myDataHolder.getSingularPluralHolder().remove(delList.get(i));
+						}
+					}
+
+					DiscountedKey dKey = new DiscountedKey(word, oldPOS);
+					this.myDataHolder.getDiscountedHolder().put(dKey, newPOS);
+				}
+			}
+		}
+		*/
+		
+		myLogger.trace("Quite discountPOS");
+	}
+
+	/******** Utilities *************/
+	
+	public void add2Holder(byte holderID, List<String> args){
+		
+		if (holderID == DataHolder.UNKNOWNWORD) {
+			this.unknownWordTable = this.add2UnknowWordHolder(this.unknownWordTable, args);
+		}
+		
+		if (holderID == DataHolder.WORDPOS) {
+			this.wordPOSTable = this.add2WordPOSHolder(this.wordPOSTable, args);
+		}
+		
+		if (holderID == DataHolder.SINGULAR_PLURAL) {
+			this.singularPluralTable = this.add2SingularPluralHolder(this.singularPluralTable, args);
+		}
+		
+		if (holderID == DataHolder.DISCOUNTED) {
+			this.discountedTable = this.add2DiscountedHolder(this.discountedTable, args);
+		}
+	}
+	
+	public Map<String, String> add2UnknowWordHolder(Map<String, String> unknownWordHolder, List<String> args){
+		int index = 0;
+		
+		String word = args.get(index++);
+		String flag = args.get(index++);
+		unknownWordHolder.put(word, flag);
+		
+		return unknownWordHolder;
+	}
+	
+	public Map<WordPOSKey, WordPOSValue> add2WordPOSHolder(Map<WordPOSKey, WordPOSValue> wordPOSHolder, List<String> args){
+		int index = 0;
+		
+		String word = args.get(index++);
+		String POS = args.get(index++);
+		String role = args.get(index++);
+		int certaintyU = new Integer(args.get(index++));
+		int certaintyL = new Integer(args.get(index++));
+		String savedFlag = args.get(index++);
+		String savedID = args.get(index++);
+		wordPOSHolder.put(
+				new WordPOSKey(word, POS), 
+				new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID));
+		
+		return wordPOSHolder; 
+	}
+	
+	public Set<SingularPluralPair> add2SingularPluralHolder(Set<SingularPluralPair> singularPluralHolder, List<String> args){
+		int index = 0;
+		
+		String singular = args.get(index++);
+		String plural = args.get(index++);
+		singularPluralHolder.add(new SingularPluralPair(singular, plural));
+		
+		return singularPluralHolder; 
+	}
+	
+	public Map<DiscountedKey, String> add2DiscountedHolder(Map<DiscountedKey, String> discountedHolder, List<String> args){
+		int index = 0;
+		
+		String word = args.get(index++);
+		String POS = args.get(index++);
+		String newPOS = args.get(index++);
+		discountedHolder.put(new DiscountedKey(word, POS), newPOS);
+		
+		return discountedHolder; 
+	}
+
 }

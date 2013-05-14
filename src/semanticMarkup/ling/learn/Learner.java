@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -734,7 +735,7 @@ public class Learner {
 	 */
 	public int updatePOS(String newWord, String newPOS, String newRole, int increment) {		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("updateTable.markKnown.updatePOS");
+		Logger myLogger = Logger.getLogger("updateTable.updatePOS");
 		
 		myLogger.trace("Enter updatePOS");
 		myLogger.trace("Word: "+newWord+", POS: "+newPOS);
@@ -849,13 +850,13 @@ public class Learner {
 	 * 
 	 * @param newWord
 	 * @param oldPOS
-	 * @param pos
-	 * @param role
+	 * @param newPOS
+	 * @param newRole
 	 * @param increment
 	 * @return
 	 */
 	public int changePOS(String newWord, String oldPOS, String newPOS,
-			String role, int increment) {
+			String newRole, int increment) {
 		oldPOS = oldPOS.toLowerCase();
 		newPOS = newPOS.toLowerCase();
 
@@ -866,7 +867,7 @@ public class Learner {
 
 		// case 1: oldPOS is "s" AND newPOS is "m"
 		if (oldPOS.matches("^.*s.*$") && newPOS.matches("^.*m.*$")) {
-			discount(newWord, oldPOS, newPOS, "all");
+			this.myDataHolder.discountPOS(newWord, oldPOS, newPOS, "all");
 			sign += markKnown(newWord, "m", "", "modifiers", increment);
 			for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
 				Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
@@ -897,13 +898,13 @@ public class Learner {
 				WordPOSValue v = this.myDataHolder.getWordPOSHolder().get(newOldKey);
 				certaintyU = v.getCertaintyU();
 				certaintyU += increment;
-				discount(newWord, oldPOS, newPOS, "all");
+				this.myDataHolder.discountPOS(newWord, oldPOS, newPOS, "all");
 			}
 
 			// case 2.2: (newWord, newPOS)
 			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
 			if (!this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
-				this.myDataHolder.getWordPOSHolder().put(newNewKey, new WordPOSValue(role,
+				this.myDataHolder.getWordPOSHolder().put(newNewKey, new WordPOSValue(newRole,
 						certaintyU, 0, "", ""));
 			}
 			sign++;
@@ -929,13 +930,13 @@ public class Learner {
 				WordPOSValue v = this.myDataHolder.getWordPOSHolder().get(newOldKey);
 				certaintyU = v.getCertaintyU();
 				certaintyU += increment;
-				discount(newWord, oldPOS, newPOS, "all");
+				this.myDataHolder.discountPOS(newWord, oldPOS, newPOS, "all");
 			}
 
 			// case 3.2: (newWord, newPOS)
 			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
 			if (!this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
-				this.myDataHolder.getWordPOSHolder().put(newNewKey, new WordPOSValue(role,
+				this.myDataHolder.getWordPOSHolder().put(newNewKey, new WordPOSValue(newRole,
 						certaintyU, 0, "", ""));
 			}
 			sign++;
@@ -1003,71 +1004,7 @@ public class Learner {
 		}
 	}
 
-	/**
-	 * Discount existing pos, but do not establish suggested pos
-	 * 
-	 * @param newWord
-	 * @param oldPOS
-	 * @param newPOS
-	 * @param mode
-	 *            "byone" - reduce certainty 1 by 1. "all" - remove this POS
-	 */
-	public void discount(String newWord, String oldPOS, String newPOS,
-			String mode) {
-		/**
-		 * 1. Find the flag of newWord in unknownWords table
-		 * 1. Select all words from unknownWords table who have the same flag (including newWord)
-		 * 1. From wordPOS table, select certaintyU of the (word, oldPOS) where word is in the words list
-		 *     For each of them
-		 *     1.1 Case 1: certaintyu less than 1, AND mode is "all"
-		 *         1.1.1 Delete the entry from wordpos table
-		 *         1.1.1 Update unknownwords
-		 *             1.1.1.1 Case 1: the pos is "s" or "p"
-		 *                 Delete all entries contains word from singularplural table as well
-		 *         1.1.1 Insert (word, oldpos, newpos) into discounted table
-		 */
 
-		String flag = this.myDataHolder.getUnknownWordHolder().get(newWord);
-		Iterator<Map.Entry<String, String>> iter = this.myDataHolder.getUnknownWordHolder()
-				.entrySet().iterator();
-		while (iter.hasNext()) {
-			Map.Entry<String, String> e = iter.next();
-			if (e.getValue().equals(flag)) {
-				String word = e.getKey();
-				WordPOSKey key = new WordPOSKey(word, oldPOS);
-				WordPOSValue value = this.myDataHolder.getWordPOSHolder().get(key);
-				int cU = value.getCertaintyU();
-				if (cU < 1 && mode.equals("all")) {
-					this.myDataHolder.getWordPOSHolder().remove(key);
-					this.myDataHolder.updateUnknownWord(word, "unknown");
-					if (oldPOS.matches("^.*[sp].*$")) {
-						// list of entries to be deleted
-						ArrayList<SingularPluralPair> delList = new ArrayList<SingularPluralPair>();
-
-						// find entries to be deleted, put them into delList
-						Iterator<SingularPluralPair> iterSPTable = this.myDataHolder.getSingularPluralHolder()
-								.iterator();
-						while (iterSPTable.hasNext()) {
-							SingularPluralPair spp = iterSPTable.next();
-							if (spp.getSingular().equals(word)
-									|| spp.getPlural().equals(word)) {
-								delList.add(spp);
-							}
-						}
-
-						// delete all entries in delList from
-						// getSingularPluralHolder()
-						for (int i = 0; i < delList.size(); i++) {
-							this.myDataHolder.getSingularPluralHolder().remove(delList.get(i));
-						}
-					}
-
-					DiscountedKey dKey = new DiscountedKey(word, oldPOS);
-					this.myDataHolder.getDiscountedHolder().put(dKey, newPOS);
-				}
-			}
-		}
-	}
 	
 	/**
 	 * Find the tag of the sentence of which this sentid (clause) is a part of

@@ -2,8 +2,11 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -79,6 +82,48 @@ public class DataHolderTest {
 		assertEquals("resolveConfilct - otherPOS", "otherPOS", myTester.resolveConflict("word1", "bPOS", "otherPOS"));
 		assertEquals("resolveConfilct - otherPOS", "bPOS", myTester.resolveConflict("word2", "bPOS", "otherPOS"));
 		assertEquals("resolveConfilct - otherPOS", "bPOS", myTester.resolveConflict("word3", "bPOS", "otherPOS"));
+	}
+	
+	@Test
+	public void testDiscountPOS(){
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		DataHolder myTester = new DataHolder(myUtility);
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"word1", "flag1"}));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"word2", "unknown"}));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"word3", "flag1"}));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"word4", "flag2"}));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"word5", "flag1"}));
+		
+		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"word1", "s", "role1", "1", "1", null, null}));
+		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"word2", "p", "role1", "2", "1", null, null}));
+		
+		myTester.add2Holder(DataHolder.SINGULAR_PLURAL, Arrays.asList(new String[] {"word1", "word1plural"}));
+		myTester.add2Holder(DataHolder.SINGULAR_PLURAL, Arrays.asList(new String[] {"word1singular", "word1"}));
+		myTester.add2Holder(DataHolder.SINGULAR_PLURAL, Arrays.asList(new String[] {"word2singular", "word2plural"}));
+		
+		Map<String, String> targetUnknownWordHolder = new HashMap<String, String>();
+		targetUnknownWordHolder = myTester.add2UnknowWordHolder(targetUnknownWordHolder, Arrays.asList(new String[] {"word1", "unknown"}));
+		targetUnknownWordHolder = myTester.add2UnknowWordHolder(targetUnknownWordHolder, Arrays.asList(new String[] {"word2", "unknown"}));
+		targetUnknownWordHolder = myTester.add2UnknowWordHolder(targetUnknownWordHolder, Arrays.asList(new String[] {"word3", "flag1"}));
+		targetUnknownWordHolder = myTester.add2UnknowWordHolder(targetUnknownWordHolder, Arrays.asList(new String[] {"word4", "flag2"}));
+		targetUnknownWordHolder = myTester.add2UnknowWordHolder(targetUnknownWordHolder, Arrays.asList(new String[] {"word5", "flag1"}));
+		
+		Map<WordPOSKey, WordPOSValue> targetWordPOSHolder = new HashMap<WordPOSKey, WordPOSValue>();
+		targetWordPOSHolder = myTester.add2WordPOSHolder(targetWordPOSHolder, Arrays.asList(new String[] {"word2", "p", "role1", "1", "1", null, null}));
+		
+		Set<SingularPluralPair> targetSingularPluralHolder = new HashSet<SingularPluralPair>();
+		targetSingularPluralHolder = myTester.add2SingularPluralHolder(targetSingularPluralHolder, Arrays.asList(new String[] {"word2singular", "word2plural"}));
+		
+		Map<DiscountedKey, String> targetDiscountedHolder = new HashMap<DiscountedKey, String>();
+		targetDiscountedHolder = myTester.add2DiscountedHolder(targetDiscountedHolder, Arrays.asList(new String[] {"word2", "p", "newPOS"}));
+		
+		myTester.discountPOS("word1", "s", "newPOS", "all");
+		myTester.discountPOS("word2", "p", "newPOS", "notAll");
+		
+		assertEquals("discountPOS - delete - UnknownWord", targetUnknownWordHolder, myTester.getUnknownWordHolder());
+		assertEquals("discountPOS - delete - WordPOS", targetWordPOSHolder, myTester.getWordPOSHolder());
+		assertEquals("discountPOS - delete - SingularPlural", targetSingularPluralHolder, myTester.getSingularPluralHolder());
 	}
 
 }
