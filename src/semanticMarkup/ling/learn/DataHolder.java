@@ -370,60 +370,96 @@ public class DataHolder {
 			}
 		}
 		
-		/*
-		Iterator<String> wordListIter = wordList.iterator();
-		while (wordListIter.hasNext()){
-			String word = wordListIter.next();
-			WordPOSKey myWordPOSkey = new WordPOSKey(word, oldPOS);
-			WordPOSValue myWordPOSValue = this.myDataHolder.getWordPOSHolder().get(myWordPOSkey);
-			
+		myLogger.trace("Quite discountPOS");
+	}
+	
+	
+	/**
+	 * Given a new role, and the old role, of a word, decide the right role to
+	 * return
+	 * 
+	 * @param oldRole
+	 * @param newRole
+	 * @return oldRole or newRole, whichever wins
+	 */
+	public String mergeRole(String oldRole, String newRole) {
+
+		// if old role is "*", return the new role
+		if (oldRole.equals("*")) {
+			return newRole;
 		}
-		
-		
-		
-		
-		while (iter.hasNext()) {
-			Map.Entry<String, String> e = iter.next();
-			if (e.getValue().equals(flag)) {
-				String word = e.getKey();
-				WordPOSKey key = new WordPOSKey(word, oldPOS);
-				WordPOSValue value = this.myDataHolder.getWordPOSHolder().get(key);
-				int cU = value.getCertaintyU();
-				if (cU < 1 && mode.equals("all")) {
-					this.myDataHolder.getWordPOSHolder().remove(key);
-					this.myDataHolder.updateUnknownWord(word, "unknown");
-					if (oldPOS.matches("^.*[sp].*$")) {
-						// list of entries to be deleted
-						ArrayList<SingularPluralPair> delList = new ArrayList<SingularPluralPair>();
+		// if the new role is "*", return the old rule
+		else if (newRole.equals("*")) {
+			return oldRole;
+		}
 
-						// find entries to be deleted, put them into delList
-						Iterator<SingularPluralPair> iterSPTable = this.myDataHolder.getSingularPluralHolder()
-								.iterator();
-						while (iterSPTable.hasNext()) {
-							SingularPluralPair spp = iterSPTable.next();
-							if (spp.getSingular().equals(word)
-									|| spp.getPlural().equals(word)) {
-								delList.add(spp);
-							}
-						}
+		// if the old role is empty, return the new role
+		if (oldRole.equals("")) {
+			return newRole;
+		}
+		// if the new role is empty, return the old role
+		else if (newRole.equals("")) {
+			return oldRole;
+		}
+		// if the old role is not same as the new role, return "+"
+		else if (!oldRole.equals(newRole)) {
+			return "+";
+		}
+		// if none of above apply, return the old role by default
+		else {
+			return oldRole;
+		}
+	}
+	
+	/**
+	 * Find the tag of the sentence of which this sentid (clause) is a part of
+	 * 
+	 * @param sentID
+	 * @return a tag
+	 */
+	public String getParentSentenceTag(int sentID) {
+		/**
+		 * 1. Get the originalsent of sentence with sentID 
+		 * 1. Case 1: the originalsent of $sentence sentID starts with a [a-z\d] 
+		 * 1.1 select modifier and tag from Sentence where tag is not "ignore" OR tag is null 
+		 *      AND originalsent COLLATE utf8_bin regexp '^[A-Z].*' OR originalsent rlike ': *\$' AND id < sentID 
+		 * 1.1 take the tag of the first sentence (with smallest id), get its modifier and tag 
+		 * 1.1 if modifier matches \w, tag = modifier + space + tag 
+		 * 1.1 remove [ and ] from tag 
+		 * 1. if tag matches \w return [+tag+], else return [parenttag]
+		 */
 
-						// delete all entries in delList from
-						// getSingularPluralHolder()
-						for (int i = 0; i < delList.size(); i++) {
-							this.myDataHolder.getSingularPluralHolder().remove(delList.get(i));
+		String originalSentence = this.sentenceTable.get(sentID)
+				.getOriginalSentence();
+		String tag = "";
+		String oSentence = "";
+		if (originalSentence.matches("^\\s*[^A-Z].*$")) {
+		//if (originalSent.matches("^\\s*([a-z]|\\d).*$")) {
+			for (int i = 0; i < sentID; i++) {
+				Sentence sentence = this.sentenceTable.get(i);
+				tag = sentence.getTag();
+				oSentence = sentence.getOriginalSentence();
+				boolean flag = (tag == null)? true : (!tag.matches("ignore"));
+
+				if (flag && ((oSentence.matches("^[A-Z].*$")) || (oSentence
+								.matches("^.*:\\s*$")))) {
+					String modifier = sentence.getModifier();
+					if (modifier.matches("^.*\\w.*$")) {
+						if (tag == null) {
+							tag = "";
 						}
+						tag = modifier + " " + tag;
+						tag = tag.replaceAll("[\\[\\]]", "");
 					}
-
-					DiscountedKey dKey = new DiscountedKey(word, oldPOS);
-					this.myDataHolder.getDiscountedHolder().put(dKey, newPOS);
+					break;
 				}
 			}
 		}
-		*/
-		
-		myLogger.trace("Quite discountPOS");
-	}
 
+		return tag.matches("^.*\\w.*$") ? "[" + tag + "]" : "[parenttag]" ;
+	}
+	
+	
 	/******** Utilities *************/
 	
 	public void add2Holder(byte holderID, List<String> args){
@@ -443,8 +479,12 @@ public class DataHolder {
 		if (holderID == DataHolder.DISCOUNTED) {
 			this.discountedTable = this.add2DiscountedHolder(this.discountedTable, args);
 		}
+		
+		if (holderID == DataHolder.SENTENCE) {
+			this.sentenceTable = this.add2SentenceHolder(this.sentenceTable,args);
+		}
 	}
-	
+
 	public Map<String, String> add2UnknowWordHolder(Map<String, String> unknownWordHolder, List<String> args){
 		int index = 0;
 		
@@ -493,4 +533,21 @@ public class DataHolder {
 		return discountedHolder; 
 	}
 
+	public List<Sentence> add2SentenceHolder(List<Sentence> sentenceTable,
+			List<String> args) {
+		int index = 0;
+		
+		String source=args.get(index++);
+		String sentence=args.get(index++);
+		String originalSentence=args.get(index++);
+		String lead=args.get(index++);
+		String status=args.get(index++);
+		String tag=args.get(index++);
+		String modifier=args.get(index++);
+		String type=args.get(index++);
+		
+		sentenceTable.add(new Sentence(source, sentence, originalSentence, lead, status, tag, modifier, type));
+		return sentenceTable;
+
+	}
 }

@@ -203,17 +203,7 @@ public class LearnerTest {
 //		fail("Not yet implemented");
 //	}
 
-	@Test
-	public void testMergeRole() {
-		// Method mergeRole
-		assertEquals("mergeRole - case 1", "new", tester.mergeRole("*", "new"));
-		assertEquals("mergeRole - case 2", "old", tester.mergeRole("old", "*"));
-		assertEquals("mergeRole - case 3", "new", tester.mergeRole("", "new"));
-		assertEquals("mergeRole - case 4", "old", tester.mergeRole("old", ""));
-		assertEquals("mergeRole - case 5", "+", tester.mergeRole("old", "new"));
-		assertEquals("mergeRole - case 0", "same",
-				tester.mergeRole("same", "same"));
-	}
+
 
 //	@Test
 //	public void testDiscount() {

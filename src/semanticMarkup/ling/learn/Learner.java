@@ -812,7 +812,7 @@ public class Learner {
 			// case 2.2: the old POS and the new POS are all [n],  update role and certaintyU
 			} else {
 				myLogger.trace("Case 2.2");
-				newRole = mergeRole(oldRole, newRole);
+				newRole = this.myDataHolder.mergeRole(oldRole, newRole);
 				certaintyU += increment;
 				WordPOSKey key = new WordPOSKey(newWord, newPOS);
 				WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
@@ -875,7 +875,7 @@ public class Learner {
 					modifier = sent.getModifier();
 					tag = sent.getTag();
 					sentence = sent.getSentence();
-					tag = getParentSentenceTag(i);
+					tag = this.myDataHolder.getParentSentenceTag(i);
 					modifier = modifier + " " + newWord;
 					modifier.replaceAll("^\\s*", "");
 					List<String> pair = getMTFromParentTag(tag);
@@ -965,91 +965,11 @@ public class Learner {
 		return sign;
 	}
 	
-	/**
-	 * Given a new role, and the old role, of a word, decide the right role to
-	 * return
-	 * 
-	 * @param oldRole
-	 * @param role
-	 * @return
-	 */
-	public String mergeRole(String oldRole, String role) {
-		String role1 = oldRole;
-		String role2 = role;
 
-		// if old role is "*", return the new role
-		if (role1.equals("*")) {
-			return role2;
-		}
-		// if the new role is "*", return the old rule
-		else if (role2.equals("*")) {
-			return role1;
-		}
-
-		// if the old role is empty, return the new role
-		if (role1.equals("")) {
-			return role2;
-		}
-		// if the new role is empty, return the old role
-		else if (role2.equals("")) {
-			return role1;
-		}
-		// if the old role is not same as the new role, return "+"
-		else if (!role1.equals(role2)) {
-			return "+";
-		}
-		// if none of above apply, return the old role by default
-		else {
-			return role1;
-		}
-	}
 
 
 	
-	/**
-	 * Find the tag of the sentence of which this sentid (clause) is a part of
-	 * 
-	 * @param sentID
-	 * @return a tag
-	 */
-	public String getParentSentenceTag(int sentID) {
-		/**
-		 * 1. Get the originalsent of sentence sentID 
-		 * 1. Case 1: the originalsent of $sentence sentID starts with a [a-z\d] 
-		 * 1.1 select modifier and tag from getSentenceHolder() where tag is not "ignore" 
-		 *     	OR tag is null 
-		 *      AND originalsent COLLATE utf8_bin regexp '^[A-Z].*' 
-		 *      OR originalsent rlike ': *\$' AND id < sentID 
-		 * 1.1 take the tag of the first sentence (with smallest id), get its modifier and tag 
-		 * 1.1 if modifier match \w, tag = modifier + space + tag 
-		 * 1.1 remove [ and ] from tag 
-		 * 1. if tag matches \w return [+tag+], else return [parenttag]
-		 */
 
-		String tag = "";
-
-		String originalSent = this.myDataHolder.getSentenceHolder().get(sentID)
-				.getOriginalSentence();
-		if (originalSent.matches("^\\s*[^A-Z].*$")) {
-		//if (originalSent.matches("^\\s*([a-z]|\\d).*$")) {
-			for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-				Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
-				tag = sent.getTag();
-				if (((!tag.equals("ignore")) || (tag == null))
-						&& ((originalSent.matches("^[A-Z].*$")) || (originalSent
-								.matches("^.*:\\s*$"))) && (i < sentID)) {
-					String modifier = sent.getModifier();
-					if (modifier.matches("^.*\\w.*$")) {
-						tag = modifier + " " + tag;
-						tag.replaceAll("[\\[\\]]", "");
-					}
-					break;
-				}
-			}
-		}
-
-		return tag.matches("^.*\\w.*$") ? "[parenttag]" : "[" + tag + "]";
-	}
 	
 	/**
 	 * 

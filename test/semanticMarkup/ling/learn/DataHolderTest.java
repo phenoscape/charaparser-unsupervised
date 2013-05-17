@@ -125,5 +125,40 @@ public class DataHolderTest {
 		assertEquals("discountPOS - delete - WordPOS", targetWordPOSHolder, myTester.getWordPOSHolder());
 		assertEquals("discountPOS - delete - SingularPlural", targetSingularPluralHolder, myTester.getSingularPluralHolder());
 	}
+	
+	@Test
+	public void testMergeRole() {
+		// Method mergeRole
+		assertEquals("mergeRole - case 1", "new", tester.mergeRole("*", "new"));
+		assertEquals("mergeRole - case 2", "old", tester.mergeRole("old", "*"));
+		assertEquals("mergeRole - case 3", "new", tester.mergeRole("", "new"));
+		assertEquals("mergeRole - case 4", "old", tester.mergeRole("old", ""));
+		assertEquals("mergeRole - case 5", "+", tester.mergeRole("old", "new"));
+		assertEquals("mergeRole - case 0", "same",
+				tester.mergeRole("same", "same"));
+	}
+	
+	@Test
+	public void testGetParentSentenceTag(){
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		DataHolder myTester = new DataHolder(myUtility);
+		
+		myTester.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"src0","s0","begin with lowercase","l0","s0",null,"m0","t0"}));
+		myTester.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"src1","s1","Begin with lowercase","l1","s1","ignore","m1","t1"}));
+		myTester.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"src2","s2","Begin with uppercase","l2","s2","ignore","m2","t2"}));
+		myTester.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"src3","s3","end with colon:  	","l3","s3",null,"m[3][","t3"}));
+		myTester.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"src4","s4","begin with lowercase","l4","s4","t4","m4","t4"}));
+		
+		assertEquals("getParentSentenceTag", "[parenttag]",myTester.getParentSentenceTag(0));
+		assertEquals("getParentSentenceTag", "[parenttag]",myTester.getParentSentenceTag(1));
+		assertEquals("getParentSentenceTag", "[m3 ]",myTester.getParentSentenceTag(4));
+		
+	}
 
 }
