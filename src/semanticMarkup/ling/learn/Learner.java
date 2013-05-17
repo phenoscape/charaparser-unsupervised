@@ -878,7 +878,7 @@ public class Learner {
 					tag = this.myDataHolder.getParentSentenceTag(i);
 					modifier = modifier + " " + newWord;
 					modifier.replaceAll("^\\s*", "");
-					List<String> pair = getMTFromParentTag(tag);
+					List<String> pair = this.myDataHolder.getMTFromParentTag(tag);
 					String m = pair.get(1);
 					tag = pair.get(2);
 					if (m.matches("^.*\\w.*$")) {
@@ -986,39 +986,13 @@ public class Learner {
 		 * 1. Do some preprocessing of modifier and tag 1. Remove -ly words 1.
 		 * Update modifier and tag of sentence sentID in getSentenceHolder()
 		 */
-
-		modifier.replaceAll("<\\S+?>", "");
-		tag.replaceAll("<\\S+?>", "");
-
-		// remove stop and forbidden words from beginning
-		modifier = StringUtility.removeAll(modifier, "\\s*\\b(" + Constant.STOP
-				+ "|" + Constant.FORBIDDEN + "|\\w+ly)$");
-		tag = StringUtility.removeAll(tag, "\\s*\\b(" + Constant.STOP + "|"
-				+ Constant.FORBIDDEN + "|\\w+ly)$");
-
-		// remove stop and forbidden words from ending
-		modifier = StringUtility.removeAll(modifier, "\\s*\\b(" + Constant.STOP
-				+ "|" + Constant.FORBIDDEN + "|\\w+ly)$");
-		tag = StringUtility.removeAll(tag, "\\s*\\b(" + Constant.STOP + "|"
-				+ Constant.FORBIDDEN + "|\\w+ly)$");
-
-		// remove all pronoun words
-		modifier = StringUtility.removeAll(modifier, "\\b(" + Constant.PRONOUN
-				+ ")\\b");
-
-		Pattern p = Pattern.compile("^(\\w+ly)\\s*(.*)$");
-		Matcher m = p.matcher(modifier);
-		while (m.lookingAt()) {
-			String ly = m.group(1);
-			String rest = m.group(2);
-			WordPOSKey wp = new WordPOSKey(ly, "b");
-			if (this.myDataHolder.getWordPOSHolder().containsKey(wp)) {
-				modifier = rest;
-				m = p.matcher(modifier);
-			} else {
-				break;
-			}
-		}
+		
+		//modifier preprocessing
+		modifier = this.myDataHolder.tagSentWithMTPreProcessing(modifier);
+		tag = this.myDataHolder.tagSentWithMTPreProcessing(tag);
+		
+		//Remove any -ly ending word which is a "b" in the WordPOS, from the modifier
+		modifier = this.myDataHolder.tagSentWithMTRemoveLyEndingBoundary(modifier);
 
 		modifier = StringUtility.removeAll(modifier, "(^\\s*|\\s*$)");
 		tag = StringUtility.removeAll(tag, "(^\\s*|\\s*$)");
@@ -1038,35 +1012,7 @@ public class Learner {
 		sent.setModifier(modifier);
 	}
 
-	/**
-	 * 
-	 * @param tag
-	 * @return
-	 */
-	public List<String> getMTFromParentTag(String tag) {
-		String modifier = "";
-		String newTag = "";
 
-		Pattern p = Pattern.compile("^\\[(\\w+)\\s+(\\w+)\\]$");
-		Matcher m = p.matcher(tag);
-		if (m.lookingAt()) {
-			modifier = m.group(1);
-			newTag = m.group(2);
-		} else {
-			p = Pattern.compile("^(\\w+)\\s+(\\w+)$");
-			m = p.matcher(tag);
-			if (m.lookingAt()) {
-				modifier = m.group(1);
-				newTag = m.group(2);
-			}
-
-		}
-		List<String> pair = new ArrayList<String>();
-		pair.add(modifier);
-		pair.add(newTag);
-
-		return pair;
-	}
 
 	public void addHeuristicsNouns() {
 		if (this.addHeuristicsNouns_debug)

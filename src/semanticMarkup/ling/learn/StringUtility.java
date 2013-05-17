@@ -1,5 +1,8 @@
 package semanticMarkup.ling.learn;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class StringUtility {
 
 	public StringUtility() {
@@ -66,6 +69,17 @@ public class StringUtility {
 	public static String removeAll(String word, String regex) {
 		String newWord = word.replaceAll(regex, ""); 
 		return newWord;
+	}
+	
+	public static String removeAllRecursive(String text, String regex) {
+		String newText = text.replaceAll(regex, "");
+				
+		while (!newText.equals(text)) {
+			text = newText;
+			newText = text.replaceAll(regex, "");
+		}
+		
+		return newText;
 	}
 	
 	// if($t !~ /\b(?:$STOP)\b/ && $t =~/\w/ && $t !~ /\d/ && length $t > 1){

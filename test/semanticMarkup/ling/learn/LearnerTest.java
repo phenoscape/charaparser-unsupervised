@@ -220,23 +220,7 @@ public class LearnerTest {
 //		fail("Not yet implemented");
 //	}
 
-	@Test
-	public void testGetMTFromParentTag() {
-		// Method getMTFromParentTag
-		List<String> pair = new ArrayList<String>();
-		pair.add("");
-		pair.add("");
-		assertEquals("getMTFromParentTag - case 0: fail", pair,
-				tester.getMTFromParentTag("[modifier_ta"));
-		pair.remove(1);
-		pair.remove(0);
-		pair.add("modifier");
-		pair.add("tag");
-		assertEquals("getMTFromParentTag - case 1: with []", pair,
-				tester.getMTFromParentTag("[modifier tag]"));
-		assertEquals("getMTFromParentTag - case 2: without []", pair,
-				tester.getMTFromParentTag("modifier tag"));
-	}
+
 
 //	@Test
 //	public void testAddHeuristicsNouns() {

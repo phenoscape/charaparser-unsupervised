@@ -111,4 +111,38 @@ public class StringUtilityTest {
 								"above|across|after|along|around|as|at|before|below|beneath|between|beyond|by|during|for|from|in|into|near|of|off|on|onto|out|outside|over|than|through|throughout|toward|towards|up|upward|with|without"));
 	}
 
+	/**
+	
+		while($modifier =~ /^($stop|$FORBIDDEN)\b/){
+		$modifier =~ s#^($stop|$FORBIDDEN)\b\s*##g;
+	}
+
+	while($tag =~ /^($stop|$FORBIDDEN)\b/){
+		$tag =~ s#^($stop|$FORBIDDEN)\b\s*##g;
+
+	}
+	
+		#from ending
+	while($modifier =~ /\b($stop|$FORBIDDEN|\w+ly)$/){
+		$modifier =~ s#\s*\b($stop|$FORBIDDEN|\w+ly)$##g;
+	}
+
+	while($tag =~ /\b($stop|$FORBIDDEN|\w+ly)$/){
+		$tag =~ s#\s*\b($stop|$FORBIDDEN|\w+ly)$##g;
+
+	}
+
+	
+	
+	 */
+	
+	@Test
+	public void testRemoveAllRecursive() {
+		assertEquals("removeAllRecursive - beginning", "word", 
+				StringUtility.removeAllRecursive("stop stop word", "^(stop)\\b\\s*"));
+		assertEquals("removeAllRecursive - ending", "word", 
+				StringUtility.removeAllRecursive("word word1ly word2ly", "\\s*\\b\\w+ly$"));
+		
+	}
+	
 }

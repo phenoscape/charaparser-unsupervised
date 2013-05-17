@@ -2,9 +2,11 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -157,8 +159,46 @@ public class DataHolderTest {
 		
 		assertEquals("getParentSentenceTag", "[parenttag]",myTester.getParentSentenceTag(0));
 		assertEquals("getParentSentenceTag", "[parenttag]",myTester.getParentSentenceTag(1));
-		assertEquals("getParentSentenceTag", "[m3 ]",myTester.getParentSentenceTag(4));
-		
+		assertEquals("getParentSentenceTag", "[m3 ]",myTester.getParentSentenceTag(4));		
+	}
+	
+	@Test
+	public void testGetMTFromParentTag() {
+		// Method getMTFromParentTag
+		List<String> pair = new ArrayList<String>();
+		pair.add("");
+		pair.add("");
+		assertEquals("getMTFromParentTag - case 0: fail", pair,
+				tester.getMTFromParentTag("[modifier_ta"));
+		pair.remove(1);
+		pair.remove(0);
+		pair.add("modifier");
+		pair.add("tag");
+		assertEquals("getMTFromParentTag - case 1: with []", pair,
+				tester.getMTFromParentTag("[modifier tag]"));
+		assertEquals("getMTFromParentTag - case 2: without []", pair,
+				tester.getMTFromParentTag("modifier tag"));
+	}
+	
+	@Test
+	public void testRemoveLyEndingBoundary(){
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		DataHolder myTester = new DataHolder(myUtility);
+		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"word1ly", "b", "role1", "1", "1", null, null}));
+		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"word2ly", "*", "role1", "1", "1", null, null}));
+		assertEquals("RemoveLyEndingBoundary", "word2", myTester.tagSentWithMTRemoveLyEndingBoundary("word1ly word2"));
+		assertEquals("RemoveLyEndingBoundary", "word2ly word2", myTester.tagSentWithMTRemoveLyEndingBoundary("word2ly word2"));
+	}
+	
+	@Test 
+	public void testTagSentWithMTPreProcessing(){
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		DataHolder myTester = new DataHolder(myUtility);
+		assertEquals("RemoveLyEndingBoundary - remove <>", "word1  word3", myTester.tagSentWithMTPreProcessing("word1 <word2> word3"));
+		assertEquals("RemoveLyEndingBoundary remove beginning stop words", "word", myTester.tagSentWithMTPreProcessing("after <word2> after above word"));
+		assertEquals("RemoveLyEndingBoundary remove ending -ly words", "word1", myTester.tagSentWithMTPreProcessing("word1 <word2> word3ly word4ly"));
 	}
 
 }

@@ -459,6 +459,61 @@ public class DataHolder {
 		return tag.matches("^.*\\w.*$") ? "[" + tag + "]" : "[parenttag]" ;
 	}
 	
+	/**
+	 * 
+	 * @param tag
+	 * @return
+	 */
+	public List<String> getMTFromParentTag(String tag) {
+		String modifier = "";
+		String newTag = "";
+
+		Pattern p = Pattern.compile("^\\[(\\w+)\\s+(\\w+)\\]$");
+		Matcher m = p.matcher(tag);
+		if (m.lookingAt()) {
+			modifier = m.group(1);
+			newTag = m.group(2);
+		} else {
+			p = Pattern.compile("^(\\w+)\\s+(\\w+)$");
+			m = p.matcher(tag);
+			if (m.lookingAt()) {
+				modifier = m.group(1);
+				newTag = m.group(2);
+			}
+
+		}
+		List<String> pair = new ArrayList<String>();
+		pair.add(modifier);
+		pair.add(newTag);
+
+		return pair;
+	}
+	
+	/**
+	 * Remove ly ending word which is a "b" in the WordPOS, from the modifier
+	 * 
+	 * @param modifier
+	 * @return the new modifer
+	 */
+	public String tagSentWithMTRemoveLyEndingBoundary(String modifier) {
+		
+		Pattern p = Pattern.compile("^(\\w+ly)\\s*(.*)$");
+		Matcher m = p.matcher(modifier);
+		while (m.lookingAt()) {
+			String wordly = m.group(1);
+			String rest = m.group(2);
+			WordPOSKey wp = new WordPOSKey(wordly, "b");
+			if (this.wordPOSTable.containsKey(wp)) {
+				modifier = rest;
+				m = p.matcher(modifier);
+			} else {
+				break;
+			}
+		}
+		
+		return modifier;
+	}
+	
 	
 	/******** Utilities *************/
 	
@@ -550,4 +605,34 @@ public class DataHolder {
 		return sentenceTable;
 
 	}
+
+	public String tagSentWithMTPreProcessing(String text) {		
+		text = text.replaceAll("<\\S+?>", "");
+
+		// remove stop and forbidden words from beginning
+		// ^($stop|$FORBIDDEN)\b
+		/**
+		 * 		while($modifier =~ /^($stop|$FORBIDDEN)\b/){
+		$modifier =~ s#^($stop|$FORBIDDEN)\b\s*##g;
+	}
+
+	while($tag =~ /^($stop|$FORBIDDEN)\b/){
+		$tag =~ s#^($stop|$FORBIDDEN)\b\s*##g;
+
+	}
+		 */
+		text = StringUtility.removeAllRecursive(text, "^(" + Constant.STOP
+				+ "|" + Constant.FORBIDDEN+")\\b\\s*");
+
+		// remove stop and forbidden words from ending
+		text = StringUtility.removeAllRecursive(text, "\\s*\\b(" + Constant.STOP
+				+ "|" + Constant.FORBIDDEN + "|\\w+ly)$");
+
+		// remove all pronoun words
+		text = StringUtility.removeAllRecursive(text, "\\b(" + Constant.PRONOUN
+				+ ")\\b");
+		
+		return text;
+	}
+
 }
