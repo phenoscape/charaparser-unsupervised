@@ -616,7 +616,7 @@ public class DataHolder {
 	 * @param tag tag could be "null"
 	 * @param label
 	 */
-	public void tagSentWithMT(int sentID, String sentence, String modifier,
+	public void tagSentenceWithMT(int sentID, String sentence, String modifier,
 			String tag, String label) {
 		/**
 		 * 1. Do some preprocessing of modifier and tag 

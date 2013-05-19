@@ -883,7 +883,7 @@ public class Learner {
 					if (m.matches("^.*\\w.*$")) {
 						modifier = modifier + " " + m;
 					}
-					this.myDataHolder.tagSentWithMT(i, sentence, modifier, tag, "changePOS[n->m:parenttag]");
+					this.myDataHolder.tagSentenceWithMT(i, sentence, modifier, tag, "changePOS[n->m:parenttag]");
 				}
 			}
 			// case 2: oldPOS is "s" AND newPOS is "b"
@@ -913,7 +913,7 @@ public class Learner {
 				if (sent.getTag().equals(newWord)) {
 					int sentID = i;
 					String s = sent.getSentence();
-					this.myDataHolder.tagSentWithMT(sentID, s, "", "NULL", "changePOS[s->b: reset to NULL]");
+					this.myDataHolder.tagSentenceWithMT(sentID, s, "", "NULL", "changePOS[s->b: reset to NULL]");
 				}
 			}
 		}
