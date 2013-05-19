@@ -52,8 +52,7 @@ public class Learner {
 	private int NUM_LEAD_WORDS; // Number of leading words
 	
 	// others
-	// tag length
-	private int tagLength = 150;
+	
 	// leading three words of sentences
 	private String CHECKEDWORDS = ":"; 
 	
@@ -62,7 +61,7 @@ public class Learner {
 		this.myUtility = utility;
 		
 		// Data holder
-		myDataHolder = new DataHolder(myUtility);
+		myDataHolder = new DataHolder(myConfiguration, myUtility);
 		
 		// Utilities
 		this.myWordFormUtility = new WordFormUtility(this.myUtility.getWordNet());
@@ -884,8 +883,7 @@ public class Learner {
 					if (m.matches("^.*\\w.*$")) {
 						modifier = modifier + " " + m;
 					}
-					tagSentWithMT(i, sentence, modifier, tag,
-							"changePOS[n->m:parenttag]");
+					this.myDataHolder.tagSentWithMT(i, sentence, modifier, tag, "changePOS[n->m:parenttag]");
 				}
 			}
 			// case 2: oldPOS is "s" AND newPOS is "b"
@@ -915,8 +913,7 @@ public class Learner {
 				if (sent.getTag().equals(newWord)) {
 					int sentID = i;
 					String s = sent.getSentence();
-					this.tagSentWithMT(sentID, s, "", "NULL",
-							"changePOS[s->b: reset to NULL]");
+					this.myDataHolder.tagSentWithMT(sentID, s, "", "NULL", "changePOS[s->b: reset to NULL]");
 				}
 			}
 		}
@@ -964,55 +961,6 @@ public class Learner {
 
 		return sign;
 	}
-	
-
-
-
-	
-
-	
-	/**
-	 * 
-	 * @param sentID
-	 * @param sentence
-	 * @param modifier
-	 * @param tag
-	 * @param label
-	 */
-	public void tagSentWithMT(int sentID, String sentence, String modifier,
-			String tag, String label) {
-
-		/**
-		 * 1. Do some preprocessing of modifier and tag 1. Remove -ly words 1.
-		 * Update modifier and tag of sentence sentID in getSentenceHolder()
-		 */
-		
-		//modifier preprocessing
-		modifier = this.myDataHolder.tagSentWithMTPreProcessing(modifier);
-		tag = this.myDataHolder.tagSentWithMTPreProcessing(tag);
-		
-		//Remove any -ly ending word which is a "b" in the WordPOS, from the modifier
-		modifier = this.myDataHolder.tagSentWithMTRemoveLyEndingBoundary(modifier);
-
-		modifier = StringUtility.removeAll(modifier, "(^\\s*|\\s*$)");
-		tag = StringUtility.removeAll(tag, "(^\\s*|\\s*$)");
-
-		if (tag != null) {
-			if (tag.length() > this.tagLength) {
-				tag = tag.substring(0, this.tagLength);
-			}
-		}
-
-		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
-		}
-
-		Sentence sent = this.myDataHolder.getSentenceHolder().get(sentID);
-		sent.setTag(tag);
-		sent.setModifier(modifier);
-	}
-
-
 
 	public void addHeuristicsNouns() {
 		if (this.addHeuristicsNouns_debug)

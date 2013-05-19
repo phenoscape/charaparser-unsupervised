@@ -20,7 +20,7 @@ public class Configuration {
 	private String openNLPSentenceDetectorDir = null;
 	private String openNLPTokenizerDir = null;
 	
-	private int tagLength = 0;
+	private int maxTagLength = 0;
 	
 	private static final String defaultWordNetDictDir = "res/WordNet/WordNet-3.0/dict";
 	private static final String defaultOpenNLPModelDir = "res";
@@ -41,10 +41,10 @@ public class Configuration {
 		
 		String tempTagLength = System.getProperty("charaparser.taglength");
 		if (tempTagLength != null) {
-			this.tagLength = Integer.parseInt(tempTagLength);
+			this.maxTagLength = Integer.parseInt(tempTagLength);
 		}
 		else {
-			this.tagLength = this.defaultTagLength;
+			this.maxTagLength = Configuration.defaultTagLength;
 		}
 		
 		
@@ -89,6 +89,10 @@ public class Configuration {
 		return this.openNLPSentenceDetectorDir;
 	}
 	
+	public int getMaxTagLength(){
+		return this.maxTagLength;
+	}
+	
 	public void setOpenNLPSentenceDetectorDir(String openNLPSentenceDetectorDir){
 		this.openNLPSentenceDetectorDir=openNLPSentenceDetectorDir;
 	}
@@ -109,6 +113,10 @@ public class Configuration {
 		this.openNLPModelDir=openNLPModelDir;
 		this.openNLPSentenceDetectorDir = this.openNLPModelDir+"//en-sent.bin";
 		this.openNLPTokenizerDir=this.openNLPModelDir+"//en-token.bin";
+	}
+	
+	public void setMaxTagLength(int maxTL){
+		this.maxTagLength = maxTL;
 	}
 
 }

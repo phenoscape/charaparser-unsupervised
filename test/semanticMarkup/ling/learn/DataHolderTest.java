@@ -21,7 +21,7 @@ public class DataHolderTest {
 	public void initialize(){
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
-		tester = new DataHolder(myUtility);
+		tester = new DataHolder(myConfiguration, myUtility);
 	}
 
 	@Test
@@ -77,7 +77,7 @@ public class DataHolderTest {
 	public void testResolveConflict(){
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
-		DataHolder myTester = new DataHolder(myUtility);
+		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		myTester.getSentenceHolder().add(new Sentence("source", "word branches word1 end", "word branches word1 end", "lead", "status", "ignore", null, null));
 		myTester.getSentenceHolder().add(new Sentence("source", "word branches word2 end", "word branches word2 end", "lead", "status", "nonignore", null, null));
 		myTester.getSentenceHolder().add(new Sentence("source", "word branches word3 end", "word branches word3 end", "lead", "status", null, null, null));
@@ -90,7 +90,7 @@ public class DataHolderTest {
 	public void testDiscountPOS(){
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
-		DataHolder myTester = new DataHolder(myUtility);
+		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"word1", "flag1"}));
 		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"word2", "unknown"}));
 		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"word3", "flag1"}));
@@ -144,7 +144,7 @@ public class DataHolderTest {
 	public void testGetParentSentenceTag(){
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
-		DataHolder myTester = new DataHolder(myUtility);
+		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		
 		myTester.add2Holder(DataHolder.SENTENCE, 
 				Arrays.asList(new String[] {"src0","s0","begin with lowercase","l0","s0",null,"m0","t0"}));
@@ -184,7 +184,7 @@ public class DataHolderTest {
 	public void testRemoveLyEndingBoundary(){
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
-		DataHolder myTester = new DataHolder(myUtility);
+		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"word1ly", "b", "role1", "1", "1", null, null}));
 		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"word2ly", "*", "role1", "1", "1", null, null}));
 		assertEquals("RemoveLyEndingBoundary", "word2", myTester.tagSentWithMTRemoveLyEndingBoundary("word1ly word2"));
@@ -195,7 +195,7 @@ public class DataHolderTest {
 	public void testTagSentWithMTPreProcessing(){
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
-		DataHolder myTester = new DataHolder(myUtility);
+		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		assertEquals("RemoveLyEndingBoundary - remove <>", "word1  word3", myTester.tagSentWithMTPreProcessing("word1 <word2> word3"));
 		assertEquals("RemoveLyEndingBoundary remove beginning stop words", "word", myTester.tagSentWithMTPreProcessing("after <word2> after above word"));
 		assertEquals("RemoveLyEndingBoundary remove ending -ly words", "word1", myTester.tagSentWithMTPreProcessing("word1 <word2> word3ly word4ly"));

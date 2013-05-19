@@ -96,7 +96,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		this.myConfiguration = new Configuration();
 		this.myUtility = new Utility(myConfiguration);
-		this.myDataHolder = new DataHolder(this.myUtility);
+		this.myDataHolder = new DataHolder(myConfiguration, myUtility);
 		myLearner = new Learner(this.myConfiguration, this.myUtility);
 		
 	}

@@ -36,7 +36,7 @@ public class LearnerTest {
 
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
-		DataHolder results = new DataHolder(myUtility);
+		DataHolder results = new DataHolder(myConfiguration, myUtility);
 
 		Map<String, String> myHeuristicNounTable = results
 				.getHeuristicNounTable();

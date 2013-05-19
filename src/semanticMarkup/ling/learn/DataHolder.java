@@ -47,9 +47,11 @@ public class DataHolder {
 	private Map<DiscountedKey, String> discountedTable = new HashMap<DiscountedKey, String>();
 	public static final byte DISCOUNTED = 6;
 	
+	private Configuration myConfiguratio;
 	private Utility myUtility;
 	
-	public DataHolder(Utility myUtility) {
+	public DataHolder(Configuration myConfiguration, Utility myUtility) {
+		this.myConfiguratio = myConfiguration;
 		this.myUtility = myUtility;
 		this.allWords = new HashMap<String, Integer>();
 		
@@ -606,21 +608,61 @@ public class DataHolder {
 
 	}
 
+	/**
+	 * 
+	 * @param sentID
+	 * @param sentence
+	 * @param modifier
+	 * @param tag tag could be "null"
+	 * @param label
+	 */
+	public void tagSentWithMT(int sentID, String sentence, String modifier,
+			String tag, String label) {
+		/**
+		 * 1. Do some preprocessing of modifier and tag 
+		 *     1. Remove -ly words 
+		 *     1. Update modifier and tag of sentence sentID in Sentence
+		 */
+		
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("updateTable.tagSentWithWT");
+		
+		myLogger.trace("Enter tagSentWithMT");
+		
+		//modifier preprocessing
+		modifier = this.tagSentWithMTPreProcessing(modifier);
+		tag = this.tagSentWithMTPreProcessing(tag);
+		
+		//Remove any -ly ending word which is a "b" in the WordPOS, from the modifier
+		modifier = this.tagSentWithMTRemoveLyEndingBoundary(modifier);
+
+		modifier = StringUtility.removeAll(modifier, "(^\\s*|\\s*$)");
+		tag = StringUtility.removeAll(tag, "(^\\s*|\\s*$)");
+
+		if (tag == null) {
+			this.getSentenceHolder().get(sentID).setTag(null);
+			this.getSentenceHolder().get(sentID).setModifier(modifier);			
+		}
+		else {
+			if (tag.length() > this.myConfiguratio.getMaxTagLength()) {
+				tag = tag.substring(0, this.myConfiguratio.getMaxTagLength());
+			}
+			this.sentenceTable.get(sentID).setTag(tag);
+			this.sentenceTable.get(sentID).setModifier(modifier);	
+		}
+
+		for (int i = 0; i < this.sentenceTable.size(); i++) {
+			this.sentenceTable.get(sentID).setTag(tag);
+			this.sentenceTable.get(sentID).setModifier(modifier);
+		}
+
+		myLogger.trace(label);
+		myLogger.trace("Quite tagSentWithMT");
+	}
+	
 	public String tagSentWithMTPreProcessing(String text) {		
 		text = text.replaceAll("<\\S+?>", "");
 
-		// remove stop and forbidden words from beginning
-		// ^($stop|$FORBIDDEN)\b
-		/**
-		 * 		while($modifier =~ /^($stop|$FORBIDDEN)\b/){
-		$modifier =~ s#^($stop|$FORBIDDEN)\b\s*##g;
-	}
-
-	while($tag =~ /^($stop|$FORBIDDEN)\b/){
-		$tag =~ s#^($stop|$FORBIDDEN)\b\s*##g;
-
-	}
-		 */
 		text = StringUtility.removeAllRecursive(text, "^(" + Constant.STOP
 				+ "|" + Constant.FORBIDDEN+")\\b\\s*");
 
