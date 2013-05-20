@@ -855,7 +855,15 @@ public class Learner {
 	 * @return
 	 */
 	public int changePOS(String newWord, String oldPOS, String newPOS,
-			String newRole, int increment) {
+			String newRole, int increment) {		
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("updateTable.changePOS");		
+		myLogger.trace("Enter changePOS");
+		myLogger.trace("newWord: "+newWord);
+		myLogger.trace("oldPOS: "+oldPOS);
+		myLogger.trace("newPOS: "+newPOS);
+		myLogger.trace("newRole: "+newRole);
+		
 		oldPOS = oldPOS.toLowerCase();
 		newPOS = newPOS.toLowerCase();
 
@@ -865,16 +873,22 @@ public class Learner {
 		int sign = 0;
 
 		// case 1: oldPOS is "s" AND newPOS is "m"
-		if (oldPOS.matches("^.*s.*$") && newPOS.matches("^.*m.*$")) {
+		//if (oldPOS.matches("^.*s.*$") && newPOS.matches("^.*m.*$")) {
+		if (oldPOS.equals("s") && newPOS.equals("m")) {
+			myLogger.trace("Case 1");
 			this.myDataHolder.discountPOS(newWord, oldPOS, newPOS, "all");
 			sign += markKnown(newWord, "m", "", "modifiers", increment);
+			
+			// For all the sentences tagged with $word (m), re tag by finding their parent tag.
 			for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
 				Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
 				if (sent.getTag().equals(newWord)) {
+					int sentID = i;
 					modifier = sent.getModifier();
 					tag = sent.getTag();
 					sentence = sent.getSentence();
-					tag = this.myDataHolder.getParentSentenceTag(i);
+					
+					tag = this.myDataHolder.getParentSentenceTag(sentID);
 					modifier = modifier + " " + newWord;
 					modifier.replaceAll("^\\s*", "");
 					List<String> pair = this.myDataHolder.getMTFromParentTag(tag);
@@ -883,14 +897,17 @@ public class Learner {
 					if (m.matches("^.*\\w.*$")) {
 						modifier = modifier + " " + m;
 					}
-					this.myDataHolder.tagSentenceWithMT(i, sentence, modifier, tag, "changePOS[n->m:parenttag]");
+					this.myDataHolder.tagSentenceWithMT(sentID, sentence, modifier, tag, "changePOS[n->m:parenttag]");
 				}
 			}
-			// case 2: oldPOS is "s" AND newPOS is "b"
-		} else if ((oldPOS.matches("^.*s.*$")) && (newPOS.matches("^.*b.*$"))) {
+			
+		} 
+		// case 2: oldPOS is "s" AND newPOS is "b"
+		else if ((oldPOS.matches("s")) && (newPOS.matches("b"))) {
+			myLogger.trace("Case 2");
 			int certaintyU = 0;
 
-			// case 2.1: (newWord, oldPOS)
+			// find (newWord, oldPOS)
 			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
 			if (this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
 				WordPOSValue v = this.myDataHolder.getWordPOSHolder().get(newOldKey);
@@ -899,29 +916,34 @@ public class Learner {
 				this.myDataHolder.discountPOS(newWord, oldPOS, newPOS, "all");
 			}
 
-			// case 2.2: (newWord, newPOS)
+			// find (newWord, newPOS)
 			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
-			if (!this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
-				this.myDataHolder.getWordPOSHolder().put(newNewKey, new WordPOSValue(newRole,
-						certaintyU, 0, "", ""));
+			if (!this.myDataHolder.getWordPOSHolder().containsKey(newNewKey)) {
+//				this.myDataHolder.getWordPOSHolder().put(newNewKey, new WordPOSValue(newRole,
+//						certaintyU, 0, "", ""));
+				this.myDataHolder.add2Holder(DataHolder.WORDPOS, 
+						Arrays.asList(new String [] {newWord, newPOS, newRole, Integer.toString(certaintyU), "0", "", ""}));
 			}
+			
+			myLogger.debug("\t: change ["+newWord+"("+oldPOS+" => "+newPOS+")] role=>"+newRole+"\n");
 			sign++;
 
 			// for all sentences tagged with (newWord, "b"), re tag them
 			for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-				Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
-				if (sent.getTag().equals(newWord)) {
-					int sentID = i;
-					String s = sent.getSentence();
-					this.myDataHolder.tagSentenceWithMT(sentID, s, "", "NULL", "changePOS[s->b: reset to NULL]");
+				String thisTag = this.myDataHolder.getSentenceHolder().get(i).getTag();
+				int thisSentID = i;
+				String thisSent = this.myDataHolder.getSentenceHolder().get(i).getSentence();
+				if (thisTag.equals(newWord)) {										
+					this.myDataHolder.tagSentenceWithMT(thisSentID, thisSent, "", "NULL", "changePOS[s->b: reset to NULL]");
 				}
 			}
 		}
 		// case 3: oldPOS is "b" AND newPOS is "s"
-		else if (oldPOS.matches("^.*b.*$") && newPOS.matches("^.*s.*$")) {
+		else if (oldPOS.matches("b") && newPOS.matches("s")) {
+			myLogger.trace("Case 3");
 			int certaintyU = 0;
 
-			// case 3.1: (newWord, oldPOS)
+			// find (newWord, oldPOS)
 			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
 			if (this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
 				WordPOSValue v = this.myDataHolder.getWordPOSHolder().get(newOldKey);
@@ -930,24 +952,19 @@ public class Learner {
 				this.myDataHolder.discountPOS(newWord, oldPOS, newPOS, "all");
 			}
 
-			// case 3.2: (newWord, newPOS)
+			// find (newWord, newPOS)
 			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
 			if (!this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
 				this.myDataHolder.getWordPOSHolder().put(newNewKey, new WordPOSValue(newRole,
 						certaintyU, 0, "", ""));
 			}
+			
+			myLogger.debug("\t: change ["+newWord+"("+oldPOS+" => "+newPOS+")] role=>"+newRole+"\n");
 			sign++;
 		}
-
-		int sum_certaintyU = 0;
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter1 = this.myDataHolder.getWordPOSHolder()
-				.entrySet().iterator();
-		while (iter1.hasNext()) {
-			Map.Entry<WordPOSKey, WordPOSValue> e = iter1.next();
-			if (e.getKey().getWord().equals(newWord)) {
-				sum_certaintyU += e.getValue().getCertaintyU();
-			}
-		}
+		
+		int sum_certaintyU = this.myDataHolder.getSumCertaintyU(newWord);
+		
 		if (sum_certaintyU > 0) {
 			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.myDataHolder.getWordPOSHolder()
 					.entrySet().iterator();
@@ -959,6 +976,8 @@ public class Learner {
 			}
 		}
 
+		myLogger.trace("Return: "+sign);
+		myLogger.trace("Quite changePOS\n");
 		return sign;
 	}
 

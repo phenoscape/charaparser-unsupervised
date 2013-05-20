@@ -198,10 +198,13 @@ public class LearnerTest {
 		
 	}
 
-//	@Test
-//	public void testChangePOS() {
-//		fail("Not yet implemented");
-//	}
+	@Test
+	public void testChangePOS() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		assertEquals("changePOS", "", myTester.changePOS("newWord", "oldPOS", "newPOS", "newRole", 3));
+	}
 
 
 

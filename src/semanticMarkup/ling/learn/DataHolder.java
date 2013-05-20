@@ -625,9 +625,9 @@ public class DataHolder {
 		 */
 		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("updateTable.tagSentWithWT");
+		Logger myLogger = Logger.getLogger("updateTable.tagSentenceWithWT");
 		
-		myLogger.trace("Enter tagSentWithMT");
+		myLogger.trace("Enter tagSentenceWithMT");
 		
 		//modifier preprocessing
 		modifier = this.tagSentWithMTPreProcessing(modifier);
@@ -657,7 +657,7 @@ public class DataHolder {
 		}
 
 		myLogger.trace(label);
-		myLogger.trace("Quite tagSentWithMT");
+		myLogger.trace("Quite tagSentenceWithMT");
 	}
 	
 	public String tagSentWithMTPreProcessing(String text) {		
@@ -675,6 +675,19 @@ public class DataHolder {
 				+ ")\\b");
 		
 		return text;
+	}
+	
+	public int getSumCertaintyU(String word) {
+		int sumCertaintyU = 0;
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> e = iter.next();
+			if (e.getKey().getWord().equals(word)) {
+				sumCertaintyU += e.getValue().getCertaintyU();
+			}
+		}
+		
+		return sumCertaintyU;
 	}
 
 }
