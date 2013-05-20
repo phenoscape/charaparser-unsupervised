@@ -690,4 +690,29 @@ public class DataHolder {
 		return sumCertaintyU;
 	}
 
+	/**
+	 * return singular and plural variations of the word
+	 * 
+	 * @param word
+	 * @return all variations of the word
+	 */
+	public String singularPluralVariations(String word, Set<SingularPluralPair> singularPluralHolder) {
+		String variations = word + "|";
+		Iterator<SingularPluralPair> iter = singularPluralHolder.iterator();
+		while (iter.hasNext()) {
+			SingularPluralPair pair = iter.next();
+			String sg = pair.getSingular();
+			String pl = pair.getPlural();
+			if (sg.equals(word) && (!pl.equals(""))) {
+				variations = variations + pl + "|";
+			}
+			if (pl.equals(word) && (!sg.equals(""))) {
+				variations = variations + sg + "|";
+			}
+		}
+
+		variations = StringUtility.removeAll(variations, "\\|+$");
+
+		return variations;
+	}
 }

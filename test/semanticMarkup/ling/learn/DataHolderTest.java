@@ -200,5 +200,32 @@ public class DataHolderTest {
 		assertEquals("RemoveLyEndingBoundary remove beginning stop words", "word", myTester.tagSentWithMTPreProcessing("after <word2> after above word"));
 		assertEquals("RemoveLyEndingBoundary remove ending -ly words", "word1", myTester.tagSentWithMTPreProcessing("word1 <word2> word3ly word4ly"));
 	}
+	
+	@Test 
+	public void testGetSumCertaintyU(){
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
+		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"target", "pos1", "role", "1", "5", null, null}));
+		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"target", "pos2", "role", "1", "5", null, null}));
+		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"target", "pos3", "role", "1", "5", null, null}));
+		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"word", "pos", "role", "1", "5", null, null}));
+		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"target", "pos4", "role", "1", "5", null, null}));
+		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"target", "pos5", "role", "1", "5", null, null}));
+		assertEquals("getSumCertaintyU", 5 ,myTester.getSumCertaintyU("target"));
+		
+	}
 
+	@Test
+	public void testSingularPluralVariations(){
+		Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair> ();
+		singularPluralTable.add(new SingularPluralPair("vertebra", "vertebrae"));
+		singularPluralTable.add(new SingularPluralPair("curimatidae","curimatida"));
+		singularPluralTable.add(new SingularPluralPair("bone","bones"));
+		assertEquals("singularPluralVariations", "vertebra|vertebrae", tester.singularPluralVariations("vertebra", singularPluralTable));
+		assertEquals("singularPluralVariations", "curimatidae|curimatida", tester.singularPluralVariations("curimatidae", singularPluralTable));
+		assertEquals("singularPluralVariations", "curimatida|curimatidae", tester.singularPluralVariations("curimatida", singularPluralTable));
+		assertEquals("singularPluralVariations", "bones|bone", tester.singularPluralVariations("bones", singularPluralTable));
+	}
+	
 }

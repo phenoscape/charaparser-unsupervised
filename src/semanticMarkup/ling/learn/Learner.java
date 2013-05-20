@@ -585,7 +585,7 @@ public class Learner {
 			otherPrefix = StringUtility.removeFromWordList(g1, Constant.PREFIX);
 
 			spWords = "("
-					+ StringUtility.escape(singularPluralVariations(g2,
+					+ StringUtility.escape(this.myDataHolder.singularPluralVariations(g2,
 							this.myDataHolder.getSingularPluralHolder())) + ")";
 			pattern = "^(" + otherPrefix + ")?" + spWords + "$";
 
@@ -614,7 +614,7 @@ public class Learner {
 		// word starts with a lower case letter
 		if (word.matches("^[a-z].*$")) {
 			spWords = "("
-					+ StringUtility.escape(singularPluralVariations(word,
+					+ StringUtility.escape(this.myDataHolder.singularPluralVariations(word,
 							this.myDataHolder.getSingularPluralHolder())) + ")";
 			// word=shrubs, pattern = (pre|sub)shrubs
 			pattern = "^(" + Constant.PREFIX + ")" + spWords + "$";
@@ -643,7 +643,7 @@ public class Learner {
 
 			// case 3: word_$spwords
 			spWords = "("
-					+ StringUtility.escape(singularPluralVariations(word,
+					+ StringUtility.escape(this.myDataHolder.singularPluralVariations(word,
 							this.myDataHolder.getSingularPluralHolder())) + ")";
 			pattern = "^.*_" + spWords + "$";
 			Iterator<Map.Entry<String, String>> iter3 = this.myDataHolder.getUnknownWordHolder()
@@ -669,31 +669,7 @@ public class Learner {
 	}
 
 	
-	/**
-	 * return singular and plural variations of the word
-	 * 
-	 * @param word
-	 * @return all variations of the word
-	 */
-	public String singularPluralVariations(String word, Set<SingularPluralPair> singularPluralHolder) {
-		String variations = word + "|";
-		Iterator<SingularPluralPair> iter = singularPluralHolder.iterator();
-		while (iter.hasNext()) {
-			SingularPluralPair pair = iter.next();
-			String sg = pair.getSingular();
-			String pl = pair.getPlural();
-			if (sg.equals(word) && (!pl.equals(""))) {
-				variations = variations + pl + "|";
-			}
-			if (pl.equals(word) && (!sg.equals(""))) {
-				variations = variations + sg + "|";
-			}
-		}
 
-		variations = StringUtility.removeAll(variations, "\\|+$");
-
-		return variations;
-	}
 	
 	/**
 	 * This method handles a new word when the updateTable method is called
