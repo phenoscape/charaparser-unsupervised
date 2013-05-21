@@ -462,7 +462,7 @@ public class Learner {
 			String word = iter.next();
 			if ((!word.matches("^.*\\w.*$")) || (word.matches("^.*ous$"))) {
 				this.myDataHolder.addUnknown(word, word);
-				this.updateTable(word, "b", "", "wordpos", 1);
+				this.myDataHolder.updateTable(word, "b", "", "wordpos", 1);
 			} else {
 				this.myDataHolder.addUnknown(word, "unknown");
 			}
@@ -474,489 +474,7 @@ public class Learner {
 	
 	/**
 	 * 
-	 * @param word
-	 * @param pos
-	 * @param role
-	 * @param table
-	 * @param increment
-	 * @return
 	 */
-	public int updateTable(String word, String pos, String role, String table,
-			int increment) {
-		int result = 0;
-
-		word = StringUtility.processWord(word);
-		// empty word
-		if (word.length() < 1) {
-			return 0;
-		}
-
-		// forbidden word
-		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
-			return 0;
-		}
-
-		// if it is a n word, check if it is singular or plural, and update the
-		// pos
-		if (pos.equals("n")) {
-			pos = myWordFormUtility.getNumber(word);
-		}
-
-		result = result + markKnown(word, pos, role, table, increment);
-
-		// 1) if the word is a singular form n word, find its plural form, then add
-		// the plural form, and add the singular - pluarl pair into
-		// singularPluarlTable;
-		// 2) if the word is a plural form n word, find its singular form, then add
-		// the singular form, and add the singular - pluarl pair into
-		// singularPluarlTable;
-		if (!this.myDataHolder.isInSingularPluralPair(word)) {
-			if (pos.equals("p")) {
-				String pl = word;
-				word = myWordFormUtility.getSingular(word);
-				// add "*" and 0: pos for those words are inferred based on
-				// other clues, not seen directly from the text
-				result = result + this.markKnown(word, "s", "*", table, 0);
-				this.myDataHolder.addSingularPluralPair(word, pl);
-			}
-			if (pos.equals("s")) {
-				List<String> words = myWordFormUtility.getPlural(word);
-				String sg = word;
-				for (int i = 0; i < words.size(); i++) {
-					if (words.get(i).matches("^.*\\w.*$")) {
-						result = result
-								+ this.markKnown(words.get(i), "p", "*", table,
-										0);
-					}
-					this.myDataHolder.addSingularPluralPair(sg, words.get(i));
-				}
-			}
-		}
-
-		return result;
-	}
-	
-	/**
-	 * mark a word an its pos and role
-	 * 
-	 * @param word
-	 *            the word to mark
-	 * @param pos
-	 *            the pos of the word
-	 * @param role
-	 *            the role of the word
-	 * @param table
-	 *            which table to mark
-	 * @param increment
-	 * @return
-	 */
-	public int markKnown(String word, String pos, String role, String table,
-			int increment) {
-
-		boolean markknown_debug=true;
-		
-		String pattern = "";
-		int sign = 0;
-		String otherPrefix = "";
-		String spWords = "";
-
-		// forbidden word
-		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
-			return 0;
-		}
-
-		// stop words
-		if (word.matches("^(" + Constant.STOP + ")$")) {
-			sign = sign
-					+ processNewWord(word, pos, role, table, word, increment);
-			return sign;
-		}
-
-		// process this new word
-		sign = sign + processNewWord(word, pos, role, table, word, increment);
-		
-		// Then we try to learn those new words based on this one
-		Pattern p = Pattern.compile("^(" + Constant.PREFIX + ")(\\S+).*$");
-		Matcher m = p.matcher(word);
-		if (m.lookingAt()) {
-			String g1 = m.group(1); // the prefix
-			String g2 = m.group(2); // the remaining
-
-			otherPrefix = StringUtility.removeFromWordList(g1, Constant.PREFIX);
-
-			spWords = "("
-					+ StringUtility.escape(this.myDataHolder.singularPluralVariations(g2,
-							this.myDataHolder.getSingularPluralHolder())) + ")";
-			pattern = "^(" + otherPrefix + ")?" + spWords + "$";
-
-			Iterator<Map.Entry<String, String>> iter1 = this.myDataHolder.getUnknownWordHolder()
-					.entrySet().iterator();
-
-			// case 1
-			while (iter1.hasNext()) {
-				Map.Entry<String, String> entry = iter1.next();
-				String newWord = entry.getKey();
-				String flag = entry.getValue();
-
-				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
-					sign = sign
-							+ processNewWord(newWord, pos, "*", table, word, 0);
-
-					if (markknown_debug) {
-						System.out.print("case 1");
-						System.out.println("by removing prefix of" + word
-								+ ", know " + newWord + " is a [" + pos + "]");
-					}
-				}
-			}
-		}
-
-		// word starts with a lower case letter
-		if (word.matches("^[a-z].*$")) {
-			spWords = "("
-					+ StringUtility.escape(this.myDataHolder.singularPluralVariations(word,
-							this.myDataHolder.getSingularPluralHolder())) + ")";
-			// word=shrubs, pattern = (pre|sub)shrubs
-			pattern = "^(" + Constant.PREFIX + ")" + spWords + "$";
-
-			Iterator<Map.Entry<String, String>> iter2 = this.myDataHolder.getUnknownWordHolder()
-					.entrySet().iterator();
-
-			// case 2
-			while (iter2.hasNext()) {
-				Map.Entry<String, String> entry = iter2.next();
-				String newWord = entry.getKey();
-
-				String flag = entry.getValue();
-				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
-					sign = sign
-							+ processNewWord(newWord, pos, "*", table, word, 0);
-					
-					if (markknown_debug) {
-						System.out.print("case 2");
-						System.out.println("by removing prefix of" + word
-								+ ", know " + newWord + " is a [" + pos + "]");
-					}
-				
-				}
-			}
-
-			// case 3: word_$spwords
-			spWords = "("
-					+ StringUtility.escape(this.myDataHolder.singularPluralVariations(word,
-							this.myDataHolder.getSingularPluralHolder())) + ")";
-			pattern = "^.*_" + spWords + "$";
-			Iterator<Map.Entry<String, String>> iter3 = this.myDataHolder.getUnknownWordHolder()
-					.entrySet().iterator();
-			while (iter3.hasNext()) {
-				Map.Entry<String, String> entry = iter3.next();
-				String newWord = entry.getKey();
-				String flag = entry.getValue();
-				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
-					sign = sign
-							+ processNewWord(newWord, pos, "*", table, word, 0);
-					
-					if (markknown_debug) {
-						System.out.print("case 3");
-						System.out.println("by removing prefix of" + word
-								+ ", know " + newWord + " is a [" + pos + "]");
-					}
-				}
-			}
-		}
-
-		return sign;
-	}
-
-	
-
-	
-	/**
-	 * This method handles a new word when the updateTable method is called
-	 * 
-	 * @param newWord
-	 * @param pos
-	 * @param role
-	 * @param table which table to update. "wordpos" or "modifiers"
-	 * @param flag
-	 * @param increment
-	 * @return if a new word was added, returns 1; otherwise returns 0
-	 */
-	public int processNewWord(String newWord, String pos, String role,
-			String table, String flag, int increment) {
-				
-		int sign = 0;
-		// remove the new word from unknownword holder
-		this.myDataHolder.updateUnknownWord(newWord, flag);
-		
-		// insert the new word to the specified data holder
-		if (table.equals("wordpos")) {
-			sign = sign + updatePOS(newWord, pos, role, increment);
-		} else if (table.equals("modifiers")) {
-			sign = sign + this.myDataHolder.addModifier(newWord, increment);
-		}
-
-		return sign;
-	}
-	
-	/**
-	 * update the pos of a word
-	 * 
-	 * @param newWord
-	 * @param newPOS
-	 * @param newRole
-	 * @param increment
-	 * @return
-	 */
-	public int updatePOS(String newWord, String newPOS, String newRole, int increment) {		
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("updateTable.updatePOS");
-		
-		myLogger.trace("Enter updatePOS");
-		myLogger.trace("Word: "+newWord+", POS: "+newPOS);
-		
-		
-		int n = 0;
-				
-		String regex = "^.*(\\b|_)(NUM|" + Constant.NUMBER + "|"
-				+ Constant.CLUSTERSTRING + "|" + Constant.CHARACTER + ")\\b.*$";
-		//regex = "(NUM|" + "rows" + ")";
-		boolean case1 = newWord.matches(regex);
-		boolean case2 = newPOS.matches("[nsp]"); 
-		if (case1 && case2) {
-			myLogger.trace("Case 0");
-			myLogger.trace("Quite updatePOS");
-			return 0;
-		}
-
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.getWordPOSHolder()
-				.entrySet().iterator();
-		// boolean isExist = false;
-		Map.Entry<WordPOSKey, WordPOSValue> targetWordPOS = null;
-		while (iter.hasNext()) {
-			Map.Entry<WordPOSKey, WordPOSValue> wordPOS = iter.next();
-			if (wordPOS.getKey().getWord().equals(newWord)) {
-				targetWordPOS = wordPOS;
-				break;
-			}
-		}
-		// case 1: the word does not exist, add it
-		if (targetWordPOS == null) {
-			myLogger.trace("Case 1");
-			int certaintyU = 0;
-			certaintyU += increment;
-			this.myDataHolder.getWordPOSHolder().put(new WordPOSKey(newWord, newPOS),
-					new WordPOSValue(newRole, certaintyU, 0, null, null));
-			n = 1;
-		// case 2: the word already exists, update it
-		} else {
-			myLogger.trace("Case 2");
-			String oldPOS = targetWordPOS.getKey().getPOS();
-			String oldRole = targetWordPOS.getValue().getRole();
-			int certaintyU = targetWordPOS.getValue().getCertaintyU();
-			// case 2.1 
-			// 		the old POS is NOT same as the new POS, 
-			// 	AND	the old POS is b or the new POS is b
-			if ((!oldPOS.equals(newPOS))
-					&& ((oldPOS.equals("b")) || (newPOS.equals("b")))) {
-				myLogger.trace("Case 2.1");
-				String otherPOS = newPOS.equals("b") ? oldPOS : newPOS;
-				newPOS = this.myDataHolder.resolveConflict(newWord, "b", otherPOS);
-
-				boolean flag = false;
-				if (newPOS != null) {
-					if (!newPOS.equals(oldPOS)) {
-						flag = true;
-					}
-				}
-
-				// new pos win
-				if (flag) { 
-					newRole = newRole.equals("*") ? "" : newRole;
-					n = n + changePOS(newWord, oldPOS, newPOS, newRole, increment);
-				// olde pos win
-				} else { 
-					newRole = oldRole.equals("*") ? newRole : oldRole;
-					certaintyU = certaintyU + increment;
-					WordPOSKey key = new WordPOSKey("newWord", "pos");
-					WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
-							null, null);
-					this.myDataHolder.getWordPOSHolder().put(key, value);
-				}
-				
-			// case 2.2: the old POS and the new POS are all [n],  update role and certaintyU
-			} else {
-				myLogger.trace("Case 2.2");
-				newRole = this.myDataHolder.mergeRole(oldRole, newRole);
-				certaintyU += increment;
-				WordPOSKey key = new WordPOSKey(newWord, newPOS);
-				WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
-						null, null);
-				this.myDataHolder.getWordPOSHolder().put(key, value);
-			}
-		}
-
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.myDataHolder.getWordPOSHolder()
-				.entrySet().iterator();
-		int certaintyL = 0;
-		while (iter2.hasNext()) {
-			Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
-			if (e.getKey().getWord().equals(newWord)) {
-				certaintyL += e.getValue().getCertaintyU();
-			}
-		}
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter3 = this.myDataHolder.getWordPOSHolder()
-				.entrySet().iterator();
-		while (iter3.hasNext()) {
-			Map.Entry<WordPOSKey, WordPOSValue> e = iter3.next();
-			if (e.getKey().getWord().equals(newWord)) {
-				e.getValue().setCertiantyU(certaintyL);
-			}
-		}
-
-		myLogger.trace("Quite updatePOS");
-		return n;
-	}
-	
-
-
-	/**
-	 * This method corrects the pos of the word from N to M (establish newPOS)
-	 * 
-	 * @param newWord
-	 * @param oldPOS
-	 * @param newPOS
-	 * @param newRole
-	 * @param increment
-	 * @return
-	 */
-	public int changePOS(String newWord, String oldPOS, String newPOS,
-			String newRole, int increment) {		
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("updateTable.changePOS");		
-		myLogger.trace("Enter changePOS");
-		myLogger.trace("newWord: "+newWord);
-		myLogger.trace("oldPOS: "+oldPOS);
-		myLogger.trace("newPOS: "+newPOS);
-		myLogger.trace("newRole: "+newRole);
-		
-		oldPOS = oldPOS.toLowerCase();
-		newPOS = newPOS.toLowerCase();
-
-		String modifier = "";
-		String tag = "";
-		String sentence = null;
-		int sign = 0;
-
-		// case 1: oldPOS is "s" AND newPOS is "m"
-		//if (oldPOS.matches("^.*s.*$") && newPOS.matches("^.*m.*$")) {
-		if (oldPOS.equals("s") && newPOS.equals("m")) {
-			myLogger.trace("Case 1");
-			this.myDataHolder.discountPOS(newWord, oldPOS, newPOS, "all");
-			sign += markKnown(newWord, "m", "", "modifiers", increment);
-			
-			// For all the sentences tagged with $word (m), re tag by finding their parent tag.
-			for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-				Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
-				if (sent.getTag().equals(newWord)) {
-					int sentID = i;
-					modifier = sent.getModifier();
-					tag = sent.getTag();
-					sentence = sent.getSentence();
-					
-					tag = this.myDataHolder.getParentSentenceTag(sentID);
-					modifier = modifier + " " + newWord;
-					modifier.replaceAll("^\\s*", "");
-					List<String> pair = this.myDataHolder.getMTFromParentTag(tag);
-					String m = pair.get(1);
-					tag = pair.get(2);
-					if (m.matches("^.*\\w.*$")) {
-						modifier = modifier + " " + m;
-					}
-					this.myDataHolder.tagSentenceWithMT(sentID, sentence, modifier, tag, "changePOS[n->m:parenttag]");
-				}
-			}
-			
-		} 
-		// case 2: oldPOS is "s" AND newPOS is "b"
-		else if ((oldPOS.matches("s")) && (newPOS.matches("b"))) {
-			myLogger.trace("Case 2");
-			int certaintyU = 0;
-
-			// find (newWord, oldPOS)
-			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
-			if (this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
-				WordPOSValue v = this.myDataHolder.getWordPOSHolder().get(newOldKey);
-				certaintyU = v.getCertaintyU();
-				certaintyU += increment;
-				this.myDataHolder.discountPOS(newWord, oldPOS, newPOS, "all");
-			}
-
-			// find (newWord, newPOS)
-			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
-			if (!this.myDataHolder.getWordPOSHolder().containsKey(newNewKey)) {
-//				this.myDataHolder.getWordPOSHolder().put(newNewKey, new WordPOSValue(newRole,
-//						certaintyU, 0, "", ""));
-				this.myDataHolder.add2Holder(DataHolder.WORDPOS, 
-						Arrays.asList(new String [] {newWord, newPOS, newRole, Integer.toString(certaintyU), "0", "", ""}));
-			}
-			
-			myLogger.debug("\t: change ["+newWord+"("+oldPOS+" => "+newPOS+")] role=>"+newRole+"\n");
-			sign++;
-
-			// for all sentences tagged with (newWord, "b"), re tag them
-			for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-				String thisTag = this.myDataHolder.getSentenceHolder().get(i).getTag();
-				int thisSentID = i;
-				String thisSent = this.myDataHolder.getSentenceHolder().get(i).getSentence();
-				if (thisTag.equals(newWord)) {										
-					this.myDataHolder.tagSentenceWithMT(thisSentID, thisSent, "", "NULL", "changePOS[s->b: reset to NULL]");
-				}
-			}
-		}
-		// case 3: oldPOS is "b" AND newPOS is "s"
-		else if (oldPOS.matches("b") && newPOS.matches("s")) {
-			myLogger.trace("Case 3");
-			int certaintyU = 0;
-
-			// find (newWord, oldPOS)
-			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
-			if (this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
-				WordPOSValue v = this.myDataHolder.getWordPOSHolder().get(newOldKey);
-				certaintyU = v.getCertaintyU();
-				certaintyU += increment;
-				this.myDataHolder.discountPOS(newWord, oldPOS, newPOS, "all");
-			}
-
-			// find (newWord, newPOS)
-			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
-			if (!this.myDataHolder.getWordPOSHolder().containsKey(newOldKey)) {
-				this.myDataHolder.getWordPOSHolder().put(newNewKey, new WordPOSValue(newRole,
-						certaintyU, 0, "", ""));
-			}
-			
-			myLogger.debug("\t: change ["+newWord+"("+oldPOS+" => "+newPOS+")] role=>"+newRole+"\n");
-			sign++;
-		}
-		
-		int sum_certaintyU = this.myDataHolder.getSumCertaintyU(newWord);
-		
-		if (sum_certaintyU > 0) {
-			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.myDataHolder.getWordPOSHolder()
-					.entrySet().iterator();
-			while (iter2.hasNext()) {
-				Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
-				if (e.getKey().getWord().equals(newWord)) {
-					e.getValue().setCertiantyL(sum_certaintyU);
-				}
-			}
-		}
-
-		myLogger.trace("Return: "+sign);
-		myLogger.trace("Quite changePOS\n");
-		return sign;
-	}
-
 	public void addHeuristicsNouns() {
 		if (this.addHeuristicsNouns_debug)
 			System.out.println("Enter addHeuristicsNouns:\n");
@@ -987,7 +505,7 @@ public class Learner {
 					if (m.lookingAt()) {
 						String word = m.group(1);
 						String pos = m.group(2);
-						this.updateTable(word, pos, "*", "wordpos", 0);
+						this.myDataHolder.updateTable(word, pos, "*", "wordpos", 0);
 
 						if (pos.equals("p")) {
 							String plural = word;
@@ -1034,7 +552,7 @@ public class Learner {
 //				System.out.println();
 //			}
 			if (!StringUtility.isMatchedWords(descriptor, Constant.FORBIDDEN)) {
-				this.updateTable(descriptor, "b", "", "wordpos", 1);
+				this.myDataHolder.updateTable(descriptor, "b", "", "wordpos", 1);
 			}
 		}
 		
@@ -1050,7 +568,7 @@ public class Learner {
 		while (iter.hasNext()) {
 			String noun = iter.next();
 			if (!StringUtility.isMatchedWords(noun, Constant.FORBIDDEN)) {
-				this.updateTable(noun, "n", "", "wordpos", 1);
+				this.myDataHolder.updateTable(noun, "n", "", "wordpos", 1);
 			}
 		}
 	}
@@ -1757,7 +1275,7 @@ public class Learner {
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			this.updateTable(word, "b", "*", "wordpos", 0);
+			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 0, 0, null, null));
 			// System.out.println("Add Stop Word: " + word+"\n");
@@ -1778,7 +1296,7 @@ public class Learner {
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			this.updateTable(word, "b", "*", "wordpos", 0);
+			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("", 0, 0, null, null));
 			// System.out.println("addCharacter word: " + word);
@@ -1799,12 +1317,12 @@ public class Learner {
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			this.updateTable(word, "b", "*", "wordpos", 0);
+			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 0, 0, null, null));
 			// System.out.println("add Number: " + word);
 		}
-		this.updateTable("NUM", "b", "*", "wordpos", 0);
+		this.myDataHolder.updateTable("NUM", "b", "*", "wordpos", 0);
 		// this.getWordPOSHolder().put(new WordPOSKey("NUM", "b"), new
 		// WordPOSValue("*",0, 0, null, null));
 	}
@@ -1821,7 +1339,7 @@ public class Learner {
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			this.updateTable(word, "b", "*", "wordpos", 0);
+			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 1, 1, null, null));
 			// System.out.println("addClusterString: " + word);
@@ -1837,7 +1355,7 @@ public class Learner {
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			this.updateTable(word, "b", "*", "wordpos", 0);
+			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "z"), new
 			// WordPOSValue("*", 0, 0, null, null));
 			// System.out.println("Add ProperNoun: " + word);
@@ -1886,7 +1404,7 @@ public class Learner {
 						String base = matcher.group(1);
 						String suffix = matcher.group(2);
 						if (this.containSuffix(unknownWord, base, suffix)) {
-							this.updateTable(unknownWord, "b", "*", "wordpos", 0);
+							this.myDataHolder.updateTable(unknownWord, "b", "*", "wordpos", 0);
 							if (this.posBySuffix_debug) {
 								System.out.println("posBySuffix - set word:");
 								System.out.println(unknownWord);
@@ -2159,7 +1677,7 @@ public class Learner {
 		// Case 1: single word case
 		if (ptn.matches("^[pns]$")) {
 			String tag = words[0];
-			sign = sign + updateTable(tag, ptn, "-", "wordpos", 1);
+			sign = sign + this.myDataHolder.updateTable(tag, ptn, "-", "wordpos", 1);
 		}
 
 		// Case 2: the POSs are "ps"
@@ -2172,8 +1690,8 @@ public class Learner {
 				String pWord = words[start];
 				String sWord = words[end - 1];
 
-				sign += updateTable(pWord, "p", "-", "wordpos", 1);
-				sign += updateTable(sWord, "s", "", "wordpos", 1);
+				sign += this.myDataHolder.updateTable(pWord, "p", "-", "wordpos", 1);
+				sign += this.myDataHolder.updateTable(sWord, "s", "", "wordpos", 1);
 
 				// $sign += updatenn(0, $#tws+1, @tws); #up to the "p" inclusive
 

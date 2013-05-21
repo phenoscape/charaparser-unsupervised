@@ -25,6 +25,60 @@ public class DataHolderTest {
 	}
 
 	@Test
+	public void testUpdateTable() {
+		// Method updateTable
+		assertEquals("updateTable - empty word", 0,
+				tester.updateTable("", "", "", "", 0));
+		assertEquals("updateTable - forbidden word", 0,
+				tester.updateTable("to", "", "", "", 0));
+	}
+	
+	@Test
+	public void testMarkKnown() {
+		// Method markKnown
+		assertEquals("markKnown - forbidden word", 0,
+				tester.markKnown("and", "", "", "", 0));
+		//assertEquals("markKnown - stop word", 0,
+		//		tester.markKnown("page", "", "", "", 0));
+		
+		
+		// case 1 & 2
+		tester.markKnown("dentinous", "b", "", "wordpos", 1);
+		
+		// case 2
+		tester.markKnown("lamentous", "b", "", "wordpos", 1);
+		
+	}
+
+
+
+	@Test
+	public void testUpdatePOS() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		assertEquals("updatePOS - no update", 0, myTester.getDataHolder().updatePOS("NUM", "n", "", 1));
+		assertEquals("updatePOS - no update", 0, myTester.getDataHolder().updatePOS("two", "s", "", 1));
+		assertEquals("updatePOS - no update", 0, myTester.getDataHolder().updatePOS("series", "p", "", 1));
+		assertEquals("updatePOS - no update", 0, myTester.getDataHolder().updatePOS("heights", "n", "", 1));
+		
+		Map<WordPOSKey, WordPOSValue> target = new HashMap<WordPOSKey, WordPOSValue>();
+		target.put(new WordPOSKey("word1", "n"), new WordPOSValue("role1", 2, 0, null, null));
+		myTester.getDataHolder().updatePOS("word1", "n", "role1", 2);
+		assertEquals("updatePOS - add", target, myTester.getDataHolder().getWordPOSHolder());
+		
+	}
+
+	@Test
+	public void testChangePOS() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		//assertEquals("changePOS", "", myTester.getDataHolder().changePOS("newWord", "oldPOS", "newPOS", "newRole", 3));
+	}
+
+	
+	@Test
 	public void testAddSingularPluralPair() {
 		// Method addSingularPluralPair
 		assertEquals("addSigularPluralPair - pair not exist", true, tester.addSingularPluralPair("sword", "pword"));

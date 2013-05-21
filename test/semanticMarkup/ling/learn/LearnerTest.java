@@ -148,63 +148,8 @@ public class LearnerTest {
 //		fail("Not yet implemented");
 //	}
 
-	@Test
-	public void testUpdateTable() {
-		// Method updateTable
-		assertEquals("updateTable - empty word", 0,
-				tester.updateTable("", "", "", "", 0));
-		assertEquals("updateTable - forbidden word", 0,
-				tester.updateTable("to", "", "", "", 0));
-	}
 
-	@Test
-	public void testMarkKnown() {
-		// Method markKnown
-		assertEquals("markKnown - forbidden word", 0,
-				tester.markKnown("and", "", "", "", 0));
-		assertEquals("markKnown - stop word", 0,
-				tester.markKnown("page", "", "", "", 0));
-	}
 
-//	@Test
-//	public void testProcessNewWord() {
-//		fail("Not yet implemented");
-//	}
-
-//	@Test
-//	public void testSingularPluralVariations() {
-//		fail("Not yet implemented");
-//	}
-
-//	@Test
-//	public void testUpdateUnknownWords() {
-//		fail("Not yet implemented");
-//	}
-
-	@Test
-	public void testUpdatePOS() {
-		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
-		assertEquals("updatePOS - no update", 0, myTester.updatePOS("NUM", "n", "", 1));
-		assertEquals("updatePOS - no update", 0, myTester.updatePOS("two", "s", "", 1));
-		assertEquals("updatePOS - no update", 0, myTester.updatePOS("series", "p", "", 1));
-		assertEquals("updatePOS - no update", 0, myTester.updatePOS("heights", "n", "", 1));
-		
-		Map<WordPOSKey, WordPOSValue> target = new HashMap<WordPOSKey, WordPOSValue>();
-		target.put(new WordPOSKey("word1", "n"), new WordPOSValue("role1", 2, 0, null, null));
-		myTester.updatePOS("word1", "n", "role1", 2);
-		assertEquals("updatePOS - add", target, myTester.getDataHolder().getWordPOSHolder());
-		
-	}
-
-	@Test
-	public void testChangePOS() {
-		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
-		assertEquals("changePOS", "", myTester.changePOS("newWord", "oldPOS", "newPOS", "newRole", 3));
-	}
 
 
 
@@ -223,7 +168,20 @@ public class LearnerTest {
 //		fail("Not yet implemented");
 //	}
 
+//	@Test
+//	public void testProcessNewWord() {
+//		fail("Not yet implemented");
+//	}
 
+//	@Test
+//	public void testSingularPluralVariations() {
+//		fail("Not yet implemented");
+//	}
+
+//	@Test
+//	public void testUpdateUnknownWords() {
+//		fail("Not yet implemented");
+//	}
 
 //	@Test
 //	public void testAddHeuristicsNouns() {

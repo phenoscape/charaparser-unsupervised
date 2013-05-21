@@ -1,6 +1,7 @@
 package semanticMarkup.ling.learn;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -607,7 +608,484 @@ public class DataHolder {
 		return sentenceTable;
 
 	}
+	
+	/**
+	 * 
+	 * @param word
+	 * @param pos
+	 * @param role
+	 * @param table
+	 * @param increment
+	 * @return
+	 */
+	public int updateTable(String word, String pos, String role, String table,
+			int increment) {
+		int result = 0;
 
+		word = StringUtility.processWord(word);
+		// empty word
+		if (word.length() < 1) {
+			return 0;
+		}
+
+		// forbidden word
+		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
+			return 0;
+		}
+
+		// if it is a n word, check if it is singular or plural, and update the
+		// pos
+		if (pos.equals("n")) {
+			pos = this.myUtility.getWordFormUtility().getNumber(word);
+		}
+
+		result = result + markKnown(word, pos, role, table, increment);
+
+		// 1) if the word is a singular form n word, find its plural form, then add
+		// the plural form, and add the singular - pluarl pair into
+		// singularPluarlTable;
+		// 2) if the word is a plural form n word, find its singular form, then add
+		// the singular form, and add the singular - pluarl pair into
+		// singularPluarlTable;
+		if (!this.isInSingularPluralPair(word)) {
+			if (pos.equals("p")) {
+				String pl = word;
+				word = this.myUtility.getWordFormUtility().getSingular(word);
+				// add "*" and 0: pos for those words are inferred based on
+				// other clues, not seen directly from the text
+				result = result + this.markKnown(word, "s", "*", table, 0);
+				this.addSingularPluralPair(word, pl);
+			}
+			if (pos.equals("s")) {
+				List<String> words = this.myUtility.getWordFormUtility().getPlural(word);
+				String sg = word;
+				for (int i = 0; i < words.size(); i++) {
+					if (words.get(i).matches("^.*\\w.*$")) {
+						result = result
+								+ this.markKnown(words.get(i), "p", "*", table,
+										0);
+					}
+					this.addSingularPluralPair(sg, words.get(i));
+				}
+			}
+		}
+
+		return result;
+	}
+
+	/**
+	 * mark a word an its pos and role
+	 * 
+	 * @param word
+	 *            the word to mark
+	 * @param pos
+	 *            the pos of the word
+	 * @param role
+	 *            the role of the word
+	 * @param table
+	 *            which table to mark
+	 * @param increment
+	 * @return
+	 */
+	public int markKnown(String word, String pos, String role, String table,
+			int increment) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("updateTable.markKnown");		
+		myLogger.trace("Enter markKnown");
+		
+		String pattern = "";
+		int sign = 0;
+		String otherPrefix = "";
+		String spWords = "";
+
+		// forbidden word
+		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
+			return 0;
+		}
+
+		// stop words
+		if (word.matches("^(" + Constant.STOP + ")$")) {
+			sign = sign
+					+ processNewWord(word, pos, role, table, word, increment);
+			return sign;
+		}
+
+		// process this new word
+		sign = sign + processNewWord(word, pos, role, table, word, increment);
+		
+		// Case 1: we try to learn those new words based on this one
+		Pattern p = Pattern.compile("^(" + Constant.PREFIX + ")(\\S+).*$");
+		Matcher m = p.matcher(word);
+		if (m.lookingAt()) {
+			myLogger.trace("Case 1");
+			String g1 = m.group(1); // the prefix
+			String g2 = m.group(2); // the remaining
+
+			otherPrefix = StringUtility.removeFromWordList(g1, Constant.PREFIX);
+
+			spWords = "("
+					+ StringUtility.escape(this.singularPluralVariations(g2,
+							this.getSingularPluralHolder())) + ")";
+			pattern = "^(" + otherPrefix + ")?" + spWords + "$";
+
+			Iterator<Map.Entry<String, String>> iter1 = this.getUnknownWordHolder()
+					.entrySet().iterator();
+
+			
+			while (iter1.hasNext()) {
+				Map.Entry<String, String> entry = iter1.next();
+				String newWord = entry.getKey();
+				String flag = entry.getValue();
+
+				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
+					sign = sign
+							+ processNewWord(newWord, pos, "*", table, word, 0);
+					
+					myLogger.trace("Case 1.1");
+					myLogger.trace("by removing prefix of" + word + ", know "
+							+ newWord + " is a [" + pos + "]");
+				}
+			}
+		}
+
+		// Case 2: word starts with a lower case letter
+		if (word.matches("^[a-z].*$")) {
+			myLogger.trace("Case 2");
+			spWords = "("
+					+ StringUtility.escape(this.singularPluralVariations(word,
+							this.getSingularPluralHolder())) + ")";
+			// word=shrubs, pattern = (pre|sub)shrubs
+			pattern = "^(" + Constant.PREFIX + ")" + spWords + "$";
+
+			Iterator<Map.Entry<String, String>> iter2 = this.getUnknownWordHolder()
+					.entrySet().iterator();
+
+			while (iter2.hasNext()) {
+				Map.Entry<String, String> entry = iter2.next();
+				String newWord = entry.getKey();
+
+				String flag = entry.getValue();
+				// case 2.1
+				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
+					sign = sign
+							+ processNewWord(newWord, pos, "*", table, word, 0);
+					
+					myLogger.debug("Case 2.1");
+					myLogger.debug("by removing prefix of" + word
+							+ ", know " + newWord + " is a [" + pos + "]");
+				
+				}
+			}
+			
+			spWords = "("
+					+ StringUtility.escape(this.singularPluralVariations(word,
+							this.getSingularPluralHolder())) + ")";
+			pattern = "^.*_" + spWords + "$";
+			Iterator<Map.Entry<String, String>> iter3 = this.getUnknownWordHolder()
+					.entrySet().iterator();
+			while (iter3.hasNext()) {
+				Map.Entry<String, String> entry = iter3.next();
+				String newWord = entry.getKey();
+				String flag = entry.getValue();
+				// case 2.2: word_$spwords
+				if ((newWord.matches(pattern)) && (flag.equals("unknown"))) {
+					sign = sign
+							+ processNewWord(newWord, pos, "*", table, word, 0);
+					
+					myLogger.debug("Case 2.2");
+					myLogger.debug("by removing prefix of" + word
+								+ ", know " + newWord + " is a [" + pos + "]");
+				}
+			}
+		}
+
+		return sign;
+	}
+	
+	/**
+	 * This method handles a new word when the updateTable method is called
+	 * 
+	 * @param newWord
+	 * @param pos
+	 * @param role
+	 * @param table which table to update. "wordpos" or "modifiers"
+	 * @param flag
+	 * @param increment
+	 * @return if a new word was added, returns 1; otherwise returns 0
+	 */
+	public int processNewWord(String newWord, String pos, String role,
+			String table, String flag, int increment) {
+				
+		int sign = 0;
+		// remove the new word from unknownword holder
+		this.updateUnknownWord(newWord, flag);
+		
+		// insert the new word to the specified data holder
+		if (table.equals("wordpos")) {
+			sign = sign + updatePOS(newWord, pos, role, increment);
+		} else if (table.equals("modifiers")) {
+			sign = sign + this.addModifier(newWord, increment);
+		}
+
+		return sign;
+	}
+	
+	/**
+	 * update the pos of a word
+	 * 
+	 * @param newWord
+	 * @param newPOS
+	 * @param newRole
+	 * @param increment
+	 * @return
+	 */
+	public int updatePOS(String newWord, String newPOS, String newRole, int increment) {		
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("updateTable.updatePOS");
+		
+		myLogger.trace("Enter updatePOS");
+		myLogger.trace("Word: "+newWord+", POS: "+newPOS);
+		
+		
+		int n = 0;
+				
+		String regex = "^.*(\\b|_)(NUM|" + Constant.NUMBER + "|"
+				+ Constant.CLUSTERSTRING + "|" + Constant.CHARACTER + ")\\b.*$";
+		//regex = "(NUM|" + "rows" + ")";
+		boolean case1 = newWord.matches(regex);
+		boolean case2 = newPOS.matches("[nsp]"); 
+		if (case1 && case2) {
+			myLogger.trace("Case 0");
+			myLogger.trace("Quite updatePOS");
+			return 0;
+		}
+
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolder()
+				.entrySet().iterator();
+		// boolean isExist = false;
+		Map.Entry<WordPOSKey, WordPOSValue> targetWordPOS = null;
+		while (iter.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> wordPOS = iter.next();
+			if (wordPOS.getKey().getWord().equals(newWord)) {
+				targetWordPOS = wordPOS;
+				break;
+			}
+		}
+		// case 1: the word does not exist, add it
+		if (targetWordPOS == null) {
+			myLogger.trace("Case 1");
+			int certaintyU = 0;
+			certaintyU += increment;
+			this.getWordPOSHolder().put(new WordPOSKey(newWord, newPOS),
+					new WordPOSValue(newRole, certaintyU, 0, null, null));
+			n = 1;
+		// case 2: the word already exists, update it
+		} else {
+			myLogger.trace("Case 2");
+			String oldPOS = targetWordPOS.getKey().getPOS();
+			String oldRole = targetWordPOS.getValue().getRole();
+			int certaintyU = targetWordPOS.getValue().getCertaintyU();
+			// case 2.1 
+			// 		the old POS is NOT same as the new POS, 
+			// 	AND	the old POS is b or the new POS is b
+			if ((!oldPOS.equals(newPOS))
+					&& ((oldPOS.equals("b")) || (newPOS.equals("b")))) {
+				myLogger.trace("Case 2.1");
+				String otherPOS = newPOS.equals("b") ? oldPOS : newPOS;
+				newPOS = this.resolveConflict(newWord, "b", otherPOS);
+
+				boolean flag = false;
+				if (newPOS != null) {
+					if (!newPOS.equals(oldPOS)) {
+						flag = true;
+					}
+				}
+
+				// new pos win
+				if (flag) { 
+					newRole = newRole.equals("*") ? "" : newRole;
+					n = n + changePOS(newWord, oldPOS, newPOS, newRole, increment);
+				// olde pos win
+				} else { 
+					newRole = oldRole.equals("*") ? newRole : oldRole;
+					certaintyU = certaintyU + increment;
+					WordPOSKey key = new WordPOSKey("newWord", "pos");
+					WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
+							null, null);
+					this.getWordPOSHolder().put(key, value);
+				}
+				
+			// case 2.2: the old POS and the new POS are all [n],  update role and certaintyU
+			} else {
+				myLogger.trace("Case 2.2");
+				newRole = this.mergeRole(oldRole, newRole);
+				certaintyU += increment;
+				WordPOSKey key = new WordPOSKey(newWord, newPOS);
+				WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
+						null, null);
+				this.getWordPOSHolder().put(key, value);
+			}
+		}
+
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.getWordPOSHolder()
+				.entrySet().iterator();
+		int certaintyL = 0;
+		while (iter2.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
+			if (e.getKey().getWord().equals(newWord)) {
+				certaintyL += e.getValue().getCertaintyU();
+			}
+		}
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter3 = this.getWordPOSHolder()
+				.entrySet().iterator();
+		while (iter3.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> e = iter3.next();
+			if (e.getKey().getWord().equals(newWord)) {
+				e.getValue().setCertiantyU(certaintyL);
+			}
+		}
+
+		myLogger.trace("Quite updatePOS");
+		return n;
+	}
+	
+	/**
+	 * This method corrects the pos of the word from N to M (establish newPOS)
+	 * 
+	 * @param newWord
+	 * @param oldPOS
+	 * @param newPOS
+	 * @param newRole
+	 * @param increment
+	 * @return
+	 */
+	public int changePOS(String newWord, String oldPOS, String newPOS,
+			String newRole, int increment) {		
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("updateTable.changePOS");		
+		myLogger.trace("Enter changePOS");
+		myLogger.trace("newWord: "+newWord);
+		myLogger.trace("oldPOS: "+oldPOS);
+		myLogger.trace("newPOS: "+newPOS);
+		myLogger.trace("newRole: "+newRole);
+		
+		oldPOS = oldPOS.toLowerCase();
+		newPOS = newPOS.toLowerCase();
+
+		String modifier = "";
+		String tag = "";
+		String sentence = null;
+		int sign = 0;
+
+		// case 1: oldPOS is "s" AND newPOS is "m"
+		//if (oldPOS.matches("^.*s.*$") && newPOS.matches("^.*m.*$")) {
+		if (oldPOS.equals("s") && newPOS.equals("m")) {
+			myLogger.trace("Case 1");
+			this.discountPOS(newWord, oldPOS, newPOS, "all");
+			sign += markKnown(newWord, "m", "", "modifiers", increment);
+			
+			// For all the sentences tagged with $word (m), re tag by finding their parent tag.
+			for (int i = 0; i < this.getSentenceHolder().size(); i++) {
+				Sentence sent = this.getSentenceHolder().get(i);
+				if (sent.getTag().equals(newWord)) {
+					int sentID = i;
+					modifier = sent.getModifier();
+					tag = sent.getTag();
+					sentence = sent.getSentence();
+					
+					tag = this.getParentSentenceTag(sentID);
+					modifier = modifier + " " + newWord;
+					modifier.replaceAll("^\\s*", "");
+					List<String> pair = this.getMTFromParentTag(tag);
+					String m = pair.get(1);
+					tag = pair.get(2);
+					if (m.matches("^.*\\w.*$")) {
+						modifier = modifier + " " + m;
+					}
+					this.tagSentenceWithMT(sentID, sentence, modifier, tag, "changePOS[n->m:parenttag]");
+				}
+			}
+			
+		} 
+		// case 2: oldPOS is "s" AND newPOS is "b"
+		else if ((oldPOS.matches("s")) && (newPOS.matches("b"))) {
+			myLogger.trace("Case 2");
+			int certaintyU = 0;
+
+			// find (newWord, oldPOS)
+			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
+			if (this.getWordPOSHolder().containsKey(newOldKey)) {
+				WordPOSValue v = this.getWordPOSHolder().get(newOldKey);
+				certaintyU = v.getCertaintyU();
+				certaintyU += increment;
+				this.discountPOS(newWord, oldPOS, newPOS, "all");
+			}
+
+			// find (newWord, newPOS)
+			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
+			if (!this.getWordPOSHolder().containsKey(newNewKey)) {
+//				this.getWordPOSHolder().put(newNewKey, new WordPOSValue(newRole,
+//						certaintyU, 0, "", ""));
+				this.add2Holder(DataHolder.WORDPOS, 
+						Arrays.asList(new String [] {newWord, newPOS, newRole, Integer.toString(certaintyU), "0", "", ""}));
+			}
+			
+			myLogger.debug("\t: change ["+newWord+"("+oldPOS+" => "+newPOS+")] role=>"+newRole+"\n");
+			sign++;
+
+			// for all sentences tagged with (newWord, "b"), re tag them
+			for (int i = 0; i < this.getSentenceHolder().size(); i++) {
+				String thisTag = this.getSentenceHolder().get(i).getTag();
+				int thisSentID = i;
+				String thisSent = this.getSentenceHolder().get(i).getSentence();
+				if (thisTag.equals(newWord)) {										
+					this.tagSentenceWithMT(thisSentID, thisSent, "", "NULL", "changePOS[s->b: reset to NULL]");
+				}
+			}
+		}
+		// case 3: oldPOS is "b" AND newPOS is "s"
+		else if (oldPOS.matches("b") && newPOS.matches("s")) {
+			myLogger.trace("Case 3");
+			int certaintyU = 0;
+
+			// find (newWord, oldPOS)
+			WordPOSKey newOldKey = new WordPOSKey(newWord, oldPOS);
+			if (this.getWordPOSHolder().containsKey(newOldKey)) {
+				WordPOSValue v = this.getWordPOSHolder().get(newOldKey);
+				certaintyU = v.getCertaintyU();
+				certaintyU += increment;
+				this.discountPOS(newWord, oldPOS, newPOS, "all");
+			}
+
+			// find (newWord, newPOS)
+			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
+			if (!this.getWordPOSHolder().containsKey(newOldKey)) {
+				this.getWordPOSHolder().put(newNewKey, new WordPOSValue(newRole,
+						certaintyU, 0, "", ""));
+			}
+			
+			myLogger.debug("\t: change ["+newWord+"("+oldPOS+" => "+newPOS+")] role=>"+newRole+"\n");
+			sign++;
+		}
+		
+		int sum_certaintyU = this.getSumCertaintyU(newWord);
+		
+		if (sum_certaintyU > 0) {
+			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.getWordPOSHolder()
+					.entrySet().iterator();
+			while (iter2.hasNext()) {
+				Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
+				if (e.getKey().getWord().equals(newWord)) {
+					e.getValue().setCertiantyL(sum_certaintyU);
+				}
+			}
+		}
+
+		myLogger.trace("Return: "+sign);
+		myLogger.trace("Quite changePOS\n");
+		return sign;
+	}
+	
 	/**
 	 * 
 	 * @param sentID
