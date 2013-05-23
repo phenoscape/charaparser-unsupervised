@@ -101,7 +101,7 @@ public class Learner {
 
 
 		// ???
-		//this.posBySuffix();
+		this.posBySuffix();
 		//this.markupByPattern();
 		//this.markupIgnore();
 
@@ -1380,8 +1380,16 @@ public class Learner {
 	 * -merous(adj), -most(adj), -shaped(adj), -ous(adj)
 	 */
 	public void posBySuffix() {
-		String p1 = "^[a-z_]+(" + Constant.SUFFIX + ")$";
-		String p2 = "^[._.][a-z]+"; // , _nerved
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("posBySuffix");		
+		myLogger.trace("Enter posBySuffix");
+		
+		String pattern1 = "^[a-z_]+(" + Constant.SUFFIX + ")$";
+		String pattern2 = "^[._.][a-z]+"; // , _nerved
+		
+		myLogger.debug("Pattern1: "+pattern1);
+		myLogger.debug("Pattern2: "+pattern2);
+		
 		Iterator<Map.Entry<String, String>> iterator = this.myDataHolder.getUnknownWordHolder()
 				.entrySet().iterator();
 
@@ -1391,50 +1399,57 @@ public class Learner {
 			String unknownWordTag = unknownWordEntry.getValue();
 
 			if (unknownWordTag.equals("unknown")) {
-				if (unknownWord.matches(p1)) {
+				if (unknownWord.matches(pattern1)) {
 					Matcher matcher = Pattern.compile(
 							"(.*?)(" + Constant.SUFFIX + ")$").matcher(
 							unknownWord);
 					if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
 							&& matcher.matches()) {
 						if (this.posBySuffix_debug) {
-							System.out.println("posBySuffix - check word:");
-							System.out.println(unknownWord);
+							myLogger.info("posBySuffix - check word: " + unknownWord);
 						}
 						String base = matcher.group(1);
 						String suffix = matcher.group(2);
 						if (this.containSuffix(unknownWord, base, suffix)) {
-							this.myDataHolder.updateTable(unknownWord, "b", "*", "wordpos", 0);
-							if (this.posBySuffix_debug) {
-								System.out.println("posBySuffix - set word:");
-								System.out.println(unknownWord);
-							}
+							this.myDataHolder.updateTable(unknownWord, "b", "*", "wordpos", 0);							
+								myLogger.info("posBySuffix - set word: " + unknownWord);							
 						}
 					}
 				}
 
-				if (unknownWord.matches(p2)) {
-					// getUnknownWordHolder().put(unknownWord, "b");
+				if (unknownWord.matches(pattern2)) {
 					this.myDataHolder.getWordPOSHolder().put(new WordPOSKey(unknownWord, "b"),
 							new WordPOSValue("*", 0, 0, null, null));
-					System.out
-							.println("posbysuffix set $unknownword a boundary word\n");
+					myLogger.info("posbysuffix set "+unknownWord + " a boundary word\n");
 				}
 			}
 		}
+		
+		myLogger.trace("Quite posBySuffix");
 	}
 
-	// return false or true depending on if the word contains the suffix as the
-	// suffix
+	/**
+	 * return false or true depending on if the word contains the suffix as the
+	 * suffix
+	 * 
+	 * @param word
+	 * @param base
+	 * @param suffix
+	 * @return
+	 */
 	public boolean containSuffix(String word, String base, String suffix) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("posBySuffix");		
+		myLogger.trace("Enter containSuffix");
+		
 		boolean flag = false; // return value
 		boolean wordInWN = false; // if this word is in WordNet
 		boolean baseInWN = false;
 		WordNetAPI myWN;
 
 		// check base
-		// this if statement is added by Dongye
 		if (base.length() == 0) {
+			myLogger.trace("case 0");
 			return true;
 		}
 
@@ -1442,26 +1457,26 @@ public class Learner {
 
 		myWN = this.myUtility.getWordNet();
 		if (myWN.contains(word)) {
+			myLogger.trace("case 1.1");
 			wordInWN = true; // word is in WordNet
 		} else {
-			// $wnoutputword =~ s#\n# #g;
-
+			myLogger.trace("case 1.2");
 			wordInWN = false;
 		}
 
 		if (myWN.contains(base)) {
+			myLogger.trace("case 2.1");
 			baseInWN = true;
 		} else {
-			// $wnoutputbase =~ s#\n# #g;
+			myLogger.trace("case 2.2");
 			baseInWN = false;
 		}
 
 		// if WN pos is adv, return 1: e.g. ly, or if $base is in
-		// unknownwords
-		// table
+		// unknownwords table
 		if (suffix.equals("ly")) {
+			myLogger.trace("case 3.1");
 			if (wordInWN) {
-				// if($wnoutputword =~/Overview of adv $word/){
 				if (myWN.isAdverb(word)) {
 					return true;
 				}
@@ -1475,22 +1490,18 @@ public class Learner {
 		// if WN recognize superlative, comparative adjs, return 1: e.g. er,
 		// est
 		else if (suffix.equals("er") || suffix.equals("est")) {
+			myLogger.trace("case 3.2");
 			if (wordInWN) {
-				// if($wnoutputword =~/Overview of adj (\w+)/){#$word =
-				// softer,
-				// $1 = soft vs. $word=$1=neuter
-				// $word = softer, $1 = soft vs. $word=$1=neuter
 				if (myWN.isAdjective(word) || myWN.isAdverb(word)) {
 					return true;
 				}
-				// return 1 if $word=~/^$1\w+/;
 			}
 		}
 
 		// if $base is in WN or unknownwords table, or if $word has sole pos
-		// adj
-		// in WN, return 1: e.g. scalelike
+		// adj in WN, return 1: e.g. scalelike
 		else {
+			myLogger.trace("case 3.3");
 			if (myWN.isSoleAdjective(word)) {
 				return true;
 			}

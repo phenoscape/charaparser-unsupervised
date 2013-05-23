@@ -742,7 +742,7 @@ public class DataHolder {
 							+ processNewWord(newWord, pos, "*", table, word, 0);
 					
 					myLogger.trace("Case 1.1");
-					myLogger.trace("by removing prefix of" + word + ", know "
+					myLogger.trace("by removing prefix of " + word + ", know "
 							+ newWord + " is a [" + pos + "]");
 				}
 			}
@@ -771,7 +771,7 @@ public class DataHolder {
 							+ processNewWord(newWord, pos, "*", table, word, 0);
 					
 					myLogger.debug("Case 2.1");
-					myLogger.debug("by removing prefix of" + word
+					myLogger.debug("by removing prefix of " + word
 							+ ", know " + newWord + " is a [" + pos + "]");
 				
 				}
@@ -793,7 +793,7 @@ public class DataHolder {
 							+ processNewWord(newWord, pos, "*", table, word, 0);
 					
 					myLogger.debug("Case 2.2");
-					myLogger.debug("by removing prefix of" + word
+					myLogger.debug("by removing prefix of " + word
 								+ ", know " + newWord + " is a [" + pos + "]");
 				}
 			}

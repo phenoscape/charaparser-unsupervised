@@ -449,10 +449,13 @@ public class LearnerTest {
 //		fail("Not yet implemented");
 //	}
 //
-//	@Test
-//	public void testPosBySuffix() {
-//		fail("Not yet implemented");
-//	}
+	@Test
+	public void testPosBySuffix() {
+		// Pattern 1: ^[a-z_]+(er|est|fid|form|ish|less|like|ly|merous|most|shaped)$
+		// Pattern 2: ^[._.][a-z]+
+		
+		tester.posBySuffix();
+	}
 
 	@Test
 	public void testContainSuffix() {
@@ -469,6 +472,18 @@ public class LearnerTest {
 				tester.containSuffix("platform", "plat", "form"));
 		assertEquals("containSuffix sole adj", true,
 				tester.containSuffix("scalelike", "scale", "like"));
+		
+		// case 3.1.2 and case 3.3.3 not tested
+		assertEquals("containSuffix sole adj", true,
+				tester.containSuffix("anteriorly", "anterior", "ly")); // 221
+		assertEquals("containSuffix sole adj", false,
+				tester.containSuffix("anterolaterally", "anterolateral", "ly")); // 111
+		assertEquals("containSuffix sole adj", true,
+				tester.containSuffix("bifid", "bi", "fid")); // 223
+		assertEquals("containSuffix sole adj", false,
+				tester.containSuffix("border", "bord", "er")); // 212
+		assertEquals("containSuffix sole adj", false,
+				tester.containSuffix("corner", "corn", "er")); // 222
 
 	}
 
