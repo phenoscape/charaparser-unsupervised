@@ -456,6 +456,20 @@ public class LearnerTest {
 		
 		tester.posBySuffix();
 	}
+	
+	@Test
+	public void testPosBySuffixCase1Helper(){
+		assertEquals("posBySuffix Case1 - match", true, tester.posBySuffixCase1Helper("approximately"));
+		assertEquals("posBySuffix Case1 - not match", false, tester.posBySuffixCase1Helper("bigger"));
+		assertEquals("posBySuffix Case1 - match", true, tester.posBySuffixCase1Helper("bifid"));
+		assertEquals("posBySuffix Case1 - not match", false, tester.posBySuffixCase1Helper("per"));
+	}
+	
+	@Test
+	public void testPosBySuffixCase2Helper(){
+		assertEquals("posBySuffix Case2 - match", true, tester.posBySuffixCase2Helper("_nerved"));
+		assertEquals("posBySuffix Case2 - not match", false, tester.posBySuffixCase2Helper("nerved"));
+	}
 
 	@Test
 	public void testContainSuffix() {
@@ -464,7 +478,7 @@ public class LearnerTest {
 				tester.containSuffix("less", "", "less"));
 		assertEquals("containSuffix ly", true,
 				tester.containSuffix("slightly", "slight", "ly"));
-		assertEquals("containSuffix er", true,
+		assertEquals("containSuffix er", false,
 				tester.containSuffix("fewer", "few", "er"));
 		assertEquals("containSuffix est", true,
 				tester.containSuffix("fastest", "fast", "est"));
@@ -474,16 +488,28 @@ public class LearnerTest {
 				tester.containSuffix("scalelike", "scale", "like"));
 		
 		// case 3.1.2 and case 3.3.3 not tested
-		assertEquals("containSuffix sole adj", true,
-				tester.containSuffix("anteriorly", "anterior", "ly")); // 221
-		assertEquals("containSuffix sole adj", false,
+		assertEquals("containSuffix 111", false,
 				tester.containSuffix("anterolaterally", "anterolateral", "ly")); // 111
-		assertEquals("containSuffix sole adj", true,
-				tester.containSuffix("bifid", "bi", "fid")); // 223
-		assertEquals("containSuffix sole adj", false,
+		assertEquals("containSuffix 121", false,
+				tester.containSuffix("mesially", "mesial", "ly")); // 121
+		assertEquals("containSuffix 122", false,
+				tester.containSuffix("per", "p", "er")); // 122
+		assertEquals("containSuffix 212", false,
 				tester.containSuffix("border", "bord", "er")); // 212
-		assertEquals("containSuffix sole adj", false,
+		assertEquals("containSuffix 212", false,
+				tester.containSuffix("bigger", "bigg", "er")); // 212
+		assertEquals("containSuffix 221", true,
+				tester.containSuffix("anteriorly", "anterior", "ly")); // 221
+		assertEquals("containSuffix 222", false,
 				tester.containSuffix("corner", "corn", "er")); // 222
+		assertEquals("containSuffix 222", true,
+				tester.containSuffix("lower", "low", "er")); // 222
+		assertEquals("containSuffix 223", true,
+				tester.containSuffix("bifid", "bi", "fid")); // 223
+		
+		
+		
+		
 
 	}
 

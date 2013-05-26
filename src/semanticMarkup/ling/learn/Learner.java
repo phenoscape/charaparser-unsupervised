@@ -33,7 +33,6 @@ public class Learner {
 	private boolean populateSentence_debug = false;
 	private boolean addHeuristicsNouns_debug = false;
 	private boolean getHeuristicNouns_debug = false;
-	private boolean posBySuffix_debug = false;
 	private boolean characterHeuristics_debug = false;
 	/**************************************************
 	 */
@@ -1384,12 +1383,6 @@ public class Learner {
 		Logger myLogger = Logger.getLogger("posBySuffix");		
 		myLogger.trace("Enter posBySuffix");
 		
-		String pattern1 = "^[a-z_]+(" + Constant.SUFFIX + ")$";
-		String pattern2 = "^[._.][a-z]+"; // , _nerved
-		
-		myLogger.debug("Pattern1: "+pattern1);
-		myLogger.debug("Pattern2: "+pattern2);
-		
 		Iterator<Map.Entry<String, String>> iterator = this.myDataHolder.getUnknownWordHolder()
 				.entrySet().iterator();
 
@@ -1399,35 +1392,62 @@ public class Learner {
 			String unknownWordTag = unknownWordEntry.getValue();
 
 			if (unknownWordTag.equals("unknown")) {
-				if (unknownWord.matches(pattern1)) {
-					Matcher matcher = Pattern.compile(
-							"(.*?)(" + Constant.SUFFIX + ")$").matcher(
-							unknownWord);
-					if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
-							&& matcher.matches()) {
-						if (this.posBySuffix_debug) {
-							myLogger.info("posBySuffix - check word: " + unknownWord);
-						}
-						String base = matcher.group(1);
-						String suffix = matcher.group(2);
-						if (this.containSuffix(unknownWord, base, suffix)) {
-							this.myDataHolder.updateTable(unknownWord, "b", "*", "wordpos", 0);							
-								myLogger.info("posBySuffix - set word: " + unknownWord);							
-						}
-					}
-				}
-
-				if (unknownWord.matches(pattern2)) {
-					this.myDataHolder.getWordPOSHolder().put(new WordPOSKey(unknownWord, "b"),
-							new WordPOSValue("*", 0, 0, null, null));
-					myLogger.info("posbysuffix set "+unknownWord + " a boundary word\n");
-				}
+				boolean flag1 = posBySuffixCase1Helper(unknownWord);				
+				boolean flag2 = posBySuffixCase2Helper(unknownWord);								
 			}
 		}
 		
 		myLogger.trace("Quite posBySuffix");
 	}
 
+	public boolean posBySuffixCase1Helper(String unknownWord) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("posBySuffix");
+		
+		String pattern1 = "^[a-z_]+(" + Constant.SUFFIX + ")$";
+		myLogger.debug("Pattern1: "+pattern1);
+				
+		if (unknownWord.matches(pattern1)) {
+			Matcher matcher = Pattern.compile(
+					"(.*?)(" + Constant.SUFFIX + ")$").matcher(
+					unknownWord);
+			if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
+					&& matcher.matches()) {
+				myLogger.info("posBySuffix - check word: " + unknownWord);
+				String base = matcher.group(1);
+				String suffix = matcher.group(2);
+				if (this.containSuffix(unknownWord, base, suffix)) {
+					myLogger.info("Pass\n");
+					this.myDataHolder.updateTable(unknownWord, "b", "*", "wordpos", 0);							
+					myLogger.info("posBySuffix - set word: " + unknownWord);
+					return true;
+				}
+				else {
+					myLogger.info("Not Pass\n");
+				}
+			}
+		}
+		return false;
+	}
+
+	public boolean posBySuffixCase2Helper(String unknownWord) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("posBySuffix");
+		
+		String pattern2 = "^[._.][a-z]+"; // , _nerved
+		myLogger.debug("Pattern2: "+pattern2);
+		
+		if (unknownWord.matches(pattern2)) {
+			this.myDataHolder.getWordPOSHolder().put(new WordPOSKey(unknownWord, "b"),
+					new WordPOSValue("*", 0, 0, null, null));
+			myLogger.info("posbysuffix set "+unknownWord + " a boundary word\n");
+			return true;
+		}
+		
+		return false;
+	}
+
+	
 	/**
 	 * return false or true depending on if the word contains the suffix as the
 	 * suffix
@@ -1439,13 +1459,13 @@ public class Learner {
 	 */
 	public boolean containSuffix(String word, String base, String suffix) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("posBySuffix");		
+		Logger myLogger = Logger.getLogger("posBySuffix.containSuffix");		
 		myLogger.trace("Enter containSuffix");
 		
 		boolean flag = false; // return value
 		boolean wordInWN = false; // if this word is in WordNet
 		boolean baseInWN = false;
-		WordNetAPI myWN;
+		WordNetAPI myWN = this.myUtility.getWordNet();
 
 		// check base
 		if (base.length() == 0) {
@@ -1455,7 +1475,6 @@ public class Learner {
 
 		base.replaceAll("_", ""); // cup_shaped
 
-		myWN = this.myUtility.getWordNet();
 		if (myWN.contains(word)) {
 			myLogger.trace("case 1.1");
 			wordInWN = true; // word is in WordNet
@@ -1487,13 +1506,17 @@ public class Learner {
 			}
 		}
 
-		// if WN recognize superlative, comparative adjs, return 1: e.g. er,
-		// est
+		// if WN recognize superlative, comparative adjs, return 1: e.g. er, est
 		else if (suffix.equals("er") || suffix.equals("est")) {
 			myLogger.trace("case 3.2");
 			if (wordInWN) {
-				if (myWN.isAdjective(word) || myWN.isAdverb(word)) {
+				boolean case1 =!myWN.isAdjective(word);
+				boolean case2 = myWN.isAdjective(base); 
+				if (case1 && case2) {
 					return true;
+				}
+				else {
+					return false;
 				}
 			}
 		}
