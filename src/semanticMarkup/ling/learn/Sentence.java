@@ -90,14 +90,15 @@ public class Sentence {
 		
 		Sentence mySentence = (Sentence) obj;
 		
-		return ((this.lead.equals(mySentence.lead))
-				&&(this.modifier.equals(mySentence.modifier))
-				&&(this.originalSentence.equals(mySentence.originalSentence))
-				&&(this.sentence.equals(mySentence.sentence))
-				&&(this.source.equals(mySentence.source))
-				&&(this.status.equals(mySentence.status))
-				&&(this.tag.equals(mySentence.tag))
-				&&(this.type.equals(mySentence.type)));
+		return ((StringUtility.equalsWithNull(this.source, mySentence.source))
+				&&(StringUtility.equalsWithNull(this.sentence, mySentence.sentence))
+				&&(StringUtility.equalsWithNull(this.originalSentence, mySentence.originalSentence))
+				&&(StringUtility.equalsWithNull(this.lead, mySentence.lead))
+				&&(StringUtility.equalsWithNull(this.status, mySentence.status))
+				&&(StringUtility.equalsWithNull(this.tag, mySentence.tag))
+				&&(StringUtility.equalsWithNull(this.modifier, mySentence.modifier))
+				&&(StringUtility.equalsWithNull(this.type, mySentence.type))
+				);
 	}
 	
 }

@@ -101,7 +101,7 @@ public class Learner {
 
 		// ???
 		this.posBySuffix();
-		//this.markupByPattern();
+		this.markupByPattern();
 		//this.markupIgnore();
 
 		// learning rules with high certainty
@@ -1540,72 +1540,71 @@ public class Learner {
 	}
 
 	public void markupByPattern() {
-		System.out.println("markupbypattern start");
-		// int cap=this.sentence.size();
-		int cap = this.myDataHolder.getSentenceHolder().size();
-		// ((ArrayList)this.tag).ensureCapacity(cap);
-		// ((ArrayList)this.modifier).ensureCapacity(cap);
-		// for (int i=0;i<this.originalSent.size();i++) {
-		for (int i = 0; i < cap; i++) {
-			// case 1
-			// if (this.originalSent.get(i).matches("^x=.*")) {
-			if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
-					.matches("^x=.*")) {
-				// tag.set(i, "chromosome");
-				// modifier.set(i, "");
-				this.myDataHolder.getSentenceHolder().get(i).setTag("chromosome");
-				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
-			}
-			// case 2
-			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
-					.matches("^2n=.*")) {
-				// tag.set(i, "chromosome");
-				// modifier.set(i, "");
-				this.myDataHolder.getSentenceHolder().get(i).setTag("chromosome");
-				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
-			}
-			// case 3
-			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
-					.matches("^x .*")) {
-				// tag.set(i, "chromosome");
-				// modifier.set(i, "");
-				this.myDataHolder.getSentenceHolder().get(i).setTag("chromosome");
-				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
-			}
-			// case 4
-			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
-					.matches("^2n .*")) {
-				// tag.set(i, "chromosome");
-				// modifier.set(i, "");
-				this.myDataHolder.getSentenceHolder().get(i).setTag("chromosome");
-				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
-			}
-			// case 5
-			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
-					.matches("^2 n.*")) {
-				// tag.set(i, "chromosome");
-				// modifier.set(i, "");
-				this.myDataHolder.getSentenceHolder().get(i).setTag("chromosome");
-				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
-			}
-			// case 6
-			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
-					.matches("^fl.*")) {
-				// tag.set(i, "flowerTime");
-				// modifier.set(i, "");
-				this.myDataHolder.getSentenceHolder().get(i).setTag("flowerTime");
-				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
-			}
-			// case 7
-			else if (this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence()
-					.matches("^fr.*")) {
-				// tag.set(i, "flowerTime");
-				// modifier.set(i, "");
-				this.myDataHolder.getSentenceHolder().get(i).setTag("flowerTime");
-				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
-			}
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("markupByPattern");		
+		myLogger.trace("Enter markupByPattern");
+		
+		int size = this.myDataHolder.getSentenceHolder().size();
+
+		for (int i = 0; i < size; i++) {			
+			boolean flag = markupByPatternHelper(this.myDataHolder.getSentenceHolder().get(i));			
 		}
-		System.out.println("markupbypattern end");
+		System.out.println("Quit markupByPattern");
+	}
+
+	public boolean markupByPatternHelper(Sentence sentence) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("markupByPattern");	
+		// case 1
+		if (sentence.getOriginalSentence().matches("^x=.*")) {
+			myLogger.trace("Case 1");
+			sentence.setTag("chromosome");
+			sentence.setModifier("");
+			return true;
+		}
+		// case 2
+		else if (sentence.getOriginalSentence().matches("^2n=.*")) {
+			myLogger.trace("Case 2");
+			sentence.setTag("chromosome");
+			sentence.setModifier("");
+			return true;
+		}
+		// case 3
+		else if (sentence.getOriginalSentence().matches("^x .*")) {
+			myLogger.trace("Case 3");
+			sentence.setTag("chromosome");
+			sentence.setModifier("");
+			return true;
+		}
+		// case 4
+		else if (sentence.getOriginalSentence().matches("^2n .*")) {
+			myLogger.trace("Case 4");
+			sentence.setTag("chromosome");
+			sentence.setModifier("");
+			return true;
+		}
+		// case 5
+		else if (sentence.getOriginalSentence().matches("^2 n.*")) {
+			myLogger.trace("Case 5");
+			sentence.setTag("chromosome");
+			sentence.setModifier("");
+			return true;
+		}
+		// case 6
+		else if (sentence.getOriginalSentence().matches("^fl.*")) {
+			myLogger.trace("Case 6");
+			sentence.setTag("flowerTime");
+			sentence.setModifier("");
+			return true;
+		}
+		// case 7
+		else if (sentence.getOriginalSentence().matches("^fr.*")) {
+			myLogger.trace("Case 7");
+			sentence.setTag("flowerTime");
+			sentence.setModifier("");
+			return true;
+		}
+		return false;
 	}
 
 	// private String IGNOREPTN ="(IGNOREPTN)"; //disabled

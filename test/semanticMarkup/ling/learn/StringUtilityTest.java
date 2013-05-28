@@ -145,4 +145,13 @@ public class StringUtilityTest {
 		
 	}
 	
+	@Test
+	public void testEqualsWithNull(){
+		assertEquals("equalsWithNull - null : null", true, StringUtility.equalsWithNull(null, null));
+		assertEquals("equalsWithNull - null : not null", false, StringUtility.equalsWithNull(null, "s2"));
+		assertEquals("equalsWithNull - not null : null", false, StringUtility.equalsWithNull("s1", null));
+		assertEquals("equalsWithNull - not null : not null - equal", true, StringUtility.equalsWithNull("abc", "abc"));
+		assertEquals("equalsWithNull - not null : not null - not equal", false, StringUtility.equalsWithNull("s1", "s2"));
+	}
+	
 }

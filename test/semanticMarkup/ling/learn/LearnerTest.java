@@ -513,10 +513,25 @@ public class LearnerTest {
 
 	}
 
-//	@Test
-//	public void testMarkupByPattern() {
-//		fail("Not yet implemented");
-//	}
+	@Test
+	public void testMarkupByPattern() {
+		//fail("Not yet implemented");
+	}
+	
+	@Test
+	public void testMarkupByPatternHelper(){
+		// case 1
+		Sentence mySentence1 = new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "tag1", "modifier1", "type1");
+		Sentence target1 = new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1");
+		tester.markupByPatternHelper(mySentence1);
+		assertEquals("markupByPatternHelper - case 1", target1,mySentence1);
+		
+		// case 2
+		Sentence mySentence2 = new Sentence("source2", "sentence2", "2n=abc...", "lead2", "status2", "tag2", "modifier2", null);
+		Sentence target2 = new Sentence("source2", "sentence2", "2n=abc...", "lead2", "status2", "chromosome", "", null);
+		tester.markupByPatternHelper(mySentence2);
+		assertEquals("markupByPatternHelper - case 2", target2,mySentence2);
+	}
 //
 //	@Test
 //	public void testMarkupIgnore() {
