@@ -3,8 +3,10 @@ package semanticMarkup.ling.learn;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -515,7 +517,18 @@ public class LearnerTest {
 
 	@Test
 	public void testMarkupByPattern() {
-		//fail("Not yet implemented");
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "sentence1", "x=word word word", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myTester.markupByPattern();
+		
+		List<Sentence> targetSentenceHolder = new LinkedList<Sentence>();
+		targetSentenceHolder.add(new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1"));
+		
+		assertEquals("markupByPattern", targetSentenceHolder, myTester.getDataHolder().getSentenceHolder());
 	}
 	
 	@Test
@@ -531,6 +544,36 @@ public class LearnerTest {
 		Sentence target2 = new Sentence("source2", "sentence2", "2n=abc...", "lead2", "status2", "chromosome", "", null);
 		tester.markupByPatternHelper(mySentence2);
 		assertEquals("markupByPatternHelper - case 2", target2,mySentence2);
+		
+		// case 3
+		Sentence mySentence3 = new Sentence("source", "sentence", "x word word", "lead", "status", "tag", "modifier", null);
+		Sentence target3 = new Sentence("source", "sentence", "x word word", "lead", "status", "chromosome", "", null);
+		tester.markupByPatternHelper(mySentence3);
+		assertEquals("markupByPatternHelper - case 3", target3, mySentence3);
+		
+		// case 4
+		Sentence mySentence4 = new Sentence("source", "sentence", "2n word word", "lead",null, "tag", "modifier", null);
+		Sentence target4 = new Sentence("source", "sentence", "2n word word", "lead", null, "chromosome", "", null);
+		tester.markupByPatternHelper(mySentence4);
+		assertEquals("markupByPatternHelper - case 4", target4, mySentence4);
+		
+		// case 5
+		Sentence mySentence5 = new Sentence("source", "sentence", "2 nword word", "lead", "status", "tag", "modifier", "");
+		Sentence target5 = new Sentence("source", "sentence", "2 nword word", "lead", "status", "chromosome", "", "");
+		tester.markupByPatternHelper(mySentence5);
+		assertEquals("markupByPatternHelper - case 5", target5, mySentence5);
+		
+		// case 6
+		Sentence mySentence6 = new Sentence("source", "sentence", "fl. word word", "lead", "status", null, null, "");
+		Sentence target6 = new Sentence("source", "sentence", "fl. word word", "lead", "status", "flowerTime", "", "");
+		tester.markupByPatternHelper(mySentence6);
+		assertEquals("markupByPatternHelper - case 6", target6, mySentence6);
+		
+		// case 7
+		Sentence mySentence7 = new Sentence("source", "sentence", "fr.word word", "lead", "status", null, "", "");
+		Sentence target7 = new Sentence("source", "sentence", "fr.word word", "lead", "status", "fruitTime", "", "");
+		tester.markupByPatternHelper(mySentence7);
+		assertEquals("markupByPatternHelper - case 7", target7, mySentence7);
 	}
 //
 //	@Test

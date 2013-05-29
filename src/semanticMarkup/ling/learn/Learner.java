@@ -1547,9 +1547,12 @@ public class Learner {
 		int size = this.myDataHolder.getSentenceHolder().size();
 
 		for (int i = 0; i < size; i++) {			
-			boolean flag = markupByPatternHelper(this.myDataHolder.getSentenceHolder().get(i));			
+			boolean flag = markupByPatternHelper(this.myDataHolder.getSentenceHolder().get(i));
+			if (flag) {
+				myLogger.debug("Updated Sentence #"+i);
+			}			
 		}
-		System.out.println("Quit markupByPattern");
+		myLogger.trace("Quite markupByPattern");
 	}
 
 	public boolean markupByPatternHelper(Sentence sentence) {
@@ -1600,7 +1603,7 @@ public class Learner {
 		// case 7
 		else if (sentence.getOriginalSentence().matches("^fr.*")) {
 			myLogger.trace("Case 7");
-			sentence.setTag("flowerTime");
+			sentence.setTag("fruitTime");
 			sentence.setModifier("");
 			return true;
 		}
