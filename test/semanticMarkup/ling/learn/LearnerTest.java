@@ -508,10 +508,6 @@ public class LearnerTest {
 				tester.containSuffix("lower", "low", "er")); // 222
 		assertEquals("containSuffix 223", true,
 				tester.containSuffix("bifid", "bi", "fid")); // 223
-		
-		
-		
-		
 
 	}
 
@@ -575,12 +571,37 @@ public class LearnerTest {
 		tester.markupByPatternHelper(mySentence7);
 		assertEquals("markupByPatternHelper - case 7", target7, mySentence7);
 	}
-//
-//	@Test
-//	public void testMarkupIgnore() {
-//		fail("Not yet implemented");
-//	}
-//
+
+	@Test
+	public void testMarkupIgnore() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "sentence1", "IGNOREPTN", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myTester.markupIgnore();
+		
+		List<Sentence> targetSentenceHolder = new LinkedList<Sentence>();
+		targetSentenceHolder.add(new Sentence("source1", "sentence1", "IGNOREPTN", "lead1", "status1", "ignore", "", "type1"));
+		
+		assertEquals("markupIgnore", targetSentenceHolder, myTester.getDataHolder().getSentenceHolder());
+
+	}
+
+	@Test
+	public void testMarkupIgnoreHelper() {
+		Sentence mySentence1 = new Sentence("source", "sentence", "IGNOREPTN", "lead", "status", null, "", "");
+		Sentence target1 = new Sentence("source", "sentence", "IGNOREPTN", "lead", "status", "ignore", "", "");
+		tester.markupIgnoreHelper(mySentence1);
+		assertEquals("markupIgnoreHelper", target1, mySentence1);
+		
+		Sentence mySentence2 = new Sentence("source", "sentence", " IGNOREPTN", "lead", "status", null, "", "");
+		Sentence target2 = new Sentence("source", "sentence", " IGNOREPTN", "lead", "status", "ignore", "", "");
+		tester.markupIgnoreHelper(mySentence2);
+		assertEquals("markupIgnoreHelper", target2, mySentence2);
+	}
+	
 //	@Test
 //	public void testDiscover() {
 //		fail("Not yet implemented");

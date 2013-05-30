@@ -72,8 +72,10 @@ public class Learner {
 	}
 
 	public DataHolder Learn(List<Treatment> treatments) {
-		System.out.println(String
-				.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("Learn");		
+		myLogger.trace(String.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
+
 		this.populateSentences(treatments);
 		this.populateUnknownWordsTable(this.myDataHolder.allWords);
 
@@ -102,7 +104,7 @@ public class Learner {
 		// ???
 		this.posBySuffix();
 		this.markupByPattern();
-		//this.markupIgnore();
+		this.markupIgnore();
 
 		// learning rules with high certainty
 		//this.discover("start");
@@ -1612,16 +1614,35 @@ public class Learner {
 
 	// private String IGNOREPTN ="(IGNOREPTN)"; //disabled
 	public void markupIgnore() {
-		// $sth =
-		// $dbh->prepare("update ".$prefix."_sentence set tag = 'ignore', modifier='' where originalsent rlike '(^| )$IGNOREPTN ' ");
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("markupIgnore");		
+		myLogger.trace("Enter markupIgnore");
+		
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			String thisSent = this.myDataHolder.getSentenceHolder().get(i).getOriginalSentence();
-			String p = "(^| )" + Constant.IGNOREPTN;
-			if (thisSent.matches("(^|^ )" + Constant.IGNOREPTN + ".?")) {
-				this.myDataHolder.getSentenceHolder().get(i).setTag("ignore");
-				this.myDataHolder.getSentenceHolder().get(i).setModifier("");
+			boolean flag = markupIgnoreHelper(this.myDataHolder.getSentenceHolder().get(i));
+			if (flag) {
+				myLogger.debug("Updated Sentence #"+i);
 			}
 		}
+		
+		myLogger.trace("Quite markupIgnore");
+	}
+
+	public boolean markupIgnoreHelper(Sentence sentence) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("markupIgnore");		
+		
+		String thisOriginalSentence = sentence.getOriginalSentence();
+		String pattern = "(^|^ )" + Constant.IGNOREPTN + ".*$";
+		if (thisOriginalSentence.matches(pattern)) {
+			sentence.setTag("ignore");
+			sentence.setModifier("");
+			myLogger.trace("Set Tag to \"ignore\", Modifier to \"\"");
+			
+			return true;
+		}
+		
+		return false;
 	}
 
 	public int discover(String s) {
