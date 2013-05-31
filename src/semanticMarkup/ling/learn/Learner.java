@@ -139,7 +139,7 @@ public class Learner {
 	 */
 	public int populateSentence(List<Treatment> treatments) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("populateSentence");
+		Logger myLogger = Logger.getLogger("learn.populateSentence");
 		myLogger.info("Reading sentences...");
 
 		String fileName;
@@ -1363,7 +1363,7 @@ public class Learner {
 	 */
 	public void posBySuffix() {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("posBySuffix");		
+		Logger myLogger = Logger.getLogger("learn.posBySuffix");		
 		myLogger.trace("Enter posBySuffix");
 		
 		Iterator<Map.Entry<String, String>> iterator = this.myDataHolder.getUnknownWordHolder()
@@ -1385,7 +1385,7 @@ public class Learner {
 
 	public boolean posBySuffixCase1Helper(String unknownWord) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("posBySuffix");
+		Logger myLogger = Logger.getLogger("learn.posBySuffix");
 		
 		String pattern1 = "^[a-z_]+(" + Constant.SUFFIX + ")$";
 		myLogger.debug("Pattern1: "+pattern1);
@@ -1415,7 +1415,7 @@ public class Learner {
 
 	public boolean posBySuffixCase2Helper(String unknownWord) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("posBySuffix");
+		Logger myLogger = Logger.getLogger("learn.posBySuffix");
 		
 		String pattern2 = "^[._.][a-z]+"; // , _nerved
 		myLogger.debug("Pattern2: "+pattern2);
@@ -1442,7 +1442,7 @@ public class Learner {
 	 */
 	public boolean containSuffix(String word, String base, String suffix) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("posBySuffix.containSuffix");		
+		Logger myLogger = Logger.getLogger("learn.posBySuffix.containSuffix");		
 		myLogger.trace("Enter containSuffix");
 		
 		boolean flag = false; // return value
@@ -1524,7 +1524,7 @@ public class Learner {
 
 	public void markupByPattern() {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("markupByPattern");		
+		Logger myLogger = Logger.getLogger("learn.markupByPattern");		
 		myLogger.trace("Enter markupByPattern");
 		
 		int size = this.myDataHolder.getSentenceHolder().size();
@@ -1596,7 +1596,7 @@ public class Learner {
 	// private String IGNOREPTN ="(IGNOREPTN)"; //disabled
 	public void markupIgnore() {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("markupIgnore");		
+		Logger myLogger = Logger.getLogger("learn.markupIgnore");		
 		myLogger.trace("Enter markupIgnore");
 		
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {

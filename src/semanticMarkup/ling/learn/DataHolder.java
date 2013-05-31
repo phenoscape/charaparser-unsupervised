@@ -249,7 +249,7 @@ public class DataHolder {
 	 */
 	public String resolveConflict(String newWord, String bPOS, String otherPOS) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("updateTable.resolveConflict");
+		Logger myLogger = Logger.getLogger("dataholder.updateTable.resolveConflict");
 		
 		myLogger.trace("Enter resolveConflict");
 
@@ -309,7 +309,7 @@ public class DataHolder {
 		 */
 		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("updateTable.discountPOS");
+		Logger myLogger = Logger.getLogger("dataholder.updateTable.discountPOS");
 		
 		myLogger.trace("Enter discountPOS");
 		
@@ -690,7 +690,7 @@ public class DataHolder {
 	public int markKnown(String word, String pos, String role, String table,
 			int increment) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("updateTable.markKnown");		
+		Logger myLogger = Logger.getLogger("dataholder.updateTable.markKnown");		
 		myLogger.trace("Enter markKnown");
 		
 		String pattern = "";
@@ -841,7 +841,7 @@ public class DataHolder {
 	 */
 	public int updatePOS(String newWord, String newPOS, String newRole, int increment) {		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("updateTable.updatePOS");
+		Logger myLogger = Logger.getLogger("dataholder.updateTable.updatePOS");
 		
 		myLogger.trace("Enter updatePOS");
 		myLogger.trace("Word: "+newWord+", POS: "+newPOS);
@@ -962,7 +962,7 @@ public class DataHolder {
 	public int changePOS(String newWord, String oldPOS, String newPOS,
 			String newRole, int increment) {		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("updateTable.changePOS");		
+		Logger myLogger = Logger.getLogger("dataholder.updateTable.changePOS");		
 		myLogger.trace("Enter changePOS");
 		myLogger.trace("newWord: "+newWord);
 		myLogger.trace("oldPOS: "+oldPOS);
@@ -1103,7 +1103,7 @@ public class DataHolder {
 		 */
 		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("updateTable.tagSentenceWithWT");
+		Logger myLogger = Logger.getLogger("dataholder.updateTable.tagSentenceWithWT");
 		
 		myLogger.trace("Enter tagSentenceWithMT");
 		
