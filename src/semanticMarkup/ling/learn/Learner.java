@@ -76,7 +76,7 @@ public class Learner {
 		Logger myLogger = Logger.getLogger("Learn");		
 		myLogger.trace(String.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
 
-		this.populateSentences(treatments);
+		this.populateSentence(treatments);
 		this.populateUnknownWordsTable(this.myDataHolder.allWords);
 
 		/*
@@ -137,8 +137,10 @@ public class Learner {
 	 * @param treatments
 	 * @return number of sentences
 	 */
-	public int populateSentences(List<Treatment> treatments) {
-		System.out.println("Reading sentences:\n");
+	public int populateSentence(List<Treatment> treatments) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("populateSentence");
+		myLogger.info("Reading sentences...");
 
 		String fileName;
 		int type;
@@ -154,8 +156,7 @@ public class Learner {
 			if (text != null) {
 				// process this text
 				text = this.handleText(text);
-				if (populateSentence_debug)
-					System.out.println("Text: " + text);
+				myLogger.debug("Text: " + text);
 
 				// use Apache OpenNLP to do sentence segmentation
 				String sentences[] = {};
@@ -166,14 +167,8 @@ public class Learner {
 				
 				// for each sentence, do some operations
 				for (int j = 0; j < sentences.length; j++) {
-					if (populateSentence_debug)
-						System.out.println("Sentence " + j + ": "
-								+ sentences[j]);
-					if (populateSentence_debug)
-						System.out.println(sentences[j]);
-//					if (sentences[j].equals("mesodentine")) {
-//						System.out.println(sentences[j]);
-//					}
+					myLogger.debug("Sentence " + j + ": " + sentences[j]);
+					
 					// if(!/\w+/){next;}
 					if (!sentences[j].matches("^.*\\w+.*$")) {
 						continue;
@@ -197,9 +192,6 @@ public class Learner {
 				for (int j = 0; j < validIndex.size(); j++) {
 					String line = sentences[validIndex.get(j)];
 					String oline = sentCopy.get(j);
-//					if (oline.equals("mesodentine")) {
-//						System.out.println(oline);
-//					}
 
 					// handle line first
 					// remove all ' to avoid escape problems
@@ -264,10 +256,7 @@ public class Learner {
 			}
 		}
 
-		//int numWord = this.populateUnknownWordsTable(WORDS);
-
-		System.out.println("Total sentences = " + SENTID);
-		//System.out.println("Total words = " + numWord);
+		myLogger.info("Total sentences = " + SENTID);
 
 		return SENTID;
 	}
@@ -319,6 +308,7 @@ public class Learner {
 		// special markers, to avoid split within brackets during
 		// sentence segmentation
 		// System.out.println("Before Hide: "+text);
+		
 		text = this.myPopulateSentenceUtility.hideMarksInBrackets(text);
 		// System.out.println("After Hide: "+text+"\n");
 
@@ -455,6 +445,9 @@ public class Learner {
 	 * @return
 	 */
 	public int populateUnknownWordsTable(Map<String, Integer> WORDS) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("populateSentence");
+
 		int count = 0;
 
 		Iterator<String> iter = WORDS.keySet().iterator();
@@ -470,6 +463,8 @@ public class Learner {
 			count++;
 		}
 
+		myLogger.info("Total words = " + count);
+		
 		return count;
 	}
 	
@@ -549,9 +544,7 @@ public class Learner {
 		Iterator<String> iter = descriptors.iterator();
 		while (iter.hasNext()) {
 			String descriptor = iter.next();
-//			if (descriptor.equals("circular")){
-//				System.out.println();
-//			}
+			
 			if (!StringUtility.isMatchedWords(descriptor, Constant.FORBIDDEN)) {
 				this.myDataHolder.updateTable(descriptor, "b", "", "wordpos", 1);
 			}
@@ -815,11 +808,6 @@ public class Learner {
 			String source = sent.getSource();
 			String sentence = sent.getSentence();
 			String originalSentence = sent.getOriginalSentence();
-			
-//			if (originalSentence.equals("mesodentine")){
-//				System.out.println("oSent:");
-//				System.out.println(originalSentence);
-//			}
 
 			if (this.characterHeuristics_debug) {
 				System.out.println(source);
@@ -890,14 +878,7 @@ public class Learner {
 					originalSentence, "-");
 //			System.out.println("oSent:");
 //			System.out.println(originalSentence);
-//			if (originalSentence.equals("mesodentine")){
-//				System.out.println("oSent:");
-//				System.out.println(originalSentence);
-//			}
 			
-//			if (originalSentence.equals("Body scale profile")) {
-//				System.out.println("Body scale profile");
-//			}
 			// Descriptor rule 1: single term descriptions are descriptors
 			descriptors.addAll(this.getDescriptorsRule1(source,
 					originalSentence, nouns));
@@ -1415,17 +1396,17 @@ public class Learner {
 					unknownWord);
 			if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
 					&& matcher.matches()) {
-				myLogger.info("posBySuffix - check word: " + unknownWord);
+				myLogger.debug("posBySuffix - check word: " + unknownWord);
 				String base = matcher.group(1);
 				String suffix = matcher.group(2);
 				if (this.containSuffix(unknownWord, base, suffix)) {
-					myLogger.info("Pass\n");
+					myLogger.debug("Pass\n");
 					this.myDataHolder.updateTable(unknownWord, "b", "*", "wordpos", 0);							
-					myLogger.info("posBySuffix - set word: " + unknownWord);
+					myLogger.debug("posBySuffix - set word: " + unknownWord);
 					return true;
 				}
 				else {
-					myLogger.info("Not Pass\n");
+					myLogger.debug("Not Pass\n");
 				}
 			}
 		}
@@ -1442,7 +1423,7 @@ public class Learner {
 		if (unknownWord.matches(pattern2)) {
 			this.myDataHolder.getWordPOSHolder().put(new WordPOSKey(unknownWord, "b"),
 					new WordPOSValue("*", 0, 0, null, null));
-			myLogger.info("posbysuffix set "+unknownWord + " a boundary word\n");
+			myLogger.debug("posbysuffix set "+unknownWord + " a boundary word\n");
 			return true;
 		}
 		
