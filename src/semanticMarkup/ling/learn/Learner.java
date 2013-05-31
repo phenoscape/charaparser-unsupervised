@@ -107,7 +107,9 @@ public class Learner {
 		this.markupIgnore();
 
 		// learning rules with high certainty
-		//this.discover("start");
+		
+		myLogger.info("Learning rules with high certainty:");
+		this.discover("start");
 		// bootstrapping rules
 		//this.discover("normal");
 
@@ -1626,21 +1628,28 @@ public class Learner {
 		return false;
 	}
 
-	public int discover(String s) {
+	
+	public int discover(String status) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.discover");
+		
+		myLogger.trace("Enter Discover - Status: "+status);
+		
+		
 		int newDisc = 0;
 
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
 			Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(i);
 			// sentid
-			String sent = sentEntry.getSentence();
-			String lead = sentEntry.getLead();
-			String tag = sentEntry.getTag();
-			String status = sentEntry.getStatus();
-			if (!(tag == null || !tag.equals("ignore") && status.equals(s))) {
+			String thisSentence = sentEntry.getSentence();
+			String thisLead = sentEntry.getLead();
+			String thisTag = sentEntry.getTag();
+			String thisStatus = sentEntry.getStatus();
+			if (!(thisTag == null || !thisTag.equals("ignore") && thisStatus.equals(status))) {
 				continue;
 			}
 
-			String[] startWords = lead.split("\\s+");
+			String[] startWords = thisLead.split("\\s+");
 			// @startwords = split(/\s+/,$lead);
 
 			// $pattern = buildpattern(@startwords);
@@ -1648,7 +1657,7 @@ public class Learner {
 
 			if (pattern.matches("^.*\\w+.*$")) {
 				// ids of untagged sentences that match the pattern
-				Set<Integer> matched = matchPattern(pattern, status, false);
+				Set<Integer> matched = matchPattern(pattern, thisStatus, false);
 				int round = 0;
 				int numNew = 0;
 
@@ -1661,6 +1670,8 @@ public class Learner {
 
 		}
 
+		myLogger.trace("Return " + newDisc);
+		myLogger.trace("Quite discover");
 		return newDisc;
 	}
 
