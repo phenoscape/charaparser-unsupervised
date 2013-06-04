@@ -79,6 +79,14 @@ public class Sentence {
 		this.modifier=modifier;
 	}
 	
+	public String getType() {
+		return this.type;
+	}
+	
+	public void setType(String type) {
+		this.type=type;
+	}
+	
 	public boolean equals(Object obj){
 		if (obj==this){
 			return true;

@@ -516,99 +516,7 @@ public class DataHolder {
 		
 		return modifier;
 	}
-	
-	
-	/******** Utilities *************/
-	
-	public void add2Holder(byte holderID, List<String> args){
 		
-		if (holderID == DataHolder.UNKNOWNWORD) {
-			this.unknownWordTable = this.add2UnknowWordHolder(this.unknownWordTable, args);
-		}
-		
-		if (holderID == DataHolder.WORDPOS) {
-			this.wordPOSTable = this.add2WordPOSHolder(this.wordPOSTable, args);
-		}
-		
-		if (holderID == DataHolder.SINGULAR_PLURAL) {
-			this.singularPluralTable = this.add2SingularPluralHolder(this.singularPluralTable, args);
-		}
-		
-		if (holderID == DataHolder.DISCOUNTED) {
-			this.discountedTable = this.add2DiscountedHolder(this.discountedTable, args);
-		}
-		
-		if (holderID == DataHolder.SENTENCE) {
-			this.sentenceTable = this.add2SentenceHolder(this.sentenceTable,args);
-		}
-	}
-
-	public Map<String, String> add2UnknowWordHolder(Map<String, String> unknownWordHolder, List<String> args){
-		int index = 0;
-		
-		String word = args.get(index++);
-		String flag = args.get(index++);
-		unknownWordHolder.put(word, flag);
-		
-		return unknownWordHolder;
-	}
-	
-	public Map<WordPOSKey, WordPOSValue> add2WordPOSHolder(Map<WordPOSKey, WordPOSValue> wordPOSHolder, List<String> args){
-		int index = 0;
-		
-		String word = args.get(index++);
-		String POS = args.get(index++);
-		String role = args.get(index++);
-		int certaintyU = new Integer(args.get(index++));
-		int certaintyL = new Integer(args.get(index++));
-		String savedFlag = args.get(index++);
-		String savedID = args.get(index++);
-		wordPOSHolder.put(
-				new WordPOSKey(word, POS), 
-				new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID));
-		
-		return wordPOSHolder; 
-	}
-	
-	public Set<SingularPluralPair> add2SingularPluralHolder(Set<SingularPluralPair> singularPluralHolder, List<String> args){
-		int index = 0;
-		
-		String singular = args.get(index++);
-		String plural = args.get(index++);
-		singularPluralHolder.add(new SingularPluralPair(singular, plural));
-		
-		return singularPluralHolder; 
-	}
-	
-	public Map<DiscountedKey, String> add2DiscountedHolder(Map<DiscountedKey, String> discountedHolder, List<String> args){
-		int index = 0;
-		
-		String word = args.get(index++);
-		String POS = args.get(index++);
-		String newPOS = args.get(index++);
-		discountedHolder.put(new DiscountedKey(word, POS), newPOS);
-		
-		return discountedHolder; 
-	}
-
-	public List<Sentence> add2SentenceHolder(List<Sentence> sentenceTable,
-			List<String> args) {
-		int index = 0;
-		
-		String source=args.get(index++);
-		String sentence=args.get(index++);
-		String originalSentence=args.get(index++);
-		String lead=args.get(index++);
-		String status=args.get(index++);
-		String tag=args.get(index++);
-		String modifier=args.get(index++);
-		String type=args.get(index++);
-		
-		sentenceTable.add(new Sentence(source, sentence, originalSentence, lead, status, tag, modifier, type));
-		return sentenceTable;
-
-	}
-	
 	/**
 	 * 
 	 * @param word
@@ -1193,4 +1101,126 @@ public class DataHolder {
 
 		return variations;
 	}
+	
+	/******** Utilities *************/
+	
+	public void add2Holder(byte holderID, List<String> args){
+		
+		if (holderID == DataHolder.UNKNOWNWORD) {
+			this.unknownWordTable = this.add2UnknowWordHolder(this.unknownWordTable, args);
+		}
+		
+		if (holderID == DataHolder.WORDPOS) {
+			this.wordPOSTable = this.add2WordPOSHolder(this.wordPOSTable, args);
+		}
+		
+		if (holderID == DataHolder.SINGULAR_PLURAL) {
+			this.singularPluralTable = this.add2SingularPluralHolder(this.singularPluralTable, args);
+		}
+		
+		if (holderID == DataHolder.DISCOUNTED) {
+			this.discountedTable = this.add2DiscountedHolder(this.discountedTable, args);
+		}
+		
+		if (holderID == DataHolder.SENTENCE) {
+			this.sentenceTable = this.add2SentenceHolder(this.sentenceTable,args);
+		}
+	}
+
+	public Map<String, String> add2UnknowWordHolder(Map<String, String> unknownWordHolder, List<String> args){
+		int index = 0;
+		
+		String word = args.get(index++);
+		String flag = args.get(index++);
+		unknownWordHolder.put(word, flag);
+		
+		return unknownWordHolder;
+	}
+	
+	public Map<WordPOSKey, WordPOSValue> add2WordPOSHolder(Map<WordPOSKey, WordPOSValue> wordPOSHolder, List<String> args){
+		int index = 0;
+		
+		String word = args.get(index++);
+		String POS = args.get(index++);
+		String role = args.get(index++);
+		int certaintyU = new Integer(args.get(index++));
+		int certaintyL = new Integer(args.get(index++));
+		String savedFlag = args.get(index++);
+		String savedID = args.get(index++);
+		wordPOSHolder.put(
+				new WordPOSKey(word, POS), 
+				new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID));
+		
+		return wordPOSHolder; 
+	}
+	
+	public Set<SingularPluralPair> add2SingularPluralHolder(Set<SingularPluralPair> singularPluralHolder, List<String> args){
+		int index = 0;
+		
+		String singular = args.get(index++);
+		String plural = args.get(index++);
+		singularPluralHolder.add(new SingularPluralPair(singular, plural));
+		
+		return singularPluralHolder; 
+	}
+	
+	public Map<DiscountedKey, String> add2DiscountedHolder(Map<DiscountedKey, String> discountedHolder, List<String> args){
+		int index = 0;
+		
+		String word = args.get(index++);
+		String POS = args.get(index++);
+		String newPOS = args.get(index++);
+		discountedHolder.put(new DiscountedKey(word, POS), newPOS);
+		
+		return discountedHolder; 
+	}
+
+	public List<Sentence> add2SentenceHolder(List<Sentence> sentenceTable,
+			List<String> args) {
+		int index = 0;
+		
+		String source=args.get(index++);
+		String sentence=args.get(index++);
+		String originalSentence=args.get(index++);
+		String lead=args.get(index++);
+		String status=args.get(index++);
+		String tag=args.get(index++);
+		String modifier=args.get(index++);
+		String type=args.get(index++);
+		
+		sentenceTable.add(new Sentence(source, sentence, originalSentence, lead, status, tag, modifier, type));
+		return sentenceTable;
+
+	}
+	
+	// Holder Output
+	void printHolder(byte holderID) {
+		if (holderID == DataHolder.SENTENCE) {
+			printHolder(holderID, 0, this.sentenceTable.size()-1);
+		}
+		
+	}
+	
+	void printHolder(byte holderID, int startIndex, int endIndex){
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.discover");
+		
+		if (holderID == DataHolder.SENTENCE) {
+			for (int i = startIndex; i<=endIndex; i++) {
+				Sentence sentence = this.sentenceTable.get(i);
+				myLogger.info("Sentence ID: "+i);
+				myLogger.info("Source: "+sentence.getSource());
+				myLogger.info("Sentence: "+sentence.getSentence());
+				myLogger.info("Original Sentence: "+sentence.getSentence());
+				myLogger.info("Lead: "+sentence.getLead());
+				myLogger.info("Status: "+sentence.getStatus());
+				myLogger.info("Tag: "+sentence.getTag());
+				myLogger.info("Modifier: "+sentence.getModifier());
+				myLogger.info("Type: "+sentence.getType());
+				myLogger.info("\n");
+			}
+			myLogger.info("Total: "+(endIndex-startIndex+1)+"\n");
+		}
+	}
+
 }

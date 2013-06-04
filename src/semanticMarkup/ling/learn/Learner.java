@@ -451,7 +451,7 @@ public class Learner {
 	 */
 	public int populateUnknownWordsTable(Map<String, Integer> WORDS) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("populateSentence");
+		Logger myLogger = Logger.getLogger("learn.populateSentence");
 
 		int count = 0;
 
@@ -1645,6 +1645,8 @@ public class Learner {
 		
 		int newDisc = 0;
 		
+		this.myDataHolder.printHolder(DataHolder.SENTENCE);
+		
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
 			Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(i);
 			// sentid
@@ -1653,37 +1655,51 @@ public class Learner {
 			String thisTag = sentEntry.getTag();
 			String thisStatus = sentEntry.getStatus();
 			//if (!(thisTag == null || !thisTag.equals("ignore") 
-				
-			if ((!thisTag.equals("ignore") || (thisTag == null))
+			
+			//myLogger.debug("Tag: "+thisTag);
+
+			if ((
+					//!thisTag.equals("ignore") 
+					
+					!StringUtility.equalsWithNull(thisTag, "ignore")
+					
+					|| (thisTag == null)
+					
+					)
 					&& thisStatus.equals(status)) {
 				
-				//if(ismarked($sid)){next;} #marked, check $sid for most recent info.
-				// marked, check $sid for most recent info.
-				if (isMarked(i)) {
+				myLogger.debug("Sentence: "+i+", Tag: "+thisTag);
+				myLogger.debug("Sentence: "+thisSentence);
+				// tag is not null
+				if (isMarked(this.myDataHolder.getSentenceHolder().get(i))) {
+					myLogger.debug("Not Pass");
 					continue;
 				}
 				
+				// tag is null
+				myLogger.debug("Pass");
 				
 				
-				String[] startWords = thisLead.split("\\s+");
-				// @startwords = split(/\s+/,$lead);
-
-				// $pattern = buildpattern(@startwords);
-				String pattern = buildPattern(startWords);
-
-				if (pattern.matches("^.*\\w+.*$")) {
-					// ids of untagged sentences that match the pattern
-					Set<Integer> matched = matchPattern(pattern, thisStatus,
-							false);
-					int round = 0;
-					int numNew = 0;
-
-					do {
-						numNew = ruleBasedLearn(matched);
-						newDisc = newDisc + numNew;
-						round++;
-					} while (numNew > 0);
-				}
+				
+//				String[] startWords = thisLead.split("\\s+");
+//				// @startwords = split(/\s+/,$lead);
+//
+//				// $pattern = buildpattern(@startwords);
+//				String pattern = buildPattern(startWords);
+//
+//				if (pattern.matches("^.*\\w+.*$")) {
+//					// ids of untagged sentences that match the pattern
+//					Set<Integer> matched = matchPattern(pattern, thisStatus,
+//							false);
+//					int round = 0;
+//					int numNew = 0;
+//
+//					do {
+//						numNew = ruleBasedLearn(matched);
+//						newDisc = newDisc + numNew;
+//						round++;
+//					} while (numNew > 0);
+//				}
 
 			}
 
@@ -1698,12 +1714,13 @@ public class Learner {
 	 * A helper of method discover(). Check if the tag of the i-th sentence is
 	 * NOT null
 	 * 
-	 * @param i
+	 * @param sentence
+	 *            the sentence to check
 	 * @return if the tag of the i-th sentence is NOT null, returns true;
 	 *         otherwise returns false
 	 */
-	public boolean isMarked(int i) {
-		String thisTag = this.myDataHolder.getSentenceHolder().get(i).getTag();
+	public boolean isMarked(Sentence sentence) {
+		String thisTag = sentence.getTag();
 
 		if (thisTag != null) {
 			return true;
