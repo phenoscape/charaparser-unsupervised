@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,11 +20,19 @@ public class DataHolder {
 	// all unique words in the input treatments
 	public Map<String, Integer> allWords;
 	
-	// Data holders	
+	// Data holders
+	// Table heuristicnoun
+	private Map<String, String> heuristicNounTable = new HashMap<String, String>();
+	public static final byte HEURISTICNOUN = 3;
+
 	// Table sentence
 	private List<Sentence> sentenceTable = new LinkedList<Sentence>();
 	public static final byte SENTENCE = 0;
-	
+
+	// Table singularPlural
+	private Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
+	public static final byte SINGULAR_PLURAL = 4;
+
 	// Table unknownword
 	private Map<String, String> unknownWordTable = new HashMap<String, String>();
 	public static final byte UNKNOWNWORD = 1;
@@ -31,15 +40,7 @@ public class DataHolder {
 	// Table wordpos
 	private Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
 	public static final byte WORDPOS = 2;
-
-	// Table heuristicnoun
-	private Map<String, String> heuristicNounTable = new HashMap<String, String>();
-	public static final byte HEURISTICNOUN = 3;
-
-	// Table singularPlural
-	private Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
-	public static final byte SINGULAR_PLURAL = 4;
-
+	
 	// Table modifier
 	private Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
 	public static final byte MODIFIER = 5;
@@ -1199,6 +1200,18 @@ public class DataHolder {
 			printHolder(holderID, 0, this.sentenceTable.size()-1);
 		}
 		
+		if (holderID == DataHolder.SINGULAR_PLURAL) {
+			printHolder(holderID, 0, this.singularPluralTable.size()-1);
+		}
+		
+		if (holderID == DataHolder.UNKNOWNWORD) {
+			printHolder(holderID, 0, this.unknownWordTable.size()-1);
+		}
+		
+		if (holderID == DataHolder.WORDPOS) {
+			printHolder(holderID, 0, this.wordPOSTable.size()-1);
+		}
+		
 	}
 	
 	void printHolder(byte holderID, int startIndex, int endIndex){
@@ -1219,8 +1232,64 @@ public class DataHolder {
 				myLogger.info("Type: "+sentence.getType());
 				myLogger.info("\n");
 			}
-			myLogger.info("Total: "+(endIndex-startIndex+1)+"\n");
 		}
-	}
+		
+		if (holderID == DataHolder.SINGULAR_PLURAL) {
+			int index = 0;
+			Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+			while (iter.hasNext()) {
+				if ((index >= startIndex) && (index <=endIndex)) {
+					SingularPluralPair entry = iter.next();
+					
+					myLogger.info("Index: " + index);
+					myLogger.info("Singular: " + entry.getSingular());
+					myLogger.info("Plural: " + entry.getPlural());
+					myLogger.info("\n");
+				}
+				index++;
+			}
+		}
+		
+		if (holderID == DataHolder.UNKNOWNWORD) {
+			int index = 0;
+			Iterator<Entry<String, String>> iter = this.unknownWordTable.entrySet().iterator();
+			
+			while (iter.hasNext()) {
+				if ((index >= startIndex) && (index <= endIndex)) {
+					Entry<String, String> entry = iter.next();
+					
+					myLogger.info("Index: " + index);
+					myLogger.info("Key: " + entry.getKey());
+					myLogger.info("Value: " + entry.getValue());
+					myLogger.info("\n");
+				}
+				index++;
+			}
+		}
+		
+		if (holderID == DataHolder.WORDPOS) {
+			int index = 0;
+			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();			
+			while (iter.hasNext()) {				
+				if ((index >= startIndex) && (index <= endIndex)) {
+					Entry<WordPOSKey, WordPOSValue> entry = iter.next();
+					
+					myLogger.info("Index: "+index);
+					myLogger.info("Word: " + entry.getKey().getWord());
+					myLogger.info("POS: " + entry.getKey().getPOS());
+					myLogger.info("Role: " + entry.getValue().getRole());
+					myLogger.info("CertaintyU: " + entry.getValue().getCertaintyU());
+					myLogger.info("CertaintyL: " + entry.getValue().getCertaintyL());
+					myLogger.info("Saved Flag: " + entry.getValue().getSavedFlag());
+					myLogger.info("Saved ID: " + entry.getValue().getSavedID());
+					myLogger.info("\n");
 
+				}
+				index++;
+			}
+			
+		}
+		
+		myLogger.info("Total: "+(endIndex-startIndex+1)+"\n");
+	}
 }

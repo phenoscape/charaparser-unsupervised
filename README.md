@@ -23,3 +23,6 @@ The regular expression like "blv?d" would match both "blvd" and "bld". The quest
 		    1.1.1. If the POS is "s" or "p", delete all entries contains word from Singularplural holder as well
         1.1. Else insert (nword, Oldpos, newpos) into discounted table
 
+* discover
+** with parameter "start"
+At the every beginning, only those sentence whose first word is a p, could have a tag of "start", see populateSentece section.

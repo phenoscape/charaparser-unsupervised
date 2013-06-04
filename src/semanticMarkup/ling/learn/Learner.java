@@ -108,6 +108,8 @@ public class Learner {
 		this.markupIgnore();
 
 		// learning rules with high certainty
+		// At the every beginning, only those sentence whose first word is a p,
+		// could have a tag of "start", see populateSentece - getFirstNWords section -Dongye
 		myLogger.info("Learning rules with high certainty:");
 		this.discover("start");
 		
@@ -1658,6 +1660,8 @@ public class Learner {
 			
 			//myLogger.debug("Tag: "+thisTag);
 
+			
+			
 			if ((
 					//!thisTag.equals("ignore") 
 					
