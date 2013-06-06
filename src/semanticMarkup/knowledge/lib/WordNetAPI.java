@@ -29,9 +29,23 @@ public class WordNetAPI implements IPOSKnowledgeBase {
 		dictionary.open();
 	}
 
+//	@Override
+//	public boolean isNoun(String word) {
+//		return dictionary.getIndexWord(word, edu.mit.jwi.item.POS.NOUN) != null;
+//	}
+	
 	@Override
 	public boolean isNoun(String word) {
-		return dictionary.getIndexWord(word, edu.mit.jwi.item.POS.NOUN) != null;
+		WordnetStemmer myWordnetStemmer = new WordnetStemmer(dictionary);
+		List<String> stems = myWordnetStemmer.findStems(word, null);
+
+		for (int i = 0; i < stems.size(); i++) {
+			String wordStem = stems.get(i);
+			if(dictionary.getIndexWord(wordStem, edu.mit.jwi.item.POS.NOUN) != null) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -115,12 +129,29 @@ public class WordNetAPI implements IPOSKnowledgeBase {
 		}
 	}
 
+//	@Override
+//	public boolean contains(String word) {
+//		for(edu.mit.jwi.item.POS pos : edu.mit.jwi.item.POS.values()) {
+//			IIndexWord indexWord = dictionary.getIndexWord(word, pos);
+//			if(indexWord!=null)
+//				return true;
+//		}
+//		return false;
+//	}
+	
 	@Override
 	public boolean contains(String word) {
-		for(edu.mit.jwi.item.POS pos : edu.mit.jwi.item.POS.values()) {
-			IIndexWord indexWord = dictionary.getIndexWord(word, pos);
-			if(indexWord!=null)
-				return true;
+		WordnetStemmer myWordnetStemmer = new WordnetStemmer(dictionary);
+		List<String> stems = myWordnetStemmer.findStems(word, null);
+
+		for (int i = 0; i < stems.size(); i++) {
+			String wordStem = stems.get(i);
+
+			for (edu.mit.jwi.item.POS pos : edu.mit.jwi.item.POS.values()) {
+				IIndexWord indexWord = dictionary.getIndexWord(wordStem, pos);
+				if (indexWord != null)
+					return true;
+			}
 		}
 		return false;
 	}

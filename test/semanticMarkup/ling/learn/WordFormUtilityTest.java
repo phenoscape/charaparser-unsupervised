@@ -43,8 +43,8 @@ public class WordFormUtilityTest {
 		assertEquals ("checkWN - case 2.1.1", "ossified", tester.checkWN("ossified","singular"));
 		assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("ossified","number"));
 		// These two tests not passed!
-		//assertEquals ("checkWN - case 2.1.1", "extending", tester.checkWN("extending","singular"));
-		//assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("extending","number"));
+		assertEquals ("checkWN - case 2.1.1", "extending", tester.checkWN("extending","singular"));
+		assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("extending","number"));
 		assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("extends", "number"));
 		// Case 2.1.2
 		assertEquals ("checkWN - case 2.1.2", "stay", tester.checkWN("stays","singular"));
