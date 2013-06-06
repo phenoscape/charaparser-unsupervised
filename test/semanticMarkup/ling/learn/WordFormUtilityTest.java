@@ -42,10 +42,12 @@ public class WordFormUtilityTest {
 		assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("conical","number"));
 		assertEquals ("checkWN - case 2.1.1", "ossified", tester.checkWN("ossified","singular"));
 		assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("ossified","number"));
-		// These two tests not passed!
+		
 		assertEquals ("checkWN - case 2.1.1", "extending", tester.checkWN("extending","singular"));
 		assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("extending","number"));
 		assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("extends", "number"));
+		
+		assertEquals ("checkWN - case 2.1.1", "x", tester.checkWN("smaller", "number"));
 		// Case 2.1.2
 		assertEquals ("checkWN - case 2.1.2", "stay", tester.checkWN("stays","singular"));
 		assertEquals ("checkWN - case 2.1.2", "p", tester.checkWN("stays","number"));
@@ -83,7 +85,12 @@ public class WordFormUtilityTest {
 		// Method getNumber
 		assertEquals ("getNumber - not match", "s", tester.getNumber("jxbz"));
 		assertEquals ("getNumber - case 1", "", tester.getNumber("only"));
-		assertEquals ("getNumber - case 3", "s", tester.getNumber("uroneural"));	
+		assertEquals ("getNumber - case 3", "s", tester.getNumber("uroneural"));
+		
+		// These test cases are added from the point when populateSentence() is
+		// called, it check the first the first word, if it is a "p", mark the
+		// its tag as "start", otherwise mark it as "normal". 
+		//assertEquals ("getNumber - discover", "p", tester.getNumber("smaller"));
 	}
 	
 	@Test

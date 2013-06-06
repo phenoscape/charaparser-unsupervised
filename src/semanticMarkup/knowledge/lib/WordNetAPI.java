@@ -37,7 +37,7 @@ public class WordNetAPI implements IPOSKnowledgeBase {
 	@Override
 	public boolean isNoun(String word) {
 		WordnetStemmer myWordnetStemmer = new WordnetStemmer(dictionary);
-		List<String> stems = myWordnetStemmer.findStems(word, null);
+		List<String> stems = myWordnetStemmer.findStems(word, edu.mit.jwi.item.POS.NOUN);
 
 		for (int i = 0; i < stems.size(); i++) {
 			String wordStem = stems.get(i);
