@@ -1896,6 +1896,12 @@ public class Learner {
 	// tag need to be adjusted (not by doit function), also need to adjust
 	// certainty counts.
 	public void doIt(int sentID) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt");
+		
+		myLogger.trace("Enter doIt");
+		myLogger.trace("sentence ID: " + sentID);
+		
 		int sign = 0;
 
 		Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(sentID);
@@ -1937,6 +1943,8 @@ public class Learner {
 				}
 			}
 		}
+		
+		myLogger.trace("Quit doIt");
 	}
 
 	/**
