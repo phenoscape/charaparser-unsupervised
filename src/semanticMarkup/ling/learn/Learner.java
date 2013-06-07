@@ -1691,30 +1691,25 @@ public class Learner {
 				}
 				
 				
-				
 				String[] startWords = thisLead.split("\\s+");
-//				myLogger.debug("startWords: "+startWords.toString());
-//				// @startwords = split(/\s+/,$lead);
-//
-//				// $pattern = buildpattern(@startwords);
+				myLogger.debug("startWords: "+startWords.toString());
+
 				String pattern = buildPattern(startWords);
-//
-//				if (pattern.matches("^.*\\w+.*$")) {
-//					// ids of untagged sentences that match the pattern
-//					Set<Integer> matched = matchPattern(pattern, thisStatus,
-//							false);
+				myLogger.info("Build pattern ["+pattern+"] from starting words ["+thisLead+"]");
+				
+				if (pattern != null) {
+					// IDs of untagged sentences that match the pattern
+					Set<Integer> matched = matchPattern(pattern, status, false);
 //					int round = 0;
 //					int numNew = 0;
-//
+
 //					do {
 //						numNew = ruleBasedLearn(matched);
 //						newDisc = newDisc + numNew;
 //						round++;
 //					} while (numNew > 0);
-//				}
-
+				}
 			}
-
 		}
 
 		myLogger.trace("Return " + newDisc);
@@ -1741,6 +1736,105 @@ public class Learner {
 		}
 	}
 
+	/**
+	 * build a pattern based on existing checked word set, and the start words
+	 * 
+	 * @param startWords
+	 * @return a pattern. If no pattern is generated, return null
+	 */
+	public String buildPattern(String[] startWords) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.buildPattern");
+		
+		myLogger.trace("Enter buildPattern");
+		myLogger.trace("Start Words: "+startWords);
+				
+		Set<String> newWords = new HashSet<String>();
+		String temp = "";
+		String prefix = "\\w+\\s";
+		String pattern = "";
+		
+		Set<String> checkedWords = this.checkedWordSet;
+		myLogger.trace("checkedWords: " + checkedWords);
+
+		for (int i = 0; i < startWords.length; i++) {
+			String word = startWords[i];
+			// This is not very sure, need to make sure - Dongye
+			if ((!word.matches("[\\p{Punct}0-9]")) 
+					&& (!checkedWords.contains(word))) {
+				temp = temp + word + "|";
+				newWords.add(word);
+			}
+		}
+		myLogger.trace("temp: " + temp);		
+
+		// no new words
+		if (temp.length() == 0) {
+			myLogger.trace("No new words");
+			myLogger.trace("Return null");
+			myLogger.trace("Quite buildPattern");
+			myLogger.trace("\n");
+			return null;
+		} else {
+
+			// remove the last char, which is a '|'
+			temp = temp.substring(0, temp.length() - 1);
+		}
+
+		temp = "\\b(?:" + temp + ")\\b";
+		pattern = "^" + temp + "|";
+
+		for (int j = 0; j < this.NUM_LEAD_WORDS - 1; j++) {
+			temp = prefix + temp;
+			pattern = pattern + "^" + temp + "|";
+		}
+		myLogger.trace("Pattern: "+pattern);
+		
+		pattern = pattern.substring(0, pattern.length() - 1);
+		pattern = "(?:" + pattern + ").*$";
+		checkedWords.addAll(newWords);
+		this.checkedWordSet = checkedWords;
+		
+		myLogger.trace("Return Pattern: "+pattern);
+		myLogger.trace("Quite buildPattern");
+		myLogger.trace("\n");
+		return pattern;
+	}
+	
+	/**
+	 * Find the IDs of the sentences that matches the pattern
+	 * 
+	 * @param pattern
+	 * @param status
+	 * @param hasTag
+	 * @return a set of sentence IDs of the sentences that matches the pattern
+	 */
+	public Set<Integer> matchPattern(String pattern, String status, boolean hasTag) {
+
+		Set<Integer> matchedIDs = new HashSet<Integer>();
+
+		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
+			Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
+			String thisSentence = sent.getSentence();
+			String thisStatus = sent.getStatus();
+			String thisTag = sent.getTag();
+			
+			boolean a = hasTag;
+			boolean b = (thisTag == null);
+			
+			if ((a ^ b) && (StringUtility.equalsWithNull(status, thisStatus))) {
+				Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+				Matcher m = p.matcher(thisSentence);
+				if (m.lookingAt()) {
+					matchedIDs.add(i);
+				}
+			}
+		}
+
+		return matchedIDs;
+	}
+
+	
 	/**
 	 * return a positive number if anything new is learnt from @source sentences
 	 * by applying rules and clues to grow %NOUNS and %BDRY and to confirm tags
@@ -1900,95 +1994,6 @@ public class Learner {
 	public void tagIt(int sentID, String tag) {
 		;
 	}
-
-	public Set<Integer> matchPattern(String pattern, String s, boolean hasTag) {
-
-		Set<Integer> matchedIDs = new HashSet<Integer>();
-
-		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
-			String sentence = sent.getSentence();
-			String status = sent.getStatus();
-			String tag = sent.getTag();
-			if ((hasTag && (tag != null) && (status.equals(s)))
-					|| ((!hasTag) && (tag == null) && (status.equals(s)))) {
-				Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
-				Matcher m = p.matcher(sentence);
-				if (m.lookingAt()) {
-					matchedIDs.add(i);
-				}
-			}
-		}
-
-		return matchedIDs;
-	}
-
-	/**
-	 * 
-	 * @param startWords
-	 * @return
-	 */
-	public String buildPattern(String[] startWords) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.buildPattern");
-		
-		myLogger.trace("Enter buildPattern");
-		myLogger.trace("Start Words: "+startWords);
-				
-		Set<String> newWords = new HashSet<String>();
-		String temp = "";
-		String prefix = "\\w+\\s";
-		String pattern = "";
-		
-		Set<String> checkedWords = this.checkedWordSet;
-		
-		myLogger.trace("checkedWords: " + checkedWords);
-
-		for (int i = 0; i < startWords.length; i++) {
-			String word = startWords[i];
-			// This is not very sure, need to make sure - Dongye
-			if ((!word.matches("[\\p{Punct}0-9]")) 
-					&& (!checkedWords.contains(word))) {
-				temp = temp + word + "|";
-				newWords.add(word);
-			}
-		}
-		myLogger.trace("temp: " + temp);
-		
-
-		// no new words
-		if (temp.length() == 0) {
-			myLogger.trace("No new words");
-			myLogger.trace("Return null");
-			myLogger.trace("Quite buildPattern");
-			myLogger.trace("\n");
-			return null;
-		} else {
-
-			// remove the last char, which is a '|'
-			temp = temp.substring(0, temp.length() - 1);
-		}
-
-		temp = "\\b(?:" + temp + ")\\b";
-		pattern = "^" + temp + "|";
-
-		for (int j = 0; j < this.NUM_LEAD_WORDS - 1; j++) {
-			temp = prefix + temp;
-			pattern = pattern + "^" + temp + "|";
-		}
-		myLogger.trace("Pattern: "+pattern);
-		
-		pattern = pattern.substring(0, pattern.length() - 1);
-		pattern = "(?:" + pattern + ")";
-		checkedWords.addAll(newWords);
-		this.checkedWordSet = checkedWords;
-		
-		myLogger.trace("Return Pattern: "+pattern);
-		myLogger.trace("Quite buildPattern");
-		myLogger.trace("\n");
-		return pattern;
-	}
-
 
 	
 	/**
