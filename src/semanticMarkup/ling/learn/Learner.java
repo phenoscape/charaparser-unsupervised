@@ -1810,7 +1810,14 @@ public class Learner {
 	 * @return a set of sentence IDs of the sentences that matches the pattern
 	 */
 	public Set<Integer> matchPattern(String pattern, String status, boolean hasTag) {
-
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.matchPattern");
+		
+		myLogger.trace("Enter matchPattern");
+		myLogger.trace("Pattern: "+pattern);
+		myLogger.trace("Status: "+status);
+		myLogger.trace("HasTag: "+hasTag);
+		
 		Set<Integer> matchedIDs = new HashSet<Integer>();
 
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
@@ -1826,11 +1833,20 @@ public class Learner {
 				Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 				Matcher m = p.matcher(thisSentence);
 				if (m.lookingAt()) {
+					myLogger.debug("Push Sentence #"+i);
+					myLogger.debug("Sentence: "+thisSentence);
+					myLogger.debug("Status: "+thisStatus);
+					myLogger.debug("Tag: "+thisTag);
+					myLogger.debug("\n");
+										
 					matchedIDs.add(i);
 				}
 			}
 		}
 
+		myLogger.trace("Return IDs: "+matchedIDs);
+		myLogger.trace("Quite matchPattern");
+		myLogger.trace("\n");
 		return matchedIDs;
 	}
 

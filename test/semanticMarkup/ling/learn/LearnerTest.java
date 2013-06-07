@@ -660,7 +660,7 @@ public class LearnerTest {
 				myTester.buildPattern("teeth ; 9".split(" ")));
 		
 		assertEquals("buildPattern", 
-				"(?:^\\b(?:variously|arranged)\\b|^\\w+\\s\\b(?:variously|arranged)\\b|^\\w+\\s\\w+\\s\\b(?:variously|arranged)\\b)",
+				"(?:^\\b(?:variously|arranged)\\b|^\\w+\\s\\b(?:variously|arranged)\\b|^\\w+\\s\\w+\\s\\b(?:variously|arranged)\\b).*$",
 				myTester.buildPattern("teeth variously arranged".split(" ")));
 		
 		wordSet.add("circuli");
@@ -670,13 +670,13 @@ public class LearnerTest {
 		wordSet.add("muscle");
 		
 		assertEquals("buildPattern", 
-				"(?:^\\b(?:does|not|cross)\\b|^\\w+\\s\\b(?:does|not|cross)\\b|^\\w+\\s\\w+\\s\\b(?:does|not|cross)\\b)",
+				"(?:^\\b(?:does|not|cross)\\b|^\\w+\\s\\b(?:does|not|cross)\\b|^\\w+\\s\\w+\\s\\b(?:does|not|cross)\\b).*$",
 				myTester.buildPattern("does not cross".split(" ")));
 		
 		wordSet.addAll(Arrays.asList("lepidotrichia:of:passes:between:bases".split(":")));
 		
 		assertEquals("buildPattern", 
-				"(?:^\\b(?:ankylosed|to)\\b|^\\w+\\s\\b(?:ankylosed|to)\\b|^\\w+\\s\\w+\\s\\b(?:ankylosed|to)\\b)",
+				"(?:^\\b(?:ankylosed|to)\\b|^\\w+\\s\\b(?:ankylosed|to)\\b|^\\w+\\s\\w+\\s\\b(?:ankylosed|to)\\b).*$",
 				myTester.buildPattern("teeth ankylosed to".split(" ")));
 		
 		

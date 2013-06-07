@@ -1216,7 +1216,7 @@ public class DataHolder {
 	
 	void printHolder(byte holderID, int startIndex, int endIndex){
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.discover");
+		Logger myLogger = Logger.getLogger("dataholder.printHolder");
 		
 		if (holderID == DataHolder.SENTENCE) {
 			for (int i = startIndex; i<=endIndex; i++) {
