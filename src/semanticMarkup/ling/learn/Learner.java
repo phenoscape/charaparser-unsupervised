@@ -1700,14 +1700,14 @@ public class Learner {
 				if (pattern != null) {
 					// IDs of untagged sentences that match the pattern
 					Set<Integer> matched = matchPattern(pattern, status, false);
-//					int round = 0;
-//					int numNew = 0;
+					int round = 0;
+					int numNew = 0;
 
-//					do {
-//						numNew = ruleBasedLearn(matched);
-//						newDisc = newDisc + numNew;
-//						round++;
-//					} while (numNew > 0);
+					do {
+						numNew = ruleBasedLearn(matched);
+						newDisc = newDisc + numNew;
+						round++;
+					} while (numNew > 0);
 				}
 			}
 		}
@@ -1860,7 +1860,12 @@ public class Learner {
 	 * @return
 	 */
 	public int ruleBasedLearn(Set<Integer> matched) {
-
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn");
+		
+		myLogger.trace("Enter ruleBasedLearn");
+		myLogger.trace("Matched IDs: "+matched);
+		
 		int sign = 0;
 		int numNew = 0;
 		String tag = "";
@@ -1868,8 +1873,8 @@ public class Learner {
 		Iterator<Integer> iter = matched.iterator();
 		while (iter.hasNext()) {
 			int sentID = iter.next().intValue();
-			Sentence sent = this.myDataHolder.getSentenceHolder().get(sentID);
-			if (sent.getTag() != null) {
+			Sentence sentence = this.myDataHolder.getSentenceHolder().get(sentID);
+			if (!isMarked(sentence)) {
 				// ($tag, $new) = doit($sentid);
 				doIt(sentID);
 				// tag($sentid, $tag);
@@ -1877,8 +1882,12 @@ public class Learner {
 				sign = sign + numNew;
 			}
 		}
-
-		return 0;
+		
+		myLogger.trace("Return: "+sign);
+		myLogger.trace("Quit ruleBaseLearn");
+		myLogger.trace("\n");
+		
+		return sign;
 	}
 
 	// update wordpos table (on certainty) when a sentence is tagged for the
