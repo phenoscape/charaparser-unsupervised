@@ -52,8 +52,8 @@ public class Learner {
 	
 	// others
 	
-	// leading three words of sentences
-	private String CHECKEDWORDS = ":"; 
+	// leading three words of sentences 
+	private Set<String> checkedWordSet;
 	
 	public Learner(Configuration configuration, Utility utility) {
 		this.myConfiguration = configuration;
@@ -68,6 +68,8 @@ public class Learner {
 		
 		// Class variables
 		NUM_LEAD_WORDS = 3; // Set the number of leading words be 3
+		
+		checkedWordSet = new HashSet<String>();
 		
 	}
 
@@ -1672,24 +1674,30 @@ public class Learner {
 					)
 					&& thisStatus.equals(status)) {
 				
-				myLogger.debug("Sentence: "+i+", Tag: "+thisTag);
+				myLogger.debug("Sentence #: "+i);
+				myLogger.debug("Lead: " + thisLead);
+				
+				myLogger.debug("Tag: "+thisTag);
+				
 				myLogger.debug("Sentence: "+thisSentence);
 				// tag is not null
 				if (isMarked(this.myDataHolder.getSentenceHolder().get(i))) {
 					myLogger.debug("Not Pass");
 					continue;
+				}				
+				// tag is null
+				else {
+					myLogger.debug("Pass");
 				}
 				
-				// tag is null
-				myLogger.debug("Pass");
 				
 				
-				
-//				String[] startWords = thisLead.split("\\s+");
+				String[] startWords = thisLead.split("\\s+");
+//				myLogger.debug("startWords: "+startWords.toString());
 //				// @startwords = split(/\s+/,$lead);
 //
 //				// $pattern = buildpattern(@startwords);
-//				String pattern = buildPattern(startWords);
+				String pattern = buildPattern(startWords);
 //
 //				if (pattern.matches("^.*\\w+.*$")) {
 //					// ids of untagged sentences that match the pattern
@@ -1921,67 +1929,78 @@ public class Learner {
 	 * @return
 	 */
 	public String buildPattern(String[] startWords) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.buildPattern");
+		
+		myLogger.trace("Enter buildPattern");
+		myLogger.trace("Start Words: "+startWords);
+				
 		Set<String> newWords = new HashSet<String>();
 		String temp = "";
 		String prefix = "\\w+\\s";
 		String pattern = "";
+		
+		Set<String> checkedWords = this.checkedWordSet;
+		
+		myLogger.trace("checkedWords: " + checkedWords);
 
 		for (int i = 0; i < startWords.length; i++) {
 			String word = startWords[i];
-			Pattern p = Pattern.compile(":" + word + ":",
-					Pattern.CASE_INSENSITIVE);
-			Matcher m = p.matcher(this.CHECKEDWORDS);
 			// This is not very sure, need to make sure - Dongye
-			if ((!word.matches("[\\p{Punct}0-9]")) && (!m.lookingAt())) {
+			if ((!word.matches("[\\p{Punct}0-9]")) 
+					&& (!checkedWords.contains(word))) {
 				temp = temp + word + "|";
 				newWords.add(word);
 			}
 		}
+		myLogger.trace("temp: " + temp);
+		
 
 		// no new words
-		if (!temp.matches("^.*\\w.*$")) {
-			return "";
+		if (temp.length() == 0) {
+			myLogger.trace("No new words");
+			myLogger.trace("Return null");
+			myLogger.trace("Quite buildPattern");
+			myLogger.trace("\n");
+			return null;
+		} else {
+
+			// remove the last char, which is a '|'
+			temp = temp.substring(0, temp.length() - 1);
 		}
 
-		// remove the last char, which is a '|'
-		temp = temp.substring(0, temp.length() - 1);
 		temp = "\\b(?:" + temp + ")\\b";
-
 		pattern = "^" + temp + "|";
 
 		for (int j = 0; j < this.NUM_LEAD_WORDS - 1; j++) {
 			temp = prefix + temp;
 			pattern = pattern + "^" + temp + "|";
 		}
-
+		myLogger.trace("Pattern: "+pattern);
+		
 		pattern = pattern.substring(0, pattern.length() - 1);
-
 		pattern = "(?:" + pattern + ")";
-
-		this.CHECKEDWORDS = this.updateCheckedWords(":", this.CHECKEDWORDS,
-				newWords);
-
+		checkedWords.addAll(newWords);
+		this.checkedWordSet = checkedWords;
+		
+		myLogger.trace("Return Pattern: "+pattern);
+		myLogger.trace("Quite buildPattern");
+		myLogger.trace("\n");
 		return pattern;
 	}
+
+
 	
 	/**
-	 * 
-	 * @param expr
-	 * @param checkedWords
-	 * @param list
-	 * @return
+	 * Utilities
+	 * @return 
 	 */
-	public String updateCheckedWords(String expr, String checkedWords,
-			Set<String> list) {
-		String newCheckedWords = checkedWords;
-		Iterator<String> iter = list.iterator();
-
-		while (iter.hasNext()) {
-			newCheckedWords = newCheckedWords + iter.next() + ":";
-		}
-		// newCheckedWords = newCheckedWords + ":";
-
-		return newCheckedWords;
+	public Set<String> getCheckedWordSet() {
+		return this.checkedWordSet;
+	}
+	
+	public void setCheckedWordSet(Set<String> wordSet) {
+		this.checkedWordSet = wordSet;
 	}
 	
 }

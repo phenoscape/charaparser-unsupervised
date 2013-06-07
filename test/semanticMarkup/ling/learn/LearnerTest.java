@@ -639,23 +639,47 @@ public class LearnerTest {
 
 	@Test
 	public void testBuildPattern() {
+		
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+
 		// Method buildPattern
-		assertEquals(
-				"buildPattern",
-				"(?:^\\b(?:one|two|three)\\b|^\\w+\\s\\b(?:one|two|three)\\b|^\\w+\\s\\w+\\s\\b(?:one|two|three)\\b)",
-				tester.buildPattern("one two three".split(" ")));
+//		assertEquals(
+//				"buildPattern",
+//				"(?:^\\b(?:one|two|three)\\b|^\\w+\\s\\b(?:one|two|three)\\b|^\\w+\\s\\w+\\s\\b(?:one|two|three)\\b)",
+//				tester.buildPattern("one two three".split(" ")));
+		
+		HashSet<String> wordSet= new HashSet<String>();
+		wordSet.add("teeth");
+		wordSet.add("unicuspid");
+		wordSet.add("with");
+		myTester.setCheckedWordSet(wordSet);
+		
+		assertEquals("buildPattern", null,
+				myTester.buildPattern("teeth ; 9".split(" ")));
+		
+		assertEquals("buildPattern", 
+				"(?:^\\b(?:variously|arranged)\\b|^\\w+\\s\\b(?:variously|arranged)\\b|^\\w+\\s\\w+\\s\\b(?:variously|arranged)\\b)",
+				myTester.buildPattern("teeth variously arranged".split(" ")));
+		
+		wordSet.add("circuli");
+		wordSet.add("present");
+		wordSet.add("on");
+		wordSet.add("hyohyoidei");
+		wordSet.add("muscle");
+		
+		assertEquals("buildPattern", 
+				"(?:^\\b(?:does|not|cross)\\b|^\\w+\\s\\b(?:does|not|cross)\\b|^\\w+\\s\\w+\\s\\b(?:does|not|cross)\\b)",
+				myTester.buildPattern("does not cross".split(" ")));
+		
+		wordSet.addAll(Arrays.asList("lepidotrichia:of:passes:between:bases".split(":")));
+		
+		assertEquals("buildPattern", 
+				"(?:^\\b(?:ankylosed|to)\\b|^\\w+\\s\\b(?:ankylosed|to)\\b|^\\w+\\s\\w+\\s\\b(?:ankylosed|to)\\b)",
+				myTester.buildPattern("teeth ankylosed to".split(" ")));
+		
+		
 	}
-
-	@Test
-	public void testUpdateCheckedWords() {
-		// Method updateCheckedWords
-		String checkedWords = ":";
-		Set<String> list = new HashSet<String>();
-		list.add("one");
-		list.add("two");
-		list.add("three");
-		assertEquals("updateCheckedWords", ":two:one:three:",
-				tester.updateCheckedWords(":", checkedWords, list));
-	}
-
+	
 }
