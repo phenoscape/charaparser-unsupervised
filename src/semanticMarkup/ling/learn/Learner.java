@@ -1905,10 +1905,10 @@ public class Learner {
 		int sign = 0;
 
 		Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(sentID);
-		String sent = sentEntry.getSentence();
-		String lead = sentEntry.getLead();
+		String thisSentence = sentEntry.getSentence();
+		String thisLead = sentEntry.getLead();
 
-		String[] words = lead.split("\\s+");
+		String[] words = thisLead.split("\\s+");
 		String ptn = this.getPOSptn(words);
 
 		Pattern p;
@@ -1955,6 +1955,16 @@ public class Learner {
 	 * @return
 	 */
 	public String getPOSptn(String[] words) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt.getPOSptn");
+		
+		myLogger.trace("Enter getPOSptn");
+		myLogger.trace("Words: " + words);
+		
+		
+		
+		
+		
 		String ptn = "";
 		for (int i = 0; i < words.length; i++) {
 			String word = words[i];
@@ -1974,6 +1984,10 @@ public class Learner {
 			}
 		}
 
+		
+		myLogger.trace("Return ptn: " + ptn);
+		myLogger.trace("Quite getPOSptn");
+		
 		return ptn;
 	}
 

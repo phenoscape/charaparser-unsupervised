@@ -154,4 +154,10 @@ public class StringUtilityTest {
 		assertEquals("equalsWithNull - not null : not null - not equal", false, StringUtility.equalsWithNull("s1", "s2"));
 	}
 	
+	@Test
+	public void testStringArray2String() {
+		assertEquals("stringArray2String", "teeth unicuspid with", StringUtility.stringArray2String(("teeth unicuspid with".split(" "))));
+	}
+	
+	
 }

@@ -155,4 +155,23 @@ public class StringUtility {
 		
 		return flag;
 	}
+	
+	/**
+	 * Convert a string array of to a string of words separated by space
+	 * 
+	 * @param words
+	 * @return the string
+	 */
+	public static String stringArray2String(String [] words) {
+		String wordsString = "";
+		
+		for (int i=0;i<words.length;i++) {
+			wordsString = wordsString + words[i] + " ";
+		}
+		
+		wordsString = wordsString.substring(0, wordsString.length()-1); 
+		
+		return wordsString;
+	}
+	
 }

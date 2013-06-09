@@ -638,8 +638,7 @@ public class LearnerTest {
 //	}
 
 	@Test
-	public void testBuildPattern() {
-		
+	public void testBuildPattern() {		
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
 		Learner myTester = new Learner(myConfiguration, myUtility);
@@ -681,5 +680,11 @@ public class LearnerTest {
 		
 		
 	}
+	
+	@Test
+	public void testGetPOSptn(){
+		assertEquals("getPOSptn", "p?b", tester.getPOSptn("teeth unicuspid with".split(" ")));
+	}
+	
 	
 }
