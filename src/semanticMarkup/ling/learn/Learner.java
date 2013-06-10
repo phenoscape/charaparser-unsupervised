@@ -1918,6 +1918,7 @@ public class Learner {
 		if (ptn.matches("^[pns]$")) {
 			String tag = words[0];
 			sign = sign + this.myDataHolder.updateTable(tag, ptn, "-", "wordpos", 1);
+			myLogger.info("Directly markup with tag: "+tag+"\n");
 		}
 
 		// Case 2: the POSs are "ps"
@@ -1980,7 +1981,6 @@ public class Learner {
 			}
 		}
 
-		
 		myLogger.trace("Return ptn: " + ptn);
 		myLogger.trace("Quite getPOSptn");
 		
