@@ -676,14 +676,26 @@ public class LearnerTest {
 		
 		assertEquals("buildPattern", 
 				"(?:^\\b(?:ankylosed|to)\\b|^\\w+\\s\\b(?:ankylosed|to)\\b|^\\w+\\s\\w+\\s\\b(?:ankylosed|to)\\b).*$",
-				myTester.buildPattern("teeth ankylosed to".split(" ")));
-		
+				myTester.buildPattern("teeth ankylosed to".split(" ")));		
 		
 	}
 	
 	@Test
 	public void testGetPOSptn(){
-		assertEquals("getPOSptn", "p?b", tester.getPOSptn("teeth unicuspid with".split(" ")));
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
+		
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"unicuspid", "p", "role", "1", "3", "", ""}));
+		
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"with", "b", "role", "1", "1", "", ""}));
+		
+		assertEquals("getPOSptn", "p?b", myTester.getPOSptn("teeth unicuspid with".split(" ")));
 	}
 	
 	

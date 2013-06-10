@@ -1960,11 +1960,7 @@ public class Learner {
 		
 		myLogger.trace("Enter getPOSptn");
 		myLogger.trace("Words: " + StringUtility.stringArray2String(words));
-		
-		
-		
-		
-		
+				
 		String ptn = "";
 		for (int i = 0; i < words.length; i++) {
 			String word = words[i];
@@ -1976,8 +1972,8 @@ public class Learner {
 				double certainty = (double) p.getCertaintyU()
 						/ (double) p.getCertaintyL();
 
-				if ((!POS.equals("?")) && (certainty <= 0.5)) {
-					// This POS has a certainty less than 0.5. It is ignored.
+				if ((!StringUtility.equalsWithNull(POS, "?")) && (certainty <= 0.5)) {
+					myLogger.info("This POS has a certainty less than 0.5. It is ignored.");
 					POS = "?";
 				}
 				ptn = ptn + POS;
