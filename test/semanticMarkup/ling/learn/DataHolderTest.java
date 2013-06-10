@@ -39,8 +39,7 @@ public class DataHolderTest {
 		assertEquals("markKnown - forbidden word", 0,
 				tester.markKnown("and", "", "", "", 0));
 		//assertEquals("markKnown - stop word", 0,
-		//		tester.markKnown("page", "", "", "", 0));
-		
+		//		tester.markKnown("page", "", "", "", 0));		
 		
 		// case 1 & 2
 		tester.markKnown("dentinous", "b", "", "wordpos", 1);
@@ -280,6 +279,22 @@ public class DataHolderTest {
 		assertEquals("singularPluralVariations", "curimatidae|curimatida", tester.singularPluralVariations("curimatidae", singularPluralTable));
 		assertEquals("singularPluralVariations", "curimatida|curimatidae", tester.singularPluralVariations("curimatida", singularPluralTable));
 		assertEquals("singularPluralVariations", "bones|bone", tester.singularPluralVariations("bones", singularPluralTable));
+	}
+
+	@Test
+	public void testCheckPOSInfo(){
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
+		
+		//myTester.add2Holder(DataHolder.WORDPOS, 
+		//		Arrays.asList(new String[] {"word1", "pos1", "role", "1", "4", "", ""}));
+
+		List<POSInfo> target = new ArrayList<POSInfo>();
+		target.add(new POSInfo("123", "b", "", 1, 1));
+		assertEquals("checkPOSInfo - digit", target, myTester.checkPOSInfo("123", 1));
+		
+		
 	}
 	
 }

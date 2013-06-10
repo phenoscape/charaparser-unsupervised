@@ -2,6 +2,7 @@ package semanticMarkup.ling.learn;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1291,5 +1292,59 @@ public class DataHolder {
 		}
 		
 		myLogger.info("Total: "+(endIndex-startIndex+1)+"\n");
+	}
+	
+	/**
+	 * Return (POS, role, certaintyU, certaintyL) of a word
+	 * 
+	 * @param word
+	 *            the word to check
+	 * @param num
+	 *            the number of entries to return. If it is a negative integer,
+	 *            then it would return all
+	 * @return first num entries of (POS, role, certaintyU, certaintyL) of the
+	 *         word in a list
+	 */
+	public List<POSInfo> checkPOSInfo(String word, int num) {
+		List<POSInfo> POSInfoList = new ArrayList<POSInfo>();
+
+		word = StringUtility.removeAll(word, "^\\s*");
+		word = StringUtility.removeAll(word, "\\s+$");
+
+		if (word.matches("^\\d+.*$")) {
+			POSInfo p = new POSInfo(word, "b", "", 1, 1);
+			POSInfoList.add(p);
+			return POSInfoList;
+		}
+
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
+		int index = 0;
+		while (iter.hasNext()) {
+			if (index >= num) {
+				break;
+			}
+
+			Map.Entry<WordPOSKey, WordPOSValue> e = iter.next();
+			String w = e.getKey().getWord();
+			if (w.equals(word)) {
+				String POS = e.getKey().getPOS();
+				String role = e.getValue().getRole();
+				int certaintyU = e.getValue().getCertaintyU();
+				int certaintyL = e.getValue().getCertaintyL();
+				POSInfo p = new POSInfo(word, POS, role, certaintyU, certaintyL);
+				POSInfoList.add(p);
+			}
+			index++;
+		}
+
+		// nothing found
+		if (POSInfoList.size() != 0) {
+			// sort the list in ascending order of certaintyU/certaintyL
+			Collections.sort(POSInfoList);
+			// reverse it into descending order
+			Collections.reverse(POSInfoList);
+		}
+		return POSInfoList;
+
 	}
 }

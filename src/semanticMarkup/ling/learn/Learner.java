@@ -1959,7 +1959,7 @@ public class Learner {
 		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt.getPOSptn");
 		
 		myLogger.trace("Enter getPOSptn");
-		myLogger.trace("Words: " + words);
+		myLogger.trace("Words: " + StringUtility.stringArray2String(words));
 		
 		
 		
@@ -1968,7 +1968,7 @@ public class Learner {
 		String ptn = "";
 		for (int i = 0; i < words.length; i++) {
 			String word = words[i];
-			List<POSInfo> POSInfoList = checkPOSInfo(word);
+			List<POSInfo> POSInfoList = this.myDataHolder.checkPOSInfo(word, 1);
 			if (POSInfoList.size() > 0) {
 				POSInfo p = POSInfoList.get(0);
 				String POS = p.getPOS();
@@ -1991,52 +1991,7 @@ public class Learner {
 		return ptn;
 	}
 
-	/**
-	 * It usually return all
-	 * 
-	 * @param word
-	 * @return a list of POSInfo objects in descending order of
-	 *         certaintyU/certaintyL
-	 */
-	public List<POSInfo> checkPOSInfo(String word) {
-		List<POSInfo> POSInfoList = new ArrayList<POSInfo>();
 
-		word = StringUtility.removeAll(word, "^\\s*");
-		word = StringUtility.removeAll(word, "\\s+$");
-
-		if (word.matches("^\\d+.*$")) {
-			POSInfo p = new POSInfo("b", "", 1, 1);
-			POSInfoList.add(p);
-			return POSInfoList;
-		}
-
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.getWordPOSHolder()
-				.entrySet().iterator();
-		while (iter.hasNext()) {
-			Map.Entry<WordPOSKey, WordPOSValue> e = iter.next();
-			String w = e.getKey().getWord();
-			if (w.equals(word)) {
-				String POS = e.getKey().getPOS();
-				String role = e.getValue().getRole();
-				int certaintyU = e.getValue().getCertaintyU();
-				int certaintyL = e.getValue().getCertaintyL();
-				POSInfo p = new POSInfo(POS, role, certaintyU, certaintyL);
-				POSInfoList.add(p);
-			}
-		}
-
-		// nothing found
-		if (POSInfoList.size() == 0) {
-			return new ArrayList<POSInfo>();
-		} else {
-			// sort the list in ascending order of certaintyU/certaintyL
-			Collections.sort(POSInfoList);
-			// reverse it into descending order
-			Collections.reverse(POSInfoList);
-
-			return POSInfoList;
-		}
-	}
 
 	public void tagIt(int sentID, String tag) {
 		;
