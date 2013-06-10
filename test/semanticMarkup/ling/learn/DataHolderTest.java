@@ -287,14 +287,31 @@ public class DataHolderTest {
 		Utility myUtility = new Utility(myConfiguration);
 		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		
-		//myTester.add2Holder(DataHolder.WORDPOS, 
-		//		Arrays.asList(new String[] {"word1", "pos1", "role", "1", "4", "", ""}));
+		myTester.add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word1", "pos3", "role", "1", "4", "", ""}));
+		myTester.add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word2", "pos3", "role", "1", "4", "", ""}));
+		myTester.add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word1", "pos1", "role", "3", "4", "", ""}));
+		myTester.add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word2", "pos1", "role", "3", "4", "", ""}));
+		myTester.add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word1", "pos2", "role", "2", "4", "", ""}));
+		myTester.add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word2", "pos2", "role", "2", "4", "", ""}));
 
-		List<POSInfo> target = new ArrayList<POSInfo>();
-		target.add(new POSInfo("123", "b", "", 1, 1));
-		assertEquals("checkPOSInfo - digit", target, myTester.checkPOSInfo("123", 1));
+		List<POSInfo> target1 = new ArrayList<POSInfo>();
+		target1.add(new POSInfo("123", "b", "", 1, 1));
+		assertEquals("checkPOSInfo - digit", target1, myTester.checkPOSInfo("123"));
 		
+		List<POSInfo> target2 = new ArrayList<POSInfo>();
+		assertEquals("checkPOSInfo - not found", target2, myTester.checkPOSInfo("abc"));
 		
+		List<POSInfo> target3 = new ArrayList<POSInfo>();
+		target3.add(new POSInfo("word1", "pos1", "role", 3, 4));
+		target3.add(new POSInfo("word1", "pos2", "role", 2, 4));
+		target3.add(new POSInfo("word1", "pos3", "role", 1, 4));
+		assertEquals("checkPOSInfo - found multiple", target3, myTester.checkPOSInfo("word1"));
 	}
 	
 }

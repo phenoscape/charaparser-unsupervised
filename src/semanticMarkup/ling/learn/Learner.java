@@ -1968,7 +1968,7 @@ public class Learner {
 		String ptn = "";
 		for (int i = 0; i < words.length; i++) {
 			String word = words[i];
-			List<POSInfo> POSInfoList = this.myDataHolder.checkPOSInfo(word, 1);
+			List<POSInfo> POSInfoList = this.myDataHolder.checkPOSInfo(word);
 			if (POSInfoList.size() > 0) {
 				POSInfo p = POSInfoList.get(0);
 				String POS = p.getPOS();

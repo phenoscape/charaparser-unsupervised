@@ -49,7 +49,7 @@ public class POSInfo implements Comparable<POSInfo>{
 		int bCU = b.getCertaintyU();
 		int bCL = b.getCertaintyL();
 
-		if (aCU * bCL > bCU * aCL) {
+		if (aCU * bCL < bCU * aCL) {
 			return -1;
 		} else if (aCU * bCL == bCU * aCL) {
 			return 0;
