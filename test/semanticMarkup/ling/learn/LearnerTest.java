@@ -698,6 +698,18 @@ public class LearnerTest {
 		assertEquals("getPOSptn", "p?b", myTester.getPOSptn("teeth unicuspid with".split(" ")));
 	}
 	
+	@Test
+	public void testDoItHelper(){
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
+		
+		assertEquals("doItHelper - case 1", new StringAndInt("teeth",1), myTester.doItHelper("", "teeth"));
+	}
+	
 	
 	
 	

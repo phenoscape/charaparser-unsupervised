@@ -1890,24 +1890,45 @@ public class Learner {
 		return sign;
 	}
 
-	// update wordpos table (on certainty) when a sentence is tagged for the
-	// first time. this update should not be done when a pos is looked up,
-	// because we may lookup a pos for the same example multiple times. if the
-	// tag need to be adjusted (not by doit function), also need to adjust
-	// certainty counts.
-	public void doIt(int sentID) {
+	/**
+	 * update wordpos table (on certainty) when a sentence is tagged for the
+	 * first time. this update should not be done when a pos is looked up,
+	 * because we may lookup a pos for the same example multiple times. if the
+	 * tag need to be adjusted (not by doit function), also need to adjust
+	 * certainty counts.
+	 * 
+	 * @param sentID
+	 *            the ID of the sentence
+	 * @return a pair of (tag, sign)
+	 */
+	public StringAndInt doIt(int sentID) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt");
 		
 		myLogger.trace("Enter doIt");
 		myLogger.trace("sentence ID: " + sentID);
 		
-		int sign = 0;
+
 
 		Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(sentID);
 		String thisSentence = sentEntry.getSentence();
 		String thisLead = sentEntry.getLead();
+		
+		StringAndInt returnValue = this.doItHelper(thisSentence, thisLead);
+		
+		myLogger.trace("Return Tag: " + returnValue.getString() + ", sign: " + returnValue.getInt());
+		myLogger.trace("Quit doIt");
+		
+		return returnValue;		
+	}
 
+	public StringAndInt doItHelper(String thisSentence, String thisLead) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt");
+		
+		int sign = 0;
+		String tag = null;
+		
 		String[] words = thisLead.split("\\s+");
 		String ptn = this.getPOSptn(words);
 
@@ -1916,7 +1937,7 @@ public class Learner {
 
 		// Case 1: single word case
 		if (ptn.matches("^[pns]$")) {
-			String tag = words[0];
+			tag = words[0];
 			sign = sign + this.myDataHolder.updateTable(tag, ptn, "-", "wordpos", 1);
 			myLogger.info("Directly markup with tag: "+tag+"\n");
 		}
@@ -1945,7 +1966,9 @@ public class Learner {
 			}
 		}
 		
-		myLogger.trace("Quit doIt");
+		StringAndInt returnValue = new StringAndInt(tag,sign);
+		
+		return returnValue;
 	}
 
 	/**

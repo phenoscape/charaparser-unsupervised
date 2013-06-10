@@ -17,5 +17,25 @@ public class StringAndInt {
 	public int getInt() {
 		return i;
 	}
+	
+	public int hashCode() {		
+		return this.s.hashCode() + this.i;
+	}
+	
+	public boolean equals(Object obj){
+		if (obj==this){
+			return true;
+		}
+		
+		if (obj==null||obj.getClass()!=this.getClass()){
+			return false;
+		}
+		
+		StringAndInt myStringAndInt = (StringAndInt) obj;
+		
+		return (   (StringUtility.equalsWithNull(this.s, myStringAndInt.getString()))
+				&& (this.i == myStringAndInt.getInt())
+				);
+	}
 
 }
