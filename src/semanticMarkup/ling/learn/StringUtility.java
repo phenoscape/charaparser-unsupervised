@@ -1,5 +1,8 @@
 package semanticMarkup.ling.learn;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -172,6 +175,30 @@ public class StringUtility {
 		wordsString = wordsString.substring(0, wordsString.length()-1); 
 		
 		return wordsString;
+	}
+	
+//	public static List<String>
+	
+	//Arrays.asList
+	
+	/**
+	 * Removed a section of the string list between the index of the start
+	 * (inclusive) and the end (exclusive)from the string list
+	 * 
+	 * @param words
+	 *            the string list
+	 * @param start
+	 *            the start index of the section
+	 * @param end
+	 *            the end index of the section
+	 * @return the remaining list
+	 */
+	public static List<String> stringArraySplice(List<String> words, int start, int end) {
+		List<String> splicedWords = new ArrayList<String>();
+		splicedWords.addAll(words.subList(0, start));
+		splicedWords.addAll(words.subList(end, words.size()));
+		
+		return splicedWords;
 	}
 	
 }

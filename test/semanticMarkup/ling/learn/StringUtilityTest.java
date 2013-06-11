@@ -2,6 +2,11 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+
 import org.junit.Test;
 
 public class StringUtilityTest {
@@ -159,5 +164,12 @@ public class StringUtilityTest {
 		assertEquals("stringArray2String", "teeth unicuspid with", StringUtility.stringArray2String(("teeth unicuspid with".split(" "))));
 	}
 	
+	
+	@Test
+	public void testStringArraySplice() {
+		List<String> target = new ArrayList<String>();
+		target.addAll(Arrays.asList("0 1 5 6 7 8 9".split(" ")));
+		assertEquals("stringArraySplice", target, StringUtility.stringArraySplice(Arrays.asList("0 1 2 3 4 5 6 7 8 9".split(" ")), 2, 5));
+	}
 	
 }
