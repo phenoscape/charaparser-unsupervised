@@ -1931,38 +1931,56 @@ public class Learner {
 		
 		String[] words = thisLead.split("\\s+");
 		String ptn = this.getPOSptn(words);
-
-		Pattern p;
-		Matcher m;
+		
+		Pattern p2 = Pattern.compile("^.*ps.*$");
+		Matcher m2 = p2.matcher(ptn);
+		
+		Pattern p3 = Pattern.compile("^.*p(\\?).*$");
+		Matcher m3 = p3.matcher(ptn);
+		
 
 		// Case 1: single word case
 		if (ptn.matches("^[pns]$")) {
+			myLogger.info("Case 1");
 			tag = words[0];
 			sign = sign + this.myDataHolder.updateTable(tag, ptn, "-", "wordpos", 1);
 			myLogger.info("Directly markup with tag: "+tag+"\n");
 		}
 
 		// Case 2: the POSs are "ps"
-		else {
-			p = Pattern.compile("^.*ps.*$");
-			m = p.matcher(ptn);
-			if (m.find()) {
-				int start = m.start();
-				int end = m.end();
-				String pWord = words[start];
-				String sWord = words[end - 1];
+		else if (m2.find()) {
+			myLogger.info("Case 2");
+			int start = m2.start();
+			int end = m2.end();
+			String pWord = words[start];
+			String sWord = words[end - 1];
 
-				sign += this.myDataHolder.updateTable(pWord, "p", "-", "wordpos", 1);
-				sign += this.myDataHolder.updateTable(sWord, "s", "", "wordpos", 1);
-
-				// $sign += updatenn(0, $#tws+1, @tws); #up to the "p" inclusive
-
-			} else {
-				p = Pattern.compile("^.*p(\\?).*$");
-				m = p.matcher(ptn);
-				if (m.find()) {
-					int start = m.start();
-				}
+			sign += this.myDataHolder.updateTable(pWord, "p", "-", "wordpos", 1);
+			sign += this.myDataHolder.updateTable(sWord, "s", "", "wordpos", 1);
+		} 
+		
+		else if (m3.find()) {
+			myLogger.info("Case 3");
+			myLogger.info("Found [p?] pattern");
+			
+			int start = m3.start();
+			int end = m2.end();
+			
+			String secondMatchedWord = words[end-1];
+			
+			if (StringUtility.equalsWithNull(this.myUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
+				myLogger.info("Case 3.1");
+				tag = secondMatchedWord;
+				sign = sign + this.myDataHolder.updateTable(tag, "p", "-", "wordpos", 1);
+				this.myDataHolder.add2Holder(DataHolder.ISA, Arrays.asList(new String[] {tag, words[end-2]}));	
+				myLogger.info("\t:[p p] pattern: determine the tag: "+tag);
+			}
+			else {
+				myLogger.info("Case 3.2");
+				
+				
+				myLogger.info("\t:determine the tag: $tag\n");
+				myLogger.info("\t:updates on POSs\n");
 			}
 		}
 		

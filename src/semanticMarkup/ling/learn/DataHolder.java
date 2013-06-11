@@ -24,32 +24,36 @@ public class DataHolder {
 	// Data holders
 	// Table heuristicnoun
 	private Map<String, String> heuristicNounTable = new HashMap<String, String>();
-	public static final byte HEURISTICNOUN = 3;
-
-	// Table sentence
-	private List<Sentence> sentenceTable = new LinkedList<Sentence>();
-	public static final byte SENTENCE = 0;
-
-	// Table singularPlural
-	private Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
-	public static final byte SINGULAR_PLURAL = 4;
-
-	// Table unknownword
-	private Map<String, String> unknownWordTable = new HashMap<String, String>();
-	public static final byte UNKNOWNWORD = 1;
-
-	// Table wordpos
-	private Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
-	public static final byte WORDPOS = 2;
-	
-	// Table modifier
-	private Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
-	public static final byte MODIFIER = 5;
+	public static final byte HEURISTICNOUN = 1;
 
 	// Table discounted
 	private Map<DiscountedKey, String> discountedTable = new HashMap<DiscountedKey, String>();
-	public static final byte DISCOUNTED = 6;
+	public static final byte DISCOUNTED = 2;
 	
+	// Table isATable
+	private Map<Integer, IsAValue> isATable = new HashMap<Integer, IsAValue>();
+	public static final byte ISA = 3;
+	
+	// Table modifier
+	private Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
+	public static final byte MODIFIER = 4;
+	
+	// Table sentence
+	private List<Sentence> sentenceTable = new LinkedList<Sentence>();
+	public static final byte SENTENCE = 5;
+
+	// Table singularPlural
+	private Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
+	public static final byte SINGULAR_PLURAL = 6;
+
+	// Table unknownword
+	private Map<String, String> unknownWordTable = new HashMap<String, String>();
+	public static final byte UNKNOWNWORD = 7;
+
+	// Table wordpos
+	private Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
+	public static final byte WORDPOS = 8;
+
 	private Configuration myConfiguratio;
 	private Utility myUtility;
 	
@@ -1153,6 +1157,22 @@ public class DataHolder {
 	/******** Utilities *************/
 	
 	public void add2Holder(byte holderID, List<String> args){
+
+		if (holderID == DataHolder.DISCOUNTED) {
+			this.discountedTable = this.add2DiscountedHolder(this.discountedTable, args);
+		}
+		
+		if (holderID == DataHolder.ISA) {
+			this.isATable = this.add2IsAHolder(this.isATable, args);
+		}
+		
+		if (holderID == DataHolder.SENTENCE) {
+			this.sentenceTable = this.add2SentenceHolder(this.sentenceTable,args);
+		}
+		
+		if (holderID == DataHolder.SINGULAR_PLURAL) {
+			this.singularPluralTable = this.add2SingularPluralHolder(this.singularPluralTable, args);
+		}
 		
 		if (holderID == DataHolder.UNKNOWNWORD) {
 			this.unknownWordTable = this.add2UnknowWordHolder(this.unknownWordTable, args);
@@ -1162,17 +1182,17 @@ public class DataHolder {
 			this.wordPOSTable = this.add2WordPOSHolder(this.wordPOSTable, args);
 		}
 		
-		if (holderID == DataHolder.SINGULAR_PLURAL) {
-			this.singularPluralTable = this.add2SingularPluralHolder(this.singularPluralTable, args);
-		}
+	}
+	
+	public Map<Integer, IsAValue> add2IsAHolder (Map<Integer, IsAValue> isAHolder, List<String> args) {
+		int index = 0;
 		
-		if (holderID == DataHolder.DISCOUNTED) {
-			this.discountedTable = this.add2DiscountedHolder(this.discountedTable, args);
-		}
+		String instance = args.get(index++);
+		String cls = args.get(index++);
 		
-		if (holderID == DataHolder.SENTENCE) {
-			this.sentenceTable = this.add2SentenceHolder(this.sentenceTable,args);
-		}
+		isAHolder.put(isAHolder.size()+1, new IsAValue(instance, cls));
+		
+		return isAHolder;
 	}
 
 	public Map<String, String> add2UnknowWordHolder(Map<String, String> unknownWordHolder, List<String> args){
