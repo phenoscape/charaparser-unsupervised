@@ -695,7 +695,7 @@ public class LearnerTest {
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"with", "b", "role", "1", "1", "", ""}));
 		
-		assertEquals("getPOSptn", "p?b", myTester.getPOSptn("teeth unicuspid with".split(" ")));
+		assertEquals("getPOSptn", "p?b", myTester.getPOSptn(Arrays.asList("teeth unicuspid with".split(" "))));
 	}
 	
 	@Test
@@ -704,10 +704,20 @@ public class LearnerTest {
 		Utility myUtility = new Utility(myConfiguration);
 		Learner myTester = new Learner(myConfiguration, myUtility);
 		
+        // case 1
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
 		
 		assertEquals("doItHelper - case 1", new StringAndInt("teeth",1), myTester.doItHelper("", "teeth"));
+        
+        // case 3.2
+        myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"unicuspid", "p", "role", "1", "3", "", ""}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"with", "b", "role", "1", "1", "", ""}));
+        assertEquals("doItHelper - case 1", new StringAndInt("teeth",4), 
+            myTester.doItHelper("teeth unicuspid with crowns posteriorly curved along the main axis of the mandible , organized into a long series of equally_ sized teeth", 
+                "teeth unicuspid with"));        
 	}
 	
 	

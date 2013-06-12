@@ -314,4 +314,12 @@ public class DataHolderTest {
 		assertEquals("checkPOSInfo - found multiple", target3, myTester.checkPOSInfo("word1"));
 	}
 	
+	@Test
+	public void testUpdateTableNNConditionHelper(){
+		assertEquals("updateTableNN case 0 - true", false, tester.updateTableNNConditionHelper(""));
+		assertEquals("updateTableNN case 1 - false", false, tester.updateTableNNConditionHelper(""));
+		assertEquals("updateTableNN case 2 - false", false, tester.updateTableNNConditionHelper(""));
+		assertEquals("updateTableNN case 3 - false", false, tester.updateTableNNConditionHelper(""));
+	}
+	
 }

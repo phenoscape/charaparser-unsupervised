@@ -1929,7 +1929,8 @@ public class Learner {
 		int sign = 0;
 		String tag = null;
 		
-		String[] words = thisLead.split("\\s+");
+		List<String> words = Arrays.asList(thisLead.split("\\s+"));
+		
 		String ptn = this.getPOSptn(words);
 		
 		Pattern p2 = Pattern.compile("^.*ps.*$");
@@ -1942,7 +1943,7 @@ public class Learner {
 		// Case 1: single word case
 		if (ptn.matches("^[pns]$")) {
 			myLogger.info("Case 1");
-			tag = words[0];
+			tag = words.get(0);
 			sign = sign + this.myDataHolder.updateTable(tag, ptn, "-", "wordpos", 1);
 			myLogger.info("Directly markup with tag: "+tag+"\n");
 		}
@@ -1952,8 +1953,8 @@ public class Learner {
 			myLogger.info("Case 2");
 			int start = m2.start();
 			int end = m2.end();
-			String pWord = words[start];
-			String sWord = words[end - 1];
+			String pWord = words.get(start);
+			String sWord = words.get(end-1);
 
 			sign += this.myDataHolder.updateTable(pWord, "p", "-", "wordpos", 1);
 			sign += this.myDataHolder.updateTable(sWord, "s", "", "wordpos", 1);
@@ -1966,17 +1967,18 @@ public class Learner {
 			int start = m3.start();
 			int end = m2.end();
 			
-			String secondMatchedWord = words[end-1];
+			String secondMatchedWord = words.get(end-1);
 			
 			if (StringUtility.equalsWithNull(this.myUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
 				myLogger.info("Case 3.1");
 				tag = secondMatchedWord;
 				sign = sign + this.myDataHolder.updateTable(tag, "p", "-", "wordpos", 1);
-				this.myDataHolder.add2Holder(DataHolder.ISA, Arrays.asList(new String[] {tag, words[end-2]}));	
+				this.myDataHolder.add2Holder(DataHolder.ISA, Arrays.asList(new String[] {tag, words.get(end-2)}));	
 				myLogger.info("\t:[p p] pattern: determine the tag: "+tag);
 			}
 			else {
 				myLogger.info("Case 3.2");
+				
 				
 				
 				myLogger.info("\t:determine the tag: $tag\n");
@@ -1996,16 +1998,16 @@ public class Learner {
 	 * @param words
 	 * @return
 	 */
-	public String getPOSptn(String[] words) {
+	public String getPOSptn(List<String> words) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt.getPOSptn");
 		
 		myLogger.trace("Enter getPOSptn");
-		myLogger.trace("Words: " + StringUtility.stringArray2String(words));
+		myLogger.trace("Words: " + words.toString());
 				
 		String ptn = "";
-		for (int i = 0; i < words.length; i++) {
-			String word = words[i];
+		for (int i = 0; i < words.size(); i++) {
+			String word = words.get(i);
 			List<POSInfo> POSInfoList = this.myDataHolder.checkPOSInfo(word);
 			if (POSInfoList.size() > 0) {
 				POSInfo p = POSInfoList.get(0);

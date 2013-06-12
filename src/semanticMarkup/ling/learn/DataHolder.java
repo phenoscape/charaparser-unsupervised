@@ -1108,6 +1108,52 @@ public class DataHolder {
 		return variations;
 	}
 	
+	public int updateTableNN(int start, int end, List<String> words) {
+		int update=0;
+		
+		List<String> splicedWords = StringUtility.stringArraySplice(words, start, end); 
+		
+		/**
+
+	for($i = 0; $i < @words-1; $i++){
+		#one N at a time
+    	$update += update($words[$i], "m", "", "modifiers", 1) if $words[$i] !~/\b($stop)\b/ and $words[$i] !~ /ly\s*$/ and $words[$i] !~ /\b($FORBIDDEN)\b/; #update modifier
+	}
+
+		 */
+		
+		for (int i=0;i<splicedWords.size()-1;i++) {
+			String word = splicedWords.get(i);
+			if (this.updateTableNNConditionHelper(word)) {
+				update += this.updateTable(word, "m", "", "modifiers", 1);
+			}
+		}
+		
+		return update;
+	}
+	
+	/**
+	 * A helper of method updateTableNN. Check if the condition is meet.
+	 * 
+	 * @param word
+	 *            the word to check
+	 * @return a boolean variable
+	 */
+	public boolean updateTableNNConditionHelper(String word) {
+		boolean flag = false;
+		
+		flag = (
+				// $words[$i] !~/\b($stop)\b/
+				(word.matches("^.*\\b("+Constant.STOP+")\\b.*$"))
+				// $words[$i] !~ /ly\s*$/
+				&& (word.matches("^.*ly\\s*$"))
+				// $words[$i] !~ /\b($FORBIDDEN)\b/
+				&& (word.matches("^.*\\b("+Constant.FORBIDDEN+")\\b.*$"))
+				);
+		
+		return flag;
+	}
+	
 	/**
 	 * Return (POS, role, certaintyU, certaintyL) of a word
 	 * 
