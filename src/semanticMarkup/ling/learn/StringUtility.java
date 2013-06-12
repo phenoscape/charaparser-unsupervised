@@ -200,4 +200,26 @@ public class StringUtility {
 		return splicedWords;
 	}
 	
+	/**
+	 * Join a list of string together
+	 * 
+	 * @param separater
+	 * @param list
+	 * @return the string
+	 */
+	public static String joinList(String separater, List<String> list){
+		String result = "";
+		
+		for (int i=0;i<list.size();i++) {
+			result = result + list.get(i)+separater;
+		}
+		
+		if (!result.equals("")) {
+			result = result.substring(0, result.length()-separater.length());
+		}
+		
+		
+		return result;
+	}
+	
 }

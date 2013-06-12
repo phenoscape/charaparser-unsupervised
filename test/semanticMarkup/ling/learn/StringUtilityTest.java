@@ -173,4 +173,12 @@ public class StringUtilityTest {
 		
 	}
 	
+	@Test
+	public void testJoinList(){
+		List<String> input = new ArrayList<String>();
+		input.addAll(Arrays.asList("word1 word2 word3".split(" ")));
+		String sep = "+++";
+		assertEquals("stringArraySplice", "word1+++word2+++word3", StringUtility.joinList(sep, input));
+	}
+	
 }
