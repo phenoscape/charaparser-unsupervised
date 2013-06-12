@@ -1144,11 +1144,11 @@ public class DataHolder {
 		
 		flag = (
 				// $words[$i] !~/\b($stop)\b/
-				(word.matches("^.*\\b("+Constant.STOP+")\\b.*$"))
+				(!word.matches("^.*\\b("+Constant.STOP+")\\b.*$"))
 				// $words[$i] !~ /ly\s*$/
-				&& (word.matches("^.*ly\\s*$"))
+				&& (!word.matches("^.*ly\\s*$"))
 				// $words[$i] !~ /\b($FORBIDDEN)\b/
-				&& (word.matches("^.*\\b("+Constant.FORBIDDEN+")\\b.*$"))
+				&& (!word.matches("^.*\\b("+Constant.FORBIDDEN+")\\b.*$"))
 				);
 		
 		return flag;

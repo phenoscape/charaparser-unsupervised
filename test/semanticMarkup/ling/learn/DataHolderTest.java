@@ -316,10 +316,10 @@ public class DataHolderTest {
 	
 	@Test
 	public void testUpdateTableNNConditionHelper(){
-		assertEquals("updateTableNN case 0 - true", false, tester.updateTableNNConditionHelper(""));
-		assertEquals("updateTableNN case 1 - false", false, tester.updateTableNNConditionHelper(""));
-		assertEquals("updateTableNN case 2 - false", false, tester.updateTableNNConditionHelper(""));
-		assertEquals("updateTableNN case 3 - false", false, tester.updateTableNNConditionHelper(""));
+		assertEquals("updateTableNN case 0 - true", true, tester.updateTableNNConditionHelper("word"));
+		assertEquals("updateTableNN case 1 stop words - false", false, tester.updateTableNNConditionHelper(" page"));
+		assertEquals("updateTableNN case 2 -ly ending words - false", false, tester.updateTableNNConditionHelper("hello abcly "));
+		assertEquals("updateTableNN case 3 forbidden words - false", false, tester.updateTableNNConditionHelper("nor $%^iwopf0-v"));
 	}
 	
 }
