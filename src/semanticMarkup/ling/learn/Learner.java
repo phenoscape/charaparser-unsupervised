@@ -1942,7 +1942,7 @@ public class Learner {
 
 		// Case 1: single word case
 		if (ptn.matches("^[pns]$")) {
-			myLogger.info("Case 1");
+			myLogger.trace("Case 1");
 			tag = words.get(0);
 			sign = sign + this.myDataHolder.updateTable(tag, ptn, "-", "wordpos", 1);
 			myLogger.info("Directly markup with tag: "+tag+"\n");
@@ -1950,7 +1950,7 @@ public class Learner {
 
 		// Case 2: the POSs are "ps"
 		else if (m2.find()) {
-			myLogger.info("Case 2");
+			myLogger.trace("Case 2");
 			int start = m2.start();
 			int end = m2.end();
 			String pWord = words.get(start);
@@ -1960,29 +1960,47 @@ public class Learner {
 			sign += this.myDataHolder.updateTable(sWord, "s", "", "wordpos", 1);
 		} 
 		
+		// Case 3
 		else if (m3.find()) {
-			myLogger.info("Case 3");
+			myLogger.trace("Case 3");
 			myLogger.info("Found [p?] pattern");
 			
 			int start = m3.start();
-			int end = m2.end();
+			int end = m3.end();
 			
 			String secondMatchedWord = words.get(end-1);
 			
 			if (StringUtility.equalsWithNull(this.myUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
-				myLogger.info("Case 3.1");
+				myLogger.trace("Case 3.1");
 				tag = secondMatchedWord;
 				sign = sign + this.myDataHolder.updateTable(tag, "p", "-", "wordpos", 1);
 				this.myDataHolder.add2Holder(DataHolder.ISA, Arrays.asList(new String[] {tag, words.get(end-2)}));	
 				myLogger.info("\t:[p p] pattern: determine the tag: "+tag);
 			}
 			else {
-				myLogger.info("Case 3.2");
+				myLogger.trace("Case 3.2");
 				
+				List<String> wordsCopy = words;
+				// $i is just end-1
+				List<String> tempWords = StringUtility.stringArraySplice(words, 0, end-1);
 				
+				tag = StringUtility.joinList(" ", tempWords);
 				
 				myLogger.info("\t:determine the tag: $tag\n");
 				myLogger.info("\t:updates on POSs\n");
+				
+				int temp = 0;
+				temp = this.myDataHolder.updateTable(wordsCopy.get(end-1), "b", "", "wordpos", 1);
+				sign += temp;
+				myLogger.info("\t:updateTable1 returns " + temp);
+				
+				temp = this.myDataHolder.updateTable(wordsCopy.get(end-2), "p", "-", "wordpos", 1);
+				sign += temp;
+				myLogger.info("\t:updateTable2 returns " + temp);
+				
+				temp = this.myDataHolder.updateTableNN(0, tempWords.size(), tempWords);
+				sign += temp;
+				myLogger.info("\t:updateTable returns " + temp);
 			}
 		}
 		

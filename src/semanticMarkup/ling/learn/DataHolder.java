@@ -1108,22 +1108,19 @@ public class DataHolder {
 		return variations;
 	}
 	
+	/**
+	 * 
+	 * @param start
+	 * @param end
+	 * @param words
+	 * @return
+	 */
 	public int updateTableNN(int start, int end, List<String> words) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.updateTableNN");
-		
+				
 		int update=0;
-		
 		List<String> splicedWords = StringUtility.stringArraySplice(words, start, end); 
-		
-		/**
-
-	for($i = 0; $i < @words-1; $i++){
-		#one N at a time
-    	$update += update($words[$i], "m", "", "modifiers", 1) if $words[$i] !~/\b($stop)\b/ and $words[$i] !~ /ly\s*$/ and $words[$i] !~ /\b($FORBIDDEN)\b/; #update modifier
-	}
-
-		 */
 		
 		for (int i=0;i<splicedWords.size()-1;i++) {
 			String word = splicedWords.get(i);
