@@ -166,10 +166,11 @@ public class StringUtilityTest {
 	
 	
 	@Test
-	public void testStringArraySplice() {
-		List<String> target = new ArrayList<String>();
-		target.addAll(Arrays.asList("0 1 5 6 7 8 9".split(" ")));
-		assertEquals("stringArraySplice", target, StringUtility.stringArraySplice(Arrays.asList("0 1 2 3 4 5 6 7 8 9".split(" ")), 2, 5));
+	public void testStringArraySplice() {		
+		List<String> target1 = new ArrayList<String>();
+		target1.addAll(Arrays.asList("hyohyoidei muscle".split(" ")));
+		assertEquals("stringArraySplice", target1, StringUtility.stringArraySplice(Arrays.asList("hyohyoidei muscle".split(" ")), 0, 2));
+		
 	}
 	
 }

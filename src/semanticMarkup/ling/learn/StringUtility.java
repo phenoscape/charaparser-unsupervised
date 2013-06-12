@@ -182,7 +182,7 @@ public class StringUtility {
 	//Arrays.asList
 	
 	/**
-	 * Removed a section of the string list between the index of the start
+	 * Get a splice of the string list between the index of the start
 	 * (inclusive) and the end (exclusive)from the string list
 	 * 
 	 * @param words
@@ -191,12 +191,11 @@ public class StringUtility {
 	 *            the start index of the section
 	 * @param end
 	 *            the end index of the section
-	 * @return the remaining list
+	 * @return the splice
 	 */
 	public static List<String> stringArraySplice(List<String> words, int start, int end) {
 		List<String> splicedWords = new ArrayList<String>();
-		splicedWords.addAll(words.subList(0, start));
-		splicedWords.addAll(words.subList(end, words.size()));
+		splicedWords.addAll(words.subList(start, end));
 		
 		return splicedWords;
 	}

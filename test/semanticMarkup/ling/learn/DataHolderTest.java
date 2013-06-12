@@ -322,4 +322,12 @@ public class DataHolderTest {
 		assertEquals("updateTableNN case 3 forbidden words - false", false, tester.updateTableNNConditionHelper("nor $%^iwopf0-v"));
 	}
 	
+	@Test
+	public void testUpdateTableNN() {
+		List<String> input1 = new ArrayList<String>();
+		input1.addAll(Arrays.asList("hyohyoidei muscle".split(" ")));
+		
+		assertEquals("updateTableNN case 3 forbidden words - false", 1, tester.updateTableNN(0, 2, input1));		
+	}
+	
 }

@@ -1109,6 +1109,9 @@ public class DataHolder {
 	}
 	
 	public int updateTableNN(int start, int end, List<String> words) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.updateTableNN");
+		
 		int update=0;
 		
 		List<String> splicedWords = StringUtility.stringArraySplice(words, start, end); 
@@ -1124,8 +1127,14 @@ public class DataHolder {
 		
 		for (int i=0;i<splicedWords.size()-1;i++) {
 			String word = splicedWords.get(i);
+
+			myLogger.trace("Check N: " + word);
+
 			if (this.updateTableNNConditionHelper(word)) {
-				update += this.updateTable(word, "m", "", "modifiers", 1);
+				myLogger.trace("Update N: " + word);
+				int temp = this.updateTable(word, "m", "", "modifiers", 1);
+				update = update + temp;
+				myLogger.trace("Return: " + temp);
 			}
 		}
 		
@@ -1142,12 +1151,8 @@ public class DataHolder {
 	public boolean updateTableNNConditionHelper(String word) {
 		boolean flag = false;
 		
-		flag = (
-				// $words[$i] !~/\b($stop)\b/
-				(!word.matches("^.*\\b("+Constant.STOP+")\\b.*$"))
-				// $words[$i] !~ /ly\s*$/
+		flag = (   (!word.matches("^.*\\b("+Constant.STOP+")\\b.*$"))
 				&& (!word.matches("^.*ly\\s*$"))
-				// $words[$i] !~ /\b($FORBIDDEN)\b/
 				&& (!word.matches("^.*\\b("+Constant.FORBIDDEN+")\\b.*$"))
 				);
 		
