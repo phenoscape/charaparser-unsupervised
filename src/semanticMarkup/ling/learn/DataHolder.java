@@ -1350,19 +1350,37 @@ public class DataHolder {
 		}
 		
 		if (holderID == DataHolder.SINGULAR_PLURAL) {
-			int index = 0;
+			myLogger.info("==SingularPlural Table==");
+			
 			Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
-			while (iter.hasNext()) {
-				if ((index >= startIndex) && (index <=endIndex)) {
-					SingularPluralPair entry = iter.next();
+			
+			List<SingularPluralPair> singularPluralPairList = new LinkedList<SingularPluralPair>();
+			singularPluralPairList.addAll(singularPluralTable);
+			Collections.sort(singularPluralPairList);
+			
+			for (int i = 0; i<singularPluralPairList.size();i++) {
+				if ((i >= startIndex) && (i <=endIndex)) {
+					SingularPluralPair entry = singularPluralPairList.get(i);
 					
-					myLogger.info("Index: " + index);
+					myLogger.info("Index: " + i);
 					myLogger.info("Singular: " + entry.getSingular());
 					myLogger.info("Plural: " + entry.getPlural());
 					myLogger.info("\n");
 				}
-				index++;
 			}
+			
+//			int index = 0;
+//			while (iter.hasNext()) {
+//				if ((index >= startIndex) && (index <=endIndex)) {
+//					SingularPluralPair entry = iter.next();
+//					
+//					myLogger.info("Index: " + index);
+//					myLogger.info("Singular: " + entry.getSingular());
+//					myLogger.info("Plural: " + entry.getPlural());
+//					myLogger.info("\n");
+//				}
+//				index++;
+//			}
 		}
 		
 		if (holderID == DataHolder.UNKNOWNWORD) {
