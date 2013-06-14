@@ -715,7 +715,7 @@ public class LearnerTest {
 				Arrays.asList(new String[] {"unicuspid", "p", "role", "1", "3", "", ""}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"with", "b", "role", "1", "1", "", ""}));
-        assertEquals("doItHelper - case 1", new StringAndInt("teeth",4), 
+        assertEquals("doItHelper - case 3.2", new StringAndInt("teeth",4), 
             myTester.doItHelper("teeth unicuspid with crowns posteriorly curved along the main axis of the mandible , organized into a long series of equally_ sized teeth", 
                 "teeth unicuspid with"));        
 	}

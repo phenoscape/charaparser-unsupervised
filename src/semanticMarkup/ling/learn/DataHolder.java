@@ -1310,7 +1310,7 @@ public class DataHolder {
 	}
 	
 	// Holder Output
-	void printHolder(byte holderID) {
+	public void printHolder(byte holderID) {
 		if (holderID == DataHolder.SENTENCE) {
 			printHolder(holderID, 0, this.sentenceTable.size()-1);
 		}
@@ -1329,7 +1329,7 @@ public class DataHolder {
 		
 	}
 	
-	void printHolder(byte holderID, int startIndex, int endIndex){
+	public void printHolder(byte holderID, int startIndex, int endIndex){
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.printHolder");
 		

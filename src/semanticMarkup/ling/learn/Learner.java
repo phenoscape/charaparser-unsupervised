@@ -101,7 +101,7 @@ public class Learner {
 
 		// pre load words
 		this.addHeuristicsNouns();
-		this.addPredefinedWords();
+		//this.addPredefinedWords();
 
 
 		// ???
@@ -118,8 +118,6 @@ public class Learner {
 		// bootstrapping rules
 //		myLogger.info("Bootstrapping rules");
 //		this.discover("normal");
-
-		//System.out.println("Method: learn - Done!\n");
 
 		myLogger.trace("Quite Learn");
 		return myDataHolder;
@@ -481,26 +479,36 @@ public class Learner {
 	 * 
 	 */
 	public void addHeuristicsNouns() {
-		if (this.addHeuristicsNouns_debug)
-			System.out.println("Enter addHeuristicsNouns:\n");
-
-		// part 1
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addHeuristicsNouns");
+		
+		myLogger.trace("Enter addHeuristicsNouns");
+		
+		Set<String> nouns = this.learnHeuristicsNouns();
+		myLogger.debug("Nouns learnt from heuristics:");
+		myLogger.debug("\t"+nouns.toString());
+		myLogger.debug("Total: "+nouns.size());
+		
 		List<Set<String>> results = this.characterHeuristics();
 		Set<String> rnouns = results.get(0);
-		Set<String> descriptors = results.get(1);
-		
+		Set<String> descriptors = results.get(1);		
 		addDescriptors(descriptors);
-		addNouns(rnouns);
+		addNouns(rnouns);	
 		
-		// part 2
-		Set<String> nouns = this.learnHeuristicsNouns();
+		//this.myDataHolder.printHolder(DataHolder.SINGULAR_PLURAL);
+		
+		myLogger.debug("Total: "+nouns.size());
 		Iterator<String> iter = nouns.iterator();
 		while (iter.hasNext()) {
 			String e = iter.next();
+			myLogger.trace("Check Word: "+e);
+			
 			if ((e.matches("^.*\\w.*$"))
 					&& (!StringUtility.isMatchedWords(e, "NUM|" + Constant.NUMBER
 							+ "|" + Constant.CLUSTERSTRING + "|"
 							+ Constant.CHARACTER + "|" + Constant.PROPERNOUN))) {
+				myLogger.trace("Pass");
+				
 				// same word may have two different pos tags
 				String[] nounArray = e.split("\\|");
 				for (int i = 0; i < nounArray.length; i++) {
@@ -527,9 +535,9 @@ public class Learner {
 							String singular = word;
 							List<String> pluralList = this.myWordFormUtility
 									.getPlural(singular);
-							iter = pluralList.iterator();
-							while (iter.hasNext()) {
-								String plural = iter.next();
+							Iterator<String> pluralIter = pluralList.iterator();
+							while (pluralIter.hasNext()) {
+								String plural = pluralIter.next();
 								if (plural != null) {
 									if (!plural.equals("")) {
 										this.myDataHolder.addSingularPluralPair(singular, plural);
@@ -541,6 +549,8 @@ public class Learner {
 				}
 			}
 		}
+				
+		myLogger.trace("Quite addHeuristicsNouns");
 	}
 
 
@@ -1664,15 +1674,9 @@ public class Learner {
 
 			
 			
-			if ((
-					//!thisTag.equals("ignore") 
-					
-					!StringUtility.equalsWithNull(thisTag, "ignore")
-					
-					|| (thisTag == null)
-					
-					)
-					&& thisStatus.equals(status)) {
+			if (    (!StringUtility.equalsWithNull(thisTag, "ignore")
+					|| (thisTag == null))
+				&& thisStatus.equals(status)) {
 				
 				myLogger.debug("Sentence #: "+i);
 				myLogger.debug("Lead: " + thisLead);
@@ -1688,8 +1692,7 @@ public class Learner {
 				// tag is null
 				else {
 					myLogger.debug("Pass");
-				}
-				
+				}				
 				
 				String[] startWords = thisLead.split("\\s+");
 				myLogger.debug("startWords: "+startWords.toString());
@@ -1908,8 +1911,6 @@ public class Learner {
 		myLogger.trace("Enter doIt");
 		myLogger.trace("sentence ID: " + sentID);
 		
-
-
 		Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(sentID);
 		String thisSentence = sentEntry.getSentence();
 		String thisLead = sentEntry.getLead();
@@ -1918,6 +1919,7 @@ public class Learner {
 		
 		myLogger.trace("Return Tag: " + returnValue.getString() + ", sign: " + returnValue.getInt());
 		myLogger.trace("Quit doIt");
+		myLogger.trace("\n");
 		
 		return returnValue;		
 	}
@@ -1925,13 +1927,19 @@ public class Learner {
 	public StringAndInt doItHelper(String thisSentence, String thisLead) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt");
-		
+
+		myLogger.trace("Enter doItHelper");
+		myLogger.trace("Sentence: " + thisSentence);
+		myLogger.trace("Lead: " + thisLead);
+
 		int sign = 0;
 		String tag = null;
 		
 		List<String> words = Arrays.asList(thisLead.split("\\s+"));
 		
 		String ptn = this.getPOSptn(words);
+		
+		myLogger.trace("ptn: "+ptn);
 		
 		Pattern p2 = Pattern.compile("^.*ps.*$");
 		Matcher m2 = p2.matcher(ptn);
@@ -1945,12 +1953,13 @@ public class Learner {
 			myLogger.trace("Case 1");
 			tag = words.get(0);
 			sign = sign + this.myDataHolder.updateTable(tag, ptn, "-", "wordpos", 1);
-			myLogger.info("Directly markup with tag: "+tag+"\n");
+			myLogger.debug("Directly markup with tag: "+tag+"\n");
 		}
 
 		// Case 2: the POSs are "ps"
 		else if (m2.find()) {
 			myLogger.trace("Case 2");
+			myLogger.debug("Found [ps] pattern\n");
 			int start = m2.start();
 			int end = m2.end();
 			String pWord = words.get(start);
@@ -1963,7 +1972,7 @@ public class Learner {
 		// Case 3
 		else if (m3.find()) {
 			myLogger.trace("Case 3");
-			myLogger.info("Found [p?] pattern");
+			myLogger.debug("Found [p?] pattern");
 			
 			int start = m3.start();
 			int end = m3.end();
@@ -1975,7 +1984,7 @@ public class Learner {
 				tag = secondMatchedWord;
 				sign = sign + this.myDataHolder.updateTable(tag, "p", "-", "wordpos", 1);
 				this.myDataHolder.add2Holder(DataHolder.ISA, Arrays.asList(new String[] {tag, words.get(end-2)}));	
-				myLogger.info("\t:[p p] pattern: determine the tag: "+tag);
+				myLogger.debug("\t:[p p] pattern: determine the tag: "+tag);
 			}
 			else {
 				myLogger.trace("Case 3.2");
@@ -1986,26 +1995,27 @@ public class Learner {
 				
 				tag = StringUtility.joinList(" ", tempWords);
 				
-				myLogger.info("\t:determine the tag: $tag\n");
-				myLogger.info("\t:updates on POSs\n");
+				myLogger.debug("\t:determine the tag: $tag\n");
+				myLogger.debug("\t:updates on POSs\n");
 				
 				int temp = 0;
 				temp = this.myDataHolder.updateTable(wordsCopy.get(end-1), "b", "", "wordpos", 1);
 				sign += temp;
-				myLogger.info("\t:updateTable1 returns " + temp);
+				myLogger.debug("\t:updateTable1 returns " + temp);
 				
 				temp = this.myDataHolder.updateTable(wordsCopy.get(end-2), "p", "-", "wordpos", 1);
 				sign += temp;
-				myLogger.info("\t:updateTable2 returns " + temp);
+				myLogger.debug("\t:updateTable2 returns " + temp);
 				
 				temp = this.myDataHolder.updateTableNN(0, tempWords.size(), tempWords);
 				sign += temp;
-				myLogger.info("\t:updateTable returns " + temp);
+				myLogger.debug("\t:updateTable returns " + temp);
 			}
 		}
 		
 		StringAndInt returnValue = new StringAndInt(tag,sign);
 		
+		myLogger.trace("Quite doItHelper");
 		return returnValue;
 	}
 
