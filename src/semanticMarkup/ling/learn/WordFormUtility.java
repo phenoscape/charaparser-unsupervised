@@ -315,9 +315,12 @@ public class WordFormUtility {
 	}	
 
 	/**
+	 * Get the singular form of a word
 	 * 
 	 * @param word
-	 * @return the singular form of the input word
+	 *            the word in query
+	 * @return the singular form of the input word. If it the method fails to
+	 *         find any singular form of the word, return an empty string
 	 */
 	public String getSingular(String word) {
 		if (!word.matches("^.*\\w.*$")) {
@@ -419,9 +422,17 @@ public class WordFormUtility {
 			return singular;
 		}
 
-		return null;
+		return "";
 	}	
 
+	/**
+	 * Get all the plural forms of a word
+	 * 
+	 * @param word
+	 *            the word in query
+	 * @return a list of the plural forms of the word. If the method fails to
+	 *         find any plural forms of the method, return an empty list
+	 */
 	public List<String> getPlural(String word) {
 		
 		if (word.matches("^(n|2n|x)$")) {
@@ -466,6 +477,7 @@ public class WordFormUtility {
 		String[] pArray = plStr.split(" ");
 		List<String> pList = new ArrayList<String>();
 		Collections.addAll(pList, pArray);
+		
 		return pList;
 	}
 
