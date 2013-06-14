@@ -1,6 +1,6 @@
 package semanticMarkup.ling.learn;
 
-public class SingularPluralPair {	
+public class SingularPluralPair implements Comparable<SingularPluralPair>{	
 	private String singular;
 	private String plural;
 
@@ -44,6 +44,14 @@ public class SingularPluralPair {
 		return ((this.singular.equals(mySingularPluralPair.getSingular())) 
 				&&(this.plural.equals(mySingularPluralPair.getPlural())));
 		
+	}
+
+	@Override
+	public int compareTo(SingularPluralPair spp) {		
+		String SingularAndPluralA = this.singular + this.plural;
+		String SingularAndPluralB = spp.getSingular() + spp.getPlural();
+		
+		return SingularAndPluralA.compareTo(SingularAndPluralB);
 	}
 
 }

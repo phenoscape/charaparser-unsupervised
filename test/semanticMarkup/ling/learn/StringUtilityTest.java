@@ -2,6 +2,11 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+
 import org.junit.Test;
 
 public class StringUtilityTest {
@@ -111,4 +116,69 @@ public class StringUtilityTest {
 								"above|across|after|along|around|as|at|before|below|beneath|between|beyond|by|during|for|from|in|into|near|of|off|on|onto|out|outside|over|than|through|throughout|toward|towards|up|upward|with|without"));
 	}
 
+	/**
+	
+		while($modifier =~ /^($stop|$FORBIDDEN)\b/){
+		$modifier =~ s#^($stop|$FORBIDDEN)\b\s*##g;
+	}
+
+	while($tag =~ /^($stop|$FORBIDDEN)\b/){
+		$tag =~ s#^($stop|$FORBIDDEN)\b\s*##g;
+
+	}
+	
+		#from ending
+	while($modifier =~ /\b($stop|$FORBIDDEN|\w+ly)$/){
+		$modifier =~ s#\s*\b($stop|$FORBIDDEN|\w+ly)$##g;
+	}
+
+	while($tag =~ /\b($stop|$FORBIDDEN|\w+ly)$/){
+		$tag =~ s#\s*\b($stop|$FORBIDDEN|\w+ly)$##g;
+
+	}
+
+	
+	
+	 */
+	
+	@Test
+	public void testRemoveAllRecursive() {
+		assertEquals("removeAllRecursive - beginning", "word", 
+				StringUtility.removeAllRecursive("stop stop word", "^(stop)\\b\\s*"));
+		assertEquals("removeAllRecursive - ending", "word", 
+				StringUtility.removeAllRecursive("word word1ly word2ly", "\\s*\\b\\w+ly$"));
+		
+	}
+	
+	@Test
+	public void testEqualsWithNull(){
+		assertEquals("equalsWithNull - null : null", true, StringUtility.equalsWithNull(null, null));
+		assertEquals("equalsWithNull - null : not null", false, StringUtility.equalsWithNull(null, "s2"));
+		assertEquals("equalsWithNull - not null : null", false, StringUtility.equalsWithNull("s1", null));
+		assertEquals("equalsWithNull - not null : not null - equal", true, StringUtility.equalsWithNull("abc", "abc"));
+		assertEquals("equalsWithNull - not null : not null - not equal", false, StringUtility.equalsWithNull("s1", "s2"));
+	}
+	
+	@Test
+	public void testStringArray2String() {
+		assertEquals("stringArray2String", "teeth unicuspid with", StringUtility.stringArray2String(("teeth unicuspid with".split(" "))));
+	}
+	
+	
+	@Test
+	public void testStringArraySplice() {		
+		List<String> target1 = new ArrayList<String>();
+		target1.addAll(Arrays.asList("hyohyoidei muscle".split(" ")));
+		assertEquals("stringArraySplice", target1, StringUtility.stringArraySplice(Arrays.asList("hyohyoidei muscle".split(" ")), 0, 2));
+		
+	}
+	
+	@Test
+	public void testJoinList(){
+		List<String> input = new ArrayList<String>();
+		input.addAll(Arrays.asList("word1 word2 word3".split(" ")));
+		String sep = "+++";
+		assertEquals("stringArraySplice", "word1+++word2+++word3", StringUtility.joinList(sep, input));
+	}
+	
 }

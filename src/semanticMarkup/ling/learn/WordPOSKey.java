@@ -42,8 +42,12 @@ public class WordPOSKey {
 		
 		WordPOSKey myWordPOSKey = (WordPOSKey) obj;
 		
-		return ((this.word.equals(myWordPOSKey.getWord())) 
-				&& (this.pos.equals(myWordPOSKey.getPOS())));
+		boolean case1 = (this.word == null)?
+				myWordPOSKey.getWord()==null : this.word.equals(myWordPOSKey.getWord());
+		boolean case2 = (this.pos == null)?
+				myWordPOSKey.getPOS()==null : this.pos.equals(myWordPOSKey.getPOS());
+		
+		return (case1 && case2);
 		
 	}
 

@@ -29,16 +29,20 @@ import semanticMarkup.core.Treatment;
 import semanticMarkup.knowledge.Stemmer;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
-public class UnsupervisedClauseMarkup implements ITerminologyLearner {
-
+public class UnsupervisedClauseMarkup implements ITerminologyLearner {	
 	// Date holder
 	public DataHolder myDataHolder;
+	
+	// Configuration
+		private Configuration myConfiguration;
+		
+		// Utility
+		private Utility myUtility;
 
 	// Learner
 	private Learner myLearner;
-
-	// OpenNLP tokenizer
-	private TokenizerME myTokenizer;
+	
+	
 
 	// unused variables
 	// directory of /descriptions folder
@@ -89,26 +93,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		// Get DataHolder
 		// this.myDataHolder = null;// 
-		this.myDataHolder=new DataHolder();
-		myLearner = new Learner(learningMode, wordnetDir);
-
-		// Get OpenNLP tokenizer
-		InputStream tokenModelIn;
-		try {
-			tokenModelIn = new FileInputStream("res/en-token.bin");
-			TokenizerModel model = new TokenizerModel(tokenModelIn);
-			this.myTokenizer = new TokenizerME(model);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
+		
+		this.myConfiguration = new Configuration();
+		this.myUtility = new Utility(myConfiguration);
+		this.myDataHolder = new DataHolder(myConfiguration, myUtility);
+		myLearner = new Learner(this.myConfiguration, this.myUtility);
+		
 	}
 
 	public void learn(List<Treatment> treatments) {
@@ -141,7 +131,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Set<String> myAdjNounSet = new HashSet<String>();
 
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 
 		while (iter.hasNext()) {
@@ -168,7 +158,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Map<String, String> myAdjNounSent = new HashMap<String, String>();
 
 		// collect senteces that need adj-nn disambiguation
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 
 		while (iter.hasNext()) {
@@ -209,14 +199,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Map<String, Set<String>> myWordToSources = new HashMap<String, Set<String>>();
 
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceTable()
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 
+		TokenizerME myTokenizer = this.myUtility.getTokenizer();
 		while (iter.hasNext()) {
 			Sentence sentenceElement = iter.next();
 			String source = sentenceElement.getSource();
-			String sentence = sentenceElement.getSentence();
-			String[] words = this.myTokenizer.tokenize(sentence);
+			String sentence = sentenceElement.getSentence();			
+			String[] words = myTokenizer.tokenize(sentence);
 			for (int i = 0; i < words.length; i++) {
 				String word = words[i];
 				if (!myWordToSources.containsKey(word))
@@ -302,8 +293,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// ---------------TEST Helper function----------------
 	public void printWordPOSTable() {
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = this.myDataHolder.wordPOSTable
-				.entrySet().iterator();
+		Map<WordPOSKey, WordPOSValue> myWordPOSHolder = this.myDataHolder.getWordPOSHolder();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> entries = myWordPOSHolder.entrySet().iterator();
 		while (entries.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> entry = entries.next();
 			System.out.println(entry.getKey().getWord() + ", "

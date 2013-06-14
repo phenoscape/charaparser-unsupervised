@@ -24,15 +24,9 @@ public class WordFormUtility {
 	
 	// Porter Stemmer
 	private Stemmer myStemmer;
-	
-	public WordFormUtility(String wnDir) {
-		try {
-			this.myWN = new WordNetAPI(wnDir, false);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+
+	public WordFormUtility(WordNetAPI wn) {
+		this.myWN = wn;
 		this.myStemmer = new Stemmer();
 	}
 	
@@ -48,8 +42,7 @@ public class WordFormUtility {
 	 *         2) mode "number": if a noun, return "p" [plural] or "s"[singular], else if not in WN "", otherwise "x".
 	 *         3) mode "pos": return n [p,s], v, a, r, "" (not in WN).
 	 */
-	public String checkWN(String word, String mode) {
-		
+	public String checkWN(String word, String mode) {		
 		/**
 		 * 0.0 If the word contains nothing but non-word characters, such as <>, return empty
 		 * 0.1 Check singularRecordsprevious records
@@ -65,8 +58,7 @@ public class WordFormUtility {
 		 *  2.2 mode is pos
 		 */
 		
-		//this.myWN.getMostLikleyPOS(word);
-		
+		//this.myWN.getMostLikleyPOS(word);		
 		// If the word contains nothing but non-word characters, such as <>, return empty
 		word = word.replaceAll("\\W", "");
 		if (word.equals("")) {
@@ -75,8 +67,8 @@ public class WordFormUtility {
 		
 		// Check previous records
 		// singular case
-		String singular = "";
-		if (mode.equals("singular")) {
+		String singular = null;
+		if (StringUtility.equalsWithNull(mode, "singular")) {
 			singular = this.singularRecords.get(word);
 		}
 		if (singular != null) {
@@ -86,8 +78,8 @@ public class WordFormUtility {
 		}
 
 		// number case
-		String number = "";
-		if (mode.equals("number")) {
+		String number = null;
+		if (StringUtility.equalsWithNull(mode, "number")) {
 			number = this.numberRecords.get(word);
 		}
 		if (number != null) {
@@ -97,8 +89,8 @@ public class WordFormUtility {
 		}
 
 		// pos case
-		String pos = "";
-		if (mode.equals("pos")) {
+		String pos = null;
+		if (StringUtility.equalsWithNull(mode, "pos")) {
 			pos = this.POSRecords.get(word);
 		}
 		if (pos != null) {
@@ -202,7 +194,7 @@ public class WordFormUtility {
 				this.numberRecords.put(word, "s");
 				return mode.equals("singular")?sWord:"s";
 			}
-			// Case 2.1.3: pluarl
+			// Case 2.1.3: plural
 			else {
 				this.numberRecords.put(word, "p");
 				return mode.equals("singular")?sWord:"p";

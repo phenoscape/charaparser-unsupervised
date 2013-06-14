@@ -3,8 +3,10 @@ package semanticMarkup.ling.learn;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +22,9 @@ public class LearnerTest {
 
 	@Before
 	public void initialize() {
-		this.tester = new Learner("plain", "res/WordNet/WordNet-3.0/dict");
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		this.tester = new Learner(myConfiguration, myUtility);
 	}
 
 	@Test
@@ -32,13 +36,15 @@ public class LearnerTest {
 
 		List<Treatment> tms = fileLoader.getTreatmentList();
 
-		DataHolder results = new DataHolder();
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		DataHolder results = new DataHolder(myConfiguration, myUtility);
 
 		Map<String, String> myHeuristicNounTable = results
 				.getHeuristicNounTable();
 		myHeuristicNounTable.put("word1", "type1");
 
-		List<Sentence> mySentenceTable = results.getSentenceTable();
+		List<Sentence> mySentenceTable = results.getSentenceHolder();
 		mySentenceTable.add(new Sentence("source1", "sentence1",
 				"originalSentence", "lead1", "status1", "tag1", "modifier1",
 				"type1"));
@@ -144,62 +150,10 @@ public class LearnerTest {
 //		fail("Not yet implemented");
 //	}
 
-	@Test
-	public void testUpdateTable() {
-		// Method updateTable
-		assertEquals("updateTable - empty word", 0,
-				tester.updateTable("", "", "", "", 0));
-		assertEquals("updateTable - forbidden word", 0,
-				tester.updateTable("to", "", "", "", 0));
-	}
 
-	@Test
-	public void testMarkKnown() {
-		// Method markKnown
-		assertEquals("markKnown - forbidden word", 0,
-				tester.markKnown("and", "", "", "", 0));
-		assertEquals("markKnown - stop word", 0,
-				tester.markKnown("page", "", "", "", 0));
-	}
 
-//	@Test
-//	public void testProcessNewWord() {
-//		fail("Not yet implemented");
-//	}
 
-//	@Test
-//	public void testSingularPluralVariations() {
-//		fail("Not yet implemented");
-//	}
 
-//	@Test
-//	public void testUpdateUnknownWords() {
-//		fail("Not yet implemented");
-//	}
-
-//	@Test
-//	public void testUpdatePOS() {
-//		// Method updatePOS
-//		// assertEquals ("getPluralRuleHelper - ves plural", 0,
-//		// tester.updatePOS("", "", "", 0));
-//	}
-
-//	@Test
-//	public void testChangePOS() {
-//		fail("Not yet implemented");
-//	}
-
-	@Test
-	public void testMergeRole() {
-		// Method mergeRole
-		assertEquals("mergeRole - case 1", "new", tester.mergeRole("*", "new"));
-		assertEquals("mergeRole - case 2", "old", tester.mergeRole("old", "*"));
-		assertEquals("mergeRole - case 3", "new", tester.mergeRole("", "new"));
-		assertEquals("mergeRole - case 4", "old", tester.mergeRole("old", ""));
-		assertEquals("mergeRole - case 5", "+", tester.mergeRole("old", "new"));
-		assertEquals("mergeRole - case 0", "same",
-				tester.mergeRole("same", "same"));
-	}
 
 //	@Test
 //	public void testDiscount() {
@@ -216,23 +170,20 @@ public class LearnerTest {
 //		fail("Not yet implemented");
 //	}
 
-	@Test
-	public void testGetMTFromParentTag() {
-		// Method getMTFromParentTag
-		List<String> pair = new ArrayList<String>();
-		pair.add("");
-		pair.add("");
-		assertEquals("getMTFromParentTag - case 0: fail", pair,
-				tester.getMTFromParentTag("[modifier_ta"));
-		pair.remove(1);
-		pair.remove(0);
-		pair.add("modifier");
-		pair.add("tag");
-		assertEquals("getMTFromParentTag - case 1: with []", pair,
-				tester.getMTFromParentTag("[modifier tag]"));
-		assertEquals("getMTFromParentTag - case 2: without []", pair,
-				tester.getMTFromParentTag("modifier tag"));
-	}
+//	@Test
+//	public void testProcessNewWord() {
+//		fail("Not yet implemented");
+//	}
+
+//	@Test
+//	public void testSingularPluralVariations() {
+//		fail("Not yet implemented");
+//	}
+
+//	@Test
+//	public void testUpdateUnknownWords() {
+//		fail("Not yet implemented");
+//	}
 
 //	@Test
 //	public void testAddHeuristicsNouns() {
@@ -500,10 +451,27 @@ public class LearnerTest {
 //		fail("Not yet implemented");
 //	}
 //
-//	@Test
-//	public void testPosBySuffix() {
-//		fail("Not yet implemented");
-//	}
+	@Test
+	public void testPosBySuffix() {
+		// Pattern 1: ^[a-z_]+(er|est|fid|form|ish|less|like|ly|merous|most|shaped)$
+		// Pattern 2: ^[._.][a-z]+
+		
+		tester.posBySuffix();
+	}
+	
+	@Test
+	public void testPosBySuffixCase1Helper(){
+		assertEquals("posBySuffix Case1 - match", true, tester.posBySuffixCase1Helper("approximately"));
+		assertEquals("posBySuffix Case1 - not match", false, tester.posBySuffixCase1Helper("bigger"));
+		assertEquals("posBySuffix Case1 - match", true, tester.posBySuffixCase1Helper("bifid"));
+		assertEquals("posBySuffix Case1 - not match", false, tester.posBySuffixCase1Helper("per"));
+	}
+	
+	@Test
+	public void testPosBySuffixCase2Helper(){
+		assertEquals("posBySuffix Case2 - match", true, tester.posBySuffixCase2Helper("_nerved"));
+		assertEquals("posBySuffix Case2 - not match", false, tester.posBySuffixCase2Helper("nerved"));
+	}
 
 	@Test
 	public void testContainSuffix() {
@@ -512,7 +480,7 @@ public class LearnerTest {
 				tester.containSuffix("less", "", "less"));
 		assertEquals("containSuffix ly", true,
 				tester.containSuffix("slightly", "slight", "ly"));
-		assertEquals("containSuffix er", true,
+		assertEquals("containSuffix er", false,
 				tester.containSuffix("fewer", "few", "er"));
 		assertEquals("containSuffix est", true,
 				tester.containSuffix("fastest", "fast", "est"));
@@ -520,19 +488,120 @@ public class LearnerTest {
 				tester.containSuffix("platform", "plat", "form"));
 		assertEquals("containSuffix sole adj", true,
 				tester.containSuffix("scalelike", "scale", "like"));
+		
+		// case 3.1.2 and case 3.3.3 not tested
+		assertEquals("containSuffix 111", false,
+				tester.containSuffix("anterolaterally", "anterolateral", "ly")); // 111
+		assertEquals("containSuffix 121", false,
+				tester.containSuffix("mesially", "mesial", "ly")); // 121
+		assertEquals("containSuffix 122", false,
+				tester.containSuffix("per", "p", "er")); // 122
+		assertEquals("containSuffix 212", false,
+				tester.containSuffix("border", "bord", "er")); // 212
+		assertEquals("containSuffix 212", false,
+				tester.containSuffix("bigger", "bigg", "er")); // 212
+		assertEquals("containSuffix 221", true,
+				tester.containSuffix("anteriorly", "anterior", "ly")); // 221
+		assertEquals("containSuffix 222", false,
+				tester.containSuffix("corner", "corn", "er")); // 222
+		assertEquals("containSuffix 222", true,
+				tester.containSuffix("lower", "low", "er")); // 222
+		assertEquals("containSuffix 223", true,
+				tester.containSuffix("bifid", "bi", "fid")); // 223
 
 	}
 
-//	@Test
-//	public void testMarkupByPattern() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testMarkupIgnore() {
-//		fail("Not yet implemented");
-//	}
-//
+	@Test
+	public void testMarkupByPattern() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "sentence1", "x=word word word", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myTester.markupByPattern();
+		
+		List<Sentence> targetSentenceHolder = new LinkedList<Sentence>();
+		targetSentenceHolder.add(new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1"));
+		
+		assertEquals("markupByPattern", targetSentenceHolder, myTester.getDataHolder().getSentenceHolder());
+	}
+	
+	@Test
+	public void testMarkupByPatternHelper(){
+		// case 1
+		Sentence mySentence1 = new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "tag1", "modifier1", "type1");
+		Sentence target1 = new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1");
+		tester.markupByPatternHelper(mySentence1);
+		assertEquals("markupByPatternHelper - case 1", target1,mySentence1);
+		
+		// case 2
+		Sentence mySentence2 = new Sentence("source2", "sentence2", "2n=abc...", "lead2", "status2", "tag2", "modifier2", null);
+		Sentence target2 = new Sentence("source2", "sentence2", "2n=abc...", "lead2", "status2", "chromosome", "", null);
+		tester.markupByPatternHelper(mySentence2);
+		assertEquals("markupByPatternHelper - case 2", target2,mySentence2);
+		
+		// case 3
+		Sentence mySentence3 = new Sentence("source", "sentence", "x word word", "lead", "status", "tag", "modifier", null);
+		Sentence target3 = new Sentence("source", "sentence", "x word word", "lead", "status", "chromosome", "", null);
+		tester.markupByPatternHelper(mySentence3);
+		assertEquals("markupByPatternHelper - case 3", target3, mySentence3);
+		
+		// case 4
+		Sentence mySentence4 = new Sentence("source", "sentence", "2n word word", "lead",null, "tag", "modifier", null);
+		Sentence target4 = new Sentence("source", "sentence", "2n word word", "lead", null, "chromosome", "", null);
+		tester.markupByPatternHelper(mySentence4);
+		assertEquals("markupByPatternHelper - case 4", target4, mySentence4);
+		
+		// case 5
+		Sentence mySentence5 = new Sentence("source", "sentence", "2 nword word", "lead", "status", "tag", "modifier", "");
+		Sentence target5 = new Sentence("source", "sentence", "2 nword word", "lead", "status", "chromosome", "", "");
+		tester.markupByPatternHelper(mySentence5);
+		assertEquals("markupByPatternHelper - case 5", target5, mySentence5);
+		
+		// case 6
+		Sentence mySentence6 = new Sentence("source", "sentence", "fl. word word", "lead", "status", null, null, "");
+		Sentence target6 = new Sentence("source", "sentence", "fl. word word", "lead", "status", "flowerTime", "", "");
+		tester.markupByPatternHelper(mySentence6);
+		assertEquals("markupByPatternHelper - case 6", target6, mySentence6);
+		
+		// case 7
+		Sentence mySentence7 = new Sentence("source", "sentence", "fr.word word", "lead", "status", null, "", "");
+		Sentence target7 = new Sentence("source", "sentence", "fr.word word", "lead", "status", "fruitTime", "", "");
+		tester.markupByPatternHelper(mySentence7);
+		assertEquals("markupByPatternHelper - case 7", target7, mySentence7);
+	}
+
+	@Test
+	public void testMarkupIgnore() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "sentence1", "IGNOREPTN", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myTester.markupIgnore();
+		
+		List<Sentence> targetSentenceHolder = new LinkedList<Sentence>();
+		targetSentenceHolder.add(new Sentence("source1", "sentence1", "IGNOREPTN", "lead1", "status1", "ignore", "", "type1"));
+		
+		assertEquals("markupIgnore", targetSentenceHolder, myTester.getDataHolder().getSentenceHolder());
+
+	}
+
+	@Test
+	public void testMarkupIgnoreHelper() {
+		Sentence mySentence1 = new Sentence("source", "sentence", "IGNOREPTN", "lead", "status", null, "", "");
+		Sentence target1 = new Sentence("source", "sentence", "IGNOREPTN", "lead", "status", "ignore", "", "");
+		tester.markupIgnoreHelper(mySentence1);
+		assertEquals("markupIgnoreHelper", target1, mySentence1);
+		
+		Sentence mySentence2 = new Sentence("source", "sentence", " IGNOREPTN", "lead", "status", null, "", "");
+		Sentence target2 = new Sentence("source", "sentence", " IGNOREPTN", "lead", "status", "ignore", "", "");
+		tester.markupIgnoreHelper(mySentence2);
+		assertEquals("markupIgnoreHelper", target2, mySentence2);
+	}
+	
 //	@Test
 //	public void testDiscover() {
 //		fail("Not yet implemented");
@@ -569,36 +638,89 @@ public class LearnerTest {
 //	}
 
 	@Test
-	public void testBuildPattern() {
-		// Method buildPattern
-		assertEquals(
-				"buildPattern",
-				"(?:^\\b(?:one|two|three)\\b|^\\w+\\s\\b(?:one|two|three)\\b|^\\w+\\s\\w+\\s\\b(?:one|two|three)\\b)",
-				tester.buildPattern("one two three".split(" ")));
-	}
+	public void testBuildPattern() {		
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
 
-	@Test
-	public void testUpdateCheckedWords() {
-		// Method updateCheckedWords
-		String checkedWords = ":";
-		Set<String> list = new HashSet<String>();
-		list.add("one");
-		list.add("two");
-		list.add("three");
-		assertEquals("updateCheckedWords", ":two:one:three:",
-				tester.updateCheckedWords(":", checkedWords, list));
+		// Method buildPattern
+//		assertEquals(
+//				"buildPattern",
+//				"(?:^\\b(?:one|two|three)\\b|^\\w+\\s\\b(?:one|two|three)\\b|^\\w+\\s\\w+\\s\\b(?:one|two|three)\\b)",
+//				tester.buildPattern("one two three".split(" ")));
+		
+		HashSet<String> wordSet= new HashSet<String>();
+		wordSet.add("teeth");
+		wordSet.add("unicuspid");
+		wordSet.add("with");
+		myTester.setCheckedWordSet(wordSet);
+		
+		assertEquals("buildPattern", null,
+				myTester.buildPattern("teeth ; 9".split(" ")));
+		
+		assertEquals("buildPattern", 
+				"(?:^\\b(?:variously|arranged)\\b|^\\w+\\s\\b(?:variously|arranged)\\b|^\\w+\\s\\w+\\s\\b(?:variously|arranged)\\b).*$",
+				myTester.buildPattern("teeth variously arranged".split(" ")));
+		
+		wordSet.add("circuli");
+		wordSet.add("present");
+		wordSet.add("on");
+		wordSet.add("hyohyoidei");
+		wordSet.add("muscle");
+		
+		assertEquals("buildPattern", 
+				"(?:^\\b(?:does|not|cross)\\b|^\\w+\\s\\b(?:does|not|cross)\\b|^\\w+\\s\\w+\\s\\b(?:does|not|cross)\\b).*$",
+				myTester.buildPattern("does not cross".split(" ")));
+		
+		wordSet.addAll(Arrays.asList("lepidotrichia:of:passes:between:bases".split(":")));
+		
+		assertEquals("buildPattern", 
+				"(?:^\\b(?:ankylosed|to)\\b|^\\w+\\s\\b(?:ankylosed|to)\\b|^\\w+\\s\\w+\\s\\b(?:ankylosed|to)\\b).*$",
+				myTester.buildPattern("teeth ankylosed to".split(" ")));		
+		
 	}
 	
 	@Test
-	public void testSingularPluralVariations(){
-		Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair> ();
-		singularPluralTable.add(new SingularPluralPair("vertebra", "vertebrae"));
-		singularPluralTable.add(new SingularPluralPair("curimatidae","curimatida"));
-		singularPluralTable.add(new SingularPluralPair("bone","bones"));
-		assertEquals("singularPluralVariations", "vertebra|vertebrae", tester.singularPluralVariations("vertebra", singularPluralTable));
-		assertEquals("singularPluralVariations", "curimatidae|curimatida", tester.singularPluralVariations("curimatidae", singularPluralTable));
-		assertEquals("singularPluralVariations", "curimatida|curimatidae", tester.singularPluralVariations("curimatida", singularPluralTable));
-		assertEquals("singularPluralVariations", "bones|bone", tester.singularPluralVariations("bones", singularPluralTable));
+	public void testGetPOSptn(){
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
+		
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"unicuspid", "p", "role", "1", "3", "", ""}));
+		
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"with", "b", "role", "1", "1", "", ""}));
+		
+		assertEquals("getPOSptn", "p?b", myTester.getPOSptn(Arrays.asList("teeth unicuspid with".split(" "))));
 	}
-
+	
+	@Test
+	public void testDoItHelper(){
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+        // case 1
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
+		
+		assertEquals("doItHelper - case 1", new StringAndInt("teeth",1), myTester.doItHelper("", "teeth"));
+        
+        // case 3.2
+        myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"unicuspid", "p", "role", "1", "3", "", ""}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"with", "b", "role", "1", "1", "", ""}));
+        assertEquals("doItHelper - case 3.2", new StringAndInt("teeth",4), 
+            myTester.doItHelper("teeth unicuspid with crowns posteriorly curved along the main axis of the mandible , organized into a long series of equally_ sized teeth", 
+                "teeth unicuspid with"));        
+	}
+	
+	
+	
+	
 }

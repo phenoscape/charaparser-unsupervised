@@ -1,5 +1,11 @@
 package semanticMarkup.ling.learn;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class StringUtility {
 
 	public StringUtility() {
@@ -68,6 +74,17 @@ public class StringUtility {
 		return newWord;
 	}
 	
+	public static String removeAllRecursive(String text, String regex) {
+		String newText = text.replaceAll(regex, "");
+				
+		while (!newText.equals(text)) {
+			text = newText;
+			newText = text.replaceAll(regex, "");
+		}
+		
+		return newText;
+	}
+	
 	// if($t !~ /\b(?:$STOP)\b/ && $t =~/\w/ && $t !~ /\d/ && length $t > 1){
 	public static boolean isWord(String token) {
 		String regex = "\\b(" + Constant.STOP + ")\\b";
@@ -134,4 +151,75 @@ public class StringUtility {
 		
 		return newWordList;
 	}
+	
+	public static boolean equalsWithNull(String s1, String s2) {
+		boolean flag = false;
+		flag = (s1==null)? (s2==null) : s1.equals(s2);
+		
+		return flag;
+	}
+	
+	/**
+	 * Convert a string array of to a string of words separated by space
+	 * 
+	 * @param words
+	 * @return the string
+	 */
+	public static String stringArray2String(String [] words) {
+		String wordsString = "";
+		
+		for (int i=0;i<words.length;i++) {
+			wordsString = wordsString + words[i] + " ";
+		}
+		
+		wordsString = wordsString.substring(0, wordsString.length()-1); 
+		
+		return wordsString;
+	}
+	
+//	public static List<String>
+	
+	//Arrays.asList
+	
+	/**
+	 * Get a splice of the string list between the index of the start
+	 * (inclusive) and the end (exclusive)from the string list
+	 * 
+	 * @param words
+	 *            the string list
+	 * @param start
+	 *            the start index of the section
+	 * @param end
+	 *            the end index of the section
+	 * @return the splice
+	 */
+	public static List<String> stringArraySplice(List<String> words, int start, int end) {
+		List<String> splicedWords = new ArrayList<String>();
+		splicedWords.addAll(words.subList(start, end));
+		
+		return splicedWords;
+	}
+	
+	/**
+	 * Join a list of string together
+	 * 
+	 * @param separater
+	 * @param list
+	 * @return the string
+	 */
+	public static String joinList(String separater, List<String> list){
+		String result = "";
+		
+		for (int i=0;i<list.size();i++) {
+			result = result + list.get(i)+separater;
+		}
+		
+		if (!result.equals("")) {
+			result = result.substring(0, result.length()-separater.length());
+		}
+		
+		
+		return result;
+	}
+	
 }

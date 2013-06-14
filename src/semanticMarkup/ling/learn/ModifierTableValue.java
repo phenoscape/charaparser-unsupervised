@@ -25,4 +25,27 @@ public class ModifierTableValue {
 	public boolean getIsTypeModifier() {
 		return this.isTypeModifier;
 	}
+	
+	public boolean equals(Object obj){
+		if (obj==this){
+			return true;
+		}
+		
+		if (obj==null||obj.getClass()!=this.getClass()){
+			return false;
+		}
+		
+		ModifierTableValue myModifierTableValue = (ModifierTableValue) obj;
+		
+		return ((this.count == myModifierTableValue.getCount()) 
+				&& (this.isTypeModifier == myModifierTableValue.getIsTypeModifier()));
+		
+	}
+
+	public int hashCode() {
+		int hash = (new Integer(this.count)).hashCode()
+				+ (new Boolean(this.isTypeModifier)).hashCode();
+
+		return hash;
+	}
 }

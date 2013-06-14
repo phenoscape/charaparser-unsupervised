@@ -21,5 +21,6 @@
 	<classpathentry kind="lib" path="lib/OpenNLP/opennlp-maxent-3.0.2-incubating.jar"/>
 	<classpathentry kind="lib" path="lib/OpenNLP/opennlp-tools-1.5.2-incubating.jar"/>
 	<classpathentry kind="lib" path="lib/OpenNLP/opennlp-uima-1.5.2-incubating.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.17.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

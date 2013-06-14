@@ -45,6 +45,17 @@ public class PopulateSentenceUtility {
 		return 0;
 	}
 	
+	
+	/**
+	 * Segment a text into sentences using the OpenNLP sentence detector. Note
+	 * how dot after any abbreviations is handled: to avoid segmenting at
+	 * abbreviations, the dots of abbreviations are first replaced by a special
+	 * mark before the text is segmented. Then after the segmentation, they are
+	 * restored back.
+	 * 
+	 * @param text
+	 * @return
+	 */
 	String[] segmentSentence(String text) {
 		String sentences[] = {};
 		
@@ -234,6 +245,13 @@ public class PopulateSentenceUtility {
 		return words;
 	}
 	
+	/**
+	 * replace the dot (.) mark of abbreviations in the text by a special mark
+	 * ([DOT])
+	 * 
+	 * @param text
+	 * @return the text after replacement
+	 */
 	public String hideAbbreviations(String text) {
 		String pattern = "(^.*)("
 				+Constant.PEOPLE_ABBR
@@ -265,6 +283,13 @@ public class PopulateSentenceUtility {
 		return text;
 	}
 	
+	/**
+	 * restore the dot (.) mark of abbreviations in the text from special mark
+	 * ([DOT])
+	 * 
+	 * @param text
+	 * @return the text after replacement
+	 */
 	public String restoreAbbreviations(String text) {
 		String pattern = "(^.*)("
 				+Constant.PEOPLE_ABBR
