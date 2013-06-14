@@ -4,9 +4,9 @@ charaparser-unsupervised
 Java implementation of unsupervised CharaParser code
 
 * Read Treatment
+    * Sentence segmentation
+        * Handle abbreviation. 
 
-** Sentence segmentation
-*** Handle abbreviation. 
 First replace all dot marks after abbreviation by "[DOT]". After sentence segmentation, restore them.
 
 The regular expression like "blv?d" would match both "blvd" and "bld". The question mark makes the previous letter optional.
