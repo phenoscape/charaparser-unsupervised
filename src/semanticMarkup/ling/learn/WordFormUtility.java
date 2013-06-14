@@ -474,9 +474,12 @@ public class WordFormUtility {
 		plStr = plStr.replaceAll("\\s+$", "");
 		this.PLURALS.put(word, plStr);
 		
-		String[] pArray = plStr.split(" ");
 		List<String> pList = new ArrayList<String>();
-		Collections.addAll(pList, pArray);
+		
+		if (!plStr.equals("")) {
+			String[] pArray = plStr.split(" ");
+			Collections.addAll(pList, pArray);
+		}
 		
 		return pList;
 	}

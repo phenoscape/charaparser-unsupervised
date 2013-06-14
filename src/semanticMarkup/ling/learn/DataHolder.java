@@ -194,8 +194,14 @@ public class DataHolder {
 	 * @return if add a pair, return true; otherwise return false
 	 */
 	public boolean addSingularPluralPair(String sgl, String pl) {
+		
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.addsingularpluralpair");				
+		
 		SingularPluralPair pair = new SingularPluralPair(sgl, pl);
 		boolean result = this.singularPluralTable.add(pair);
+		
+		myLogger.info(String.format("Added singular-plural pair (%s, %s)", sgl, pl));
 		return result;
 	}
 	
@@ -534,6 +540,10 @@ public class DataHolder {
 	 */
 	public int updateTable(String word, String pos, String role, String table,
 			int increment) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.updateTable");
+		myLogger.trace("Enter");
+		
 		int result = 0;
 
 		word = StringUtility.processWord(word);
@@ -562,17 +572,28 @@ public class DataHolder {
 		// the singular form, and add the singular - pluarl pair into
 		// singularPluarlTable;
 		if (!this.isInSingularPluralPair(word)) {
+			myLogger.trace("Now add singular-plural pair");
+			myLogger.trace("Word: "+word);
+			
 			if (pos.equals("p")) {
+				myLogger.trace("Case 1");
 				String pl = word;
 				word = this.myUtility.getWordFormUtility().getSingular(word);
-				// add "*" and 0: pos for those words are inferred based on
-				// other clues, not seen directly from the text
-				result = result + this.markKnown(word, "s", "*", table, 0);
-				this.addSingularPluralPair(word, pl);
+				
+				if (word.equals("")) {
+					// add "*" and 0: pos for those words are inferred based on
+					// other clues, not seen directly from the text
+					result = result + this.markKnown(word, "s", "*", table, 0);
+					this.addSingularPluralPair(word, pl);
+				}
 			}
 			if (pos.equals("s")) {
+				myLogger.trace("Case 2");
 				List<String> words = this.myUtility.getWordFormUtility().getPlural(word);
 				String sg = word;
+				if (sg.equals("centrum")) {
+					System.out.println("Return Size: "+words.size());
+				}
 				for (int i = 0; i < words.size(); i++) {
 					if (words.get(i).matches("^.*\\w.*$")) {
 						result = result

@@ -153,6 +153,8 @@ public class WordFormUtilityTest {
 		tester.getWORDS().put("ices", 1);
 		tester.getWORDS().put("ixes", 2);
 		assertEquals ("getPlural", pList, tester.getPlural("ix"));	
+		
+		assertEquals ("getPlural", new ArrayList<String>(), tester.getPlural("centrum"));
 	}
 	
 	@Test
