@@ -101,7 +101,7 @@ public class Learner {
 
 		// pre load words
 		this.addHeuristicsNouns();
-		//this.addPredefinedWords();
+		this.addPredefinedWords();
 
 
 		// ???
@@ -147,6 +147,7 @@ public class Learner {
 	public int populateSentence(List<Treatment> treatments) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("learn.populateSentence");
+		myLogger.info("Enter");
 		myLogger.info("Reading sentences...");
 
 		String fileName;
@@ -254,9 +255,8 @@ public class Learner {
 						break;
 					}
 
-					Sentence newSent = new Sentence(source, line, oline, lead,
+					this.myDataHolder.addSentence(source, line, oline, lead,
 							status, null, null, typeStr);
-					this.myDataHolder.getSentenceHolder().add(newSent);
 
 					SENTID++;
 				}
@@ -264,6 +264,8 @@ public class Learner {
 		}
 
 		myLogger.info("Total sentences = " + SENTID);
+		myLogger.info("Quite");
+		myLogger.info("\n");
 
 		return SENTID;
 	}
@@ -453,8 +455,9 @@ public class Learner {
 	 */
 	public int populateUnknownWordsTable(Map<String, Integer> WORDS) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.populateSentence");
+		Logger myLogger = Logger.getLogger("learn.pupluateUnknownWords");
 
+		myLogger.trace("Enter");
 		int count = 0;
 
 		Iterator<String> iter = WORDS.keySet().iterator();
@@ -472,6 +475,8 @@ public class Learner {
 
 		myLogger.info("Total words = " + count);
 		
+		myLogger.trace("Return: "+count);
+		myLogger.trace("Quite\n");
 		return count;
 	}
 	
@@ -1263,6 +1268,10 @@ public class Learner {
 	}
 	
 	public void addStopWords() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addStopWords");
+		myLogger.trace("Add stop words");
+		
 		List<String> stops = new ArrayList<String>();
 		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
 		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
@@ -1284,6 +1293,10 @@ public class Learner {
 	}
 
 	public void addCharacters() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addCharacters");
+		myLogger.trace("Add characters");		
+		
 		List<String> chars = new ArrayList<String>();
 		chars.addAll(Arrays.asList(Constant.CHARACTER.split("\\|")));
 //
@@ -1305,6 +1318,10 @@ public class Learner {
 	}
 
 	public void addNumbers() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addNumbers");
+		myLogger.trace("Add numbers");	
+		
 		List<String> nums = new ArrayList<String>();
 		nums.addAll(Arrays.asList(Constant.NUMBER.split("\\|")));
 
@@ -1329,6 +1346,10 @@ public class Learner {
 	}
 
 	public void addClusterstrings() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addClusterstrings");
+		myLogger.trace("Add clusterstrings");	
+		
 		List<String> cltstrs = new ArrayList<String>();
 		cltstrs.addAll(Arrays.asList(Constant.CLUSTERSTRING.split("\\|")));
 
@@ -1348,6 +1369,10 @@ public class Learner {
 	}
 
 	public void addProperNouns() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addProperNouns");
+		myLogger.trace("Add proper nouns");	
+		
 		List<String> ppnouns = new ArrayList<String>();
 		ppnouns.addAll(Arrays.asList(Constant.PROPERNOUN.split("\\|")));
 

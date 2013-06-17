@@ -94,6 +94,9 @@ public class DataHolder {
 //		return result;
 //	}
 	
+	
+	/** Operations**/
+	
 	/**
 	 * 
 	 * @param word
@@ -101,6 +104,28 @@ public class DataHolder {
 	 */
 	public void updateUnknownWord(String word, String flag){
 		this.unknownWordTable.put(word, flag);
+	}
+	
+	public void addSentence(String source, String sentence,
+			String originalSentence, String lead, String status, String tag,
+			String modifier, String type) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.addSentence");	
+		
+		Sentence newSent = new Sentence(source, sentence, originalSentence, lead,
+				status, tag, modifier, type);
+		this.sentenceTable.add(newSent);
+		myLogger.trace("Added Sentence: ");
+		myLogger.trace("\tSource: " + source);
+		myLogger.trace("\tSentence: " + sentence);
+		myLogger.trace("\tOriginal Sentence: " + originalSentence);
+		myLogger.trace("\tLead: " + lead);
+		myLogger.trace("\tStatus: " + status);
+		myLogger.trace("\tTag: " + tag);
+		myLogger.trace("\tModifier: " + modifier);
+		myLogger.trace("\tType: " + type);
+		
+		myLogger.trace("Quite\n");
 	}
 
 	public boolean equals(Object obj) {
@@ -572,8 +597,7 @@ public class DataHolder {
 		// the singular form, and add the singular - pluarl pair into
 		// singularPluarlTable;
 		if (!this.isInSingularPluralPair(word)) {
-			myLogger.trace("Now add singular-plural pair");
-			myLogger.trace("Word: "+word);
+			myLogger.trace("Search for singular-plural pair of word: " + word);
 			
 			if (pos.equals("p")) {
 				myLogger.trace("Case 1");
@@ -585,15 +609,16 @@ public class DataHolder {
 					// other clues, not seen directly from the text
 					result = result + this.markKnown(word, "s", "*", table, 0);
 					this.addSingularPluralPair(word, pl);
+					myLogger.trace(String.format("Added (%s, %s)", word, pl));
 				}
 			}
-			if (pos.equals("s")) {
+			else if (pos.equals("s")) {
 				myLogger.trace("Case 2");
 				List<String> words = this.myUtility.getWordFormUtility().getPlural(word);
 				String sg = word;
-				if (sg.equals("centrum")) {
-					System.out.println("Return Size: "+words.size());
-				}
+//				if (sg.equals("centrum")) {
+//					System.out.println("Return Size: "+words.size());
+//				}
 				for (int i = 0; i < words.size(); i++) {
 					if (words.get(i).matches("^.*\\w.*$")) {
 						result = result
@@ -601,10 +626,15 @@ public class DataHolder {
 										0);
 					}
 					this.addSingularPluralPair(sg, words.get(i));
+					myLogger.trace(String.format("Added (%s, %s)", sg, words.get(i)));
 				}
+			}
+			else {
+				myLogger.trace("Not added anything");
 			}
 		}
 
+		myLogger.trace("Quite\n");
 		return result;
 	}
 
