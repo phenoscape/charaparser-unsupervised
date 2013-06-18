@@ -630,7 +630,7 @@ public class DataHolder {
 				}
 			}
 			else {
-				myLogger.trace("Not added anything");
+				myLogger.trace("Nothing added");
 			}
 		}
 

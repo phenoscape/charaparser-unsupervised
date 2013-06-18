@@ -490,7 +490,7 @@ public class Learner {
 		myLogger.trace("Enter addHeuristicsNouns");
 		
 		Set<String> nouns = this.learnHeuristicsNouns();
-		myLogger.debug("Nouns learnt from heuristics:");
+		myLogger.debug("Nouns learned from heuristics:");
 		myLogger.debug("\t"+nouns.toString());
 		myLogger.debug("Total: "+nouns.size());
 		
@@ -2061,19 +2061,30 @@ public class Learner {
 		String ptn = "";
 		for (int i = 0; i < words.size(); i++) {
 			String word = words.get(i);
+			myLogger.trace("\tCheck word: " + word);
 			List<POSInfo> POSInfoList = this.myDataHolder.checkPOSInfo(word);
 			if (POSInfoList.size() > 0) {
 				POSInfo p = POSInfoList.get(0);
 				String POS = p.getPOS();
 				String role = p.getRole();
-				double certainty = (double) p.getCertaintyU()
-						/ (double) p.getCertaintyL();
-
+				double certaintyU = (double) p.getCertaintyU();
+				double certaintyL;
+				if (p.getCertaintyU() == 0) {
+					certaintyL = 1.0;
+				}
+				else {
+					certaintyL = (double) p.getCertaintyL();
+				}
+				double certainty = certaintyU / certaintyL;
+				myLogger.trace(String.format("\t\tCertaintyU: %f", certaintyU));
+				myLogger.trace(String.format("\t\tCertaintyL: %f", certaintyL));
+				myLogger.trace(String.format("\t\tCertainty: %f", certainty));
 				if ((!StringUtility.equalsWithNull(POS, "?")) && (certainty <= 0.5)) {
-					myLogger.info("This POS has a certainty less than 0.5. It is ignored.");
+					myLogger.info("\t\tThis POS has a certainty less than 0.5. It is ignored.");
 					POS = "?";
 				}
 				ptn = ptn + POS;
+				myLogger.trace("\t\tAdd pos: " + POS);
 			}
 		}
 
