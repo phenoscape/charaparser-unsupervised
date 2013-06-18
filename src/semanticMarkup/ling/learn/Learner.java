@@ -1277,19 +1277,19 @@ public class Learner {
 		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
 				"]", "}", "\\\\d+" }));
 
-//		System.out.println(stops);
-//		System.out.println(Constant.FORBIDDEN);
-
+		myLogger.trace("Stop Words: " + stops);
 		for (int i = 0; i < stops.size(); i++) {
 			String word = stops.get(i);
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
+			myLogger.trace(String.format("(\"%s\", \"b\", \"*\", \"wordpos\", 0) added\n", word));
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 0, 0, null, null));
 			// System.out.println("Add Stop Word: " + word+"\n");
 		}
+		myLogger.trace("Quite\n");
 	}
 
 	public void addCharacters() {
@@ -2067,17 +2067,19 @@ public class Learner {
 				POSInfo p = POSInfoList.get(0);
 				String POS = p.getPOS();
 				String role = p.getRole();
-				double certaintyU = (double) p.getCertaintyU();
-				double certaintyL;
+				
+				double certainty;
 				if (p.getCertaintyU() == 0) {
-					certaintyL = 1.0;
+					certainty = 1.0;
 				}
 				else {
-					certaintyL = (double) p.getCertaintyL();
+					double certaintyU = (double) p.getCertaintyU();
+					double certaintyL = (double) p.getCertaintyL();
+					certainty = certaintyU / certaintyL;
 				}
-				double certainty = certaintyU / certaintyL;
-				myLogger.trace(String.format("\t\tCertaintyU: %f", certaintyU));
-				myLogger.trace(String.format("\t\tCertaintyL: %f", certaintyL));
+				
+				myLogger.trace(String.format("\t\tCertaintyU: %d", p.getCertaintyU()));
+				myLogger.trace(String.format("\t\tCertaintyL: %d", p.getCertaintyL()));
 				myLogger.trace(String.format("\t\tCertainty: %f", certainty));
 				if ((!StringUtility.equalsWithNull(POS, "?")) && (certainty <= 0.5)) {
 					myLogger.info("\t\tThis POS has a certainty less than 0.5. It is ignored.");
