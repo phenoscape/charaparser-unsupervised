@@ -212,6 +212,9 @@ public class PopulateSentenceUtility {
 		if (sentence == null || sentence == "") {
 			return nWords;
 		}
+		else {
+			sentence = this.getSentenceHead(sentence);
+		}
 
 		String[] tokens = this.myTokenizer.tokenize(sentence);
 		int minL = tokens.length > n ? n : tokens.length;

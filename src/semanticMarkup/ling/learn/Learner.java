@@ -2052,51 +2052,62 @@ public class Learner {
 	 * @return
 	 */
 	public String getPOSptn(List<String> words) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt.getPOSptn");
-		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.ruleBasedLearn.doIt.getPOSptn");
+
 		myLogger.trace("Enter getPOSptn");
 		myLogger.trace("Words: " + words.toString());
-				
+
 		String ptn = "";
+		String POS = "";
+		double certainty;
 		for (int i = 0; i < words.size(); i++) {
+
 			String word = words.get(i);
 			myLogger.trace("\tCheck word: " + word);
 			List<POSInfo> POSInfoList = this.myDataHolder.checkPOSInfo(word);
-			if (POSInfoList.size() > 0) {
-				POSInfo p = POSInfoList.get(0);
-				String POS = p.getPOS();
-				String role = p.getRole();
-				
-				double certainty;
-				if (p.getCertaintyU() == 0) {
-					certainty = 1.0;
-				}
-				else {
-					double certaintyU = (double) p.getCertaintyU();
-					double certaintyL = (double) p.getCertaintyL();
-					certainty = certaintyU / certaintyL;
-				}
-				
-				myLogger.trace(String.format("\t\tCertaintyU: %d", p.getCertaintyU()));
-				myLogger.trace(String.format("\t\tCertaintyL: %d", p.getCertaintyL()));
-				myLogger.trace(String.format("\t\tCertainty: %f", certainty));
-				if ((!StringUtility.equalsWithNull(POS, "?")) && (certainty <= 0.5)) {
-					myLogger.info("\t\tThis POS has a certainty less than 0.5. It is ignored.");
+			if (POSInfoList.size() >= 0) {
+				if (POSInfoList.size() == 0) {
 					POS = "?";
+				} 
+				else {
+					POSInfo p = POSInfoList.get(0);
+					POS = p.getPOS();
+
+					if (p.getCertaintyU() == 0) {
+						certainty = 1.0;
+					} else {
+						double certaintyU = (double) p.getCertaintyU();
+						double certaintyL = (double) p.getCertaintyL();
+						certainty = certaintyU / certaintyL;
+					}
+
+					myLogger.trace(String.format("\t\tCertaintyU: %d",
+							p.getCertaintyU()));
+					myLogger.trace(String.format("\t\tCertaintyL: %d",
+							p.getCertaintyL()));
+					myLogger.trace(String
+							.format("\t\tCertainty: %f", certainty));
+					if ((!StringUtility.equalsWithNull(POS, "?"))
+							&& (certainty <= 0.5)) {
+						myLogger.info("\t\tThis POS has a certainty less than 0.5. It is ignored.");
+						POS = "?";
+					}
+
 				}
 				ptn = ptn + POS;
 				myLogger.trace("\t\tAdd pos: " + POS);
+			} else {
+				myLogger.error("Error: checkPOSInfo gave invalid return value");
 			}
 		}
 
 		myLogger.trace("Return ptn: " + ptn);
 		myLogger.trace("Quite getPOSptn");
-		
+
 		return ptn;
 	}
-
-
 
 	public void tagIt(int sentID, String tag) {
 		;
