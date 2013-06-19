@@ -234,40 +234,59 @@ public class PopulateSentenceUtility {
 	 * @return the portion in the head
 	 */
 	public String getSentenceHead(String sentence) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.populateSentence.getFirstNWords.getHead");
-		
-		String head = "";
-		int start = 0;
-		int end = sentence.length();
-		
-		String pattern1 = " [,:;.\\[(]";
-		String pattern2 = "\\b"+Constant.PREPOSITION+"\\s";
-		
-		myLogger.trace("Pattern1: "+pattern1);
-		myLogger.trace("Pattern2: "+pattern2);
-		
-		Pattern p1 = Pattern.compile(pattern1);
-		Pattern p2 = Pattern.compile(pattern2);
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.populateSentence.getFirstNWords.getHead");
 
-		Matcher m1 = p1.matcher(sentence);
-		Matcher m2 = p2.matcher(sentence);
-		
-		if (m1.find()) {
-			int temp1 = m1.end();
-			end = temp1 < end ? temp1 : end;
-			end = end -2;
+		if (sentence == null) {
+			return sentence;
 		}
-		
-		if (m2.find()) {
-			int temp2 = m2.end();
-					end = temp2 < end ? temp2 : end;		
+		else if (sentence.equals("")) {
+			return sentence;
+		} 
+		else {
+			String head = "";
+			int start = 0;
+			int end = sentence.length();
+
+			String pattern1 = " [,:;.\\[(]";
+			String pattern2 = "\\b" + "(" + Constant.PREPOSITION + ")" + "\\s";
+
+			myLogger.trace("Pattern1: " + pattern1);
+			myLogger.trace("Pattern2: " + pattern2);
+
+			Pattern p1 = Pattern.compile(pattern1);
+			Pattern p2 = Pattern.compile(pattern2);
+
+			Matcher m1 = p1.matcher(sentence);
+			Matcher m2 = p2.matcher(sentence);
+
+			boolean case1 = m1.find();
+			boolean case2 = m2.find();
+			
+			if (case1 || case2) {
+				// case 1
+				if (case1) {
+					int temp1 = m1.end();
+					end = temp1 < end ? temp1 : end;
+					end = end - 1;
+				}
+				// case 2
+				else {
+					int temp1 = m2.start();
+					int temp2 = m2.end();
+					end = temp2 < end ? temp2 : end;
+				}
+
+				head = sentence.substring(0, end - 1);
+			}
+			else {
+				head = sentence;
+			}
+
+			myLogger.trace("Return: " + head);
+			return head;
 		}
-		
-		head = sentence.substring(0, end);
-		
-		myLogger.trace("Return: "+head);
-		return head;
 	}
 
 	/**
