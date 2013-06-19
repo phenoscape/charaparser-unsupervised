@@ -185,5 +185,10 @@ public class PopulateSentenceUtilityTest {
 		
 	}
 	
+	@Test
+	public void testGetSentenceHead() {
+		tester.getSentenceHead("");
+	}
+	
 
 }
