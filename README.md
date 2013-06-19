@@ -6,6 +6,18 @@ Java implementation of unsupervised CharaParser code
 * Read Treatment
     * Sentence segmentation
         * Handle abbreviation. 
+    * Get Lead of Sentence
+    In most cases, the lead of a sentence is just the first NUM_LEAD_WORDS words in the sentence, where NUM_LEAD_WORDS has been pre-define as 3. However, there are two expections:
+    1) When there is any :;.[(] in the sentence, only the words before any ,:;\.\[(] are counted. For example, for the sentence
+        word1 word2 . word3
+    only
+        word1 word2
+    are kept.
+    2) Whene there is any preposition word in the sentence, only the words before the preposition word and the preposition word are counted. For example, for the sentence
+        lepidotrichia of fin webs
+    only the word before the preposition word "of" and the preposition word "of"
+        lepidotrichia of
+    are kept.
 
 First replace all dot marks after abbreviation by "[DOT]". After sentence segmentation, restore them.
 
