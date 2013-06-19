@@ -222,6 +222,14 @@ public class PopulateSentenceUtility {
 		return nWords;
 	}
 	
+	/**
+	 * Get the portion in the input sentence before any of ,:;.[(, or any
+	 * preposition word, if any
+	 * 
+	 * @param sentence
+	 *            the input sentence
+	 * @return the portion in the head
+	 */
 	public String getSentenceHead(String sentence) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("learn.populateSentence.getFirstNWords.getHead");
@@ -238,14 +246,14 @@ public class PopulateSentenceUtility {
 		
 		Pattern p1 = Pattern.compile(pattern1);
 		Pattern p2 = Pattern.compile(pattern2);
-		sentence = "word2 [ word2";
+
 		Matcher m1 = p1.matcher(sentence);
 		Matcher m2 = p2.matcher(sentence);
 		
 		if (m1.find()) {
 			int temp1 = m1.end();
 			end = temp1 < end ? temp1 : end;
-			end = end -1;
+			end = end -2;
 		}
 		
 		if (m2.find()) {
@@ -253,14 +261,9 @@ public class PopulateSentenceUtility {
 					end = temp2 < end ? temp2 : end;		
 		}
 		
-
-//		if (m1.find()) {
-//			start = m1.start();
-//			end = m1.end();
-//		}
+		head = sentence.substring(0, end);
 		
-		head = sentence.substring(0, end-1);
-		
+		myLogger.trace("Return: "+head);
 		return head;
 	}
 
