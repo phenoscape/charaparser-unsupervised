@@ -246,7 +246,6 @@ public class PopulateSentenceUtility {
 		} 
 		else {
 			String head = "";
-			int start = 0;
 			int end = sentence.length();
 
 			String pattern1 = " [,:;.\\[(]";
@@ -273,7 +272,6 @@ public class PopulateSentenceUtility {
 				}
 				// case 2
 				else {
-					int temp1 = m2.start();
 					int temp2 = m2.end();
 					end = temp2 < end ? temp2 : end;
 				}

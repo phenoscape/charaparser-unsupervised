@@ -127,7 +127,7 @@ public class Learner {
 		this.addStopWords();
 		this.addCharacters();
 		this.addNumbers();
-		this.addClusterstrings();
+		this.addClusterStrings();
 		this.addProperNouns();		
 	}
 	
@@ -1345,7 +1345,7 @@ public class Learner {
 		// WordPOSValue("*",0, 0, null, null));
 	}
 
-	public void addClusterstrings() {
+	public void addClusterStrings() {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("learn.addClusterstrings");
 		myLogger.trace("Add clusterstrings");	
