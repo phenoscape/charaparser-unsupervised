@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class Sentence {
 	
 	private String source;
@@ -98,14 +100,14 @@ public class Sentence {
 		
 		Sentence mySentence = (Sentence) obj;
 		
-		return ((StringUtility.equalsWithNull(this.source, mySentence.source))
-				&&(StringUtility.equalsWithNull(this.sentence, mySentence.sentence))
-				&&(StringUtility.equalsWithNull(this.originalSentence, mySentence.originalSentence))
-				&&(StringUtility.equalsWithNull(this.lead, mySentence.lead))
-				&&(StringUtility.equalsWithNull(this.status, mySentence.status))
-				&&(StringUtility.equalsWithNull(this.tag, mySentence.tag))
-				&&(StringUtility.equalsWithNull(this.modifier, mySentence.modifier))
-				&&(StringUtility.equalsWithNull(this.type, mySentence.type))
+		return ((StringUtils.equals(this.source, mySentence.source))
+				&&(StringUtils.equals(this.sentence, mySentence.sentence))
+				&&(StringUtils.equals(this.originalSentence, mySentence.originalSentence))
+				&&(StringUtils.equals(this.lead, mySentence.lead))
+				&&(StringUtils.equals(this.status, mySentence.status))
+				&&(StringUtils.equals(this.tag, mySentence.tag))
+				&&(StringUtils.equals(this.modifier, mySentence.modifier))
+				&&(StringUtils.equals(this.type, mySentence.type))
 				);
 	}
 	

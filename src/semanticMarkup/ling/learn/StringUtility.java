@@ -154,13 +154,13 @@ public class StringUtility {
 		return newWordList;
 	}
 	
-	public static boolean equalsWithNull(String s1, String s2) {
-//		boolean flag = false;
-//		flag = (s1==null)? (s2==null) : s1.equals(s2);
-//		
-//		return flag;
-		return StringUtils.equals(s1, s2);
-	}
+//	public static boolean equalsWithNull(String s1, String s2) {
+////		boolean flag = false;
+////		flag = (s1==null)? (s2==null) : s1.equals(s2);
+////		
+////		return flag;
+//		return StringUtils.equals(s1, s2);
+//	}
 	
 	/**
 	 * Convert a string array of to a string of words separated by space

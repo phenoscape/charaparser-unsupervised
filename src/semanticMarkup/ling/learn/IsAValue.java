@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class IsAValue {
 	
 	private String instance;
@@ -34,9 +36,8 @@ public class IsAValue {
 		
 		IsAValue myIsAValue = (IsAValue) obj;
 		
-		return (   (StringUtility.equalsWithNull(this.instance, myIsAValue.getInstance()))
-				&& (this.cls == myIsAValue.getCls())
-				);
+		return ((StringUtils.equals(this.instance, myIsAValue.getInstance())) 
+				&& (this.cls == myIsAValue.getCls()));
 	}
 
 }

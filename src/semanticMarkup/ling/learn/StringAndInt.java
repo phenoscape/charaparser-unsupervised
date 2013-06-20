@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class StringAndInt {
 
 	private String s;
@@ -33,7 +35,7 @@ public class StringAndInt {
 		
 		StringAndInt myStringAndInt = (StringAndInt) obj;
 		
-		return (   (StringUtility.equalsWithNull(this.s, myStringAndInt.getString()))
+		return (   (StringUtils.equals(this.s, myStringAndInt.getString()))
 				&& (this.i == myStringAndInt.getInt())
 				);
 	}

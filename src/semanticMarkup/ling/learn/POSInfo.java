@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class POSInfo implements Comparable<POSInfo>{
 
 	private String word;
@@ -78,9 +80,9 @@ public class POSInfo implements Comparable<POSInfo>{
 		
 		POSInfo myPOSInfo = (POSInfo) obj;
 		
-		return (   (StringUtility.equalsWithNull(this.word, myPOSInfo.getWord()))
-				&& (StringUtility.equalsWithNull(this.POS, myPOSInfo.getPOS()))
-				&& (StringUtility.equalsWithNull(this.role, myPOSInfo.getRole()))
+		return (   (StringUtils.equals(this.word, myPOSInfo.getWord()))
+				&& (StringUtils.equals(this.POS, myPOSInfo.getPOS()))
+				&& (StringUtils.equals(this.role, myPOSInfo.getRole()))
 				&& (this.certaintyU == myPOSInfo.getCertaintyU())
 				&& (this.certaintyL == myPOSInfo.getCertaintyL())
 				);

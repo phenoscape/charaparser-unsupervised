@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -1699,7 +1700,7 @@ public class Learner {
 
 			
 			
-			if (    (!StringUtility.equalsWithNull(thisTag, "ignore")
+			if (    (!StringUtils.equals(thisTag, "ignore")
 					|| (thisTag == null))
 				&& thisStatus.equals(status)) {
 				
@@ -1857,7 +1858,7 @@ public class Learner {
 			boolean a = hasTag;
 			boolean b = (thisTag == null);
 			
-			if ((a ^ b) && (StringUtility.equalsWithNull(status, thisStatus))) {
+			if ((a ^ b) && (StringUtils.equals(status, thisStatus))) {
 				Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 				Matcher m = p.matcher(thisSentence);
 				if (m.lookingAt()) {
@@ -2004,7 +2005,7 @@ public class Learner {
 			
 			String secondMatchedWord = words.get(end-1);
 			
-			if (StringUtility.equalsWithNull(this.myUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
+			if (StringUtils.equals(this.myUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
 				myLogger.trace("Case 3.1");
 				tag = secondMatchedWord;
 				sign = sign + this.myDataHolder.updateTable(tag, "p", "-", "wordpos", 1);
@@ -2089,7 +2090,7 @@ public class Learner {
 							p.getCertaintyL()));
 					myLogger.trace(String
 							.format("\t\tCertainty: %f", certainty));
-					if ((!StringUtility.equalsWithNull(POS, "?"))
+					if ((!StringUtils.equals(POS, "?"))
 							&& (certainty <= 0.5)) {
 						myLogger.info("\t\tThis POS has a certainty less than 0.5. It is ignored.");
 						POS = "?";

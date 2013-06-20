@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+
 import semanticMarkup.knowledge.Stemmer;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
@@ -68,7 +70,7 @@ public class WordFormUtility {
 		// Check previous records
 		// singular case
 		String singular = null;
-		if (StringUtility.equalsWithNull(mode, "singular")) {
+		if (StringUtils.equals(mode, "singular")) {
 			singular = this.singularRecords.get(word);
 		}
 		if (singular != null) {
@@ -79,7 +81,7 @@ public class WordFormUtility {
 
 		// number case
 		String number = null;
-		if (StringUtility.equalsWithNull(mode, "number")) {
+		if (StringUtils.equals(mode, "number")) {
 			number = this.numberRecords.get(word);
 		}
 		if (number != null) {
@@ -90,7 +92,7 @@ public class WordFormUtility {
 
 		// pos case
 		String pos = null;
-		if (StringUtility.equalsWithNull(mode, "pos")) {
+		if (StringUtils.equals(mode, "pos")) {
 			pos = this.POSRecords.get(word);
 		}
 		if (pos != null) {
