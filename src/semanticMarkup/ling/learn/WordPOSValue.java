@@ -96,4 +96,11 @@ public class WordPOSValue {
 		hash = hash + (new Integer(this.certaintyU)).hashCode() + (new Integer(this.certaintyL)).hashCode();
 		return hash;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format(
+				"Value: [Role: %s, CertaintyU: %d, CertaintyL: %d, SavedFlag: %s, SavedID: %s]",
+				this.role, this.certaintyU, this.certaintyL, this.savedFlag, this.savedID);
+	}
 }

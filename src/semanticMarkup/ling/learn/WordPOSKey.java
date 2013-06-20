@@ -58,4 +58,9 @@ public class WordPOSKey {
 		return hash;
 	}
 	
+	@Override
+	public String toString() {
+		return String.format("Key: [Word: %s, POS: %s]", this.word, this.pos);
+	}
+	
 }

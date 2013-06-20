@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -103,7 +104,10 @@ public class DataHolder {
 	 * @param flag
 	 */
 	public void updateUnknownWord(String word, String flag){
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.updateUnkownWord");	
 		this.unknownWordTable.put(word, flag);
+		myLogger.trace(String.format("Added (%s, %s) into UnknownWord holder", word, flag));
 	}
 	
 	public void addSentence(String source, String sentence,
@@ -127,6 +131,39 @@ public class DataHolder {
 		
 		myLogger.trace("Quite\n");
 	}
+    
+    public List<Entry<WordPOSKey,WordPOSValue>> getWordPOSEntries(String word) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.getWordPOSEntries");
+        
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolder()
+				.entrySet().iterator();
+		List<Entry<WordPOSKey, WordPOSValue>> result = new ArrayList<Entry<WordPOSKey, WordPOSValue>>();
+		while (iter.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> wordPOSEntry = iter.next();
+			if (StringUtils.equals(wordPOSEntry.getKey().getWord(), word)) {
+				result.add(wordPOSEntry);
+			}
+		}
+		
+		myLogger.trace("Get WordPOS Entries of word: " + word);
+		myLogger.trace(StringUtils.join(result, ",\n"));		
+		
+		return result;
+    }
+    
+    public void updateWordPOS(String word, String POS, String role, int certaintyU, int certaintyL, String savedFlag, String savedID) {
+    	PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.addWordPOS");
+        
+        WordPOSKey key = new WordPOSKey(word, POS);
+		WordPOSValue value = new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID);
+		this.getWordPOSHolder().put(key, value);
+        
+		myLogger.trace(String.format(
+				"Added [Key: %s = Value: %s] into WordPOS holder",
+				key.toString(), value.toString()));
+    }    
 
 	public boolean equals(Object obj) {
 		if (obj==this){
@@ -639,7 +676,7 @@ public class DataHolder {
 	}
 
 	/**
-	 * mark a word an its pos and role
+	 * mark a word with its pos and role in wordpos holder, or ???
 	 * 
 	 * @param word
 	 *            the word to mark
@@ -736,7 +773,7 @@ public class DataHolder {
 							+ processNewWord(newWord, pos, "*", table, word, 0);
 					
 					myLogger.debug("Case 2.1");
-					myLogger.debug("by removing prefix of " + word
+					myLogger.debug("by adding a prefix to " + word
 							+ ", know " + newWord + " is a [" + pos + "]");
 				
 				}
@@ -758,7 +795,7 @@ public class DataHolder {
 							+ processNewWord(newWord, pos, "*", table, word, 0);
 					
 					myLogger.debug("Case 2.2");
-					myLogger.debug("by removing prefix of " + word
+					myLogger.debug("by adding a prefix to " + word
 								+ ", know " + newWord + " is a [" + pos + "]");
 				}
 			}
@@ -825,19 +862,23 @@ public class DataHolder {
 			return 0;
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolder()
-				.entrySet().iterator();
-		// boolean isExist = false;
-		Map.Entry<WordPOSKey, WordPOSValue> targetWordPOS = null;
-		while (iter.hasNext()) {
-			Map.Entry<WordPOSKey, WordPOSValue> wordPOS = iter.next();
-			if (wordPOS.getKey().getWord().equals(newWord)) {
-				targetWordPOS = wordPOS;
-				break;
-			}
-		}
+//		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolder()
+//				.entrySet().iterator();
+//		// boolean isExist = false;
+//		Map.Entry<WordPOSKey, WordPOSValue> targetWordPOS = null;
+//		while (iter.hasNext()) {
+//			Map.Entry<WordPOSKey, WordPOSValue> wordPOS = iter.next();
+//			if (wordPOS.getKey().getWord().equals(newWord)) {
+//				targetWordPOS = wordPOS;
+//				break;
+//			}
+//		}
+        
+        List<Entry<WordPOSKey, WordPOSValue>> entryList = getWordPOSEntries(newWord);
+        
 		// case 1: the word does not exist, add it
-		if (targetWordPOS == null) {
+        if (entryList.size()==0) {
+		// if (targetWordPOS == null) {
 			myLogger.trace("Case 1");
 			int certaintyU = 0;
 			certaintyU += increment;
@@ -847,6 +888,7 @@ public class DataHolder {
 		// case 2: the word already exists, update it
 		} else {
 			myLogger.trace("Case 2");
+			Entry<WordPOSKey, WordPOSValue> targetWordPOS = entryList.get(0);
 			String oldPOS = targetWordPOS.getKey().getPOS();
 			String oldRole = targetWordPOS.getValue().getRole();
 			int certaintyU = targetWordPOS.getValue().getCertaintyU();
@@ -874,10 +916,12 @@ public class DataHolder {
 				} else { 
 					newRole = oldRole.equals("*") ? newRole : oldRole;
 					certaintyU = certaintyU + increment;
-					WordPOSKey key = new WordPOSKey("newWord", "pos");
-					WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
-							null, null);
-					this.getWordPOSHolder().put(key, value);
+//					WordPOSKey key = new WordPOSKey("newWord", "pos");
+//					WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
+//							null, null);
+//					this.getWordPOSHolder().put(key, value);
+					
+					this.updateWordPOS(newWord, newPOS, newRole, certaintyU, 0, null, null);
 				}
 				
 			// case 2.2: the old POS and the new POS are all [n],  update role and certaintyU
@@ -885,10 +929,12 @@ public class DataHolder {
 				myLogger.trace("Case 2.2");
 				newRole = this.mergeRole(oldRole, newRole);
 				certaintyU += increment;
-				WordPOSKey key = new WordPOSKey(newWord, newPOS);
-				WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
-						null, null);
-				this.getWordPOSHolder().put(key, value);
+//				WordPOSKey key = new WordPOSKey(newWord, newPOS);
+//				WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
+//						null, null);
+//				this.getWordPOSHolder().put(key, value);
+				
+				this.updateWordPOS(newWord, newPOS, newRole, certaintyU, 0, null, null);
 			}
 		}
 
@@ -1458,14 +1504,7 @@ public class DataHolder {
 				if ((index >= startIndex) && (index <= endIndex)) {
 					Entry<WordPOSKey, WordPOSValue> entry = iter.next();
 					
-					myLogger.info("Index: "+index);
-					myLogger.info("Word: " + entry.getKey().getWord());
-					myLogger.info("POS: " + entry.getKey().getPOS());
-					myLogger.info("Role: " + entry.getValue().getRole());
-					myLogger.info("CertaintyU: " + entry.getValue().getCertaintyU());
-					myLogger.info("CertaintyL: " + entry.getValue().getCertaintyL());
-					myLogger.info("Saved Flag: " + entry.getValue().getSavedFlag());
-					myLogger.info("Saved ID: " + entry.getValue().getSavedID());
+					myLogger.info(entry.toString());
 					myLogger.info("\n");
 
 				}

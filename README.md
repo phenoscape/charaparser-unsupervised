@@ -67,7 +67,31 @@ At the every beginning, only those sentence whose first word is a p, could have 
 
 * Manage Data Holder
 ** Update Table
-For each word, if it is not in the SingularPlural Table, if it is a noun in singular form, find its plural form, and add the (singular, plural) pair into the SingularPlural Table.
+If the pos is noun, find whether its is a singular or plural.
+
+*** Mark Known Word
+
+**** Precess New Word
+
+Update Unknown Word
+Put (word, tag) into UknownWord holder
+
+***** the holder is WordPOS
+****** update POS
+case 1: the word does not exist, add it
+case 2: the word already exists, update it
+    2.1 the old POS is NOT same as the new POS, AND	the old POS is b or the new POS is b
+    ??? old POS wins
+    ??? new POS wins
+    
+    2.2 the old POS and the new POS are all [n],  update role and certaintyU
+
+***** the holder is modifier, add to Modifier holder
+
+
+Since we know the word, we try to learn new words from this word based on prefix.
+
+For each word, if it is not in the SingularPlural Table, if it is a singular and not in the SingularPlural holder, find its plural form and add the (singular, plural) pair into the SingularPlural holder. Similarly, if it is a plural and not in the SingularPlural holder, find its singular form and add the (singular, plural) pair into the SingularPlural holder.
 ***　Discount POS
     Given a word, its old POS, its new POS, and the mode,
     1. Find the flag of the word in Unknownword holder, then select all words from Unknownword table who have the same flag including itself
