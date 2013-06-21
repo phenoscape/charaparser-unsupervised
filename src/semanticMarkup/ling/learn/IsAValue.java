@@ -1,6 +1,7 @@
 package semanticMarkup.ling.learn;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class IsAValue {
 	
@@ -20,11 +21,15 @@ public class IsAValue {
 		return this.cls;
 	}
 
-	public int hashCode() {		
-		String instanceAndClass =this.instance + this.cls; 
-		return instanceAndClass.hashCode();
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder(11, 37)
+			.append(this.instance)
+			.append(this.cls)
+			.toHashCode();
 	}
 	
+	@Override
 	public boolean equals(Object obj){
 		if (obj==this){
 			return true;

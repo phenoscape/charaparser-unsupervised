@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 public class SingularPluralPair implements Comparable<SingularPluralPair>{	
 	private String singular;
 	private String plural;
@@ -22,14 +24,15 @@ public class SingularPluralPair implements Comparable<SingularPluralPair>{
 		return this.singular;
 	}
 
+	@Override
 	public int hashCode() {
-		int hash = 1;
-		hash = hash * 31
-				+ (this.singular == null ? 0 : this.singular.hashCode());
-		hash = hash * 31 + (this.plural == null ? 0 : this.plural.hashCode());
-		return hash;
+		return new HashCodeBuilder(17, 31)
+			.append(this.singular)
+			.append(this.plural)
+			.toHashCode();
 	}
 	
+	@Override
 	public boolean equals(Object obj){
 		if (obj==this){
 			return true;

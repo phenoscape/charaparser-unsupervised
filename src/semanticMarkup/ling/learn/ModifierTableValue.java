@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 public class ModifierTableValue {
 
 	private int count;
@@ -26,6 +28,7 @@ public class ModifierTableValue {
 		return this.isTypeModifier;
 	}
 	
+	@Override
 	public boolean equals(Object obj){
 		if (obj==this){
 			return true;
@@ -42,10 +45,12 @@ public class ModifierTableValue {
 		
 	}
 
+	@Override
 	public int hashCode() {
-		int hash = (new Integer(this.count)).hashCode()
-				+ (new Boolean(this.isTypeModifier)).hashCode();
-
-		return hash;
-	}
+		return new HashCodeBuilder(13, 37)
+			.append(this.count)
+			.append(this.isTypeModifier)
+			.toHashCode();
+		}
+	
 }

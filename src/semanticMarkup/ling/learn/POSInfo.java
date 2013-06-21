@@ -1,6 +1,7 @@
 package semanticMarkup.ling.learn;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class POSInfo implements Comparable<POSInfo>{
 
@@ -60,15 +61,18 @@ public class POSInfo implements Comparable<POSInfo>{
 		}
 	}
 	
-	public int hashCode() {		
-		int hashCode = 0;
-		
-		String wordAndPOSAndRole = this.word + this.POS + this.role;		
-		hashCode = wordAndPOSAndRole.hashCode()+this.certaintyU+this.certaintyL;
-		
-		return hashCode;
+	@Override
+	public int hashCode() {	
+		return new HashCodeBuilder(13, 31)
+			.append(this.word)
+			.append(this.POS)
+			.append(this.role)
+			.append(this.certaintyU)
+			.append(this.certaintyL)
+			.toHashCode();
 	}
 	
+	@Override
 	public boolean equals(Object obj){
 		if (obj==this){
 			return true;

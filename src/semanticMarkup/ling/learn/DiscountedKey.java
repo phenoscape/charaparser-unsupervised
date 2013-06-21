@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 public class DiscountedKey {
 	
 	private String word;
@@ -24,6 +26,7 @@ public class DiscountedKey {
 	//			&& (this.pos.equals(dKey.getPOS())));
 	//}
 	
+    @Override
 	public boolean equals(Object obj){
 		if (obj==this){
 			return true;
@@ -39,11 +42,12 @@ public class DiscountedKey {
 				&& (this.pos.equals(myDiscountedKey.getPOS())));
 	}
 
+    @Override
 	public int hashCode() {
-		int hash = 1;
-		hash = hash * 31 + (this.word == null ? 0 : this.word.hashCode());
-		hash = hash * 31 + (this.pos == null ? 0 : this.pos.hashCode());
-		return hash;
+        return new HashCodeBuilder(19, 31).
+        	       append(this.word).
+        	       append(this.pos).
+        	       toHashCode();
 	}
 	
 
