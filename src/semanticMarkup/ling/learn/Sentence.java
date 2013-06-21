@@ -89,6 +89,7 @@ public class Sentence {
 		this.type=type;
 	}
 	
+	@Override
 	public boolean equals(Object obj){
 		if (obj==this){
 			return true;

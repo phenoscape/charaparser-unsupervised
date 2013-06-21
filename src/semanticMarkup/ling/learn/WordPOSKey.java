@@ -33,6 +33,7 @@ public class WordPOSKey {
 	//			&& (this.pos.equals(wpk.getPOS())));
 	//}
 	
+	@Override
 	public boolean equals(Object obj){
 		if (obj==this){
 			return true;
