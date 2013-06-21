@@ -1970,7 +1970,7 @@ public class Learner {
 		Pattern p2 = Pattern.compile("^.*ps.*$");
 		Matcher m2 = p2.matcher(ptn);
 		
-		Pattern p3 = Pattern.compile("^.*p(\\?).*$");
+		Pattern p3 = Pattern.compile("p(\\?)");
 		Matcher m3 = p3.matcher(ptn);
 		
 
@@ -2000,8 +2000,8 @@ public class Learner {
 			myLogger.trace("Case 3");
 			myLogger.debug("Found [p?] pattern");
 			
-			int start = m3.start();
-			int end = m3.end();
+			int start = m3.start(1);
+			int end = m3.end(1);
 			
 			String secondMatchedWord = words.get(end-1);
 			
@@ -2021,8 +2021,8 @@ public class Learner {
 				
 				tag = StringUtility.joinList(" ", tempWords);
 				
-				myLogger.debug("\t:determine the tag: $tag\n");
-				myLogger.debug("\t:updates on POSs\n");
+				myLogger.debug("\t:determine the tag: "+tag);
+				myLogger.debug("\t:updates on POSs");
 				
 				int temp = 0;
 				temp = this.myDataHolder.updateTable(wordsCopy.get(end-1), "b", "", "wordpos", 1);
@@ -2041,7 +2041,7 @@ public class Learner {
 		
 		StringAndInt returnValue = new StringAndInt(tag,sign);
 		
-		myLogger.trace("Quite doItHelper");
+		myLogger.trace("Return: "+returnValue.toString());
 		return returnValue;
 	}
 

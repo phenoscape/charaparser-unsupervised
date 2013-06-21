@@ -875,23 +875,23 @@ public class DataHolder {
 //		}
         
         List<Entry<WordPOSKey, WordPOSValue>> entryList = getWordPOSEntries(newWord);
-        
+        int certaintyU = 0;
 		// case 1: the word does not exist, add it
         if (entryList.size()==0) {
 		// if (targetWordPOS == null) {
 			myLogger.trace("Case 1");
-			int certaintyU = 0;
 			certaintyU += increment;
 			this.getWordPOSHolder().put(new WordPOSKey(newWord, newPOS),
 					new WordPOSValue(newRole, certaintyU, 0, null, null));
 			n = 1;
+			myLogger.trace(String.format("\t: new [%s] pos=%s, role =%s, certaintyU=%d", newWord, newPOS, newRole, certaintyU));
 		// case 2: the word already exists, update it
 		} else {
 			myLogger.trace("Case 2");
 			Entry<WordPOSKey, WordPOSValue> targetWordPOS = entryList.get(0);
 			String oldPOS = targetWordPOS.getKey().getPOS();
 			String oldRole = targetWordPOS.getValue().getRole();
-			int certaintyU = targetWordPOS.getValue().getCertaintyU();
+			certaintyU = targetWordPOS.getValue().getCertaintyU();
 			// case 2.1 
 			// 		the old POS is NOT same as the new POS, 
 			// 	AND	the old POS is b or the new POS is b
@@ -922,6 +922,9 @@ public class DataHolder {
 //					this.getWordPOSHolder().put(key, value);
 					
 					this.updateWordPOS(newWord, newPOS, newRole, certaintyU, 0, null, null);
+					
+					myLogger.debug(String.format("\t: update [%s (%s):a] role: %s=>%s, certaintyU=%d\n",
+									newWord, newPOS, oldRole, newRole, certaintyU));
 				}
 				
 			// case 2.2: the old POS and the new POS are all [n],  update role and certaintyU
@@ -935,6 +938,9 @@ public class DataHolder {
 //				this.getWordPOSHolder().put(key, value);
 				
 				this.updateWordPOS(newWord, newPOS, newRole, certaintyU, 0, null, null);
+				
+				myLogger.debug(String.format("\t: update [%s (%s):b] role: %s => %s, certaintyU=%d\n",
+								newWord, newPOS, oldRole, newRole, certaintyU));
 			}
 		}
 
@@ -956,7 +962,8 @@ public class DataHolder {
 			}
 		}
 
-		myLogger.trace("Quite updatePOS");
+		myLogger.debug(String.format("\t: total occurance of [%s] = %d\n", newWord, certaintyL));
+		myLogger.trace("Return: " + n);
 		return n;
 	}
 	
