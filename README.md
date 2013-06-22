@@ -63,10 +63,20 @@ For each noun,
 
 	At the every beginning, only those sentence whose first word is a p, could have a tag of "start", see populateSentece section.
 	
-	* Build pattern from the lead words of the sentence
-	* Find those sentences which match to this pattern
-		For each of those sentences,
-		* do rule based learn, all the way to the point where no further new knowledge can be learned. Then stop.
+	** Build pattern from the lead words of the sentence
+	** Find those sentences which match to this pattern
+		For each of those sentences, do rule based learn, all the way to the point where no further new knowledge can be learned. Then stop.
+        *** In rule based learn, 
+        1) grow NOUNS and BDRY, and confirm tags by applying rules and clues 
+        2) create and maintain decision tables
+        
+        for each marked sentence:
+        	doit: 
+        	update wordpos table (on certainty) when a sentence is tagged for the first time.
+			Note: 	1) this update should not be done when a pos is looked up, because we may lookup a pos for the same example multiple times.
+					2) if the tag need to be adjusted (not by doit function), also need to adjust certainty counts.
+        		case 1 - case 10
+        	tagit
 
 * discover
 	Bootstrapping rules
