@@ -705,10 +705,10 @@ public class LearnerTest {
 		Learner myTester = new Learner(myConfiguration, myUtility);
 		
         // case 1		
-//		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
-//				Arrays.asList(new String[] {"submandibulars", "p", "", "0", "0", null, null}));
-//		
-//		assertEquals("doItHelper - case 1", new StringAndInt("submandibulars",0), myTester.doItHelper("submandibulars", "submandibulars"));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"submandibulars", "p", "", "0", "0", null, null}));
+		
+		assertEquals("doItHelper - case 1", new StringAndInt("submandibulars",0), myTester.doItHelper("submandibulars", "submandibulars"));
         
         // case 3.2
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 

@@ -913,7 +913,7 @@ public class DataHolder {
 				if (flag) { 
 					newRole = newRole.equals("*") ? "" : newRole;
 					n = n + changePOS(newWord, oldPOS, newPOS, newRole, increment);
-				// olde pos win
+				// old pos win
 				} else { 
 					newRole = oldRole.equals("*") ? newRole : oldRole;
 					certaintyU = certaintyU + increment;
