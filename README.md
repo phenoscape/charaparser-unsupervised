@@ -64,6 +64,7 @@ For each noun,
 	At the every beginning, only those sentence whose first word is a p, could have a tag of "start", see populateSentece section.
 	
 	** Build pattern from the lead words of the sentence
+        build a pattern with matches to any string containing a word in its first 3 words that is among the lead words
 	** Find those sentences which match to this pattern
 		For each of those sentences, do rule based learn, all the way to the point where no further new knowledge can be learned. Then stop.
         *** In rule based learn, 

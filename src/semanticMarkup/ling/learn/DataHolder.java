@@ -264,7 +264,7 @@ public class DataHolder {
 		SingularPluralPair pair = new SingularPluralPair(sgl, pl);
 		boolean result = this.singularPluralTable.add(pair);
 		
-		myLogger.info(String.format("Added singular-plural pair (%s, %s)", sgl, pl));
+		myLogger.debug(String.format("Added singular-plural pair (%s, %s)", sgl, pl));
 		return result;
 	}
 	

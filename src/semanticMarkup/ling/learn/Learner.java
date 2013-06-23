@@ -28,16 +28,6 @@ import semanticMarkup.core.Treatment;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
 public class Learner {	
-	/**************************************************
-	 * Debug variables used by developer
-	 */
-	private boolean populateSentence_debug = false;
-	private boolean addHeuristicsNouns_debug = false;
-	private boolean getHeuristicNouns_debug = false;
-	private boolean characterHeuristics_debug = false;
-	/**************************************************
-	 */
-
 	private Configuration myConfiguration;
 	private Utility myUtility;
 	
@@ -57,6 +47,9 @@ public class Learner {
 	private Set<String> checkedWordSet;
 	
 	public Learner(Configuration configuration, Utility utility) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("Learner");
+		
 		this.myConfiguration = configuration;
 		this.myUtility = utility;
 		
@@ -72,13 +65,18 @@ public class Learner {
 		
 		checkedWordSet = new HashSet<String>();
 		
+		myLogger.info("Created Learner");
+		myLogger.info("\tLearning Mode: "+myConfiguration.getLearningMode());
+		myLogger.info("\tMax Tag Lengthr: "+myConfiguration.getMaxTagLength());
+		myLogger.info("\n");
+		
 	}
 
 	public DataHolder Learn(List<Treatment> treatments) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learn");
 		myLogger.trace("Enter Learn");
-		myLogger.info(String.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
+		myLogger.trace(String.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
 
 		this.populateSentence(treatments);
 		this.populateUnknownWordsTable(this.myDataHolder.allWords);
@@ -266,7 +264,6 @@ public class Learner {
 
 		myLogger.info("Total sentences = " + SENTID);
 		myLogger.info("Quite");
-		myLogger.info("\n");
 
 		return SENTID;
 	}
@@ -505,6 +502,7 @@ public class Learner {
 		
 		myLogger.debug("Total: "+nouns.size());
 		Iterator<String> iter = nouns.iterator();
+        myLogger.info("Learn singular-plural pair");
 		while (iter.hasNext()) {
 			String e = iter.next();
 			myLogger.trace("Check Word: "+e);
@@ -599,6 +597,9 @@ public class Learner {
 	 * @return nouns learned by heuristics
 	 */
 	public Set<String> learnHeuristicsNouns() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addHeuristicsNouns.learnHeuristicsNouns");
+		
 		// Set of words
 		Set<String> words = new HashSet<String>();
 
@@ -609,9 +610,7 @@ public class Learner {
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
 			String originalSentence = this.myDataHolder.getSentenceHolder().get(i)
 					.getOriginalSentence();
-			if (this.getHeuristicNouns_debug) {
-				 System.out.println(originalSentence+"\n");
-			}
+			myLogger.trace("Original Sentence: "+originalSentence);
 			sentences.add(StringUtility.strip(originalSentence));
 		}
 
@@ -633,10 +632,7 @@ public class Learner {
 					// if (token.equals("arch"))
 					// token="arch";
 					words.add(token);
-					if (this.getHeuristicNouns_debug) {
-						System.out.println("Add a word into words:");
-						System.out.println(token);
-					}
+					myLogger.trace("Add a word into words: "+token);
 				}
 			}
 		}
@@ -671,16 +667,17 @@ public class Learner {
 		}
 
 		// print out the wordMap
-		if (getHeuristicNouns_debug) {
-			Iterator<Map.Entry<String, Set<String>>> iter = wordMap.entrySet().iterator();
-			while (iter.hasNext()){
-				Map.Entry<String, Set<String>> e = iter.next();
-				System.out.println(e.getKey());
-				System.out.println(e.getValue());
-			}
+		myLogger.trace("WordMap:");
+		Iterator<Map.Entry<String, Set<String>>> wordMapIter = wordMap.entrySet()
+				.iterator();
+		while (wordMapIter.hasNext()) {
+			Map.Entry<String, Set<String>> e = wordMapIter.next();
+			myLogger.trace(e.toString());
 		}
+	
 		
 		// find nouns
+        myLogger.info("Learn singular-plural pair");
 		Iterator<Map.Entry<String, Set<String>>> iter = wordMap.entrySet().iterator();
 		while (iter.hasNext()){
 			Map.Entry<String, Set<String>> e = iter.next();
@@ -745,10 +742,7 @@ public class Learner {
 		}
 		
 		//print out nouns
-		if (this.getHeuristicNouns_debug) {
-			System.out.println("Nouns:\n");
-			System.out.println(nouns);
-		}
+		myLogger.debug("Nouns: "+nouns);
 				
 		return nouns;
 	}
@@ -779,6 +773,9 @@ public class Learner {
 	 * @return nouns learned
 	 */
 	public String getPresentAbsentNouns(String text) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addHeuristicsNouns.learnHeuristicsNouns.getPresentAbsentNouns");
+		
 		String pachecked = "and|or|to";
 
 		if (text.matches("(\\w+?)\\s+(present|absent)")) {
@@ -793,8 +790,8 @@ public class Learner {
 					&& (!word.matches("\\b(" + Constant.STOP + ")\\b"))
 					&& (!word
 							.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
-				if (this.getHeuristicNouns_debug)
-					System.out.println("present/absent " + word + "\n");
+				
+				myLogger.trace("present/absent " + word);
 
 				if (((word.matches("^.*" + Constant.PENDINGS))
 						|| (word.matches("^.*[^s]s$")) || (word
@@ -817,6 +814,8 @@ public class Learner {
 	 *         element is a set of descriptors
 	 */
 	public List<Set<String>> characterHeuristics() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addHeuristicsNouns.characterHeuristics");
 		
 		Set<String> taxonNames = new HashSet<String>();
 		Set<String> nouns = new HashSet<String>();
@@ -834,11 +833,9 @@ public class Learner {
 			String sentence = sent.getSentence();
 			String originalSentence = sent.getOriginalSentence();
 
-			if (this.characterHeuristics_debug) {
-				System.out.println(source);
-				System.out.println(sentence);
-				System.out.println(originalSentence + "\n");
-			}
+			myLogger.trace("Source: "+source);
+			myLogger.trace("Sentence: "+sentence);
+			myLogger.trace("Original Sentence: "+originalSentence);
 
 			originalSentence = StringUtility.trimString(originalSentence);
 
@@ -1724,9 +1721,9 @@ public class Learner {
 				myLogger.debug("startWords: "+startWords.toString());
 
 				String pattern = buildPattern(startWords);
-				myLogger.info("Build pattern ["+pattern+"] from starting words ["+thisLead+"]");
 				
 				if (pattern != null) {
+                    myLogger.info("Build pattern ["+pattern+"] from starting words ["+thisLead+"]");
 					// IDs of untagged sentences that match the pattern
 					Set<Integer> matched = matchPattern(pattern, status, false);
 					int round = 0;
@@ -1738,6 +1735,9 @@ public class Learner {
 						round++;
 					} while (numNew > 0);
 				}
+                else {
+                    myLogger.info("Build no pattern from starting words ["+thisLead+"]");
+                }
 			}
 		}
 
@@ -1773,7 +1773,7 @@ public class Learner {
 	 */
 	public String buildPattern(String[] startWords) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.buildPattern");
+		Logger myLogger = Logger.getLogger("learn.discover.buildPattern");
 		
 		myLogger.trace("Enter buildPattern");
 		myLogger.trace("Start Words: "+startWords);
@@ -1840,7 +1840,7 @@ public class Learner {
 	 */
 	public Set<Integer> matchPattern(String pattern, String status, boolean hasTag) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.matchPattern");
+		Logger myLogger = Logger.getLogger("learn.discover.matchPattern");
 		
 		myLogger.trace("Enter matchPattern");
 		myLogger.trace("Pattern: "+pattern);
@@ -1890,7 +1890,7 @@ public class Learner {
 	 */
 	public int ruleBasedLearn(Set<Integer> matched) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn");
+		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn");
 		
 		myLogger.trace("Enter ruleBasedLearn");
 		myLogger.trace("Matched IDs: "+matched);
@@ -1932,7 +1932,7 @@ public class Learner {
 	 */
 	public StringAndInt doIt(int sentID) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt");
+		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.doIt");
 		
 		myLogger.trace("Enter doIt");
 		myLogger.trace("sentence ID: " + sentID);
@@ -1941,7 +1941,7 @@ public class Learner {
 		String thisSentence = sentEntry.getSentence();
 		String thisLead = sentEntry.getLead();
 		
-		StringAndInt returnValue = this.doItHelper(thisSentence, thisLead);
+		StringAndInt returnValue = this.doItCaseHandle(thisSentence, thisLead);
 		
 		myLogger.trace("Return Tag: " + returnValue.getString() + ", sign: " + returnValue.getInt());
 		myLogger.trace("Quit doIt");
@@ -1950,11 +1950,11 @@ public class Learner {
 		return returnValue;		
 	}
 
-	public StringAndInt doItHelper(String thisSentence, String thisLead) {
+	public StringAndInt doItCaseHandle(String thisSentence, String thisLead) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt");
+		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.doIt.doItCaseHandle");
 
-		myLogger.trace("Enter doItHelper");
+		myLogger.trace("Enter doItCaseHandle");
 		myLogger.trace("Sentence: " + thisSentence);
 		myLogger.trace("Lead: " + thisLead);
 
@@ -2055,7 +2055,7 @@ public class Learner {
 	public String getPOSptn(List<String> words) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger
-				.getLogger("learn.ruleBasedLearn.doIt.getPOSptn");
+				.getLogger("learn.discover.ruleBasedLearn.doIt.getPOSptn");
 
 		myLogger.trace("Enter getPOSptn");
 		myLogger.trace("Words: " + words.toString());
