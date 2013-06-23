@@ -32,13 +32,17 @@ The regular expression like "blv?d" would match both "blvd" and "bld". The quest
 * Add Heuristics Nouns
 ** Learn Heuristics Nouns
 
-For each noun, 
+
 
 ** Character Heuristics
+
+For each noun, if it is a singular, try to find the plural form; if it is a plural, try to find its singular form. Add any singular-plural pair learned in this way into SingularPlural holder.
 
 * Add Stop Words
 
 * Add Characters
+
+Sort all words according to their root. That is, put words with same root together. For each group of words share same root, find any word in the group having a noun ending, then it must be a singular, put it into the noun list with a [s] tag. If there is another word within the same group ends with -s or -es, it is very likely that it is the plural form of the singular word. Put it into the noun list with a [p] tag. Put this singular-plural pair into SingularPlural holder.
 
 * Add Numbers
 
