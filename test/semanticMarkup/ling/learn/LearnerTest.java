@@ -704,22 +704,37 @@ public class LearnerTest {
 		Utility myUtility = new Utility(myConfiguration);
 		Learner myTester = new Learner(myConfiguration, myUtility);
 		
-        // case 1		
-		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
-				Arrays.asList(new String[] {"submandibulars", "p", "", "0", "0", null, null}));
-		
-		assertEquals("CaseHandle - case 1", new StringAndInt("submandibulars",0), myTester.doItCaseHandle("submandibulars", "submandibulars"));
+//		
+//        // case 1		
+//		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+//				Arrays.asList(new String[] {"submandibulars", "p", "", "0", "0", null, null}));
+//		
+//		assertEquals("CaseHandle - case 1", new StringAndInt("submandibulars",0), myTester.doItCaseHandle("submandibulars", "submandibulars"));
+//        
+//        // case 3.2
+//		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+//				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
+////        myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+////				Arrays.asList(new String[] {"unicuspid", "p", "role", "1", "3", "", ""}));
+//		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+//				Arrays.asList(new String[] {"with", "b", "role", "1", "1", "", ""}));
+//        assertEquals("CaseHandle - case 3.2", new StringAndInt("teeth",1), 
+//            myTester.doItCaseHandle("teeth unicuspid with crowns posteriorly curved along the main axis of the mandible , organized into a long series of equally_ sized teeth", 
+//                "teeth unicuspid with"));   
         
-        // case 3.2
-		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+        // case 4.2	
+		Learner myTester42 = new Learner(myConfiguration, myUtility);
+		
+		myTester42.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
-//        myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
-//				Arrays.asList(new String[] {"unicuspid", "p", "role", "1", "3", "", ""}));
-		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
-				Arrays.asList(new String[] {"with", "b", "role", "1", "1", "", ""}));
-        assertEquals("CaseHandle - case 3.2", new StringAndInt("teeth",1), 
-            myTester.doItCaseHandle("teeth unicuspid with crowns posteriorly curved along the main axis of the mandible , organized into a long series of equally_ sized teeth", 
-                "teeth unicuspid with"));        
+		myTester42.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"variously", "b", "role", "0", "0", "", ""}));
+
+		
+
+        assertEquals("CaseHandle - case 4.2", new StringAndInt("teeth",1), 
+                myTester42.doItCaseHandle("teeth variously arranged , but never very numerous , equally_ sized and regularly curved posteriorly along main axis of mandible", 
+                    "teeth variously arranged")); 
 	}
 	
 	

@@ -1973,6 +1973,9 @@ public class Learner {
 		Pattern p3 = Pattern.compile("p(\\?)");
 		Matcher m3 = p3.matcher(ptn);
 		
+		Pattern p4 = Pattern.compile("[psn](b)");
+		Matcher m4 = p4.matcher(ptn);
+		
 
 		// Case 1: single word case
 		if (ptn.matches("^[pns]$")) {
@@ -2005,6 +2008,7 @@ public class Learner {
 			
 			String secondMatchedWord = words.get(end-1);
 			
+			// case 3.1
 			if (StringUtils.equals(this.myUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
 				myLogger.trace("Case 3.1");
 				tag = secondMatchedWord;
@@ -2012,13 +2016,13 @@ public class Learner {
 				this.myDataHolder.add2Holder(DataHolder.ISA, Arrays.asList(new String[] {tag, words.get(end-2)}));	
 				myLogger.debug("\t:[p p] pattern: determine the tag: "+tag);
 			}
+			// case 3.2
 			else {
 				myLogger.trace("Case 3.2");
 				
-				List<String> wordsCopy = words;
+				List<String> wordsCopy = new ArrayList<String>(words);
 				// $i is just end-1
 				List<String> tempWords = StringUtility.stringArraySplice(words, 0, end-1);
-				
 				tag = StringUtility.joinList(" ", tempWords);
 				
 				myLogger.debug("\t:determine the tag: "+tag);
@@ -2037,6 +2041,47 @@ public class Learner {
 				sign += temp;
 				myLogger.debug("\t:updateTable returns " + temp);
 			}
+		}
+		
+		// case 4
+		else if (m4.find()) {
+			myLogger.trace("Case 4");
+			Pattern p41 = Pattern.compile("^sbp");
+			Matcher m41 = p41.matcher(ptn);
+			
+			if (m41.find()) {
+				myLogger.trace("\tCase 4.1");
+				myLogger.debug("Found [sbp] pattern");
+				List<String> wordsCopy = new ArrayList<String>(words);
+				tag = StringUtility.joinList(" ", StringUtility.stringArraySplice(wordsCopy, 0, 3));
+				myLogger.trace("\t:determine the tag: " + tag);
+			}
+			else {
+				myLogger.trace("\tCase 4.2");
+				myLogger.debug("Found [[psn](b)] pattern");
+				/**
+				 * 			
+			$i = $-[1]; #index of b
+			$sign += update($ws[$i], "b","", "wordpos", 1);
+			@cws = @ws;
+			@tws = splice(@ws,0,$i);#get tag words, @ws changes.
+			$tag = join(" ",@tws);
+			$sign += update($cws[$i-1], substr($ptn, $i-1, 1), "-", "wordpos", 1);
+			$sign += updatenn(0, $#tws+1,@tws);
+			print "[doit]\t:determine the tag: $tag\n" if $doit_debug;
+			print "[doit]\t:updates on POSs\n" if $doit_debug;
+				 */
+				
+				int index = m4.start(1);
+				sign += this.getDataHolder().updateTable(words.get(index), "b", "", "wordpos", 1);
+//				List<String> wordsCopy = new ArrayList<String>(words);
+//				List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
+//				tag = StringUtility.joinList(" ", wordsTemp);
+//				sign += this.getDataHolder().updateTable(wordsCopy.get(index-1), , "-", "wordpos", 1);
+				
+				
+			}
+			
 		}
 		
 		StringAndInt returnValue = new StringAndInt(tag,sign);
@@ -2070,6 +2115,7 @@ public class Learner {
 			List<POSInfo> POSInfoList = this.myDataHolder.checkPOSInfo(word);
 			if (POSInfoList.size() >= 0) {
 				if (POSInfoList.size() == 0) {
+                    myLogger.trace("\t\tThe word is not in WordPOS holder");
 					POS = "?";
 				} 
 				else {

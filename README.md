@@ -132,3 +132,6 @@ For each word, if it is not in the SingularPlural Table, if it is a singular and
         1.1. Else insert (nword, Oldpos, newpos) into discounted table
 
 Apart the updates on the holders themselves, in this step the count of how many updates have been made in this step is returned.
+
+** getPOSptn
+given a list of words, chech each of them in the WordPOS holder, find its POS tag, and returns a string with letters representing the POS tags. If the POS tag is not known for a word, use "?" to represent it.
