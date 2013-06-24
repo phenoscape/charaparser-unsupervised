@@ -2063,19 +2063,7 @@ public class Learner {
 			else {
 				myLogger.trace("\tCase 4.2");
 				myLogger.debug("Found [[psn](b)] pattern");
-				/**
-				 * 			
-			$i = $-[1]; #index of b
-			$sign += update($ws[$i], "b","", "wordpos", 1);
-			@cws = @ws;
-			@tws = splice(@ws,0,$i);#get tag words, @ws changes.
-			$tag = join(" ",@tws);
-			$sign += update($cws[$i-1], substr($ptn, $i-1, 1), "-", "wordpos", 1);
-			$sign += updatenn(0, $#tws+1,@tws);
-			print "[doit]\t:determine the tag: $tag\n" if $doit_debug;
-			print "[doit]\t:updates on POSs\n" if $doit_debug;
-				 */
-				
+
 				int index = m4.start(1);
 
 				// get tag, which is the words prior to the b word (exclusive)				
@@ -2087,10 +2075,6 @@ public class Learner {
 				sign += this.getDataHolder().updateTable(words.get(index), "b", "", "wordpos", 1);
 				myLogger.trace(String.format("updateTable (%s, b, , wordpos, 1)", words.get(index)));
 				
-				// update the word prior to the b word
-//				List<String> wordsCopy = new ArrayList<String>(words);
-//				List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
-//				tag = StringUtility.joinList(" ", wordsTemp);
 				sign += this.getDataHolder().updateTable(words.get(index - 1),
 						ptn.substring(index - 1, index), "-", "wordpos", 1);
 
@@ -2106,7 +2090,10 @@ public class Learner {
 				myLogger.debug("\t:determine the tag: " + tag);
 				myLogger.debug("\t:updates on POSs");
 			}
-			
+		}
+		else {
+			myLogger.trace("\tCase 0");
+			myLogger.trace(String.format("Pattern [%s] is not processed", ptn));
 		}
 		
 		StringAndInt returnValue = new StringAndInt(tag,sign);

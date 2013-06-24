@@ -704,9 +704,9 @@ public class LearnerTest {
 		Utility myUtility = new Utility(myConfiguration);
 		
 		// case 0: boundary case
-		Learner myTester0 = new Learner(myConfiguration, myUtility);
-		assertEquals("CaseHandle - case 3.2", null, myTester0.doItCaseHandle(null, null));   
-		assertEquals("CaseHandle - case 3.2", new StringAndInt("",0), myTester0.doItCaseHandle("", ""));   
+		Learner myTesterBoundary = new Learner(myConfiguration, myUtility);
+		assertEquals("CaseHandle - case 3.2", null, myTesterBoundary.doItCaseHandle(null, null));   
+		assertEquals("CaseHandle - case 3.2", new StringAndInt("",0), myTesterBoundary.doItCaseHandle("", ""));   
 		
         // case 1
 		Learner myTester1 = new Learner(myConfiguration, myUtility);				
@@ -753,6 +753,19 @@ public class LearnerTest {
 				Arrays.asList(new String[] {"of", "b", "role", "2", "2", "", ""}));
         assertEquals("CaseHandle - case 4.2", new StringAndInt("bases",0), 
                 myTester42.doItCaseHandle("bases of tooth whorls", "bases of")); 
+        
+        // case 0
+        Learner myTester0 = new Learner(myConfiguration, myUtility);
+        
+		myTester0.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"does", "b", "role", "0", "0", "", ""}));
+		myTester0.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"not", "b", "role", "0", "0", "", ""}));
+
+        assertEquals("CaseHandle - case 4.2", new StringAndInt("",0), 
+                myTester42.doItCaseHandle("does not cross over the anterodorsal corner of opercular bone", 
+                    "does not cross")); 
+        
 	}
 	
 	
