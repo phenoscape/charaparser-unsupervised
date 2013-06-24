@@ -1958,8 +1958,12 @@ public class Learner {
 		myLogger.trace("Sentence: " + thisSentence);
 		myLogger.trace("Lead: " + thisLead);
 
+		if (thisSentence == null || thisLead == null) {
+			return null;
+		}
+
 		int sign = 0;
-		String tag = null;
+		String tag = "";
 		
 		List<String> words = Arrays.asList(thisLead.split("\\s+"));
 		
