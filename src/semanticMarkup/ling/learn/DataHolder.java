@@ -1214,7 +1214,7 @@ public class DataHolder {
 	}
 	
 	/**
-	 * 
+	 * for the nouns in @words, make the last n the main noun("-"). update NN's roles. return a positive number if an update is made,
 	 * @param start
 	 * @param end
 	 * @param words

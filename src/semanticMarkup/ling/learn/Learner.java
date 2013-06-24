@@ -1967,7 +1967,7 @@ public class Learner {
 		
 		myLogger.trace("ptn: "+ptn);
 		
-		Pattern p2 = Pattern.compile("^.*ps.*$");
+		Pattern p2 = Pattern.compile("ps");
 		Matcher m2 = p2.matcher(ptn);
 		
 		Pattern p3 = Pattern.compile("p(\\?)");
@@ -1985,7 +1985,7 @@ public class Learner {
 			myLogger.debug("Directly markup with tag: "+tag+"\n");
 		}
 
-		// Case 2: the POSs are "ps"
+		// Case 2: "ps"
 		else if (m2.find()) {
 			myLogger.trace("Case 2");
 			myLogger.debug("Found [ps] pattern\n");
@@ -1998,7 +1998,7 @@ public class Learner {
 			sign += this.myDataHolder.updateTable(sWord, "s", "", "wordpos", 1);
 		} 
 		
-		// Case 3
+		// Case 3: "p(\\?)"
 		else if (m3.find()) {
 			myLogger.trace("Case 3");
 			myLogger.debug("Found [p?] pattern");
@@ -2043,7 +2043,7 @@ public class Learner {
 			}
 		}
 		
-		// case 4
+		// case 4: "[psn](b)"
 		else if (m4.find()) {
 			myLogger.trace("Case 4");
 			Pattern p41 = Pattern.compile("^sbp");
@@ -2073,13 +2073,34 @@ public class Learner {
 				 */
 				
 				int index = m4.start(1);
+
+				// get tag, which is the words prior to the b word (exclusive)				
+				List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
+				tag = StringUtility.joinList(" ", wordsTemp);
+				myLogger.trace("Tag: " + tag);
+
+				// update the b word
 				sign += this.getDataHolder().updateTable(words.get(index), "b", "", "wordpos", 1);
+				myLogger.trace(String.format("updateTable (%s, b, , wordpos, 1)", words.get(index)));
+				
+				// update the word prior to the b word
 //				List<String> wordsCopy = new ArrayList<String>(words);
 //				List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
 //				tag = StringUtility.joinList(" ", wordsTemp);
-//				sign += this.getDataHolder().updateTable(wordsCopy.get(index-1), , "-", "wordpos", 1);
-				
-				
+				sign += this.getDataHolder().updateTable(words.get(index - 1),
+						ptn.substring(index - 1, index), "-", "wordpos", 1);
+
+				myLogger.trace(String.format(
+						"updateTable (%s, %s, -, wordpos, 1)",
+						words.get(index - 1), ptn.substring(index - 1, index)));
+
+				sign += this.getDataHolder().updateTableNN(0, wordsTemp.size(),
+						wordsTemp);
+				myLogger.trace(String.format("updateTableNN (0, %d, %s)",
+						wordsTemp.size(), wordsTemp.toString()));
+
+				myLogger.debug("\t:determine the tag: " + tag);
+				myLogger.debug("\t:updates on POSs");
 			}
 			
 		}
