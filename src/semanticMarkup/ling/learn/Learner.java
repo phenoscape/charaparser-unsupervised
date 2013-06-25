@@ -1980,6 +1980,9 @@ public class Learner {
 		Pattern p4 = Pattern.compile("[psn](b)");
 		Matcher m4 = p4.matcher(ptn);
 		
+		Pattern p10 = Pattern.compile("^\\?(b)");
+		Matcher m10 = p10.matcher(ptn);
+		
 
 		// Case 1: single word case
 		if (ptn.matches("^[pns]$")) {
@@ -2091,6 +2094,40 @@ public class Learner {
 				myLogger.debug("\t:updates on POSs");
 			}
 		}
+		
+		// case 10: "^\\?(b)"
+		else if (m10.find()) {
+			myLogger.trace("Case 10");
+			myLogger.trace("Found [?(b)] pattern");
+			
+			int index = m10.start(1);
+			
+			sign += this.getDataHolder().updateTable(words.get(index), "b", "", "wordpos", 1);
+			myLogger.trace(String.format("updateTable (%s, b, , wordpos, 1)", words.get(index)));
+			
+			/**
+	    	@cws = @ws;
+			@tws = splice(@ws,0,$i);#get tag words
+			$tag = join(" ",@tws);
+	    	my $word = $cws[$i-1]; #the "?" word;
+	    	**/
+			
+			List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
+			tag = StringUtility.joinList(" ", wordsTemp);
+			String word = words.get(index-1);
+			
+			myLogger.trace("Tag: "+tag);
+			myLogger.trace("Word: "+word);
+			
+			if (!isFollowedByNoun(thisSentence, thisLead)) {
+				;
+			}
+			else {
+				myLogger.trace("Case 10.2");
+				myLogger.debug(String.format("\t:%s is adv/adj or modifier. skip.", tag));
+                tag = "";
+			}
+		}
 		else {
 			myLogger.trace("\tCase 0");
 			myLogger.trace(String.format("Pattern [%s] is not processed", ptn));
@@ -2100,6 +2137,81 @@ public class Learner {
 		
 		myLogger.trace("Return: "+returnValue.toString());
 		return returnValue;
+	}
+
+	/**
+	 * Check if a lead is followed by a noun without any proposition in between
+	 * in the sentence
+	 * 
+	 * @param thisSentence
+	 *            the sentence
+	 * @param thisLead
+	 *            the lead
+	 * @return true if lead is followed by a N without any proposition in
+	 *         between
+	 */
+	public boolean isFollowedByNoun(String sentence, String lead) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.doIt.isFollowedByNoun");
+		myLogger.trace(String.format("(%s, %s)", sentence, lead));
+		
+		// null case
+		if (sentence == null || lead == null) {
+			return false;
+		}
+		
+		if (StringUtils.equals(sentence, "")) {
+			return false;
+		}
+		
+		// remove lead from sentence
+		sentence = sentence.replaceFirst("^"+lead, "");
+		myLogger.trace("Sentence after remove lead: "+sentence);
+		
+		List<String> nouns = this.getDataHolder().getWordByPOS("ps");
+		
+		if (nouns.size()==0) {
+			return false;
+		}
+		
+		
+//		(.*?)\b($knownnouns)\b
+		
+		/**
+
+	if ($sentence =~/(.*?)\b($knownnouns)\b/){
+		my $inbetween = $1;
+        print "[followedbyn]inbetween: $1\n" if $followedbyn_debug;
+        if ($inbetween !~ /\b($PREPOSITION)\b/) {
+            print "[followedbyn]return 1\n" if $followedbyn_debug;
+        }
+		return 1 if $inbetween !~ /\b($PREPOSITION)\b/;
+	}
+    print "[followedbyn]return 0\n" if $followedbyn_debug;
+	return 0;
+
+		 */
+		
+		String pattern1 = StringUtility.joinList("|", nouns);
+		pattern1 = "(.*?)\\b("+pattern1+")"+"\\b";
+		myLogger.trace("Pattern: " + pattern1);
+		
+		Pattern p1 = Pattern.compile(pattern1);
+		Matcher m1 = p1.matcher(sentence);
+		
+		String inBetweenPart = "";
+		if (m1.find()) {
+			inBetweenPart = m1.group(1);
+		}
+		
+		String pattern2 = "\\b("+Constant.PREPOSITION+")\\b";
+		Pattern p2 = Pattern.compile(pattern2);
+		Matcher m2 = p2.matcher(inBetweenPart);
+		if (!m2.find()) {
+			return true;
+		}
+		
+		return false;
 	}
 
 	/**
