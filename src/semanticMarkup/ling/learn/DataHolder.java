@@ -246,6 +246,25 @@ public class DataHolder {
 		return false;
 	}
 	
+	public List<String> getWordByPOS(String POSs) {
+		List<String> words = new ArrayList<String>();
+		int index = POSs.length();
+		for (int i = 0;i<POSs.length();i++) {
+			String POS = POSs.substring(i,i+1);
+			Iterator<Entry<WordPOSKey, WordPOSValue>> iterator = this.wordPOSTable.entrySet().iterator();
+			while (iterator.hasNext()) {
+				Entry<WordPOSKey, WordPOSValue> entry = iterator.next();
+				WordPOSKey key = entry.getKey();
+				if (StringUtils.equals(key.getPOS(),POS)) {
+					words.add(key.getWord());
+				}
+				
+			}
+		}
+		
+		return words;
+	}
+	
 	/**
 	 * add the singular form and the plural form of a word into the
 	 * singularPluarlTable
