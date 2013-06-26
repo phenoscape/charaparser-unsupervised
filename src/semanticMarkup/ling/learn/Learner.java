@@ -134,7 +134,7 @@ public class Learner {
 	 * 
 	 * @return
 	 */
-	public DataHolder getDataHolder(){
+	public DataHolder getDataHolder() {
 		return this.myDataHolder;
 	}
 
@@ -2075,17 +2075,17 @@ public class Learner {
 				myLogger.trace("Tag: " + tag);
 
 				// update the b word
-				sign += this.getDataHolder().updateTable(words.get(index), "b", "", "wordpos", 1);
+				sign += this.myDataHolder.updateTable(words.get(index), "b", "", "wordpos", 1);
 				myLogger.trace(String.format("updateTable (%s, b, , wordpos, 1)", words.get(index)));
 				
-				sign += this.getDataHolder().updateTable(words.get(index - 1),
+				sign += this.myDataHolder.updateTable(words.get(index - 1),
 						ptn.substring(index - 1, index), "-", "wordpos", 1);
 
 				myLogger.trace(String.format(
 						"updateTable (%s, %s, -, wordpos, 1)",
 						words.get(index - 1), ptn.substring(index - 1, index)));
 
-				sign += this.getDataHolder().updateTableNN(0, wordsTemp.size(),
+				sign += this.myDataHolder.updateTableNN(0, wordsTemp.size(),
 						wordsTemp);
 				myLogger.trace(String.format("updateTableNN (0, %d, %s)",
 						wordsTemp.size(), wordsTemp.toString()));
@@ -2102,7 +2102,7 @@ public class Learner {
 			
 			int index = m10.start(1);
 			
-			sign += this.getDataHolder().updateTable(words.get(index), "b", "", "wordpos", 1);
+			sign += this.myDataHolder.updateTable(words.get(index), "b", "", "wordpos", 1);
 			myLogger.trace(String.format("updateTable (%s, b, , wordpos, 1)", words.get(index)));
 			
 			/**
@@ -2114,13 +2114,82 @@ public class Learner {
 			
 			List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
 			tag = StringUtility.joinList(" ", wordsTemp);
-			String word = words.get(index-1);
+			String word = words.get(index-1); // the "?" word
 			
 			myLogger.trace("Tag: "+tag);
 			myLogger.trace("Word: "+word);
 			
+			
+			/**
+			# case 10.1
+	   		if(!followedbyn($sentence, $lead)) {	#condition added 4/7/09
+	   			print "[doit]Case 10.1\n" if $doit_debug;
+                my $wnp1 = checkWN($word, "pos");
+                my $wnp2 = getnumber($word) if $wnp1 !~/\w/;
+                $wnp1 = "" if $wnp1 =~/[ar]/;
+                
+                # case 10.1.1
+                if($wnp1=~/[psn]/ || $wnp2 =~ /[ps]/){#tag is not an adv or adj such as abaxially or inner
+                	print "[doit]Case 10.1.1\n" if $doit_debug;
+                    print "[doit]\t:determine the tag: $tag\n" if $doit_debug;	
+                    print "[doit]\t:updates on POSs\n" if $doit_debug;	
+                    $sign += update($cws[$i-1], "n", "-", "wordpos", 1);
+                    $sign += updatenn(0,$#tws,@tws);
+                }
+                # case 10.1.2
+                else{
+                	print "[doit]Case 10.1.2\n" if $doit_debug;	    		
+                    print "[doit]\t:$tag is adv/adj or modifier. skip.\n" if $doit_debug;	
+                    $tag = "";
+                }
+			 */
+			
 			if (!isFollowedByNoun(thisSentence, thisLead)) {
-				;
+				myLogger.trace("Case 10.1");
+				String wnP1 = this.myUtility.getWordFormUtility().checkWN(word, "pos");
+				myLogger.trace("wnP1: "+wnP1);
+				String wnP2 = "";
+				Pattern patternWNP2 = Pattern.compile("\\w");
+				Matcher matcherWNP2 = patternWNP2.matcher(wnP1);
+						
+				if (!StringUtility.createMatcher("\\w", wnP1).find()) {
+					wnP2 = this.myUtility.getWordFormUtility().getNumber(word);	
+				}
+				myLogger.trace("wnP2: "+wnP2);
+				
+				if (StringUtility.createMatcher("[ar]", wnP1).find()) {
+					wnP1 = "";
+				}
+				
+				if (
+						(StringUtility.createMatcher("[psn]", wnP1).find())
+						
+						||
+						
+						(StringUtility.createMatcher("[ps]", wnP2).find())
+						
+						
+						)
+				{
+					myLogger.trace("Case 10.1.1");
+					//print "[doit]\t:determine the tag: $tag\n" if $doit_debug;	
+                    //print "[doit]\t:updates on POSs\n" if $doit_debug;	
+                    myLogger.debug("\t:determine the tag: "+tag);
+                    myLogger.debug("\t:updates on POSs");
+                    sign += this.myDataHolder.updateTable(word, "n", "-", "wordpos", 1);
+                    sign += this.myDataHolder.updateTableNN(0, wordsTemp.size(), wordsTemp);
+					
+				}
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
 			}
 			else {
 				myLogger.trace("Case 10.2");
@@ -2157,10 +2226,12 @@ public class Learner {
 		
 		// null case
 		if (sentence == null || lead == null) {
+			myLogger.trace("Return false");
 			return false;
 		}
 		
 		if (StringUtils.equals(sentence, "")) {
+			myLogger.trace("Return false");
 			return false;
 		}
 		
@@ -2168,29 +2239,12 @@ public class Learner {
 		sentence = sentence.replaceFirst("^"+lead, "");
 		myLogger.trace("Sentence after remove lead: "+sentence);
 		
-		List<String> nouns = this.getDataHolder().getWordByPOS("ps");
+		List<String> nouns = this.myDataHolder.getWordByPOS("ps");
 		
 		if (nouns.size()==0) {
+			myLogger.trace("Return false");
 			return false;
 		}
-		
-		
-//		(.*?)\b($knownnouns)\b
-		
-		/**
-
-	if ($sentence =~/(.*?)\b($knownnouns)\b/){
-		my $inbetween = $1;
-        print "[followedbyn]inbetween: $1\n" if $followedbyn_debug;
-        if ($inbetween !~ /\b($PREPOSITION)\b/) {
-            print "[followedbyn]return 1\n" if $followedbyn_debug;
-        }
-		return 1 if $inbetween !~ /\b($PREPOSITION)\b/;
-	}
-    print "[followedbyn]return 0\n" if $followedbyn_debug;
-	return 0;
-
-		 */
 		
 		String pattern1 = StringUtility.joinList("|", nouns);
 		pattern1 = "(.*?)\\b("+pattern1+")"+"\\b";
@@ -2208,9 +2262,11 @@ public class Learner {
 		Pattern p2 = Pattern.compile(pattern2);
 		Matcher m2 = p2.matcher(inBetweenPart);
 		if (!m2.find()) {
+			myLogger.trace("Return true");
 			return true;
 		}
 		
+		myLogger.trace("Return false");
 		return false;
 	}
 
