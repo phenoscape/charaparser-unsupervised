@@ -221,8 +221,23 @@ public class StringUtility {
 			result = result.substring(0, result.length()-separater.length());
 		}
 		
-		
 		return result;
+	}
+	
+	/**
+	 * Given a regex and an input, returns a matcher to match the regex to the
+	 * input
+	 * 
+	 * @param regex
+	 *            the regular expression
+	 * @param input
+	 *            the input char sequence
+	 * @return the matcher
+	 */
+	public static Matcher createMatcher(String regex, CharSequence input) {
+		Pattern p = Pattern.compile(regex);
+		Matcher m = p.matcher(input);
+		return m;
 	}
 	
 }
