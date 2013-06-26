@@ -624,7 +624,7 @@ public class DataHolder {
 			int increment) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.updateTable");
-		myLogger.trace("Enter");
+		myLogger.trace(String.format("Enter (%s, %s, %s, %s, %d)", word, pos, role, table, increment));
 		
 		int result = 0;
 
@@ -646,7 +646,7 @@ public class DataHolder {
 		}
 
 		result = result + markKnown(word, pos, role, table, increment);
-
+		myLogger.trace("result1: " + result);
 		// 1) if the word is a singular form n word, find its plural form, then add
 		// the plural form, and add the singular - pluarl pair into
 		// singularPluarlTable;
@@ -660,14 +660,16 @@ public class DataHolder {
 				myLogger.trace("Case 1");
 				String pl = word;
 				word = this.myUtility.getWordFormUtility().getSingular(word);
-				
-				if (word.equals("")) {
-					// add "*" and 0: pos for those words are inferred based on
-					// other clues, not seen directly from the text
-					result = result + this.markKnown(word, "s", "*", table, 0);
-					this.addSingularPluralPair(word, pl);
-					myLogger.trace(String.format("Added (%s, %s)", word, pl));
-				}
+				myLogger.trace(String.format("Get singular form of %s: %s", pl,
+						word));
+
+				// add "*" and 0: pos for those words are inferred based on
+				// other clues, not seen directly from the text
+				result = result + this.markKnown(word, "s", "*", table, 0);
+				myLogger.trace("result2: " + result);
+				this.addSingularPluralPair(word, pl);
+				myLogger.trace(String.format("Added (%s, %s)", word, pl));
+
 			}
 			else if (pos.equals("s")) {
 				myLogger.trace("Case 2");
@@ -681,6 +683,7 @@ public class DataHolder {
 						result = result
 								+ this.markKnown(words.get(i), "p", "*", table,
 										0);
+						myLogger.trace("result3: " + result);
 					}
 					this.addSingularPluralPair(sg, words.get(i));
 					myLogger.trace(String.format("Added (%s, %s)", sg, words.get(i)));
@@ -691,7 +694,7 @@ public class DataHolder {
 			}
 		}
 
-		myLogger.trace("Quite\n");
+		myLogger.trace("Return: "+result+"\n");
 		return result;
 	}
 
@@ -1242,6 +1245,8 @@ public class DataHolder {
 	public int updateTableNN(int start, int end, List<String> words) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.updateTableNN");
+		myLogger.trace(String.format("Enter (%d, %d, %s)", start, end,
+				words.toString()));
 				
 		int update=0;
 		List<String> splicedWords = StringUtility.stringArraySplice(words, start, end); 
@@ -1259,6 +1264,7 @@ public class DataHolder {
 			}
 		}
 		
+		myLogger.trace("Return: " + update + "\n");
 		return update;
 	}
 	
