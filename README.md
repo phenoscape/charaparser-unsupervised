@@ -135,3 +135,11 @@ Apart the updates on the holders themselves, in this step the count of how many 
 
 ** getPOSptn
 given a list of words, chech each of them in the WordPOS holder, find its POS tag, and returns a string with letters representing the POS tags. If the POS tag is not known for a word, use "?" to represent it.
+
+
+========
+FAQ
+========
+* What is the difference between checkWN() and getNumber()?
+checkWN:
+getNumber() uses checkWN. If checkWN() returns "x", change the return that to empty string "". In addition, it handles some more special cases. 
