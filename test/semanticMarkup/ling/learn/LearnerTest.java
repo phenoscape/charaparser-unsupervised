@@ -765,6 +765,12 @@ public class LearnerTest {
         assertEquals("CaseHandle - case 10.1.1", new StringAndInt("teeth",2), 
                 myTester10_1_1.doItCaseHandle("teeth of dentary", 
                     "teeth of")); 
+        
+        myTester10_1_1.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"on", "b", "role", "4", "4", "", ""}));
+        assertEquals("CaseHandle - case 10.1.1", new StringAndInt("foramina",2), 
+                myTester10_1_1.doItCaseHandle("foramina on external surface of lower jaw", 
+                    "foramina on")); 
 		
 //        // case 10.2
 //        Learner myTester10_2 = new Learner(myConfiguration, myUtility);
@@ -803,7 +809,7 @@ public class LearnerTest {
 		assertEquals("isFollowedByNoun - empty case", false, myTester.isFollowedByNoun("", ""));
 		assertEquals("isFollowedByNoun", true, myTester.isFollowedByNoun("foramina on dermal cheek bones", "foramina on"));
 		assertEquals("isFollowedByNoun", true, myTester.isFollowedByNoun("foramina on bones", "foramina on"));
-		assertEquals("isFollowedByNoun", true, myTester.isFollowedByNoun("teeth of dentary", "teeth of"));
+		assertEquals("isFollowedByNoun", false, myTester.isFollowedByNoun("teeth of dentary", "teeth of"));
 	}
 	
 	

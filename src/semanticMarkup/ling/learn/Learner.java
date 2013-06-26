@@ -2252,20 +2252,19 @@ public class Learner {
 		
 		Pattern p1 = Pattern.compile(pattern1);
 		Matcher m1 = p1.matcher(sentence);
-		
+
 		String inBetweenPart = "";
 		if (m1.find()) {
 			inBetweenPart = m1.group(1);
+
+			String pattern2 = "\\b(" + Constant.PREPOSITION + ")\\b";
+			Pattern p2 = Pattern.compile(pattern2);
+			Matcher m2 = p2.matcher(inBetweenPart);
+			if (!m2.find()) {
+				myLogger.trace("Return true");
+				return true;
+			}
 		}
-		
-		String pattern2 = "\\b("+Constant.PREPOSITION+")\\b";
-		Pattern p2 = Pattern.compile(pattern2);
-		Matcher m2 = p2.matcher(inBetweenPart);
-		if (!m2.find()) {
-			myLogger.trace("Return true");
-			return true;
-		}
-		
 		myLogger.trace("Return false");
 		return false;
 	}
