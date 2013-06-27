@@ -137,6 +137,13 @@ Apart the updates on the holders themselves, in this step the count of how many 
 given a list of words, chech each of them in the WordPOS holder, find its POS tag, and returns a string with letters representing the POS tags. If the POS tag is not known for a word, use "?" to represent it.
 
 
+* Data Holder
+
+** Unknown Word
+word: the word
+flag: If the flag is "unknown", then the word is unknown; otherwise, the flag indicates how the word was learned. For example, if the word "unicuspid" is "b", then by removing prefix of unicuspid, the word "bicuspid" is learned as a [b] as well. In this case, the flag of word "bicuspid" is "unicuspid", indicates that the word "bicuspid" was learned from the word "unicuspid".
+
+
 ========
 FAQ
 ========
