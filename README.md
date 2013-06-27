@@ -51,8 +51,13 @@ Sort all words according to their root. That is, put words with same root togeth
 * Add Proper Nouns
 
 * Learn POS By Suffix
+For each word that is unknown in the Unknown Word Holder,trying to learn if it is a "b" word, by checking its suffix.
+
+We have a list of common suffix. By checking the remaining part of the word after remove the suffix, decide if the suffix is really a suffix in the word, and therefore determine the POS tag.
+  
 
 * Markup Sentence By Pattern
+markup the tag of some sentence by "chromosome", "flowerTime", "fruitTime" according to the pattern of the original sentence.
 
 * Markup Ignore
     This one is not used here.
@@ -87,7 +92,10 @@ Sort all words according to their root. That is, put words with same root togeth
 	Bootstrapping rules
 	Discover with parameter "normal"  
 	Same to the previous step, except that the parameter is "normal" instead of "start".  
-        
+	
+* additional bootstrapping
+	
+In this step, we do addition bootstrapping learning by using clues such as shared subject different boundary and one lead word.
 
 
 * Manage Data Holder
