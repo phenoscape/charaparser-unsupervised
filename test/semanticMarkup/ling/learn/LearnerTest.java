@@ -842,8 +842,6 @@ public class LearnerTest {
 		assertEquals("tagIt - case 3", true, myTester.tagIt(0, "teeth"));
 		myTester.tagIt(0, "abcdefghijkl");
 		assertEquals("tagIt - max tag length", "abcdefghij", myTester.getDataHolder().getSentenceHolder().get(0).getTag());
-		
-		
 	}
 	
 	
