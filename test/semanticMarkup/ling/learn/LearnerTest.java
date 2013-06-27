@@ -812,6 +812,24 @@ public class LearnerTest {
 		assertEquals("isFollowedByNoun", false, myTester.isFollowedByNoun("teeth of dentary", "teeth of"));
 	}
 	
+	@Test
+	public void testTagIt() {
+		Configuration myConfiguration = new Configuration();
+		myConfiguration.setMaxTagLength(10);
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag","m","type"}));
+		
+		assertEquals("tagIt - case 1", false, myTester.tagIt(0, ""));
+		assertEquals("tagIt - case 2", false, myTester.tagIt(0, "page"));
+		assertEquals("tagIt - case 3", true, myTester.tagIt(0, "teeth"));
+		myTester.tagIt(0, "abcdefghijkl");
+		assertEquals("tagIt - max tag length", "abcdefghij", myTester.getDataHolder().getSentenceHolder().get(0).getTag());
+		
+		
+	}
+	
 	
 	
 	
