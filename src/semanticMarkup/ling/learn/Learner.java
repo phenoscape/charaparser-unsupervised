@@ -115,13 +115,69 @@ public class Learner {
 		this.discover("start");
 		
 		// bootstrapping rules
-//		myLogger.info("Bootstrapping rules");
-//		this.discover("normal");
-
+		myLogger.info("Bootstrapping rules:");
+		this.discover("normal");
+		
+		myLogger.info("Additional bootstrappings:");
+		this.additionalBootStrapping();
+		
 		myLogger.trace("Quite Learn");
 		return myDataHolder;
 	}
 	
+	/**
+	 * bootstrapping using clues such as shared subject different boundary and
+	 * one lead word
+	 */
+	public void additionalBootStrapping() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
+		myLogger.trace("Enter additionalBootStrapping");
+		
+		int flag = 0;
+		
+		do {
+			myLogger.trace(String.format("Enter one do-while loop iteration"));
+			flag = 0;
+			
+			// warmup markup
+			int cmReturn = wrapupMarkup();
+			myLogger.trace(String.format("wrapupMarkup() returned %d", cmReturn));
+			flag += cmReturn;
+			
+			// one lead word markup
+			List<String> tags = this.myDataHolder.getCurrentTags();
+			int omReturn = oneLeadWordMarkup(tags);
+			myLogger.trace(String.format("oneLeadWordMarkup() returned %d", omReturn));
+			flag += omReturn;
+			
+			// doit markup
+			int dmReturn = wrapupMarkup();
+			myLogger.trace(String.format("doItMarkup() returned %d", dmReturn));
+			flag += dmReturn;
+			
+			myLogger.trace(String.format("Quite this iteration with flag = %d", flag));
+		}while (flag>0);
+		
+		
+
+	}
+
+	private int oneLeadWordMarkup(List<String> tags) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	private int wrapupMarkup() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	private int wrapupMarkup() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 	private void addPredefinedWords() {
 		this.addStopWords();
 		this.addCharacters();

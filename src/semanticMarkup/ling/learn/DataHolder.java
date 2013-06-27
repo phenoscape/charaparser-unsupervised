@@ -1549,4 +1549,9 @@ public class DataHolder {
 		myLogger.info("Total: "+(endIndex-startIndex+1)+"\n");
 	}
 
+	public List<String> getCurrentTags() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
