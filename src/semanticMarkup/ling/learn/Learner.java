@@ -1896,18 +1896,21 @@ public class Learner {
 		myLogger.trace("Matched IDs: "+matched);
 		
 		int sign = 0;
-		int numNew = 0;
-		String tag = "";
 
 		Iterator<Integer> iter = matched.iterator();
 		while (iter.hasNext()) {
 			int sentID = iter.next().intValue();
 			Sentence sentence = this.myDataHolder.getSentenceHolder().get(sentID);
 			if (!isMarked(sentence)) {
-				// ($tag, $new) = doit($sentid);
-				doIt(sentID);
-				// tag($sentid, $tag);
-				tagIt(sentID, tag);
+				StringAndInt tagAndNew = null;
+				String tag = null;
+				int numNew = 0;
+				
+				tagAndNew = doIt(sentID); 
+				tag = tagAndNew.getString();
+				numNew = tagAndNew.getInt();
+				
+				tagIt(sentID, tag);				
 				sign = sign + numNew;
 			}
 		}
@@ -2101,17 +2104,10 @@ public class Learner {
 			myLogger.trace("Found [?(b)] pattern");
 			
 			int index = m10.start(1);
-			
+
 			sign += this.myDataHolder.updateTable(words.get(index), "b", "", "wordpos", 1);
 			myLogger.trace(String.format("updateTable (%s, b, , wordpos, 1)", words.get(index)));
-			
-			/**
-	    	@cws = @ws;
-			@tws = splice(@ws,0,$i);#get tag words
-			$tag = join(" ",@tws);
-	    	my $word = $cws[$i-1]; #the "?" word;
-	    	**/
-			
+
 			List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
 			tag = StringUtility.joinList(" ", wordsTemp);
 			String word = words.get(index-1); // the "?" word
@@ -2119,38 +2115,11 @@ public class Learner {
 			myLogger.trace("Tag: "+tag);
 			myLogger.trace("Word: "+word);
 			
-			
-			/**
-			# case 10.1
-	   		if(!followedbyn($sentence, $lead)) {	#condition added 4/7/09
-	   			print "[doit]Case 10.1\n" if $doit_debug;
-                my $wnp1 = checkWN($word, "pos");
-                my $wnp2 = getnumber($word) if $wnp1 !~/\w/;
-                $wnp1 = "" if $wnp1 =~/[ar]/;
-                
-                # case 10.1.1
-                if($wnp1=~/[psn]/ || $wnp2 =~ /[ps]/){#tag is not an adv or adj such as abaxially or inner
-                	print "[doit]Case 10.1.1\n" if $doit_debug;
-                    print "[doit]\t:determine the tag: $tag\n" if $doit_debug;	
-                    print "[doit]\t:updates on POSs\n" if $doit_debug;	
-                    $sign += update($cws[$i-1], "n", "-", "wordpos", 1);
-                    $sign += updatenn(0,$#tws,@tws);
-                }
-                # case 10.1.2
-                else{
-                	print "[doit]Case 10.1.2\n" if $doit_debug;	    		
-                    print "[doit]\t:$tag is adv/adj or modifier. skip.\n" if $doit_debug;	
-                    $tag = "";
-                }
-			 */
-			
 			if (!isFollowedByNoun(thisSentence, thisLead)) {
 				myLogger.trace("Case 10.1");
 				String wnP1 = this.myUtility.getWordFormUtility().checkWN(word, "pos");
 				myLogger.trace("wnP1: "+wnP1);
 				String wnP2 = "";
-				Pattern patternWNP2 = Pattern.compile("\\w");
-				Matcher matcherWNP2 = patternWNP2.matcher(wnP1);
 						
 				if (!StringUtility.createMatcher("\\w", wnP1).find()) {
 					wnP2 = this.myUtility.getWordFormUtility().getNumber(word);	
@@ -2161,35 +2130,20 @@ public class Learner {
 					wnP1 = "";
 				}
 				
-				if (
-						(StringUtility.createMatcher("[psn]", wnP1).find())
-						
-						||
-						
-						(StringUtility.createMatcher("[ps]", wnP2).find())
-						
-						
-						)
-				{
-					myLogger.trace("Case 10.1.1");
-					//print "[doit]\t:determine the tag: $tag\n" if $doit_debug;	
-                    //print "[doit]\t:updates on POSs\n" if $doit_debug;	
+				if ((StringUtility.createMatcher("[psn]", wnP1).find())
+						|| (StringUtility.createMatcher("[ps]", wnP2).find())) {
+					myLogger.trace("Case 10.1.1");	
                     myLogger.debug("\t:determine the tag: "+tag);
                     myLogger.debug("\t:updates on POSs");
                     sign += this.myDataHolder.updateTable(word, "n", "-", "wordpos", 1);
                     sign += this.myDataHolder.updateTableNN(0, wordsTemp.size(), wordsTemp);
 					
 				}
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
+				else{
+					myLogger.trace("Case 10.1.2");
+					myLogger.debug("\t:"+tag+" is adv/adj or modifier. skip.");
+					tag = "";
+				}	
 			}
 			else {
 				myLogger.trace("Case 10.2");
@@ -2335,8 +2289,37 @@ public class Learner {
 		return ptn;
 	}
 
-	public void tagIt(int sentID, String tag) {
-		;
+	public boolean tagIt(int sentenceID, String tag) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.tagIt");
+		myLogger.trace(String.format("Enter (%d, %s)", sentenceID, tag));
+		
+		if (StringUtility.createMatcher("\\w+", tag).find()) {
+			myLogger.trace("Tag is not a word. Return");
+			return false;
+		}
+		
+		if (StringUtility.createMatcher("^("+Constant.STOP+")\\b", tag).find()) {
+			myLogger.trace(String.format("\t:tag %s starts with a stop word, ignore tagging requrest", tag));
+			return false;
+		}
+		
+		if (StringUtility.createMatcher("\\w+", tag).find()) {
+			if (tag.length() > this.myConfiguration.getMaxTagLength()) {
+				int maxLength = this.myConfiguration.getMaxTagLength();
+				tag = tag.substring(0, maxLength);
+				myLogger.debug(String.format("\ttag: %s longer than %d)", tag,
+						maxLength));
+			}
+			Sentence sentence = this.myDataHolder.getSentenceHolder().get(
+					sentenceID);
+			sentence.setTag(tag);
+			myLogger.debug(String.format("\t:mark up sentence #%d with tag %s",
+					sentenceID, tag));
+			return true;
+		}
+
+		return false;
 	}
 
 	
