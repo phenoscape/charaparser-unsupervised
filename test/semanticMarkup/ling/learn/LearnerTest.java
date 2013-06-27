@@ -705,23 +705,33 @@ public class LearnerTest {
 		
 		// case x: boundary case
 		Learner myTesterBoundary = new Learner(myConfiguration, myUtility);
-		assertEquals("CaseHandle - case 3.2", null, myTesterBoundary.doItCaseHandle(null, null));   
-		assertEquals("CaseHandle - case 3.2", new StringAndInt("",0), myTesterBoundary.doItCaseHandle("", ""));   
+		assertEquals("CaseHandle - boundary case", null, myTesterBoundary.doItCaseHandle(null, null));   
+		assertEquals("CaseHandle - boundary case", new StringAndInt("",0), myTesterBoundary.doItCaseHandle("", ""));   
 		
         // case 1
-		Learner myTester1 = new Learner(myConfiguration, myUtility);				
+		Learner myTester1 = new Learner(myConfiguration, myUtility);	
+		myTester1.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"submandibular", "s", "", "0", "0", null, null}));
 		myTester1.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"submandibulars", "p", "", "0", "0", null, null}));
 		
 		assertEquals("CaseHandle - case 1", new StringAndInt("submandibulars",0), myTester1.doItCaseHandle("submandibulars", "submandibulars"));
         
         // case 3.2
+		// This also tests method markKnown() - case 1.1
 		Learner myTester32 = new Learner(myConfiguration, myUtility);
 		myTester32.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
 		myTester32.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"with", "b", "role", "1", "1", "", ""}));
-        assertEquals("CaseHandle - case 3.2", new StringAndInt("teeth",1), 
+		
+		myTester32.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"bicuspid", "unknown"}));
+		myTester32.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"multicuspid", "unknown"}));
+		myTester32.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"tricuspid", "unknown"}));
+		
+		myTester32.getDataHolder().add2Holder(DataHolder.SINGULAR_PLURAL, Arrays.asList(new String[] {"tooth", "teeth"}));
+		
+        assertEquals("CaseHandle - case 3.2", new StringAndInt("teeth",4), 
             myTester32.doItCaseHandle("teeth unicuspid with crowns posteriorly curved along the main axis of the mandible , organized into a long series of equally_ sized teeth", 
                 "teeth unicuspid with"));   
         
@@ -733,6 +743,9 @@ public class LearnerTest {
 				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
 		myTester42.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"variously", "b", "role", "0", "0", "", ""}));
+		
+		myTester42.getDataHolder().add2Holder(DataHolder.SINGULAR_PLURAL, Arrays.asList(new String[] {"tooth", "teeth"}));
+		myTester42.getDataHolder().add2Holder(DataHolder.SINGULAR_PLURAL, Arrays.asList(new String[] {"base", "bases"}));
 
         assertEquals("CaseHandle - case 4.2", new StringAndInt("teeth",0), 
                 myTester42.doItCaseHandle("teeth variously arranged , but never very numerous , equally_ sized and regularly curved posteriorly along main axis of mandible", 
@@ -776,6 +789,9 @@ public class LearnerTest {
         Learner myTester10_2 = new Learner(myConfiguration, myUtility);
         myTester10_2.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"between", "b", "role", "0", "0", "", ""}));
+        myTester10_2.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"scales", "p", "role", "0", "0", "", ""}));
+		myTester10_2.getDataHolder().add2Holder(DataHolder.SINGULAR_PLURAL, Arrays.asList(new String[] {"scale", "scales"}));
         
         assertEquals("CaseHandle - case 10.2", new StringAndInt("",0), 
                 myTester10_2.doItCaseHandle("passes between scales", 
