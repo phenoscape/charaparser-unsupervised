@@ -118,99 +118,14 @@ public class Learner {
 		myLogger.info("Bootstrapping rules:");
 		this.discover("normal");
 		
-		myLogger.info("Additional bootstrappings:");
-		this.additionalBootStrapping();
+		//myLogger.info("Additional bootstrappings:");
+		//this.additionalBootStrapping();
 		
 		myLogger.trace("Quite Learn");
 		return myDataHolder;
 	}
 	
-	/**
-	 * bootstrapping using clues such as shared subject different boundary and
-	 * one lead word
-	 */
-	public void additionalBootStrapping() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
-		myLogger.trace("Enter additionalBootStrapping");
-		
-		int flag = 0;
-		
-		do {
-			myLogger.trace(String.format("Enter one do-while loop iteration"));
-			flag = 0;
-			
-			// warmup markup
-			int cmReturn = wrapupMarkup();
-			myLogger.trace(String.format("wrapupMarkup() returned %d", cmReturn));
-			flag += cmReturn;
-			
-			// one lead word markup
-			List<String> tags = this.myDataHolder.getCurrentTags();
-			int omReturn = oneLeadWordMarkup(tags);
-			myLogger.trace(String.format("oneLeadWordMarkup() returned %d", omReturn));
-			flag += omReturn;
-			
-			// doit markup
-			int dmReturn = wrapupMarkup();
-			myLogger.trace(String.format("doItMarkup() returned %d", dmReturn));
-			flag += dmReturn;
-			
-			myLogger.trace(String.format("Quite this iteration with flag = %d", flag));
-		}while (flag>0);
-		
-		
 
-	}
-
-	public int oneLeadWordMarkup(List<String> tagList) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping.oneLeadWordMarkup");
-		String tags = StringUtility.joinList("|", tagList);
-		int sign = 0;
-		myLogger.trace(String.format("Enter (%s)", tags));
-		
-		for (int i=0;i<this.myDataHolder.getSentenceHolder().size();i++) {
-			Sentence sentence = this.myDataHolder.getSentenceHolder().get(i);
-			String tag = sentence.getTag();
-			String lead = sentence.getLead();
-			if ()
-		}
-		
-		/**
-
-my $TAGS = shift;
-	my ($id, $sent, $sth, $lead);
-	my $tags = $TAGS."|";
-	my $sign = 0;
-
-	print "one lead word markup\n" if $debug;
-	$sth = $dbh->prepare("Select sentid, lead, sentence from ".$prefix."_sentence where isnull(tag) and lead not like '% %'");
-	$sth->execute();
-	while(($id, $lead, $sent) = $sth->fetchrow_array()){
-		if($tags=~/\b$lead\|/){
-			tag($id, $lead);
-			$sign += update($lead, "n", "-", "wordpos", 1);
-		}#else{
-		#	tag($id, "unknown");
-		#}
-	}
-	return $sign;
-
-		 */
-		
-		
-		
-		
-		
-		myLogger.trace("Return: ");
-		return 0;
-	}
-
-	private int wrapupMarkup() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
 
 	private void addPredefinedWords() {
 		this.addStopWords();
