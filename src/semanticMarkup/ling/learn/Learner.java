@@ -163,13 +163,47 @@ public class Learner {
 
 	}
 
-	private int oneLeadWordMarkup(List<String> tags) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+	public int oneLeadWordMarkup(List<String> tagList) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping.oneLeadWordMarkup");
+		String tags = StringUtility.joinList("|", tagList);
+		int sign = 0;
+		myLogger.trace(String.format("Enter (%s)", tags));
+		
+		for (int i=0;i<this.myDataHolder.getSentenceHolder().size();i++) {
+			Sentence sentence = this.myDataHolder.getSentenceHolder().get(i);
+			String tag = sentence.getTag();
+			String lead = sentence.getLead();
+			if ()
+		}
+		
+		/**
 
-	private int wrapupMarkup() {
-		// TODO Auto-generated method stub
+my $TAGS = shift;
+	my ($id, $sent, $sth, $lead);
+	my $tags = $TAGS."|";
+	my $sign = 0;
+
+	print "one lead word markup\n" if $debug;
+	$sth = $dbh->prepare("Select sentid, lead, sentence from ".$prefix."_sentence where isnull(tag) and lead not like '% %'");
+	$sth->execute();
+	while(($id, $lead, $sent) = $sth->fetchrow_array()){
+		if($tags=~/\b$lead\|/){
+			tag($id, $lead);
+			$sign += update($lead, "n", "-", "wordpos", 1);
+		}#else{
+		#	tag($id, "unknown");
+		#}
+	}
+	return $sign;
+
+		 */
+		
+		
+		
+		
+		
+		myLogger.trace("Return: ");
 		return 0;
 	}
 
