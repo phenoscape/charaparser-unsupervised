@@ -185,5 +185,24 @@ public class PopulateSentenceUtilityTest {
 		
 	}
 	
+	@Test
+	public void testGetSentenceHead() {
+		assertEquals("getSentenceHead - case 0.1 - null input", null, tester.getSentenceHead(null));
+		assertEquals("getSentenceHead - case 0.2 - empty string input", "", tester.getSentenceHead(""));
+		
+		assertEquals("getSentenceHead - case 1", "word1 word2", tester.getSentenceHead("word1 word2 , word3"));
+		assertEquals("getSentenceHead - case 1", "word1 word2", tester.getSentenceHead("word1 word2 : word3"));
+		assertEquals("getSentenceHead - case 1", "word1 word2", tester.getSentenceHead("word1 word2 ; word3"));
+		assertEquals("getSentenceHead - case 1", "word1 word2", tester.getSentenceHead("word1 word2 . word3"));
+		assertEquals("getSentenceHead - case 1", "word1 word2", tester.getSentenceHead("word1 word2 [ word3"));
+		assertEquals("getSentenceHead - case 1", "word1 word2", tester.getSentenceHead("word1 word2 ( word3"));
+		
+		assertEquals("getSentenceHead - case 2", "lepidotrichia of", tester.getSentenceHead("lepidotrichia of fin webs"));
+		assertEquals("getSentenceHead - case 2", "bases of", tester.getSentenceHead("bases of tooth whorls"));
+		
+		
+		assertEquals("getSentenceHead - case n", "word1 word2 word3", tester.getSentenceHead("word1 word2 word3"));
+	}
+	
 
 }

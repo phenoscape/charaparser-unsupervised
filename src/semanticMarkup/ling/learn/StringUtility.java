@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class StringUtility {
 
 	public StringUtility() {
@@ -152,12 +154,13 @@ public class StringUtility {
 		return newWordList;
 	}
 	
-	public static boolean equalsWithNull(String s1, String s2) {
-		boolean flag = false;
-		flag = (s1==null)? (s2==null) : s1.equals(s2);
-		
-		return flag;
-	}
+//	public static boolean equalsWithNull(String s1, String s2) {
+////		boolean flag = false;
+////		flag = (s1==null)? (s2==null) : s1.equals(s2);
+////		
+////		return flag;
+//		return StringUtils.equals(s1, s2);
+//	}
 	
 	/**
 	 * Convert a string array of to a string of words separated by space
@@ -218,8 +221,23 @@ public class StringUtility {
 			result = result.substring(0, result.length()-separater.length());
 		}
 		
-		
 		return result;
+	}
+	
+	/**
+	 * Given a regex and an input, returns a matcher to match the regex to the
+	 * input
+	 * 
+	 * @param regex
+	 *            the regular expression
+	 * @param input
+	 *            the input char sequence
+	 * @return the matcher
+	 */
+	public static Matcher createMatcher(String regex, CharSequence input) {
+		Pattern p = Pattern.compile(regex);
+		Matcher m = p.matcher(input);
+		return m;
 	}
 	
 }

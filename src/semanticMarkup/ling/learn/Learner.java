@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -27,16 +28,6 @@ import semanticMarkup.core.Treatment;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
 public class Learner {	
-	/**************************************************
-	 * Debug variables used by developer
-	 */
-	private boolean populateSentence_debug = false;
-	private boolean addHeuristicsNouns_debug = false;
-	private boolean getHeuristicNouns_debug = false;
-	private boolean characterHeuristics_debug = false;
-	/**************************************************
-	 */
-
 	private Configuration myConfiguration;
 	private Utility myUtility;
 	
@@ -56,6 +47,9 @@ public class Learner {
 	private Set<String> checkedWordSet;
 	
 	public Learner(Configuration configuration, Utility utility) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("Learner");
+		
 		this.myConfiguration = configuration;
 		this.myUtility = utility;
 		
@@ -71,13 +65,18 @@ public class Learner {
 		
 		checkedWordSet = new HashSet<String>();
 		
+		myLogger.info("Created Learner");
+		myLogger.info("\tLearning Mode: "+myConfiguration.getLearningMode());
+		myLogger.info("\tMax Tag Lengthr: "+myConfiguration.getMaxTagLength());
+		myLogger.info("\n");
+		
 	}
 
 	public DataHolder Learn(List<Treatment> treatments) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learn");
 		myLogger.trace("Enter Learn");
-		myLogger.info(String.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
+		myLogger.trace(String.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
 
 		this.populateSentence(treatments);
 		this.populateUnknownWordsTable(this.myDataHolder.allWords);
@@ -101,7 +100,7 @@ public class Learner {
 
 		// pre load words
 		this.addHeuristicsNouns();
-		//this.addPredefinedWords();
+		this.addPredefinedWords();
 
 
 		// ???
@@ -116,18 +115,108 @@ public class Learner {
 		this.discover("start");
 		
 		// bootstrapping rules
-//		myLogger.info("Bootstrapping rules");
-//		this.discover("normal");
-
+		myLogger.info("Bootstrapping rules:");
+		this.discover("normal");
+		
+		myLogger.info("Additional bootstrappings:");
+		this.additionalBootStrapping();
+		
 		myLogger.trace("Quite Learn");
 		return myDataHolder;
 	}
 	
+	/**
+	 * bootstrapping using clues such as shared subject different boundary and
+	 * one lead word
+	 */
+	public void additionalBootStrapping() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
+		myLogger.trace("Enter additionalBootStrapping");
+		
+		int flag = 0;
+		
+		do {
+			myLogger.trace(String.format("Enter one do-while loop iteration"));
+			flag = 0;
+			
+			// warmup markup
+			int cmReturn = wrapupMarkup();
+			myLogger.trace(String.format("wrapupMarkup() returned %d", cmReturn));
+			flag += cmReturn;
+			
+			// one lead word markup
+			List<String> tags = this.myDataHolder.getCurrentTags();
+			int omReturn = oneLeadWordMarkup(tags);
+			myLogger.trace(String.format("oneLeadWordMarkup() returned %d", omReturn));
+			flag += omReturn;
+			
+			// doit markup
+			int dmReturn = wrapupMarkup();
+			myLogger.trace(String.format("doItMarkup() returned %d", dmReturn));
+			flag += dmReturn;
+			
+			myLogger.trace(String.format("Quite this iteration with flag = %d", flag));
+		}while (flag>0);
+		
+		
+
+	}
+
+	public int oneLeadWordMarkup(List<String> tagList) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping.oneLeadWordMarkup");
+		String tags = StringUtility.joinList("|", tagList);
+		int sign = 0;
+		myLogger.trace(String.format("Enter (%s)", tags));
+		
+		for (int i=0;i<this.myDataHolder.getSentenceHolder().size();i++) {
+			Sentence sentence = this.myDataHolder.getSentenceHolder().get(i);
+			String tag = sentence.getTag();
+			String lead = sentence.getLead();
+			if ()
+		}
+		
+		/**
+
+my $TAGS = shift;
+	my ($id, $sent, $sth, $lead);
+	my $tags = $TAGS."|";
+	my $sign = 0;
+
+	print "one lead word markup\n" if $debug;
+	$sth = $dbh->prepare("Select sentid, lead, sentence from ".$prefix."_sentence where isnull(tag) and lead not like '% %'");
+	$sth->execute();
+	while(($id, $lead, $sent) = $sth->fetchrow_array()){
+		if($tags=~/\b$lead\|/){
+			tag($id, $lead);
+			$sign += update($lead, "n", "-", "wordpos", 1);
+		}#else{
+		#	tag($id, "unknown");
+		#}
+	}
+	return $sign;
+
+		 */
+		
+		
+		
+		
+		
+		myLogger.trace("Return: ");
+		return 0;
+	}
+
+	private int wrapupMarkup() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 	private void addPredefinedWords() {
 		this.addStopWords();
 		this.addCharacters();
 		this.addNumbers();
-		this.addClusterstrings();
+		this.addClusterStrings();
 		this.addProperNouns();		
 	}
 	
@@ -135,7 +224,7 @@ public class Learner {
 	 * 
 	 * @return
 	 */
-	public DataHolder getDataHolder(){
+	public DataHolder getDataHolder() {
 		return this.myDataHolder;
 	}
 
@@ -147,6 +236,7 @@ public class Learner {
 	public int populateSentence(List<Treatment> treatments) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("learn.populateSentence");
+		myLogger.info("Enter");
 		myLogger.info("Reading sentences...");
 
 		String fileName;
@@ -254,9 +344,8 @@ public class Learner {
 						break;
 					}
 
-					Sentence newSent = new Sentence(source, line, oline, lead,
+					this.myDataHolder.addSentence(source, line, oline, lead,
 							status, null, null, typeStr);
-					this.myDataHolder.getSentenceHolder().add(newSent);
 
 					SENTID++;
 				}
@@ -264,6 +353,7 @@ public class Learner {
 		}
 
 		myLogger.info("Total sentences = " + SENTID);
+		myLogger.info("Quite");
 
 		return SENTID;
 	}
@@ -453,8 +543,9 @@ public class Learner {
 	 */
 	public int populateUnknownWordsTable(Map<String, Integer> WORDS) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.populateSentence");
+		Logger myLogger = Logger.getLogger("learn.pupluateUnknownWords");
 
+		myLogger.trace("Enter");
 		int count = 0;
 
 		Iterator<String> iter = WORDS.keySet().iterator();
@@ -472,6 +563,8 @@ public class Learner {
 
 		myLogger.info("Total words = " + count);
 		
+		myLogger.trace("Return: "+count);
+		myLogger.trace("Quite\n");
 		return count;
 	}
 	
@@ -485,7 +578,7 @@ public class Learner {
 		myLogger.trace("Enter addHeuristicsNouns");
 		
 		Set<String> nouns = this.learnHeuristicsNouns();
-		myLogger.debug("Nouns learnt from heuristics:");
+		myLogger.debug("Nouns learned from heuristics:");
 		myLogger.debug("\t"+nouns.toString());
 		myLogger.debug("Total: "+nouns.size());
 		
@@ -499,6 +592,7 @@ public class Learner {
 		
 		myLogger.debug("Total: "+nouns.size());
 		Iterator<String> iter = nouns.iterator();
+        myLogger.info("Learn singular-plural pair");
 		while (iter.hasNext()) {
 			String e = iter.next();
 			myLogger.trace("Check Word: "+e);
@@ -593,6 +687,9 @@ public class Learner {
 	 * @return nouns learned by heuristics
 	 */
 	public Set<String> learnHeuristicsNouns() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addHeuristicsNouns.learnHeuristicsNouns");
+		
 		// Set of words
 		Set<String> words = new HashSet<String>();
 
@@ -603,9 +700,7 @@ public class Learner {
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
 			String originalSentence = this.myDataHolder.getSentenceHolder().get(i)
 					.getOriginalSentence();
-			if (this.getHeuristicNouns_debug) {
-				 System.out.println(originalSentence+"\n");
-			}
+			myLogger.trace("Original Sentence: "+originalSentence);
 			sentences.add(StringUtility.strip(originalSentence));
 		}
 
@@ -627,10 +722,7 @@ public class Learner {
 					// if (token.equals("arch"))
 					// token="arch";
 					words.add(token);
-					if (this.getHeuristicNouns_debug) {
-						System.out.println("Add a word into words:");
-						System.out.println(token);
-					}
+					myLogger.trace("Add a word into words: "+token);
 				}
 			}
 		}
@@ -665,16 +757,17 @@ public class Learner {
 		}
 
 		// print out the wordMap
-		if (getHeuristicNouns_debug) {
-			Iterator<Map.Entry<String, Set<String>>> iter = wordMap.entrySet().iterator();
-			while (iter.hasNext()){
-				Map.Entry<String, Set<String>> e = iter.next();
-				System.out.println(e.getKey());
-				System.out.println(e.getValue());
-			}
+		myLogger.trace("WordMap:");
+		Iterator<Map.Entry<String, Set<String>>> wordMapIter = wordMap.entrySet()
+				.iterator();
+		while (wordMapIter.hasNext()) {
+			Map.Entry<String, Set<String>> e = wordMapIter.next();
+			myLogger.trace(e.toString());
 		}
+	
 		
 		// find nouns
+        myLogger.info("Learn singular-plural pair");
 		Iterator<Map.Entry<String, Set<String>>> iter = wordMap.entrySet().iterator();
 		while (iter.hasNext()){
 			Map.Entry<String, Set<String>> e = iter.next();
@@ -739,10 +832,7 @@ public class Learner {
 		}
 		
 		//print out nouns
-		if (this.getHeuristicNouns_debug) {
-			System.out.println("Nouns:\n");
-			System.out.println(nouns);
-		}
+		myLogger.debug("Nouns: "+nouns);
 				
 		return nouns;
 	}
@@ -773,6 +863,9 @@ public class Learner {
 	 * @return nouns learned
 	 */
 	public String getPresentAbsentNouns(String text) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addHeuristicsNouns.learnHeuristicsNouns.getPresentAbsentNouns");
+		
 		String pachecked = "and|or|to";
 
 		if (text.matches("(\\w+?)\\s+(present|absent)")) {
@@ -787,8 +880,8 @@ public class Learner {
 					&& (!word.matches("\\b(" + Constant.STOP + ")\\b"))
 					&& (!word
 							.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
-				if (this.getHeuristicNouns_debug)
-					System.out.println("present/absent " + word + "\n");
+				
+				myLogger.trace("present/absent " + word);
 
 				if (((word.matches("^.*" + Constant.PENDINGS))
 						|| (word.matches("^.*[^s]s$")) || (word
@@ -811,6 +904,8 @@ public class Learner {
 	 *         element is a set of descriptors
 	 */
 	public List<Set<String>> characterHeuristics() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addHeuristicsNouns.characterHeuristics");
 		
 		Set<String> taxonNames = new HashSet<String>();
 		Set<String> nouns = new HashSet<String>();
@@ -828,11 +923,9 @@ public class Learner {
 			String sentence = sent.getSentence();
 			String originalSentence = sent.getOriginalSentence();
 
-			if (this.characterHeuristics_debug) {
-				System.out.println(source);
-				System.out.println(sentence);
-				System.out.println(originalSentence + "\n");
-			}
+			myLogger.trace("Source: "+source);
+			myLogger.trace("Sentence: "+sentence);
+			myLogger.trace("Original Sentence: "+originalSentence);
 
 			originalSentence = StringUtility.trimString(originalSentence);
 
@@ -1263,27 +1356,35 @@ public class Learner {
 	}
 	
 	public void addStopWords() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addStopWords");
+		myLogger.trace("Add stop words");
+		
 		List<String> stops = new ArrayList<String>();
 		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
 		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
 				"]", "}", "\\\\d+" }));
 
-//		System.out.println(stops);
-//		System.out.println(Constant.FORBIDDEN);
-
+		myLogger.trace("Stop Words: " + stops);
 		for (int i = 0; i < stops.size(); i++) {
 			String word = stops.get(i);
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
+			myLogger.trace(String.format("(\"%s\", \"b\", \"*\", \"wordpos\", 0) added\n", word));
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 0, 0, null, null));
 			// System.out.println("Add Stop Word: " + word+"\n");
 		}
+		myLogger.trace("Quite\n");
 	}
 
 	public void addCharacters() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addCharacters");
+		myLogger.trace("Add characters");		
+		
 		List<String> chars = new ArrayList<String>();
 		chars.addAll(Arrays.asList(Constant.CHARACTER.split("\\|")));
 //
@@ -1305,6 +1406,10 @@ public class Learner {
 	}
 
 	public void addNumbers() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addNumbers");
+		myLogger.trace("Add numbers");	
+		
 		List<String> nums = new ArrayList<String>();
 		nums.addAll(Arrays.asList(Constant.NUMBER.split("\\|")));
 
@@ -1328,7 +1433,11 @@ public class Learner {
 		// WordPOSValue("*",0, 0, null, null));
 	}
 
-	public void addClusterstrings() {
+	public void addClusterStrings() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addClusterstrings");
+		myLogger.trace("Add clusterstrings");	
+		
 		List<String> cltstrs = new ArrayList<String>();
 		cltstrs.addAll(Arrays.asList(Constant.CLUSTERSTRING.split("\\|")));
 
@@ -1348,6 +1457,10 @@ public class Learner {
 	}
 
 	public void addProperNouns() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("learn.addProperNouns");
+		myLogger.trace("Add proper nouns");	
+		
 		List<String> ppnouns = new ArrayList<String>();
 		ppnouns.addAll(Arrays.asList(Constant.PROPERNOUN.split("\\|")));
 
@@ -1674,7 +1787,7 @@ public class Learner {
 
 			
 			
-			if (    (!StringUtility.equalsWithNull(thisTag, "ignore")
+			if (    (!StringUtils.equals(thisTag, "ignore")
 					|| (thisTag == null))
 				&& thisStatus.equals(status)) {
 				
@@ -1698,9 +1811,9 @@ public class Learner {
 				myLogger.debug("startWords: "+startWords.toString());
 
 				String pattern = buildPattern(startWords);
-				myLogger.info("Build pattern ["+pattern+"] from starting words ["+thisLead+"]");
 				
 				if (pattern != null) {
+                    myLogger.info("Build pattern ["+pattern+"] from starting words ["+thisLead+"]");
 					// IDs of untagged sentences that match the pattern
 					Set<Integer> matched = matchPattern(pattern, status, false);
 					int round = 0;
@@ -1712,6 +1825,9 @@ public class Learner {
 						round++;
 					} while (numNew > 0);
 				}
+                else {
+                    myLogger.info("Build no pattern from starting words ["+thisLead+"]");
+                }
 			}
 		}
 
@@ -1747,7 +1863,7 @@ public class Learner {
 	 */
 	public String buildPattern(String[] startWords) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.buildPattern");
+		Logger myLogger = Logger.getLogger("learn.discover.buildPattern");
 		
 		myLogger.trace("Enter buildPattern");
 		myLogger.trace("Start Words: "+startWords);
@@ -1814,7 +1930,7 @@ public class Learner {
 	 */
 	public Set<Integer> matchPattern(String pattern, String status, boolean hasTag) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.matchPattern");
+		Logger myLogger = Logger.getLogger("learn.discover.matchPattern");
 		
 		myLogger.trace("Enter matchPattern");
 		myLogger.trace("Pattern: "+pattern);
@@ -1832,7 +1948,7 @@ public class Learner {
 			boolean a = hasTag;
 			boolean b = (thisTag == null);
 			
-			if ((a ^ b) && (StringUtility.equalsWithNull(status, thisStatus))) {
+			if ((a ^ b) && (StringUtils.equals(status, thisStatus))) {
 				Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 				Matcher m = p.matcher(thisSentence);
 				if (m.lookingAt()) {
@@ -1864,24 +1980,27 @@ public class Learner {
 	 */
 	public int ruleBasedLearn(Set<Integer> matched) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn");
+		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn");
 		
 		myLogger.trace("Enter ruleBasedLearn");
 		myLogger.trace("Matched IDs: "+matched);
 		
 		int sign = 0;
-		int numNew = 0;
-		String tag = "";
 
 		Iterator<Integer> iter = matched.iterator();
 		while (iter.hasNext()) {
 			int sentID = iter.next().intValue();
 			Sentence sentence = this.myDataHolder.getSentenceHolder().get(sentID);
 			if (!isMarked(sentence)) {
-				// ($tag, $new) = doit($sentid);
-				doIt(sentID);
-				// tag($sentid, $tag);
-				tagIt(sentID, tag);
+				StringAndInt tagAndNew = null;
+				String tag = null;
+				int numNew = 0;
+				
+				tagAndNew = doIt(sentID); 
+				tag = tagAndNew.getString();
+				numNew = tagAndNew.getInt();
+				
+				tagIt(sentID, tag);				
 				sign = sign + numNew;
 			}
 		}
@@ -1906,7 +2025,7 @@ public class Learner {
 	 */
 	public StringAndInt doIt(int sentID) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt");
+		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.doIt");
 		
 		myLogger.trace("Enter doIt");
 		myLogger.trace("sentence ID: " + sentID);
@@ -1915,7 +2034,7 @@ public class Learner {
 		String thisSentence = sentEntry.getSentence();
 		String thisLead = sentEntry.getLead();
 		
-		StringAndInt returnValue = this.doItHelper(thisSentence, thisLead);
+		StringAndInt returnValue = this.doItCaseHandle(thisSentence, thisLead);
 		
 		myLogger.trace("Return Tag: " + returnValue.getString() + ", sign: " + returnValue.getInt());
 		myLogger.trace("Quit doIt");
@@ -1924,16 +2043,20 @@ public class Learner {
 		return returnValue;		
 	}
 
-	public StringAndInt doItHelper(String thisSentence, String thisLead) {
+	public StringAndInt doItCaseHandle(String thisSentence, String thisLead) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt");
+		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.doIt.doItCaseHandle");
 
-		myLogger.trace("Enter doItHelper");
+		myLogger.trace("Enter doItCaseHandle");
 		myLogger.trace("Sentence: " + thisSentence);
 		myLogger.trace("Lead: " + thisLead);
 
+		if (thisSentence == null || thisLead == null) {
+			return null;
+		}
+
 		int sign = 0;
-		String tag = null;
+		String tag = "";
 		
 		List<String> words = Arrays.asList(thisLead.split("\\s+"));
 		
@@ -1941,11 +2064,17 @@ public class Learner {
 		
 		myLogger.trace("ptn: "+ptn);
 		
-		Pattern p2 = Pattern.compile("^.*ps.*$");
+		Pattern p2 = Pattern.compile("ps");
 		Matcher m2 = p2.matcher(ptn);
 		
-		Pattern p3 = Pattern.compile("^.*p(\\?).*$");
+		Pattern p3 = Pattern.compile("p(\\?)");
 		Matcher m3 = p3.matcher(ptn);
+		
+		Pattern p4 = Pattern.compile("[psn](b)");
+		Matcher m4 = p4.matcher(ptn);
+		
+		Pattern p10 = Pattern.compile("^\\?(b)");
+		Matcher m10 = p10.matcher(ptn);
 		
 
 		// Case 1: single word case
@@ -1956,7 +2085,7 @@ public class Learner {
 			myLogger.debug("Directly markup with tag: "+tag+"\n");
 		}
 
-		// Case 2: the POSs are "ps"
+		// Case 2: "ps"
 		else if (m2.find()) {
 			myLogger.trace("Case 2");
 			myLogger.debug("Found [ps] pattern\n");
@@ -1969,34 +2098,35 @@ public class Learner {
 			sign += this.myDataHolder.updateTable(sWord, "s", "", "wordpos", 1);
 		} 
 		
-		// Case 3
+		// Case 3: "p(\\?)"
 		else if (m3.find()) {
 			myLogger.trace("Case 3");
 			myLogger.debug("Found [p?] pattern");
 			
-			int start = m3.start();
-			int end = m3.end();
+			int start = m3.start(1);
+			int end = m3.end(1);
 			
 			String secondMatchedWord = words.get(end-1);
 			
-			if (StringUtility.equalsWithNull(this.myUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
+			// case 3.1
+			if (StringUtils.equals(this.myUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
 				myLogger.trace("Case 3.1");
 				tag = secondMatchedWord;
 				sign = sign + this.myDataHolder.updateTable(tag, "p", "-", "wordpos", 1);
 				this.myDataHolder.add2Holder(DataHolder.ISA, Arrays.asList(new String[] {tag, words.get(end-2)}));	
 				myLogger.debug("\t:[p p] pattern: determine the tag: "+tag);
 			}
+			// case 3.2
 			else {
 				myLogger.trace("Case 3.2");
 				
-				List<String> wordsCopy = words;
+				List<String> wordsCopy = new ArrayList<String>(words);
 				// $i is just end-1
 				List<String> tempWords = StringUtility.stringArraySplice(words, 0, end-1);
-				
 				tag = StringUtility.joinList(" ", tempWords);
 				
-				myLogger.debug("\t:determine the tag: $tag\n");
-				myLogger.debug("\t:updates on POSs\n");
+				myLogger.debug("\t:determine the tag: "+tag);
+				myLogger.debug("\t:updates on POSs");
 				
 				int temp = 0;
 				temp = this.myDataHolder.updateTable(wordsCopy.get(end-1), "b", "", "wordpos", 1);
@@ -2013,10 +2143,174 @@ public class Learner {
 			}
 		}
 		
+		// case 4: "[psn](b)"
+		else if (m4.find()) {
+			myLogger.trace("Case 4");
+			Pattern p41 = Pattern.compile("^sbp");
+			Matcher m41 = p41.matcher(ptn);
+			
+			if (m41.find()) {
+				myLogger.trace("\tCase 4.1");
+				myLogger.debug("Found [sbp] pattern");
+				List<String> wordsCopy = new ArrayList<String>(words);
+				tag = StringUtility.joinList(" ", StringUtility.stringArraySplice(wordsCopy, 0, 3));
+				myLogger.trace("\t:determine the tag: " + tag);
+			}
+			else {
+				myLogger.trace("\tCase 4.2");
+				myLogger.debug("Found [[psn](b)] pattern");
+
+				int index = m4.start(1);
+
+				// get tag, which is the words prior to the b word (exclusive)				
+				List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
+				tag = StringUtility.joinList(" ", wordsTemp);
+				myLogger.trace("Tag: " + tag);
+
+				// update the b word
+				sign += this.myDataHolder.updateTable(words.get(index), "b", "", "wordpos", 1);
+				myLogger.trace(String.format("updateTable (%s, b, , wordpos, 1)", words.get(index)));
+				
+				sign += this.myDataHolder.updateTable(words.get(index - 1),
+						ptn.substring(index - 1, index), "-", "wordpos", 1);
+
+				myLogger.trace(String.format(
+						"updateTable (%s, %s, -, wordpos, 1)",
+						words.get(index - 1), ptn.substring(index - 1, index)));
+
+				sign += this.myDataHolder.updateTableNN(0, wordsTemp.size(),
+						wordsTemp);
+				myLogger.trace(String.format("updateTableNN (0, %d, %s)",
+						wordsTemp.size(), wordsTemp.toString()));
+
+				myLogger.debug("\t:determine the tag: " + tag);
+				myLogger.debug("\t:updates on POSs");
+			}
+		}
+		
+		// case 10: "^\\?(b)"
+		else if (m10.find()) {
+			myLogger.trace("Case 10");
+			myLogger.trace("Found [?(b)] pattern");
+			
+			int index = m10.start(1);
+
+			sign += this.myDataHolder.updateTable(words.get(index), "b", "", "wordpos", 1);
+			myLogger.trace(String.format("updateTable (%s, b, , wordpos, 1)", words.get(index)));
+
+			List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
+			tag = StringUtility.joinList(" ", wordsTemp);
+			String word = words.get(index-1); // the "?" word
+			
+			myLogger.trace("Tag: "+tag);
+			myLogger.trace("Word: "+word);
+			
+			if (!isFollowedByNoun(thisSentence, thisLead)) {
+				myLogger.trace("Case 10.1");
+				String wnP1 = this.myUtility.getWordFormUtility().checkWN(word, "pos");
+				myLogger.trace("wnP1: "+wnP1);
+				String wnP2 = "";
+						
+				if (!StringUtility.createMatcher("\\w", wnP1).find()) {
+					wnP2 = this.myUtility.getWordFormUtility().getNumber(word);	
+				}
+				myLogger.trace("wnP2: "+wnP2);
+				
+				if (StringUtility.createMatcher("[ar]", wnP1).find()) {
+					wnP1 = "";
+				}
+				
+				if ((StringUtility.createMatcher("[psn]", wnP1).find())
+						|| (StringUtility.createMatcher("[ps]", wnP2).find())) {
+					myLogger.trace("Case 10.1.1");	
+                    myLogger.debug("\t:determine the tag: "+tag);
+                    myLogger.debug("\t:updates on POSs");
+                    sign += this.myDataHolder.updateTable(word, "n", "-", "wordpos", 1);
+                    sign += this.myDataHolder.updateTableNN(0, wordsTemp.size(), wordsTemp);
+					
+				}
+				else{
+					myLogger.trace("Case 10.1.2");
+					myLogger.debug("\t:"+tag+" is adv/adj or modifier. skip.");
+					tag = "";
+				}	
+			}
+			else {
+				myLogger.trace("Case 10.2");
+				myLogger.debug(String.format("\t:%s is adv/adj or modifier. skip.", tag));
+                tag = "";
+			}
+		}
+		else {
+			myLogger.trace("\tCase 0");
+			myLogger.trace(String.format("Pattern [%s] is not processed", ptn));
+		}
+		
 		StringAndInt returnValue = new StringAndInt(tag,sign);
 		
-		myLogger.trace("Quite doItHelper");
+		myLogger.trace("Return: "+returnValue.toString());
 		return returnValue;
+	}
+
+	/**
+	 * Check if a lead is followed by a noun without any proposition in between
+	 * in the sentence
+	 * 
+	 * @param thisSentence
+	 *            the sentence
+	 * @param thisLead
+	 *            the lead
+	 * @return true if lead is followed by a N without any proposition in
+	 *         between
+	 */
+	public boolean isFollowedByNoun(String sentence, String lead) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.doIt.isFollowedByNoun");
+		myLogger.trace(String.format("(%s, %s)", sentence, lead));
+		
+		// null case
+		if (sentence == null || lead == null) {
+			myLogger.trace("Return false");
+			return false;
+		}
+		
+		if (StringUtils.equals(sentence, "")) {
+			myLogger.trace("Return false");
+			return false;
+		}
+		
+		// remove lead from sentence
+		sentence = sentence.replaceFirst("^"+lead, "");
+		myLogger.trace("Sentence after remove lead: "+sentence);
+		
+		List<String> nouns = this.myDataHolder.getWordByPOS("ps");
+		
+		if (nouns.size()==0) {
+			myLogger.trace("Return false");
+			return false;
+		}
+		
+		String pattern1 = StringUtility.joinList("|", nouns);
+		pattern1 = "(.*?)\\b("+pattern1+")"+"\\b";
+		myLogger.trace("Pattern: " + pattern1);
+		
+		Pattern p1 = Pattern.compile(pattern1);
+		Matcher m1 = p1.matcher(sentence);
+
+		String inBetweenPart = "";
+		if (m1.find()) {
+			inBetweenPart = m1.group(1);
+
+			String pattern2 = "\\b(" + Constant.PREPOSITION + ")\\b";
+			Pattern p2 = Pattern.compile(pattern2);
+			Matcher m2 = p2.matcher(inBetweenPart);
+			if (!m2.find()) {
+				myLogger.trace("Return true");
+				return true;
+			}
+		}
+		myLogger.trace("Return false");
+		return false;
 	}
 
 	/**
@@ -2027,41 +2321,100 @@ public class Learner {
 	 * @return
 	 */
 	public String getPOSptn(List<String> words) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.ruleBasedLearn.doIt.getPOSptn");
-		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.discover.ruleBasedLearn.doIt.getPOSptn");
+
 		myLogger.trace("Enter getPOSptn");
 		myLogger.trace("Words: " + words.toString());
-				
-		String ptn = "";
-		for (int i = 0; i < words.size(); i++) {
-			String word = words.get(i);
-			List<POSInfo> POSInfoList = this.myDataHolder.checkPOSInfo(word);
-			if (POSInfoList.size() > 0) {
-				POSInfo p = POSInfoList.get(0);
-				String POS = p.getPOS();
-				String role = p.getRole();
-				double certainty = (double) p.getCertaintyU()
-						/ (double) p.getCertaintyL();
 
-				if ((!StringUtility.equalsWithNull(POS, "?")) && (certainty <= 0.5)) {
-					myLogger.info("This POS has a certainty less than 0.5. It is ignored.");
+		String ptn = "";
+		String POS = "";
+		double certainty;
+		for (int i = 0; i < words.size(); i++) {
+
+			String word = words.get(i);
+			myLogger.trace("\tCheck word: " + word);
+			List<POSInfo> POSInfoList = this.myDataHolder.checkPOSInfo(word);
+			if (POSInfoList.size() >= 0) {
+				if (POSInfoList.size() == 0) {
+                    myLogger.trace("\t\tThe word is not in WordPOS holder");
 					POS = "?";
+				} 
+				else {
+					POSInfo p = POSInfoList.get(0);
+					POS = p.getPOS();
+
+					if (p.getCertaintyU() == 0) {
+						certainty = 1.0;
+					} else {
+						double certaintyU = (double) p.getCertaintyU();
+						double certaintyL = (double) p.getCertaintyL();
+						certainty = certaintyU / certaintyL;
+					}
+
+					myLogger.trace(String.format("\t\tCertaintyU: %d",
+							p.getCertaintyU()));
+					myLogger.trace(String.format("\t\tCertaintyL: %d",
+							p.getCertaintyL()));
+					myLogger.trace(String
+							.format("\t\tCertainty: %f", certainty));
+					if ((!StringUtils.equals(POS, "?"))
+							&& (certainty <= 0.5)) {
+						myLogger.info("\t\tThis POS has a certainty less than 0.5. It is ignored.");
+						POS = "?";
+					}
+
 				}
 				ptn = ptn + POS;
+				myLogger.trace("\t\tAdd pos: " + POS);
+			} else {
+				myLogger.error("Error: checkPOSInfo gave invalid return value");
 			}
 		}
 
 		myLogger.trace("Return ptn: " + ptn);
 		myLogger.trace("Quite getPOSptn");
-		
+
 		return ptn;
 	}
 
-
-
-	public void tagIt(int sentID, String tag) {
-		;
+	public boolean tagIt(int sentenceID, String tag) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.tagIt");
+		myLogger.trace(String.format("Enter (%d, %s)", sentenceID, tag));
+		
+		// case 1
+		if (!StringUtility.createMatcher("\\w+", tag).find()) {
+			myLogger.trace("Tag is not a word. Return");
+			return false;
+		} else {
+			// case 2
+			if (StringUtility.createMatcher("^(" + Constant.STOP + ")\\b", tag)
+					.find()) {
+				myLogger.trace(String
+						.format("\t:tag %s starts with a stop word, ignore tagging requrest",
+								tag));
+				return false;
+			} else {
+				// case 3
+				int maxLength = this.myConfiguration.getMaxTagLength();
+				if (tag.length() > maxLength) {
+					maxLength = this.myConfiguration.getMaxTagLength();
+					tag = tag.substring(0, maxLength);
+					myLogger.debug(String.format("\ttag: %s longer than %d)",
+							tag, maxLength));
+				} else {
+					;
+				}
+				Sentence sentence = this.myDataHolder.getSentenceHolder().get(
+						sentenceID);
+				sentence.setTag(tag);
+				myLogger.debug(String.format(
+						"\t:mark up sentence #%d with tag %s", sentenceID, tag));
+				return true;
+			}
+		}
 	}
 
 	

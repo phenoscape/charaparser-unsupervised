@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.tokenize.Tokenizer;
 
@@ -203,20 +206,85 @@ public class PopulateSentenceUtility {
 	 * @return the first n words of the sentence. If the number of words in the
 	 *         sentence is less than n, return all of them.
 	 */
-	public List<String> getFirstNWords(String sent, int n) {
+	public List<String> getFirstNWords(String sentence, int n) {
 		List<String> nWords = new ArrayList<String>();
 
-		if (sent == null || sent == "") {
+		if (sentence == null || sentence == "") {
 			return nWords;
 		}
+		else {
+			sentence = this.getSentenceHead(sentence);
+		}
 
-		String[] tokens = this.myTokenizer.tokenize(sent);
+		String[] tokens = this.myTokenizer.tokenize(sentence);
 		int minL = tokens.length > n ? n : tokens.length;
 		for (int i = 0; i < minL; i++) {
 			nWords.add(tokens[i]);
 		}
 
 		return nWords;
+	}
+	
+	/**
+	 * Get the portion in the input sentence before any of ,:;.[(, or any
+	 * preposition word, if any
+	 * 
+	 * @param sentence
+	 *            the input sentence
+	 * @return the portion in the head
+	 */
+	public String getSentenceHead(String sentence) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.populateSentence.getFirstNWords.getHead");
+
+		if (sentence == null) {
+			return sentence;
+		}
+		else if (sentence.equals("")) {
+			return sentence;
+		} 
+		else {
+			String head = "";
+			int end = sentence.length();
+
+			String pattern1 = " [,:;.\\[(]";
+			String pattern2 = "\\b" + "(" + Constant.PREPOSITION + ")" + "\\s";
+
+			myLogger.trace("Pattern1: " + pattern1);
+			myLogger.trace("Pattern2: " + pattern2);
+
+			Pattern p1 = Pattern.compile(pattern1);
+			Pattern p2 = Pattern.compile(pattern2);
+
+			Matcher m1 = p1.matcher(sentence);
+			Matcher m2 = p2.matcher(sentence);
+
+			boolean case1 = m1.find();
+			boolean case2 = m2.find();
+			
+			if (case1 || case2) {
+				// case 1
+				if (case1) {
+					int temp1 = m1.end();
+					end = temp1 < end ? temp1 : end;
+					end = end - 1;
+				}
+				// case 2
+				else {
+					int temp2 = m2.end();
+					end = temp2 < end ? temp2 : end;
+				}
+
+				head = sentence.substring(0, end - 1);
+			}
+			else {
+				head = sentence;
+			}
+
+			myLogger.trace("Return: " + head);
+			return head;
+		}
 	}
 
 	/**

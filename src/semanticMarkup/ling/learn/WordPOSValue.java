@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 public class WordPOSValue {
 	
 	private String role;
@@ -56,7 +58,7 @@ public class WordPOSValue {
 		this.savedID=si;
 	}
 	
-
+	@Override
 	public boolean equals(Object obj){
 		if (obj==this){
 			return true;
@@ -88,12 +90,21 @@ public class WordPOSValue {
 
 	}
 
+	@Override
 	public int hashCode() {
-		int hash = 1;
-		hash = hash * 31 + (this.role == null ? 0 : this.role.hashCode());
-		hash = hash * 31 + (this.savedFlag == null ? 0 : this.savedFlag.hashCode());
-		hash = hash * 31 + (this.savedID == null ? 0 : this.savedID.hashCode());
-		hash = hash + (new Integer(this.certaintyU)).hashCode() + (new Integer(this.certaintyL)).hashCode();
-		return hash;
+		return new HashCodeBuilder(11, 37)
+			.append(this.role)
+			.append(this.certaintyL)
+			.append(this.certaintyU)
+			.append(this.savedFlag)
+			.append(this.savedID)
+			.toHashCode();
+	}
+	
+	@Override
+	public String toString() {
+		return String.format(
+				"Value: [Role: %s, CertaintyU: %d, CertaintyL: %d, SavedFlag: %s, SavedID: %s]",
+				this.role, this.certaintyU, this.certaintyL, this.savedFlag, this.savedID);
 	}
 }

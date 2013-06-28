@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -94,15 +95,77 @@ public class DataHolder {
 //		return result;
 //	}
 	
+	
+	/** Operations**/
+	
 	/**
 	 * 
 	 * @param word
 	 * @param flag
 	 */
 	public void updateUnknownWord(String word, String flag){
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.updateUnkownWord");	
 		this.unknownWordTable.put(word, flag);
+		myLogger.trace(String.format("Added (%s, %s) into UnknownWord holder", word, flag));
 	}
+	
+	public void addSentence(String source, String sentence,
+			String originalSentence, String lead, String status, String tag,
+			String modifier, String type) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.addSentence");	
+		
+		Sentence newSent = new Sentence(source, sentence, originalSentence, lead,
+				status, tag, modifier, type);
+		this.sentenceTable.add(newSent);
+		myLogger.trace("Added Sentence: ");
+		myLogger.trace("\tSource: " + source);
+		myLogger.trace("\tSentence: " + sentence);
+		myLogger.trace("\tOriginal Sentence: " + originalSentence);
+		myLogger.trace("\tLead: " + lead);
+		myLogger.trace("\tStatus: " + status);
+		myLogger.trace("\tTag: " + tag);
+		myLogger.trace("\tModifier: " + modifier);
+		myLogger.trace("\tType: " + type);
+		
+		myLogger.trace("Quite\n");
+	}
+    
+    public List<Entry<WordPOSKey,WordPOSValue>> getWordPOSEntries(String word) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.getWordPOSEntries");
+        
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolder()
+				.entrySet().iterator();
+		List<Entry<WordPOSKey, WordPOSValue>> result = new ArrayList<Entry<WordPOSKey, WordPOSValue>>();
+		while (iter.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> wordPOSEntry = iter.next();
+			if (StringUtils.equals(wordPOSEntry.getKey().getWord(), word)) {
+				result.add(wordPOSEntry);
+			}
+		}
+		
+		myLogger.trace("Get WordPOS Entries of word: " + word);
+		myLogger.trace(StringUtils.join(result, ",\n"));		
+		
+		return result;
+    }
+    
+    public void updateWordPOS(String word, String POS, String role, int certaintyU, int certaintyL, String savedFlag, String savedID) {
+    	PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.addWordPOS");
+        
+        WordPOSKey key = new WordPOSKey(word, POS);
+		WordPOSValue value = new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID);
+		this.getWordPOSHolder().put(key, value);
+        
+		myLogger.trace(String.format(
+				"Added [Key: %s = Value: %s] into WordPOS holder",
+				key.toString(), value.toString()));
+    }    
 
+    @Override
 	public boolean equals(Object obj) {
 		if (obj==this){
 			return true;
@@ -183,6 +246,25 @@ public class DataHolder {
 		return false;
 	}
 	
+	public List<String> getWordByPOS(String POSs) {
+		List<String> words = new ArrayList<String>();
+		int index = POSs.length();
+		for (int i = 0;i<POSs.length();i++) {
+			String POS = POSs.substring(i,i+1);
+			Iterator<Entry<WordPOSKey, WordPOSValue>> iterator = this.wordPOSTable.entrySet().iterator();
+			while (iterator.hasNext()) {
+				Entry<WordPOSKey, WordPOSValue> entry = iterator.next();
+				WordPOSKey key = entry.getKey();
+				if (StringUtils.equals(key.getPOS(),POS)) {
+					words.add(key.getWord());
+				}
+				
+			}
+		}
+		
+		return words;
+	}
+	
 	/**
 	 * add the singular form and the plural form of a word into the
 	 * singularPluarlTable
@@ -194,8 +276,14 @@ public class DataHolder {
 	 * @return if add a pair, return true; otherwise return false
 	 */
 	public boolean addSingularPluralPair(String sgl, String pl) {
+		
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.addsingularpluralpair");				
+		
 		SingularPluralPair pair = new SingularPluralPair(sgl, pl);
 		boolean result = this.singularPluralTable.add(pair);
+		
+		myLogger.debug(String.format("Added singular-plural pair (%s, %s)", sgl, pl));
 		return result;
 	}
 	
@@ -534,6 +622,10 @@ public class DataHolder {
 	 */
 	public int updateTable(String word, String pos, String role, String table,
 			int increment) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.updateTable");
+		myLogger.trace(String.format("Enter (%s, %s, %s, %s, %d)", word, pos, role, table, increment));
+		
 		int result = 0;
 
 		word = StringUtility.processWord(word);
@@ -554,7 +646,7 @@ public class DataHolder {
 		}
 
 		result = result + markKnown(word, pos, role, table, increment);
-
+		myLogger.trace("result1: " + result);
 		// 1) if the word is a singular form n word, find its plural form, then add
 		// the plural form, and add the singular - pluarl pair into
 		// singularPluarlTable;
@@ -562,33 +654,52 @@ public class DataHolder {
 		// the singular form, and add the singular - pluarl pair into
 		// singularPluarlTable;
 		if (!this.isInSingularPluralPair(word)) {
+			myLogger.trace("Search for singular-plural pair of word: " + word);
+			
 			if (pos.equals("p")) {
+				myLogger.trace("Case 1");
 				String pl = word;
 				word = this.myUtility.getWordFormUtility().getSingular(word);
+				myLogger.trace(String.format("Get singular form of %s: %s", pl,
+						word));
+
 				// add "*" and 0: pos for those words are inferred based on
 				// other clues, not seen directly from the text
 				result = result + this.markKnown(word, "s", "*", table, 0);
+				myLogger.trace("result2: " + result);
 				this.addSingularPluralPair(word, pl);
+				myLogger.trace(String.format("Added (%s, %s)", word, pl));
+
 			}
-			if (pos.equals("s")) {
+			else if (pos.equals("s")) {
+				myLogger.trace("Case 2");
 				List<String> words = this.myUtility.getWordFormUtility().getPlural(word);
 				String sg = word;
+//				if (sg.equals("centrum")) {
+//					System.out.println("Return Size: "+words.size());
+//				}
 				for (int i = 0; i < words.size(); i++) {
 					if (words.get(i).matches("^.*\\w.*$")) {
 						result = result
 								+ this.markKnown(words.get(i), "p", "*", table,
 										0);
+						myLogger.trace("result3: " + result);
 					}
 					this.addSingularPluralPair(sg, words.get(i));
+					myLogger.trace(String.format("Added (%s, %s)", sg, words.get(i)));
 				}
+			}
+			else {
+				myLogger.trace("Nothing added");
 			}
 		}
 
+		myLogger.trace("Return: "+result+"\n");
 		return result;
 	}
 
 	/**
-	 * mark a word an its pos and role
+	 * mark a word with its pos and role in wordpos holder, or ???
 	 * 
 	 * @param word
 	 *            the word to mark
@@ -685,7 +796,7 @@ public class DataHolder {
 							+ processNewWord(newWord, pos, "*", table, word, 0);
 					
 					myLogger.debug("Case 2.1");
-					myLogger.debug("by removing prefix of " + word
+					myLogger.debug("by adding a prefix to " + word
 							+ ", know " + newWord + " is a [" + pos + "]");
 				
 				}
@@ -707,7 +818,7 @@ public class DataHolder {
 							+ processNewWord(newWord, pos, "*", table, word, 0);
 					
 					myLogger.debug("Case 2.2");
-					myLogger.debug("by removing prefix of " + word
+					myLogger.debug("by adding a prefix to " + word
 								+ ", know " + newWord + " is a [" + pos + "]");
 				}
 			}
@@ -774,31 +885,36 @@ public class DataHolder {
 			return 0;
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolder()
-				.entrySet().iterator();
-		// boolean isExist = false;
-		Map.Entry<WordPOSKey, WordPOSValue> targetWordPOS = null;
-		while (iter.hasNext()) {
-			Map.Entry<WordPOSKey, WordPOSValue> wordPOS = iter.next();
-			if (wordPOS.getKey().getWord().equals(newWord)) {
-				targetWordPOS = wordPOS;
-				break;
-			}
-		}
+//		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolder()
+//				.entrySet().iterator();
+//		// boolean isExist = false;
+//		Map.Entry<WordPOSKey, WordPOSValue> targetWordPOS = null;
+//		while (iter.hasNext()) {
+//			Map.Entry<WordPOSKey, WordPOSValue> wordPOS = iter.next();
+//			if (wordPOS.getKey().getWord().equals(newWord)) {
+//				targetWordPOS = wordPOS;
+//				break;
+//			}
+//		}
+        
+        List<Entry<WordPOSKey, WordPOSValue>> entryList = getWordPOSEntries(newWord);
+        int certaintyU = 0;
 		// case 1: the word does not exist, add it
-		if (targetWordPOS == null) {
+        if (entryList.size()==0) {
+		// if (targetWordPOS == null) {
 			myLogger.trace("Case 1");
-			int certaintyU = 0;
 			certaintyU += increment;
 			this.getWordPOSHolder().put(new WordPOSKey(newWord, newPOS),
 					new WordPOSValue(newRole, certaintyU, 0, null, null));
 			n = 1;
+			myLogger.trace(String.format("\t: new [%s] pos=%s, role =%s, certaintyU=%d", newWord, newPOS, newRole, certaintyU));
 		// case 2: the word already exists, update it
 		} else {
 			myLogger.trace("Case 2");
+			Entry<WordPOSKey, WordPOSValue> targetWordPOS = entryList.get(0);
 			String oldPOS = targetWordPOS.getKey().getPOS();
 			String oldRole = targetWordPOS.getValue().getRole();
-			int certaintyU = targetWordPOS.getValue().getCertaintyU();
+			certaintyU = targetWordPOS.getValue().getCertaintyU();
 			// case 2.1 
 			// 		the old POS is NOT same as the new POS, 
 			// 	AND	the old POS is b or the new POS is b
@@ -819,14 +935,19 @@ public class DataHolder {
 				if (flag) { 
 					newRole = newRole.equals("*") ? "" : newRole;
 					n = n + changePOS(newWord, oldPOS, newPOS, newRole, increment);
-				// olde pos win
+				// old pos win
 				} else { 
 					newRole = oldRole.equals("*") ? newRole : oldRole;
 					certaintyU = certaintyU + increment;
-					WordPOSKey key = new WordPOSKey("newWord", "pos");
-					WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
-							null, null);
-					this.getWordPOSHolder().put(key, value);
+//					WordPOSKey key = new WordPOSKey("newWord", "pos");
+//					WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
+//							null, null);
+//					this.getWordPOSHolder().put(key, value);
+					
+					this.updateWordPOS(newWord, newPOS, newRole, certaintyU, 0, null, null);
+					
+					myLogger.debug(String.format("\t: update [%s (%s):a] role: %s=>%s, certaintyU=%d\n",
+									newWord, newPOS, oldRole, newRole, certaintyU));
 				}
 				
 			// case 2.2: the old POS and the new POS are all [n],  update role and certaintyU
@@ -834,10 +955,15 @@ public class DataHolder {
 				myLogger.trace("Case 2.2");
 				newRole = this.mergeRole(oldRole, newRole);
 				certaintyU += increment;
-				WordPOSKey key = new WordPOSKey(newWord, newPOS);
-				WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
-						null, null);
-				this.getWordPOSHolder().put(key, value);
+//				WordPOSKey key = new WordPOSKey(newWord, newPOS);
+//				WordPOSValue value = new WordPOSValue(newRole, certaintyU, 0,
+//						null, null);
+//				this.getWordPOSHolder().put(key, value);
+				
+				this.updateWordPOS(newWord, newPOS, newRole, certaintyU, 0, null, null);
+				
+				myLogger.debug(String.format("\t: update [%s (%s):b] role: %s => %s, certaintyU=%d\n",
+								newWord, newPOS, oldRole, newRole, certaintyU));
 			}
 		}
 
@@ -859,7 +985,8 @@ public class DataHolder {
 			}
 		}
 
-		myLogger.trace("Quite updatePOS");
+		myLogger.debug(String.format("\t: total occurance of [%s] = %d\n", newWord, certaintyL));
+		myLogger.trace("Return: " + n);
 		return n;
 	}
 	
@@ -1109,7 +1236,7 @@ public class DataHolder {
 	}
 	
 	/**
-	 * 
+	 * for the nouns in @words, make the last n the main noun("-"). update NN's roles. return a positive number if an update is made,
 	 * @param start
 	 * @param end
 	 * @param words
@@ -1118,6 +1245,8 @@ public class DataHolder {
 	public int updateTableNN(int start, int end, List<String> words) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.updateTableNN");
+		myLogger.trace(String.format("Enter (%d, %d, %s)", start, end,
+				words.toString()));
 				
 		int update=0;
 		List<String> splicedWords = StringUtility.stringArraySplice(words, start, end); 
@@ -1135,6 +1264,7 @@ public class DataHolder {
 			}
 		}
 		
+		myLogger.trace("Return: " + update + "\n");
 		return update;
 	}
 	
@@ -1407,14 +1537,7 @@ public class DataHolder {
 				if ((index >= startIndex) && (index <= endIndex)) {
 					Entry<WordPOSKey, WordPOSValue> entry = iter.next();
 					
-					myLogger.info("Index: "+index);
-					myLogger.info("Word: " + entry.getKey().getWord());
-					myLogger.info("POS: " + entry.getKey().getPOS());
-					myLogger.info("Role: " + entry.getValue().getRole());
-					myLogger.info("CertaintyU: " + entry.getValue().getCertaintyU());
-					myLogger.info("CertaintyL: " + entry.getValue().getCertaintyL());
-					myLogger.info("Saved Flag: " + entry.getValue().getSavedFlag());
-					myLogger.info("Saved ID: " + entry.getValue().getSavedID());
+					myLogger.info(entry.toString());
 					myLogger.info("\n");
 
 				}
@@ -1424,6 +1547,42 @@ public class DataHolder {
 		}
 		
 		myLogger.info("Total: "+(endIndex-startIndex+1)+"\n");
+	}
+
+	/**
+	 * Get a list of all tags which is not "ignore" or is null.
+	 * 
+	 * @return a list of tags
+	 */
+	public List<String> getCurrentTags() {
+		/**
+sub currenttags{
+	my ($id, $sent, $sth, $TAGS, $lead);
+  	$sth = $dbh->prepare("select tag from ".$prefix."_sentence where (tag != 'ignore' or isnull(tag)) group by tag order by count(sentid) desc");
+  	$sth->execute();
+  	$TAGS = "";
+  	while( my ($tag)=$sth->fetchrow_array()){
+    	$TAGS .= $tag."|" if ($tag=~/\w+/);
+  	}
+  	chop($TAGS);
+  	return $TAGS;
+}
+		 */
+		List<String> tags = new ArrayList<String>();
+		
+		for (int i=0;i<this.sentenceTable.size();i++) {
+			Sentence sentence = this.sentenceTable.get(i);
+			String tag = sentence.getTag();
+			if (
+					(!StringUtils.equals(tag, "ignore"))
+					||
+					(tag == null)
+					){
+				tags.add(tag);
+			}
+		}
+		
+		return tags;
 	}
 
 }

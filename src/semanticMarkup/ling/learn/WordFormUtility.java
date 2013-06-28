@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+
 import semanticMarkup.knowledge.Stemmer;
 import semanticMarkup.knowledge.lib.WordNetAPI;
 
@@ -68,7 +70,7 @@ public class WordFormUtility {
 		// Check previous records
 		// singular case
 		String singular = null;
-		if (StringUtility.equalsWithNull(mode, "singular")) {
+		if (StringUtils.equals(mode, "singular")) {
 			singular = this.singularRecords.get(word);
 		}
 		if (singular != null) {
@@ -79,7 +81,7 @@ public class WordFormUtility {
 
 		// number case
 		String number = null;
-		if (StringUtility.equalsWithNull(mode, "number")) {
+		if (StringUtils.equals(mode, "number")) {
 			number = this.numberRecords.get(word);
 		}
 		if (number != null) {
@@ -90,7 +92,7 @@ public class WordFormUtility {
 
 		// pos case
 		String pos = null;
-		if (StringUtility.equalsWithNull(mode, "pos")) {
+		if (StringUtils.equals(mode, "pos")) {
 			pos = this.POSRecords.get(word);
 		}
 		if (pos != null) {
@@ -315,9 +317,12 @@ public class WordFormUtility {
 	}	
 
 	/**
+	 * Get the singular form of a word
 	 * 
 	 * @param word
-	 * @return the singular form of the input word
+	 *            the word in query
+	 * @return the singular form of the input word. If it the method fails to
+	 *         find any singular form of the word, return an empty string
 	 */
 	public String getSingular(String word) {
 		if (!word.matches("^.*\\w.*$")) {
@@ -419,9 +424,17 @@ public class WordFormUtility {
 			return singular;
 		}
 
-		return null;
+		return "";
 	}	
 
+	/**
+	 * Get all the plural forms of a word
+	 * 
+	 * @param word
+	 *            the word in query
+	 * @return a list of the plural forms of the word. If the method fails to
+	 *         find any plural forms of the method, return an empty list
+	 */
 	public List<String> getPlural(String word) {
 		
 		if (word.matches("^(n|2n|x)$")) {
@@ -463,9 +476,13 @@ public class WordFormUtility {
 		plStr = plStr.replaceAll("\\s+$", "");
 		this.PLURALS.put(word, plStr);
 		
-		String[] pArray = plStr.split(" ");
 		List<String> pList = new ArrayList<String>();
-		Collections.addAll(pList, pArray);
+		
+		if (!plStr.equals("")) {
+			String[] pArray = plStr.split(" ");
+			Collections.addAll(pList, pArray);
+		}
+		
 		return pList;
 	}
 
