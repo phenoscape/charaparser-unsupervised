@@ -17,9 +17,10 @@ public class Utility {
 	private WordNetAPI myWN = null;
 	private SentenceDetectorME mySentenceDetector = null;
 	private TokenizerME myTokenizer = null;
-	
-	private PopulateSentenceUtility myPopulateSentenceUtility=null;
+
+	private PopulateSentenceUtility myPopulateSentenceUtility = null;
 	private WordFormUtility myWordFormUtility = null;
+	private LearnerUtility myLearnerUtility = null;
 	
 	public Utility(Configuration myConfiguration) {
 		// get those tools
@@ -67,6 +68,7 @@ public class Utility {
 		
 		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.mySentenceDetector, this.myTokenizer);
 		this.myWordFormUtility = new WordFormUtility(this.myWN);
+		this.myLearnerUtility = new LearnerUtility(myConfiguration);
 	}
 	
 	public SentenceDetectorME getPopulateSentenceUtility(){
@@ -75,6 +77,10 @@ public class Utility {
 	
 	public WordFormUtility getWordFormUtility(){
 		return this.myWordFormUtility;
+	}
+	
+	public LearnerUtility getLearnerUtility() {
+		return this.myLearnerUtility;
 	}
 
 	public WordNetAPI getWordNet() {
