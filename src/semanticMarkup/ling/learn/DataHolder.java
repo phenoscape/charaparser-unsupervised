@@ -343,7 +343,7 @@ public class DataHolder {
 	 */
 	public String resolveConflict(String newWord, String bPOS, String otherPOS) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.resolveConflict");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.resolveConflict");
 		
 		myLogger.trace("Enter resolveConflict");
 
@@ -403,7 +403,7 @@ public class DataHolder {
 		 */
 		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.discountPOS");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.discountPOS");
 		
 		myLogger.trace("Enter discountPOS");
 		
@@ -620,10 +620,10 @@ public class DataHolder {
 	 * @param increment
 	 * @return
 	 */
-	public int updateTable(String word, String pos, String role, String table,
+	public int updateDataHolder(String word, String pos, String role, String table,
 			int increment) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder");
 		myLogger.trace(String.format("Enter (%s, %s, %s, %s, %d)", word, pos, role, table, increment));
 		
 		int result = 0;
@@ -715,7 +715,7 @@ public class DataHolder {
 	public int markKnown(String word, String pos, String role, String table,
 			int increment) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.markKnown");		
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.markKnown");		
 		myLogger.trace("Enter markKnown");
 		
 		String pattern = "";
@@ -828,7 +828,7 @@ public class DataHolder {
 	}
 	
 	/**
-	 * This method handles a new word when the updateTable method is called
+	 * This method handles a new word when the updateDataHolder method is called
 	 * 
 	 * @param newWord
 	 * @param pos
@@ -866,7 +866,7 @@ public class DataHolder {
 	 */
 	public int updatePOS(String newWord, String newPOS, String newRole, int increment) {		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.updatePOS");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.updatePOS");
 		
 		myLogger.trace("Enter updatePOS");
 		myLogger.trace("Word: "+newWord+", POS: "+newPOS);
@@ -1003,7 +1003,7 @@ public class DataHolder {
 	public int changePOS(String newWord, String oldPOS, String newPOS,
 			String newRole, int increment) {		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.changePOS");		
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.changePOS");		
 		myLogger.trace("Enter changePOS");
 		myLogger.trace("newWord: "+newWord);
 		myLogger.trace("oldPOS: "+oldPOS);
@@ -1144,7 +1144,7 @@ public class DataHolder {
 		 */
 		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.tagSentenceWithWT");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.tagSentenceWithWT");
 		
 		myLogger.trace("Enter tagSentenceWithMT");
 		
@@ -1242,9 +1242,9 @@ public class DataHolder {
 	 * @param words
 	 * @return
 	 */
-	public int updateTableNN(int start, int end, List<String> words) {
+	public int updateDataHolderNN(int start, int end, List<String> words) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTableNN");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolderNN");
 		myLogger.trace(String.format("Enter (%d, %d, %s)", start, end,
 				words.toString()));
 				
@@ -1256,9 +1256,9 @@ public class DataHolder {
 
 			myLogger.trace("Check N: " + word);
 
-			if (this.updateTableNNConditionHelper(word)) {
+			if (this.updateDataHolderNNConditionHelper(word)) {
 				myLogger.trace("Update N: " + word);
-				int temp = this.updateTable(word, "m", "", "modifiers", 1);
+				int temp = this.updateDataHolder(word, "m", "", "modifiers", 1);
 				update = update + temp;
 				myLogger.trace("Return: " + temp);
 			}
@@ -1269,13 +1269,13 @@ public class DataHolder {
 	}
 	
 	/**
-	 * A helper of method updateTableNN. Check if the condition is meet.
+	 * A helper of method updateDataHolderNN. Check if the condition is meet.
 	 * 
 	 * @param word
 	 *            the word to check
 	 * @return a boolean variable
 	 */
-	public boolean updateTableNNConditionHelper(String word) {
+	public boolean updateDataHolderNNConditionHelper(String word) {
 		boolean flag = false;
 		
 		flag = (   (!word.matches("^.*\\b("+Constant.STOP+")\\b.*$"))

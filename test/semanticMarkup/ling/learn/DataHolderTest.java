@@ -26,11 +26,11 @@ public class DataHolderTest {
 
 	@Test
 	public void testUpdateTable() {
-		// Method updateTable
-		assertEquals("updateTable - empty word", 0,
-				tester.updateTable("", "", "", "", 0));
-		assertEquals("updateTable - forbidden word", 0,
-				tester.updateTable("to", "", "", "", 0));
+		// Method updateDataHolder
+		assertEquals("updateDataHolder - empty word", 0,
+				tester.updateDataHolder("", "", "", "", 0));
+		assertEquals("updateDataHolder - forbidden word", 0,
+				tester.updateDataHolder("to", "", "", "", 0));
 	}
 	
 	@Test
@@ -316,10 +316,10 @@ public class DataHolderTest {
 	
 	@Test
 	public void testUpdateTableNNConditionHelper(){
-		assertEquals("updateTableNN case 0 - true", true, tester.updateTableNNConditionHelper("word"));
-		assertEquals("updateTableNN case 1 stop words - false", false, tester.updateTableNNConditionHelper(" page"));
-		assertEquals("updateTableNN case 2 -ly ending words - false", false, tester.updateTableNNConditionHelper("hello abcly "));
-		assertEquals("updateTableNN case 3 forbidden words - false", false, tester.updateTableNNConditionHelper("nor $%^iwopf0-v"));
+		assertEquals("updateDataHolderNN case 0 - true", true, tester.updateDataHolderNNConditionHelper("word"));
+		assertEquals("updateDataHolderNN case 1 stop words - false", false, tester.updateDataHolderNNConditionHelper(" page"));
+		assertEquals("updateDataHolderNN case 2 -ly ending words - false", false, tester.updateDataHolderNNConditionHelper("hello abcly "));
+		assertEquals("updateDataHolderNN case 3 forbidden words - false", false, tester.updateDataHolderNNConditionHelper("nor $%^iwopf0-v"));
 	}
 	
 	@Test
@@ -327,7 +327,7 @@ public class DataHolderTest {
 		List<String> input1 = new ArrayList<String>();
 		input1.addAll(Arrays.asList("hyohyoidei muscle".split(" ")));
 		
-		assertEquals("updateTableNN case 3 forbidden words - false", 1, tester.updateTableNN(0, 2, input1));		
+		assertEquals("updateDataHolderNN case 3 forbidden words - false", 1, tester.updateDataHolderNN(0, 2, input1));		
 	}
 	
 }

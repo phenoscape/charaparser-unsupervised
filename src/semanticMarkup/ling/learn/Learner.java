@@ -469,7 +469,7 @@ public class Learner {
 			String word = iter.next();
 			if ((!word.matches("^.*\\w.*$")) || (word.matches("^.*ous$"))) {
 				this.myDataHolder.addUnknown(word, word);
-				this.myDataHolder.updateTable(word, "b", "", "wordpos", 1);
+				this.myDataHolder.updateDataHolder(word, "b", "", "wordpos", 1);
 			} else {
 				this.myDataHolder.addUnknown(word, "unknown");
 			}
@@ -527,7 +527,7 @@ public class Learner {
 					if (m.lookingAt()) {
 						String word = m.group(1);
 						String pos = m.group(2);
-						this.myDataHolder.updateTable(word, pos, "*", "wordpos", 0);
+						this.myDataHolder.updateDataHolder(word, pos, "*", "wordpos", 0);
 
 						if (pos.equals("p")) {
 							String plural = word;
@@ -574,7 +574,7 @@ public class Learner {
 			String descriptor = iter.next();
 			
 			if (!StringUtility.isMatchedWords(descriptor, Constant.FORBIDDEN)) {
-				this.myDataHolder.updateTable(descriptor, "b", "", "wordpos", 1);
+				this.myDataHolder.updateDataHolder(descriptor, "b", "", "wordpos", 1);
 			}
 		}
 		
@@ -590,7 +590,7 @@ public class Learner {
 		while (iter.hasNext()) {
 			String noun = iter.next();
 			if (!StringUtility.isMatchedWords(noun, Constant.FORBIDDEN)) {
-				this.myDataHolder.updateTable(noun, "n", "", "wordpos", 1);
+				this.myDataHolder.updateDataHolder(noun, "n", "", "wordpos", 1);
 			}
 		}
 	}
@@ -1286,7 +1286,7 @@ public class Learner {
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
+			this.myDataHolder.updateDataHolder(word, "b", "*", "wordpos", 0);
 			myLogger.trace(String.format("(\"%s\", \"b\", \"*\", \"wordpos\", 0) added\n", word));
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 0, 0, null, null));
@@ -1313,7 +1313,7 @@ public class Learner {
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
+			this.myDataHolder.updateDataHolder(word, "b", "*", "wordpos", 0);
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("", 0, 0, null, null));
 			// System.out.println("addCharacter word: " + word);
@@ -1338,12 +1338,12 @@ public class Learner {
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
+			this.myDataHolder.updateDataHolder(word, "b", "*", "wordpos", 0);
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 0, 0, null, null));
 			// System.out.println("add Number: " + word);
 		}
-		this.myDataHolder.updateTable("NUM", "b", "*", "wordpos", 0);
+		this.myDataHolder.updateDataHolder("NUM", "b", "*", "wordpos", 0);
 		// this.getWordPOSHolder().put(new WordPOSKey("NUM", "b"), new
 		// WordPOSValue("*",0, 0, null, null));
 	}
@@ -1364,7 +1364,7 @@ public class Learner {
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
+			this.myDataHolder.updateDataHolder(word, "b", "*", "wordpos", 0);
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 1, 1, null, null));
 			// System.out.println("addClusterString: " + word);
@@ -1384,7 +1384,7 @@ public class Learner {
 			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
 				continue;
 			}
-			this.myDataHolder.updateTable(word, "b", "*", "wordpos", 0);
+			this.myDataHolder.updateDataHolder(word, "b", "*", "wordpos", 0);
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "z"), new
 			// WordPOSValue("*", 0, 0, null, null));
 			// System.out.println("Add ProperNoun: " + word);
@@ -1448,7 +1448,7 @@ public class Learner {
 				String suffix = matcher.group(2);
 				if (this.containSuffix(unknownWord, base, suffix)) {
 					myLogger.debug("Pass\n");
-					this.myDataHolder.updateTable(unknownWord, "b", "*", "wordpos", 0);							
+					this.myDataHolder.updateDataHolder(unknownWord, "b", "*", "wordpos", 0);							
 					myLogger.debug("posBySuffix - set word: " + unknownWord);
 					return true;
 				}
@@ -1915,7 +1915,7 @@ public class Learner {
 				tag = tagAndNew.getString();
 				numNew = tagAndNew.getInt();
 				
-				this.myUtility.getLearnerUtility().tagIt(this.myDataHolder, sentID, tag);				
+				this.myUtility.getLearnerUtility().tagSentence(this.myDataHolder, sentID, tag);				
 				sign = sign + numNew;
 			}
 		}
@@ -1996,7 +1996,7 @@ public class Learner {
 		if (ptn.matches("^[pns]$")) {
 			myLogger.trace("Case 1");
 			tag = words.get(0);
-			sign = sign + this.myDataHolder.updateTable(tag, ptn, "-", "wordpos", 1);
+			sign = sign + this.myDataHolder.updateDataHolder(tag, ptn, "-", "wordpos", 1);
 			myLogger.debug("Directly markup with tag: "+tag+"\n");
 		}
 
@@ -2009,8 +2009,8 @@ public class Learner {
 			String pWord = words.get(start);
 			String sWord = words.get(end-1);
 
-			sign += this.myDataHolder.updateTable(pWord, "p", "-", "wordpos", 1);
-			sign += this.myDataHolder.updateTable(sWord, "s", "", "wordpos", 1);
+			sign += this.myDataHolder.updateDataHolder(pWord, "p", "-", "wordpos", 1);
+			sign += this.myDataHolder.updateDataHolder(sWord, "s", "", "wordpos", 1);
 		} 
 		
 		// Case 3: "p(\\?)"
@@ -2027,7 +2027,7 @@ public class Learner {
 			if (StringUtils.equals(this.myUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
 				myLogger.trace("Case 3.1");
 				tag = secondMatchedWord;
-				sign = sign + this.myDataHolder.updateTable(tag, "p", "-", "wordpos", 1);
+				sign = sign + this.myDataHolder.updateDataHolder(tag, "p", "-", "wordpos", 1);
 				this.myDataHolder.add2Holder(DataHolder.ISA, Arrays.asList(new String[] {tag, words.get(end-2)}));	
 				myLogger.debug("\t:[p p] pattern: determine the tag: "+tag);
 			}
@@ -2044,17 +2044,17 @@ public class Learner {
 				myLogger.debug("\t:updates on POSs");
 				
 				int temp = 0;
-				temp = this.myDataHolder.updateTable(wordsCopy.get(end-1), "b", "", "wordpos", 1);
+				temp = this.myDataHolder.updateDataHolder(wordsCopy.get(end-1), "b", "", "wordpos", 1);
 				sign += temp;
-				myLogger.debug("\t:updateTable1 returns " + temp);
+				myLogger.debug("\t:updateDataHolder1 returns " + temp);
 				
-				temp = this.myDataHolder.updateTable(wordsCopy.get(end-2), "p", "-", "wordpos", 1);
+				temp = this.myDataHolder.updateDataHolder(wordsCopy.get(end-2), "p", "-", "wordpos", 1);
 				sign += temp;
-				myLogger.debug("\t:updateTable2 returns " + temp);
+				myLogger.debug("\t:updateDataHolder2 returns " + temp);
 				
-				temp = this.myDataHolder.updateTableNN(0, tempWords.size(), tempWords);
+				temp = this.myDataHolder.updateDataHolderNN(0, tempWords.size(), tempWords);
 				sign += temp;
-				myLogger.debug("\t:updateTable returns " + temp);
+				myLogger.debug("\t:updateDataHolder returns " + temp);
 			}
 		}
 		
@@ -2083,19 +2083,19 @@ public class Learner {
 				myLogger.trace("Tag: " + tag);
 
 				// update the b word
-				sign += this.myDataHolder.updateTable(words.get(index), "b", "", "wordpos", 1);
-				myLogger.trace(String.format("updateTable (%s, b, , wordpos, 1)", words.get(index)));
+				sign += this.myDataHolder.updateDataHolder(words.get(index), "b", "", "wordpos", 1);
+				myLogger.trace(String.format("updateDataHolder (%s, b, , wordpos, 1)", words.get(index)));
 				
-				sign += this.myDataHolder.updateTable(words.get(index - 1),
+				sign += this.myDataHolder.updateDataHolder(words.get(index - 1),
 						ptn.substring(index - 1, index), "-", "wordpos", 1);
 
 				myLogger.trace(String.format(
-						"updateTable (%s, %s, -, wordpos, 1)",
+						"updateDataHolder (%s, %s, -, wordpos, 1)",
 						words.get(index - 1), ptn.substring(index - 1, index)));
 
-				sign += this.myDataHolder.updateTableNN(0, wordsTemp.size(),
+				sign += this.myDataHolder.updateDataHolderNN(0, wordsTemp.size(),
 						wordsTemp);
-				myLogger.trace(String.format("updateTableNN (0, %d, %s)",
+				myLogger.trace(String.format("updateDataHolderNN (0, %d, %s)",
 						wordsTemp.size(), wordsTemp.toString()));
 
 				myLogger.debug("\t:determine the tag: " + tag);
@@ -2110,8 +2110,8 @@ public class Learner {
 			
 			int index = m10.start(1);
 
-			sign += this.myDataHolder.updateTable(words.get(index), "b", "", "wordpos", 1);
-			myLogger.trace(String.format("updateTable (%s, b, , wordpos, 1)", words.get(index)));
+			sign += this.myDataHolder.updateDataHolder(words.get(index), "b", "", "wordpos", 1);
+			myLogger.trace(String.format("updateDataHolder (%s, b, , wordpos, 1)", words.get(index)));
 
 			List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
 			tag = StringUtility.joinList(" ", wordsTemp);
@@ -2140,8 +2140,8 @@ public class Learner {
 					myLogger.trace("Case 10.1.1");	
                     myLogger.debug("\t:determine the tag: "+tag);
                     myLogger.debug("\t:updates on POSs");
-                    sign += this.myDataHolder.updateTable(word, "n", "-", "wordpos", 1);
-                    sign += this.myDataHolder.updateTableNN(0, wordsTemp.size(), wordsTemp);
+                    sign += this.myDataHolder.updateDataHolder(word, "n", "-", "wordpos", 1);
+                    sign += this.myDataHolder.updateDataHolderNN(0, wordsTemp.size(), wordsTemp);
 					
 				}
 				else{

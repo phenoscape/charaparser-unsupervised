@@ -73,8 +73,8 @@ public class AdditionalBootstrapping implements LearningModule {
 						String.format("\\b%s\\|", lead), tags).find()) {
 					// tagIt(i, lead);
 					myLogger.trace(String.format(
-							"updateTable(%s, n, -, wordpos, 1)", lead));
-					sign += this.myDataHolder.updateTable(lead, "n", "-",
+							"updateDataHolder(%s, n, -, wordpos, 1)", lead));
+					sign += this.myDataHolder.updateDataHolder(lead, "n", "-",
 							"wordpos", 1);
 				}
 			}
