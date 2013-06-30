@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 public class AdditionalBootstrapping implements LearningModule {
-	private DataHolder myDataHolder;
+	private Utility myUtility;
 
 	public AdditionalBootstrapping() {
 		// TODO Auto-generated constructor stub
@@ -17,9 +17,7 @@ public class AdditionalBootstrapping implements LearningModule {
 	 * one lead word
 	 */
 	@Override
-	public DataHolder run(DataHolder dataHolder) {
-		this.myDataHolder = dataHolder;
-
+	public DataHolder run(DataHolder myDataHolder) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
 		myLogger.trace("Enter additionalBootStrapping");
@@ -37,14 +35,14 @@ public class AdditionalBootstrapping implements LearningModule {
 			flag += cmReturn;
 
 			// one lead word markup
-			List<String> tags = this.myDataHolder.getCurrentTags();
-			int omReturn = oneLeadWordMarkup(tags);
+			List<String> tags = myDataHolder.getCurrentTags();
+			int omReturn = oneLeadWordMarkup(myDataHolder, tags);
 			myLogger.trace(String.format("oneLeadWordMarkup() returned %d",
 					omReturn));
 			flag += omReturn;
 
 			// doit markup
-			int dmReturn = wrapupMarkup();
+			int dmReturn = myUtility.getLearnerUtility().doItMarkup(myDataHolder);
 			myLogger.trace(String.format("doItMarkup() returned %d", dmReturn));
 			flag += dmReturn;
 
@@ -55,7 +53,9 @@ public class AdditionalBootstrapping implements LearningModule {
 		return myDataHolder;
 	}
 
-	public int oneLeadWordMarkup(List<String> tagList) {
+
+	
+	public int oneLeadWordMarkup(DataHolder myDataHolder, List<String> tagList) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger
 				.getLogger("learn.additionalBootStrapping.oneLeadWordMarkup");
@@ -74,7 +74,7 @@ public class AdditionalBootstrapping implements LearningModule {
 					// tagIt(i, lead);
 					myLogger.trace(String.format(
 							"updateDataHolder(%s, n, -, wordpos, 1)", lead));
-					sign += this.myDataHolder.updateDataHolder(lead, "n", "-",
+					sign += myDataHolder.updateDataHolder(lead, "n", "-",
 							"wordpos", 1);
 				}
 			}

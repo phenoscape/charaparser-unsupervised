@@ -2294,7 +2294,134 @@ public class Learner {
 		return ptn;
 	}
 
+	/**
+	 * 
+	 */
+	public void additionalBootstrapping(){
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
+		myLogger.trace("Enter additionalBootStrapping");
+
+		int flag = 0;
+
+		do {
+			myLogger.trace(String.format("Enter one do-while loop iteration"));
+			flag = 0;
+
+			// warmup markup
+			int cmReturn = wrapupMarkup();
+			myLogger.trace(String
+					.format("wrapupMarkup() returned %d", cmReturn));
+			flag += cmReturn;
+
+			// one lead word markup
+			List<String> tags = myDataHolder.getCurrentTags();
+			int omReturn = oneLeadWordMarkup(tags);
+			myLogger.trace(String.format("oneLeadWordMarkup() returned %d",
+					omReturn));
+			flag += omReturn;
+
+			// doit markup
+			int dmReturn = this.doItMarkup();
+			myLogger.trace(String.format("doItMarkup() returned %d", dmReturn));
+			flag += dmReturn;
+
+			myLogger.trace(String.format("Quite this iteration with flag = %d",
+					flag));
+		} while (flag > 0);
+	}
 	
+	/**
+	 * In the sentence collections, search for such sentence, whose lead is
+	 * among the tags passed in, and add the lead into word POS collections as a
+	 * noun
+	 * 
+	 * @param tagList
+	 * @return the numbet of updates made
+	 */
+	public int oneLeadWordMarkup(List<String> tagList) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.additionalBootStrapping.oneLeadWordMarkup");
+		String tags = StringUtility.joinList("|", tagList);
+		int sign = 0;
+		myLogger.trace(String.format("Enter (%s)", tags));
+
+		for (int i = 0; i < myDataHolder.getSentenceHolder().size(); i++) {
+			Sentence sentence = myDataHolder.getSentenceHolder().get(i);
+			String tag = sentence.getTag();
+			String lead = sentence.getLead();
+
+			if ((tag == null) && (lead.matches("% %"))) {
+				if (StringUtility.createMatcher(
+						String.format("\\b%s\\|", lead), tags).find()) {
+					this.tagSentence(i, lead);
+					myLogger.trace(String.format(
+							"updateDataHolder(%s, n, -, wordpos, 1)", lead));
+					sign += myDataHolder.updateDataHolder(lead, "n", "-",
+							"wordpos", 1);
+				}
+			}
+		}
+
+		myLogger.trace("Return: " + sign);
+		return 0;
+	}
+	
+	public int wrapupMarkup() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
+	/**
+	 * skip and/or cases
+	 * skip leads with $stop words
+	 * @return number of updates
+	 */
+	public int doItMarkup() {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping.doItMarkup");
+		myLogger.trace("Enter");
+
+		int sign = 0;		
+		for (int i=0;i<myDataHolder.getSentenceHolder().size();i++) {
+			myDataHolder.getSentenceHolder().get(i);
+			String tag = myDataHolder.getSentenceHolder().get(i).getTag();
+			if ((tag == null) 
+					|| (StringUtils.equals(tag, ""))
+					|| (StringUtils.equals(tag, "unknown"))) {
+				int sentenceID = i;
+				String lead = myDataHolder.getSentenceHolder().get(i).getLead();
+				String sentence = myDataHolder.getSentenceHolder().get(i)
+						.getSentence();
+				
+                // case 1
+				if (StringUtility.createMatcher("^.{0,40} (nor|or|and|\\/)", sentence).find()) {
+                    myLogger.trace(String.format("sent #%d: case 1", i));
+					continue;
+				}
+				
+                // case 2
+				if (StringUtility.createMatcher("\\b("+Constant.STOP+")\\b", lead).find()) {
+					myLogger.trace(String.format("sent #%d: case 2", i));
+					continue;
+				}
+				
+				StringAndInt tagAndSign = doIt(sentenceID);
+				String doItTag = tagAndSign.getString();
+				int doItID = tagAndSign.getInt();
+                
+                // case 3
+				if (StringUtility.createMatcher("\\w", tag).find()) {
+					myLogger.trace(String.format("sent #%d: case 3", i));
+					this.myUtility.getLearnerUtility().tagSentence(myDataHolder, doItID, doItTag);
+				}
+			}
+		}
+		
+		myLogger.trace("Return: "+sign);
+		return 0;
+	}
 
 	
 	/**
@@ -2311,6 +2438,44 @@ public class Learner {
 	
 	public Utility getUtility() {
 		return this.myUtility;
+	}
+	
+	public boolean tagSentence(int sentenceID, String tag) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.tagIt");
+		myLogger.trace(String.format("Enter (%d, %s)", sentenceID, tag));
+		
+		// case 1
+		if (!StringUtility.createMatcher("\\w+", tag).find()) {
+			myLogger.trace("\t:tag is not a word. Return");
+			return false;
+		} else {
+			// case 2
+			if (StringUtility.createMatcher("^(" + Constant.STOP + ")\\b", tag)
+					.find()) {
+				myLogger.trace(String
+						.format("\t:tag %s starts with a stop word, ignore tagging requrest",
+								tag));
+				return false;
+			} else {
+				// case 3
+				int maxLength = this.myConfiguration.getMaxTagLength();
+				if (tag.length() > maxLength) {
+					maxLength = this.myConfiguration.getMaxTagLength();
+					tag = tag.substring(0, maxLength);
+					myLogger.debug(String.format("\ttag: %s longer than %d)",
+							tag, maxLength));
+				} else {
+					;
+				}
+				Sentence sentence = myDataHolder.getSentenceHolder().get(
+						sentenceID);
+				sentence.setTag(tag);
+				myLogger.debug(String.format(
+						"\t:mark up sentence #%d with tag %s", sentenceID, tag));
+				return true;
+			}
+		}
 	}
 	
 }
