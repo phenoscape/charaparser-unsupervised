@@ -827,4 +827,37 @@ public class LearnerTest {
 		assertEquals("isFollowedByNoun", true, myTester.isFollowedByNoun("foramina on bones", "foramina on"));
 		assertEquals("isFollowedByNoun", false, myTester.isFollowedByNoun("teeth of dentary", "teeth of"));
 	}
+	
+	@Test
+	public void testTagSentence() {		
+		Configuration myConfiguration = new Configuration();
+		myConfiguration.setMaxTagLength(10);
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag","m","type"}));
+
+		assertEquals("tagIt - case 1", false, myTester.tagSentence(0, ""));
+		assertEquals("tagIt - case 2", false, myTester.tagSentence(0, "page"));
+		assertEquals("tagIt - case 3", true, myTester.tagSentence(0, "teeth"));
+		assertEquals("tagIt - max tag length", "teeth", myTester.getDataHolder().getSentenceHolder().get(0).getTag());
+		
+		assertEquals("tagIt - case 3", true, myTester.tagSentence(0, "abcdefghijkl"));
+		//myTester.tagSentence(0, "abcdefghijkl");
+		assertEquals("tagIt - max tag length", "abcdefghij", myTester.getDataHolder().getSentenceHolder().get(0).getTag());
+	}
+	
+	@Test
+	public void testDoItMarkup() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent nor", "osent","lead","status",null,"m","type"}));
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent and", "osent","lead","status","","m","type"}));
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","unknown","m","type"}));
+		assertEquals("doItMarkup - case 1", 0, myTester.doItMarkup());
+		
+	}
+	
 }

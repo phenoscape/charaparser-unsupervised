@@ -2368,8 +2368,44 @@ public class Learner {
 		return 0;
 	}
 	
+	/**
+	 * for the remaining of sentences that do not have a tag yet, look for lead
+	 * word co-ocurrance, use the most freq. co-occured phrases as tags 
+	 *   e.g. plication induplicate (n times) and plication reduplicate (m times) =>
+	 *     plication is the tag and a noun 
+	 *   e.g. stigmatic scar basal (n times) and stigmatic scar apical (m times) => 
+	 *     stigmatic scar is the tag and scar is
+	 * a noun. what about externally like A; externally like B, functionally
+	 * staminate florets, functionally staminate xyz?
+	 * 
+	 * @return
+	 */
 	public int wrapupMarkup() {
-		// TODO Auto-generated method stub
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping.wrapupMarkup");
+		myLogger.trace("Enter");
+		
+		int sign = 0;
+		String checked = "#";
+		
+//$sth1 = $dbh->prepare("Select sentid, lead from ".$prefix."_sentence where isnull(tag)  and lead regexp \".* .*\" order by length(lead) desc" );
+		//#multiple-word leads
+		
+		List<Sentence> sentenceList = new LinkedList<Sentence>();
+		for (int id = 0; id < this.myDataHolder.getSentenceHolder().size(); id++) {
+			Sentence sentence = this.myDataHolder.getSentenceHolder().get(id);
+			String tag = sentence.getTag();
+			String lead = sentence.getLead();
+
+			if ((tag == null)
+					&& (StringUtility.createMatcher(".* .*", lead).find())) {
+				sentenceList.add(sentence);
+			}
+		}
+		SentenceLeadLengthComparator myComparator = new SentenceLeadLengthComparator(
+				false);
+		Collections.sort(sentenceList, myComparator);
+		
 		return 0;
 	}
 	
