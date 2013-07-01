@@ -2386,12 +2386,15 @@ public class Learner {
 		myLogger.trace("Enter");
 		
 		int sign = 0;
-		String checked = "#";
+		
+		Set<Integer> checkedIDs = new HashSet<Integer>();
 		
 //$sth1 = $dbh->prepare("Select sentid, lead from ".$prefix."_sentence where isnull(tag)  and lead regexp \".* .*\" order by length(lead) desc" );
 		//#multiple-word leads
 		
 		List<Sentence> sentenceList = new LinkedList<Sentence>();
+		Map<Sentence, Integer> sentence2IDMap = new HashMap<Sentence, Integer>();
+		
 		for (int id = 0; id < this.myDataHolder.getSentenceHolder().size(); id++) {
 			Sentence sentence = this.myDataHolder.getSentenceHolder().get(id);
 			String tag = sentence.getTag();
@@ -2400,13 +2403,43 @@ public class Learner {
 			if ((tag == null)
 					&& (StringUtility.createMatcher(".* .*", lead).find())) {
 				sentenceList.add(sentence);
+				sentence2IDMap.put(sentence, id);
 			}
 		}
 		SentenceLeadLengthComparator myComparator = new SentenceLeadLengthComparator(
 				false);
 		Collections.sort(sentenceList, myComparator);
 		
+		for (int i=0;i<sentenceList.size();i++){
+			Sentence sentence = sentenceList.get(i);
+			int id = sentence2IDMap.get(sentence);
+			
+			// if this sentence has been checked, pass
+			if (checkedIDs.contains(id)) {
+				continue;
+			}
+			
+			String lead = sentence.getLead();
+			
+			
+			
+		}
+		
+		
+		
+		
 		return 0;
+	}
+	
+	public String wrapupMarkupGetPattern(String lead) {
+		List<String> words = new ArrayList();
+		words.addAll(Arrays.asList(lead.split("\\s+")));
+		int length = words.size();
+		words.remove(length-1);
+		words.add("[^\\s]+$");
+		String match = StringUtility.joinList(" ", words);
+		
+		return match;
 	}
 	
 	/**

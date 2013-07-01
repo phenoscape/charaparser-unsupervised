@@ -1,9 +1,9 @@
 package semanticMarkup.ling.learn;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class Sentence {
-	
 	private String source;
 	private String sentence;
 	private String originalSentence;
@@ -110,6 +110,20 @@ public class Sentence {
 				&&(StringUtils.equals(this.modifier, mySentence.modifier))
 				&&(StringUtils.equals(this.type, mySentence.type))
 				);
+	}
+	
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder(13, 37)
+		.append(this.source)
+		.append(this.sentence)
+		.append(this.originalSentence)
+		.append(this.lead)
+		.append(this.status)
+		.append(this.tag)
+		.append(this.modifier)
+		.append(this.type)
+		.toHashCode();
 	}
 	
 }

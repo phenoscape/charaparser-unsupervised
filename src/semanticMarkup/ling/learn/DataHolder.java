@@ -24,35 +24,36 @@ public class DataHolder {
 	
 	// Data holders
 	// Table heuristicnoun
-	private Map<String, String> heuristicNounTable = new HashMap<String, String>();
+	private Map<String, String> heuristicNounTable;
 	public static final byte HEURISTICNOUN = 1;
 
 	// Table discounted
-	private Map<DiscountedKey, String> discountedTable = new HashMap<DiscountedKey, String>();
+	private Map<DiscountedKey, String> discountedTable;
 	public static final byte DISCOUNTED = 2;
 	
 	// Table isATable
-	private Map<Integer, IsAValue> isATable = new HashMap<Integer, IsAValue>();
+	private Map<Integer, IsAValue> isATable;
 	public static final byte ISA = 3;
 	
 	// Table modifier
-	private Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
+	private Map<String, ModifierTableValue> modifierTable;
 	public static final byte MODIFIER = 4;
 	
 	// Table sentence
 	private List<Sentence> sentenceTable = new LinkedList<Sentence>();
+	//private Map<Integer, Sentence> sentenceCollection;
 	public static final byte SENTENCE = 5;
 
 	// Table singularPlural
-	private Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
+	private Set<SingularPluralPair> singularPluralTable;
 	public static final byte SINGULAR_PLURAL = 6;
 
 	// Table unknownword
-	private Map<String, String> unknownWordTable = new HashMap<String, String>();
+	private Map<String, String> unknownWordTable;
 	public static final byte UNKNOWNWORD = 7;
 
 	// Table wordpos
-	private Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
+	private Map<WordPOSKey, WordPOSValue> wordPOSTable;
 	public static final byte WORDPOS = 8;
 
 	private Configuration myConfiguratio;

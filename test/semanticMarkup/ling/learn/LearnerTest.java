@@ -859,5 +859,9 @@ public class LearnerTest {
 		assertEquals("doItMarkup - case 1", 0, myTester.doItMarkup());
 		
 	}
-	
+
+    @Test
+    public void testWrapupMarkupGetPattern(){
+        assertEquals("wrapupMarkupGetPattern", "passing through [^\\s]+$", tester.wrapupMarkupGetPattern("passing through dentary"));
+    }
 }
