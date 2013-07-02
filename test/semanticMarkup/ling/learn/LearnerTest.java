@@ -861,7 +861,15 @@ public class LearnerTest {
 	}
 
     @Test
-    public void testWrapupMarkupGetPattern(){
-        assertEquals("wrapupMarkupGetPattern", "passing through [^\\s]+$", tester.wrapupMarkupGetPattern("passing through dentary"));
+    public void testHasHead(){
+        assertEquals("wrapupMarkupGetPattern", false, 
+        		tester.hasHead(	null, 
+        						Arrays.asList("passing through most".split(" "))));
+        assertEquals("wrapupMarkupGetPattern", false, 
+        		tester.hasHead(	Arrays.asList("passing through".split(" ")), 
+        						Arrays.asList("passing throug most".split(" "))));
+        assertEquals("wrapupMarkupGetPattern", true, 
+        		tester.hasHead(	Arrays.asList("passing through".split(" ")), 
+        						Arrays.asList("passing through most".split(" "))));
     }
 }

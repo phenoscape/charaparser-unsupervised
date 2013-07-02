@@ -2420,7 +2420,28 @@ public class Learner {
 			}
 			
 			String lead = sentence.getLead();
+			List<String> words = new ArrayList<String>();
+			words.addAll(Arrays.asList(lead.split("\\s+")));
 			
+			List<String> sharedHead = new ArrayList<String>();
+			sharedHead.addAll(words);
+			sharedHead.remove(words.size()-1);
+			
+			Set<String> leadSet = new HashSet<String>();
+			for (int index=0;index<this.myDataHolder.getSentenceHolder().size();index++) {
+				Sentence thisSentence = this.myDataHolder.getSentenceHolder().get(index);
+				String thisLead = thisSentence.getLead();
+				if (hasHead(sharedHead, Arrays.asList(thisLead.split(" ")))) {
+					leadSet.add(thisLead);
+				}
+			}
+			
+			Iterator<String> iter = leadSet.iterator();
+			while (iter.hasNext()) {
+				String uniqueLead = iter.next();
+				
+				
+			}
 			
 			
 		}
@@ -2431,15 +2452,34 @@ public class Learner {
 		return 0;
 	}
 	
-	public String wrapupMarkupGetPattern(String lead) {
-		List<String> words = new ArrayList();
-		words.addAll(Arrays.asList(lead.split("\\s+")));
-		int length = words.size();
-		words.remove(length-1);
-		words.add("[^\\s]+$");
-		String match = StringUtility.joinList(" ", words);
+	/**
+	 * check if the lead has the head in its n-1 words (n is the number of the
+	 * words in the lead)
+	 * 
+	 * @param head
+	 * @param lead
+	 * @return true if it has, false if it does not have
+	 */
+	public boolean hasHead(List<String> head, List<String> lead) {
 		
-		return match;
+		// null case
+		if (head == null || lead == null) {
+			return false;
+		}
+		
+		int headSize = head.size();
+		int leadSize = lead.size();
+		if (headSize != leadSize-1) {
+			return false;
+		}
+		
+		for (int i=0;i<headSize;i++) {
+			if (!StringUtils.equals(head.get(i), lead.get(i))) {
+				return false;
+			}
+		}
+		
+		return true;
 	}
 	
 	/**
