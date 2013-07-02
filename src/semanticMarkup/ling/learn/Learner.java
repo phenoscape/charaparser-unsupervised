@@ -2386,46 +2386,43 @@ public class Learner {
 		myLogger.trace("Enter");
 		
 		int sign = 0;
-		
 		Set<Integer> checkedIDs = new HashSet<Integer>();
-		
-//$sth1 = $dbh->prepare("Select sentid, lead from ".$prefix."_sentence where isnull(tag)  and lead regexp \".* .*\" order by length(lead) desc" );
-		//#multiple-word leads
-		
 		List<Sentence> sentenceList = new LinkedList<Sentence>();
 		Map<Sentence, Integer> sentence2IDMap = new HashMap<Sentence, Integer>();
 		
-		for (int id = 0; id < this.myDataHolder.getSentenceHolder().size(); id++) {
-			Sentence sentence = this.myDataHolder.getSentenceHolder().get(id);
+		for (int id1 = 0; id1 < this.myDataHolder.getSentenceHolder().size(); id1++) {
+			Sentence sentence = this.myDataHolder.getSentenceHolder().get(id1);
 			String tag = sentence.getTag();
 			String lead = sentence.getLead();
 
 			if ((tag == null)
 					&& (StringUtility.createMatcher(".* .*", lead).find())) {
 				sentenceList.add(sentence);
-				sentence2IDMap.put(sentence, id);
+				sentence2IDMap.put(sentence, id1);
 			}
 		}
 		SentenceLeadLengthComparator myComparator = new SentenceLeadLengthComparator(
 				false);
 		Collections.sort(sentenceList, myComparator);
 		
-		for (int i=0;i<sentenceList.size();i++){
-			Sentence sentence = sentenceList.get(i);
-			int id = sentence2IDMap.get(sentence);
+		for (int id1=0;id1<sentenceList.size();id1++){
+			Sentence sentence = sentenceList.get(id1);
+			int thisID = sentence2IDMap.get(sentence);
 			
 			// if this sentence has been checked, pass
-			if (checkedIDs.contains(id)) {
+			if (checkedIDs.contains(thisID)) {
 				continue;
 			}
 			
 			String lead = sentence.getLead();
 			List<String> words = new ArrayList<String>();
+			List<String> words1 = new ArrayList<String>();
 			words.addAll(Arrays.asList(lead.split("\\s+")));
-			
+			words1.addAll(words);
+
 			List<String> sharedHead = new ArrayList<String>();
 			sharedHead.addAll(words);
-			sharedHead.remove(words.size()-1);
+			sharedHead.remove(words.size() - 1);
 			
 			Set<String> leadSet = new HashSet<String>();
 			for (int index=0;index<this.myDataHolder.getSentenceHolder().size();index++) {
@@ -2437,19 +2434,94 @@ public class Learner {
 			}
 			
 			Iterator<String> iter = leadSet.iterator();
-			while (iter.hasNext()) {
-				String uniqueLead = iter.next();
+			if (iter.hasNext()) { // here we only care about the first one				
+				String match = StringUtility.joinList(" ", sharedHead);
+				String pattern = match + ".{0,1}";
+				List<Integer> idList = new ArrayList<Integer>();
+				List<String> leadList = new LinkedList<String>();
+				for (int index3 = 0; index3 < this.myDataHolder
+						.getSentenceHolder().size(); index3++) {
+					Sentence thisSentence = this.myDataHolder
+							.getSentenceHolder().get(index3);
+					String thisLead = thisSentence.getLead();
+					String thisTag = thisSentence.getTag();
+					if ((StringUtility.createMatcher(pattern, thisLead).find())
+							&& (thisTag == null)) {
+						idList.add(index3);
+						leadList.add(thisLead);
+					}
+				}
+								
+				String ptn = this.getPOSptn(sharedHead);
+				String wnPOS = this.myUtility.getWordFormUtility().checkWN(sharedHead.get(sharedHead.size()-1), "pos");
 				
-				
+				if ((StringUtility.createMatcher("[nsp]$", ptn).find())						
+						|| ((StringUtility.createMatcher("?$", ptn).find())								
+								&& (StringUtility.createMatcher("n", wnPOS).find()))) 
+				{	
+					for (int id = 0; id < idList.size(); id++) {
+						int sentenceID = idList.get(id);
+						String thisLead = leadList.get(id);
+						List<String> words2 = Arrays
+								.asList(thisLead.split(" "));
+						
+						boolean case1 = false;
+						boolean case2 = false;
+						case1 = words2.size() > words.size();
+						if (case1) {
+							List<String> checkWord = new ArrayList<String>();
+							checkWord.add(words2.get(words.size() - 1));
+							case2 = StringUtility.createMatcher("[psn]",this.getPOSptn(checkWord)).find();
+						}
+						
+						if (case1 && case2) {							
+							String nb = words2.size()>words.size()+1?words2.get(words.size()): "";							
+							words2=StringUtility.stringArraySplice(words2, words.size(), words2.size());							
+							String nmatch = StringUtility.joinList(" ", words2);
+
+							this.tagSentence(id, nmatch);
+							this.tagSentence(id1, match);
+							
+							int update1 = this.myDataHolder.updateDataHolder(words2.get(words2.size()-2), "n", "-", "wordpos", 1);
+							sign += update1;
+							if (!StringUtils.equals(nb, "")) {
+								int update2 = this.myDataHolder.updateDataHolder(nb, "b", "","wordpos", 1);
+								sign += update2;
+							}
+							int update3 = this.myDataHolder.updateDataHolder(words1.get(words1.size()-2), "b", "", "wordpos", 1);
+							sign+=update3;														
+						}
+						else {
+							String b = words2.size() > words.size() ? words2.get(words.size() - 1) : "";
+
+							this.tagSentence(id, match);
+							this.tagSentence(id1, match);
+							
+							int update1 = this.myDataHolder.updateDataHolder(words.get(words.size()-2), "n", "-", "wordpos", 1);
+							sign += update1;
+							if (!StringUtils.equals(b, "")) {
+								int update2 = this.myDataHolder.updateDataHolder(b, "b", "", "wordpos", 1);
+								sign += update2;
+							}
+							int update3 = this.myDataHolder.updateDataHolder(words1.get(words1.size()-2), "b", "", "wordpos", 1);
+							sign += update3;
+									
+						}
+						checkedIDs.add(id);
+					}
+				} else {
+					for (int id = 0; id < idList.size(); id++) {
+						checkedIDs.add(id);
+					}
+				}
 			}
-			
-			
-		}
+			else {
+				checkedIDs.add(id1);
+			}
+		}//for end
 		
-		
-		
-		
-		return 0;
+		myLogger.trace("Return "+sign);
+		return sign;
 	}
 	
 	/**
