@@ -874,7 +874,7 @@ public class LearnerTest {
     }
     
     @Test
-    public void testGetNouns() {
+    public void testGetNounsANDGetO() {
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
 		Learner myTester = new Learner(myConfiguration, myUtility);

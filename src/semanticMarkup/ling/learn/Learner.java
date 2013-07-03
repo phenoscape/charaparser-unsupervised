@@ -2624,18 +2624,29 @@ public class Learner {
 		Logger myLogger = Logger.getLogger("learn.getKnownTags");
 		myLogger.trace("Enter (mode: "+mode+")");
 		
-		List<String> nouns = new LinkedList<String>(); // nouns
-		Set<String> nounSet = this.getNouns(mode);
+		Set<String> nouns = new HashSet<String>(); // nouns
+		Set<String> o = new HashSet<String>(); // o
 		
+		// get nouns
+		Set<String> nounSet = this.getNouns(mode);
 		nouns.addAll(nounSet);
-		myLogger.trace("Get nous: "+nouns.toString());
+		myLogger.trace("Get nouns: "+nouns.toString());
+		
+		// get o
+		if(StringUtils.equals(mode, "multitags")){
+			Set<String> oSet = this.getO();
+			o.addAll(oSet);
+			myLogger.trace("Get o: "+o.toString());
+		}
+		
+		
 		
 	}
     
 	/**
 	 * A helper of method getKnownTags(). Get a set of all nouns from the
 	 * word-POS collection. If the mode is "singletag", then get additional
-	 * nouns from tags
+	 * nouns from tags in sentence collection.
 	 * 
 	 * @param mode
 	 *            can be either "singletag" or "multitags"
@@ -2662,27 +2673,42 @@ public class Learner {
 		
 		// if the mode is "singletag", then get additional nouns from tags
 		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
-			Iterator<Sentence> iterSentence = this.myDataHolder
-					.getSentenceHolder().iterator();
-			while (iterSentence.hasNext()) {
-				Sentence sentence = iterSentence.next();
-				String tag = sentence.getTag();
-
-				if (tag != null) {
-					if ((!StringUtils.equals(tag, "ignore"))
-							&& (!StringUtility.createMatcher(".* .*", tag).find()) 
-							&& (!StringUtility.createMatcher(".*\\[.*", tag).find())) {
-						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", tag).find()) {
-							nounSet.add(tag);
-						}
-					}
-				}
-			}
+			Set<String> o = this.getO();
+			nounSet.addAll(o);
 		} else {
 			// do nothing
 		}
 
 		return nounSet;
+	}
+	
+	/**
+	 * A helper of method getKnownTags(). Get a set of o from tags in sentence
+	 * collections
+	 * 
+	 * @return a set of o
+	 */
+	public Set<String> getO() {
+		Set<String> oSet = new HashSet<String>(); // set of o
+		
+		Iterator<Sentence> iterSentence = this.myDataHolder
+				.getSentenceHolder().iterator();
+		while (iterSentence.hasNext()) {
+			Sentence sentence = iterSentence.next();
+			String tag = sentence.getTag();
+
+			if (tag != null) {
+				if ((!StringUtils.equals(tag, "ignore"))
+						&& (!StringUtility.createMatcher(".* .*", tag).find()) 
+						&& (!StringUtility.createMatcher(".*\\[.*", tag).find())) {
+					if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", tag).find()) {
+						oSet.add(tag);
+					}
+				}
+			}
+		}
+		
+		return oSet;
 	}
 	
 	/**
