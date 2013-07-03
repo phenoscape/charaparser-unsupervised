@@ -145,11 +145,25 @@ Apart the updates on the holders themselves, in this step the count of how many 
 given a list of words, chech each of them in the WordPOS holder, find its POS tag, and returns a string with letters representing the POS tags. If the POS tag is not known for a word, use "?" to represent it.
 
 
-* Data Holder
+Data Holder
 
-** Unknown Word
-word: the word
-flag: If the flag is "unknown", then the word is unknown; otherwise, the flag indicates how the word was learned. For example, if the word "unicuspid" is "b", then by removing prefix of unicuspid, the word "bicuspid" is learned as a [b] as well. In this case, the flag of word "bicuspid" is "unicuspid", indicates that the word "bicuspid" was learned from the word "unicuspid".
+* Sentence Collection
+** tag: the subject of this sentence. In most cases it is a noun. Note that the tag could be a collection of more than one word. If it is null, then the sentence has not been tagged yet.
+
+* Word-POS Collection
+** role: the role of the word-POS pair. There are several legal values.
+    "" - the role is unknown
+    "*" - the word has been marked from "unknown" to "known" in the unknown word collection, but the role has not been determined yet.
+    "-" - the word in the word-POS pair is a head noun.
+    "_" - the word in the word-POS pair is a modifier prior to a head noun.
+    "+" - the word has more than one roles, mark it as "*"
+    (What is a head noun? in the leading word list, the last noun is the head noun, and the words prior to it are modifiers.)
+
+* Unknown Word Collection
+** word: the word
+** flag: If the flag is "unknown", then the word is unknown; otherwise, the flag indicates how the word was learned. For example, if the word "unicuspid" is "b", then by removing prefix of unicuspid, the word "bicuspid" is learned as a [b] as well. In this case, the flag of word "bicuspid" is "unicuspid", indicates that the word "bicuspid" was learned from the word "unicuspid".
+
+
 
 
 ========
@@ -158,3 +172,6 @@ FAQ
 * What is the difference between checkWN() and getNumber()?
 checkWN:
 getNumber() uses checkWN. If checkWN() returns "x", change the return that to empty string "". In addition, it handles some more special cases. 
+
+* what is a modifer/boundary word?
+the word before a noun is its modifer. The word after a noun is its boundary word.
