@@ -1345,6 +1345,10 @@ public class DataHolder {
 			this.isATable = this.add2IsAHolder(this.isATable, args);
 		}
 		
+		if (holderID == DataHolder.MODIFIER) {
+			this.modifierTable = this.add2ModifierHolder(this.modifierTable, args);
+		}
+		
 		if (holderID == DataHolder.SENTENCE) {
 			this.sentenceTable = this.add2SentenceHolder(this.sentenceTable,args);
 		}
@@ -1362,7 +1366,7 @@ public class DataHolder {
 		}
 		
 	}
-	
+
 	public Map<Integer, IsAValue> add2IsAHolder (Map<Integer, IsAValue> isAHolder, List<String> args) {
 		int index = 0;
 		
@@ -1372,6 +1376,23 @@ public class DataHolder {
 		isAHolder.put(isAHolder.size()+1, new IsAValue(instance, cls));
 		
 		return isAHolder;
+	}
+	
+	public Map<String, ModifierTableValue> add2ModifierHolder(Map<String, ModifierTableValue> modifierTable, List<String> args) {
+		int index = 0;
+		
+		String word = args.get(index++);
+		int count  = new Integer(args.get(index++));
+		boolean isTypeModifier = false;
+		String isTypeModifierString = args.get(index++);
+		if (StringUtils.equals(isTypeModifierString, "true")) {
+			isTypeModifier = true;
+		}
+
+		
+		modifierTable.put(word, new ModifierTableValue(count, isTypeModifier));
+		
+		return modifierTable;
 	}
 
 	public Map<String, String> add2UnknowWordHolder(Map<String, String> unknownWordHolder, List<String> args){

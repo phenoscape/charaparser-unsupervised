@@ -874,7 +874,7 @@ public class LearnerTest {
     }
     
     @Test
-    public void testGetNounsANDGetO() {
+    public void testGetPSWord(){
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
 		Learner myTester = new Learner(myConfiguration, myUtility);
@@ -888,8 +888,15 @@ public class LearnerTest {
     	target.add("acrodin");
     	target.add("areas");
     	
-    	assertEquals("getNouns - mode: multitags", target, myTester.getNouns("multitags"));
-    	
+    	assertEquals("getPSWord", target, myTester.getPSWord());
+    }
+    
+    @Test
+    public void testGetO() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+
     	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","ignore","m","type"}));
     	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status",null,"m","type"}));
     	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","taga tagb","m","type"}));
@@ -897,11 +904,28 @@ public class LearnerTest {
     	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag1","m","type"}));
     	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag2","m","type"}));
     	
+    	Set<String> target = new HashSet<String>();
     	target.add("tag1");
     	target.add("tag2");
     	
-    	assertEquals("getNouns - mode: singletag", target, myTester.getNouns("singletag"));
-
+    	assertEquals("getO", target, myTester.getO());
+    }
+    
+    @Test
+    public void testGetModifiers(){
+    	Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"basal", "1", "false"}));
+		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"endoskeletal", "1", "false"}));
+		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"\\", "1", "false"}));
+		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {null, "1", "false"}));
     	
+    	Set<String> target = new HashSet<String>();
+    	target.add("basal");
+    	target.add("endoskeletal");
+    	
+    	assertEquals("getModifiers", target, myTester.getModifiers());
+
     }
 }

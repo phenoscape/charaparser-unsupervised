@@ -2626,9 +2626,20 @@ public class Learner {
 		
 		Set<String> nouns = new HashSet<String>(); // nouns
 		Set<String> o = new HashSet<String>(); // o
+		Set<String> modifiers = new HashSet<String>(); // modifiers
 		
 		// get nouns
-		Set<String> nounSet = this.getNouns(mode);
+		Set<String> nounSet = new HashSet<String>();
+		Set<String> psWordSet = new HashSet<String>(); // set of nouns
+		psWordSet = this.getPSWord();
+		nounSet .addAll(psWordSet);
+		// if the mode is "singletag", then get additional nouns from tags
+		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
+			Set<String> oSet = this.getO();
+			nounSet.addAll(o);
+		} else {
+			// do nothing
+		}
 		nouns.addAll(nounSet);
 		myLogger.trace("Get nouns: "+nouns.toString());
 		
@@ -2640,21 +2651,33 @@ public class Learner {
 		}
 		
 		
+		// get modifiers
+		Set<String> modifierSet = new HashSet<String>();
+		modifierSet = this.getModifiers();
+		if(StringUtils.equals(mode, "singletag")){
+			Iterator<String> mIter = modifierSet.iterator();
+			while (mIter.hasNext()) {
+				String m = mIter.next();
+				if (!psWordSet.contains(m)) {
+					modifiers.add(m);
+				}
+			}
+		}else{
+			modifiers.addAll(modifierSet);
+		}
 		
 	}
     
+
+
 	/**
 	 * A helper of method getKnownTags(). Get a set of all nouns from the
-	 * word-POS collection. If the mode is "singletag", then get additional
-	 * nouns from tags in sentence collection.
+	 * word-POS collection.
 	 * 
-	 * @param mode
-	 *            can be either "singletag" or "multitags"
 	 * @return a set of nouns
 	 */
-	public Set<String> getNouns(String mode) {
-		Set<String> nounSet = new HashSet<String>(); // set of nouns
-
+	public Set<String> getPSWord() {
+		Set<String> psSet = new HashSet<String>(); // set of p and s
 		// get a set of all nouns from the word-POS collection
 		Iterator<Entry<WordPOSKey, WordPOSValue>> iterWordPOS = this.myDataHolder
 				.getWordPOSHolder().entrySet().iterator();
@@ -2664,22 +2687,16 @@ public class Learner {
 			if ((StringUtils.equals(POS, "s"))
 					|| (StringUtils.equals(POS, "p"))) {
 				String word = entry.getKey().getWord();
-				if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", word)
-						.find()) {
-					nounSet.add(word);
+				if (word != null) {
+					if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", word)
+							.find()) {
+						psSet.add(word);
+					}
 				}
 			}
 		}
-		
-		// if the mode is "singletag", then get additional nouns from tags
-		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
-			Set<String> o = this.getO();
-			nounSet.addAll(o);
-		} else {
-			// do nothing
-		}
 
-		return nounSet;
+		return psSet;
 	}
 	
 	/**
@@ -2709,6 +2726,30 @@ public class Learner {
 		}
 		
 		return oSet;
+	}
+	
+	/**
+	 * Get modifier words from modifier collection.
+	 * 
+	 * @return a set fo modifer words
+	 */
+	public Set<String> getModifiers() {
+		Set<String> mSet = new HashSet<String>(); // set of o
+		
+		Iterator<Entry<String, ModifierTableValue>> iter = this.myDataHolder
+				.getModifierHolder().entrySet().iterator();
+		while (iter.hasNext()) {
+			Entry<String, ModifierTableValue> entry = iter.next();
+			String word = entry.getKey();
+			if (word != null) {
+				if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", word)
+						.find()) {
+					mSet.add(word);
+				}
+			}
+		}
+		
+		return mSet;
 	}
 	
 	/**
