@@ -2300,7 +2300,7 @@ public class Learner {
 	public void additionalBootstrapping(){
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
-		myLogger.trace("Enter additionalBootStrapping");
+		myLogger.trace("[additionalBootStrapping]Start");
 
 		int flag = 0;
 
@@ -2329,6 +2329,8 @@ public class Learner {
 			myLogger.trace(String.format("Quite this iteration with flag = %d",
 					flag));
 		} while (flag > 0);
+		
+		myLogger.trace("[additionalBootStrapping]End");
 	}
 	
 	/**
@@ -2436,7 +2438,7 @@ public class Learner {
 			Iterator<String> iter = leadSet.iterator();
 			if (iter.hasNext()) { // here we only care about the first one				
 				String match = StringUtility.joinList(" ", sharedHead);
-				String pattern = match + ".{0,1}";
+				String pattern = match + ".*";
 				List<Integer> idList = new ArrayList<Integer>();
 				List<String> leadList = new LinkedList<String>();
 				for (int index3 = 0; index3 < this.myDataHolder
@@ -2603,7 +2605,85 @@ public class Learner {
 		myLogger.trace("Return: "+sign);
 		return 0;
 	}
+	
+	public void unknownWordBootstrapping() {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.unknownWordBootstrapping");
+		myLogger.trace("[unknownWordBootstrapping]Start");
+		
+		myLogger.trace("[unknownWordBootstrapping]End");
+	}
+    
+	/**
+	 * 
+	 * @param mode
+	 *            can be either "singletag" or "multitags"
+	 */
+    public void getKnownTags(String mode) {
+    	PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.getKnownTags");
+		myLogger.trace("Enter (mode: "+mode+")");
+		
+		List<String> nouns = new LinkedList<String>(); // nouns
+		Set<String> nounSet = this.getNouns(mode);
+		
+		nouns.addAll(nounSet);
+		myLogger.trace("Get nous: "+nouns.toString());
+		
+	}
+    
+	/**
+	 * A helper of method getKnownTags(). Get a set of all nouns from the
+	 * word-POS collection. If the mode is "singletag", then get additional
+	 * nouns from tags
+	 * 
+	 * @param mode
+	 *            can be either "singletag" or "multitags"
+	 * @return a set of nouns
+	 */
+	public Set<String> getNouns(String mode) {
+		Set<String> nounSet = new HashSet<String>(); // set of nouns
 
+		// get a set of all nouns from the word-POS collection
+		Iterator<Entry<WordPOSKey, WordPOSValue>> iterWordPOS = this.myDataHolder
+				.getWordPOSHolder().entrySet().iterator();
+		while (iterWordPOS.hasNext()) {
+			Entry<WordPOSKey, WordPOSValue> entry = iterWordPOS.next();
+			String POS = entry.getKey().getPOS();
+			if ((StringUtils.equals(POS, "s"))
+					|| (StringUtils.equals(POS, "p"))) {
+				String word = entry.getKey().getWord();
+				if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", word)
+						.find()) {
+					nounSet.add(word);
+				}
+			}
+		}
+		
+		// if the mode is "singletag", then get additional nouns from tags
+		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
+			Iterator<Sentence> iterSentence = this.myDataHolder
+					.getSentenceHolder().iterator();
+			while (iterSentence.hasNext()) {
+				Sentence sentence = iterSentence.next();
+				String tag = sentence.getTag();
+
+				if (tag != null) {
+					if ((!StringUtils.equals(tag, "ignore"))
+							&& (!StringUtility.createMatcher(".* .*", tag).find()) 
+							&& (!StringUtility.createMatcher(".*\\[.*", tag).find())) {
+						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", tag).find()) {
+							nounSet.add(tag);
+						}
+					}
+				}
+			}
+		} else {
+			// do nothing
+		}
+
+		return nounSet;
+	}
 	
 	/**
 	 * Utilities

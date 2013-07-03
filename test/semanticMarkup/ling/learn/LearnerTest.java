@@ -872,4 +872,36 @@ public class LearnerTest {
         		tester.hasHead(	Arrays.asList("passing through".split(" ")), 
         						Arrays.asList("passing through most".split(" "))));
     }
+    
+    @Test
+    public void testGetNouns() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+    	myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"acrodin", "s", "role", "0", "0", null, null}));
+    	myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"areas", "p", "role", "0", "0", null, null}));
+    	myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"(", "p", "role", "0", "0", null, null}));
+    	
+    	
+    	Set<String> target = new HashSet<String>();
+    	target.add("acrodin");
+    	target.add("areas");
+    	
+    	assertEquals("getNouns - mode: multitags", target, myTester.getNouns("multitags"));
+    	
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","ignore","m","type"}));
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status",null,"m","type"}));
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","taga tagb","m","type"}));
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","taga[tagb]","m","type"}));
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag1","m","type"}));
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag2","m","type"}));
+    	
+    	target.add("tag1");
+    	target.add("tag2");
+    	
+    	assertEquals("getNouns - mode: singletag", target, myTester.getNouns("singletag"));
+
+    	
+    }
 }
