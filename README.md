@@ -97,6 +97,16 @@ markup the tag of some sentence by "chromosome", "flowerTime", "fruitTime" accor
 	
 In this step, we do addition bootstrapping learning by using clues such as shared subject different boundary and one lead word.
 
+** wrapup markup
+Search for any shared lead words, and take them as the tag and tag those sentences with them. The shared lead words are the first several continuous words by the lead of multiple sentences.
+
+The last word in the shared lead words are a boundary word.
+
+** one lead word markup
+If the lead of any sentence has only one word, and the words was taken as the tag in any other sentence, then we take this word as the tag to the sentence, and tag the sentence using that word.
+
+
+
 
 * Manage Data Holder
 ** Update Table
