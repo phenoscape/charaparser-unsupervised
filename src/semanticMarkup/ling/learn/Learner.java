@@ -2629,6 +2629,7 @@ public class Learner {
 		Set<String> modifiers = new HashSet<String>(); // modifiers
 		Set<String> boundaryWords = new HashSet<String>(); // boundary words
 		Set<String> boundaryMarks = new HashSet<String>(); // boundary marks
+		Set<String> properNouns = new HashSet<String>(); // proper nouns
 		
 		// get nouns
 		Set<String> nounSet = new HashSet<String>();
@@ -2669,6 +2670,12 @@ public class Learner {
 		}
 		
 		// get boundary words and marks
+		List<Set<String>> result = this.getBoundaries();
+		boundaryWords = result.get(0);
+		boundaryMarks = result.get(1);
+		
+		// get proper nouns
+		properNouns = this.getProperNouns();
 		
 	}
     
@@ -2808,6 +2815,31 @@ public class Learner {
     	
     	return result;
     }
+    
+	/**
+	 * Get the proper nouns from the word-POS collection
+	 * 
+	 * @return a set of the porper nouns
+	 */
+	public Set<String> getProperNouns() {
+		Set<String> pNouns = new HashSet<String>();
+		
+		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.getWordPOSHolder().entrySet().iterator();
+		
+		while (iter.hasNext()) {
+			Entry<WordPOSKey, WordPOSValue> entry = iter.next();
+			String word = entry.getKey().getWord();
+			String POS = entry.getKey().getPOS();
+			
+			if (StringUtils.equals(POS, "z")) {
+				if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", word).find()) {
+					pNouns.add(word);
+				}
+			}
+		}
+		
+		return pNouns;
+	}
 	
 	/**
 	 * Utilities

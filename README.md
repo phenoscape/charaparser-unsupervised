@@ -161,6 +161,15 @@ Data Holder
 ** tag: the subject of this sentence. In most cases it is a noun. Note that the tag could be a collection of more than one word. If it is null, then the sentence has not been tagged yet.
 
 * Word-POS Collection
+
+** pos: the POS tag of the word
+    "n" - noun
+        "s" - noun in singular form
+        "p" - noun in plural form
+    "m" - modififer word
+    "b" - boundary word
+    "z" - proper noun
+
 ** role: the role of the word-POS pair. There are several legal values.
     "" - the role is unknown
     "*" - the word has been marked from "unknown" to "known" in the unknown word collection, but the role has not been determined yet.
@@ -168,6 +177,8 @@ Data Holder
     "_" - the word in the word-POS pair is a modifier prior to a head noun.
     "+" - the word has more than one roles, mark it as "*"
     (What is a head noun? in the leading word list, the last noun is the head noun, and the words prior to it are modifiers.)
+    
+
 
 * Unknown Word Collection
 ** word: the word
