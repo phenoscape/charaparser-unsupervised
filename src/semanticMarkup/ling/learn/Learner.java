@@ -1278,7 +1278,7 @@ public class Learner {
 		List<String> stops = new ArrayList<String>();
 		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
 		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
-				"]", "}", "\\\\d+" }));
+				"]", "}", "\\d+" }));
 
 		myLogger.trace("Stop Words: " + stops);
 		for (int i = 0; i < stops.size(); i++) {
@@ -2627,15 +2627,17 @@ public class Learner {
 		Set<String> nouns = new HashSet<String>(); // nouns
 		Set<String> o = new HashSet<String>(); // o
 		Set<String> modifiers = new HashSet<String>(); // modifiers
+		Set<String> boundaryWords = new HashSet<String>(); // boundary words
+		Set<String> boundaryMarks = new HashSet<String>(); // boundary marks
 		
 		// get nouns
 		Set<String> nounSet = new HashSet<String>();
 		Set<String> psWordSet = new HashSet<String>(); // set of nouns
-		psWordSet = this.getPSWord();
+		psWordSet = this.getPSWords();
 		nounSet .addAll(psWordSet);
 		// if the mode is "singletag", then get additional nouns from tags
 		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
-			Set<String> oSet = this.getO();
+			Set<String> oSet = this.getOs();
 			nounSet.addAll(o);
 		} else {
 			// do nothing
@@ -2645,7 +2647,7 @@ public class Learner {
 		
 		// get o
 		if(StringUtils.equals(mode, "multitags")){
-			Set<String> oSet = this.getO();
+			Set<String> oSet = this.getOs();
 			o.addAll(oSet);
 			myLogger.trace("Get o: "+o.toString());
 		}
@@ -2666,17 +2668,17 @@ public class Learner {
 			modifiers.addAll(modifierSet);
 		}
 		
+		// get boundary words and marks
+		
 	}
     
-
-
 	/**
 	 * A helper of method getKnownTags(). Get a set of all nouns from the
 	 * word-POS collection.
 	 * 
 	 * @return a set of nouns
 	 */
-	public Set<String> getPSWord() {
+	public Set<String> getPSWords() {
 		Set<String> psSet = new HashSet<String>(); // set of p and s
 		// get a set of all nouns from the word-POS collection
 		Iterator<Entry<WordPOSKey, WordPOSValue>> iterWordPOS = this.myDataHolder
@@ -2705,7 +2707,7 @@ public class Learner {
 	 * 
 	 * @return a set of o
 	 */
-	public Set<String> getO() {
+	public Set<String> getOs() {
 		Set<String> oSet = new HashSet<String>(); // set of o
 		
 		Iterator<Sentence> iterSentence = this.myDataHolder
@@ -2751,6 +2753,61 @@ public class Learner {
 		
 		return mSet;
 	}
+	
+	/**
+	 * Get boundary words and marks.
+	 * 
+	 * @return a list of two elements. The first element is a set of boundary
+	 *         words, and second element is a set of boundary marks.
+	 */
+    public List<Set<String>> getBoundaries (){
+    	Set<String> bWords = new HashSet<String>();
+    	Set<String> bMarks = new HashSet<String>();
+    	List<Set<String>> result = new LinkedList<Set<String>>();
+    	
+    	Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.getWordPOSHolder().entrySet().iterator();
+    	while (iter.hasNext()) {
+    		Entry<WordPOSKey, WordPOSValue> entry = iter.next();
+    		String word = entry.getKey().getWord();
+    		String POS = entry.getKey().getPOS();
+    		/**
+		if($word =~/^[-\(\)\[\]\{\}\.\|\+\*\?]$/){
+			$b1 .= "\\".$word."|"; #b1 includes punct marks, not need for \b when matching
+		}elsif($word !~/\w/ && $word ne "/"){
+			$b1 .= $word."|" if $word=~/^[a-zA-Z0-9_-]+$/;
+		}else{
+			$b .= $word."|" if $word=~/^[a-zA-Z0-9_-]+$/;
+		}
+    		 */
+
+			if (word != null && POS != null) {
+				if (StringUtils.equals(POS, "b")) {
+					String pattern = "^[-\\\\\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]$";
+					// String pattern =
+					// "^[-\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]$";
+					if (StringUtility.createMatcher(pattern, word).find()) {
+						bMarks.add(word);
+					} else if ((!(StringUtility.createMatcher("\\w", word)
+							.find())) && (!StringUtils.equals(word, "\\/"))) {
+						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
+								word).find()) {
+							bMarks.add(word);
+						}
+					} else {
+						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
+								word).find()) {
+							bWords.add(word);
+						}
+					}
+				}
+			}
+		}
+
+    	result.add(bWords);
+    	result.add(bMarks);
+    	
+    	return result;
+    }
 	
 	/**
 	 * Utilities

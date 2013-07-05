@@ -888,7 +888,7 @@ public class LearnerTest {
     	target.add("acrodin");
     	target.add("areas");
     	
-    	assertEquals("getPSWord", target, myTester.getPSWord());
+    	assertEquals("getPSWords", target, myTester.getPSWords());
     }
     
     @Test
@@ -908,7 +908,7 @@ public class LearnerTest {
     	target.add("tag1");
     	target.add("tag2");
     	
-    	assertEquals("getO", target, myTester.getO());
+    	assertEquals("getOs", target, myTester.getOs());
     }
     
     @Test
@@ -916,6 +916,7 @@ public class LearnerTest {
     	Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
 		Learner myTester = new Learner(myConfiguration, myUtility);
+		
 		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"basal", "1", "false"}));
 		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"endoskeletal", "1", "false"}));
 		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"\\", "1", "false"}));
@@ -926,6 +927,38 @@ public class LearnerTest {
     	target.add("endoskeletal");
     	
     	assertEquals("getModifiers", target, myTester.getModifiers());
+    }
+    
+    @Test
+    public void testGetBoundaries(){
+    	Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
 
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"about", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"along", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"acrodin", "s", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"\\", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {")", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"[", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"}", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {".", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"|", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"+", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"*", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"?", "b", "role", "0", "0", null, null}));
+		
+		Set<String> targetWords = new HashSet<String>();
+		targetWords.addAll(Arrays.asList("about along".split(" ")));
+		
+		Set<String> targetMarks = new HashSet<String>();
+		targetMarks.addAll(Arrays.asList(") \\ [ } . | * + ?".split(" ")));
+		
+		List<Set<String>> target = new LinkedList<Set<String>>();
+		target.add(targetWords);
+		target.add(targetMarks);
+		
+		assertEquals("getBoundaries", target, myTester.getBoundaries());
+		
     }
 }
