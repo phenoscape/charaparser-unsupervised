@@ -41,6 +41,7 @@ public class DataHolder {
 	
 	// Table sentence
 	private List<Sentence> sentenceTable = new LinkedList<Sentence>();
+	private int sentenceCount;
 	//private Map<Integer, Sentence> sentenceCollection;
 	public static final byte SENTENCE = 5;
 
@@ -65,6 +66,8 @@ public class DataHolder {
 		this.allWords = new HashMap<String, Integer>();
 		
 		this.sentenceTable = new LinkedList<Sentence>();
+		this.sentenceCount = 0;
+		
 		this.unknownWordTable = new HashMap<String, String>();
 		this.wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
 		this.heuristicNounTable = new HashMap<String, String>();
@@ -117,8 +120,9 @@ public class DataHolder {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.addSentence");	
 		
-		Sentence newSent = new Sentence(source, sentence, originalSentence, lead,
+		Sentence newSent = new Sentence(this.sentenceCount, source, sentence, originalSentence, lead,
 				status, tag, modifier, type);
+		this.sentenceCount++;
 		this.sentenceTable.add(newSent);
 		myLogger.trace("Added Sentence: ");
 		myLogger.trace("\tSource: " + source);
@@ -1456,7 +1460,8 @@ public class DataHolder {
 		String modifier=args.get(index++);
 		String type=args.get(index++);
 		
-		sentenceTable.add(new Sentence(source, sentence, originalSentence, lead, status, tag, modifier, type));
+		this.addSentence(source, sentence, originalSentence, lead, status, tag, modifier, type);
+		//sentenceTable.add(new Sentence(source, sentence, originalSentence, lead, status, tag, modifier, type));
 		return sentenceTable;
 
 	}

@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class Sentence {
+	private int ID;
 	private String source;
 	private String sentence;
 	private String originalSentence;
@@ -13,8 +14,9 @@ public class Sentence {
 	private String modifier;
 	private String type;
 
-	public Sentence(String source, String sentence, String originalSentence, String lead, String status, String tag, String modifier, String type) {
+	public Sentence(int id, String source, String sentence, String originalSentence, String lead, String status, String tag, String modifier, String type) {
 		// TODO Auto-generated constructor stub
+		this.ID = id;
 		this.source=source;
 		this.sentence=sentence;
 		this.originalSentence=originalSentence;
@@ -23,6 +25,10 @@ public class Sentence {
 		this.tag=tag;
 		this.modifier=modifier;
 		this.type=type;
+	}
+	
+	public int getID() {
+		return this.ID;
 	}
 	
 	public String getSource() {
@@ -101,7 +107,8 @@ public class Sentence {
 		
 		Sentence mySentence = (Sentence) obj;
 		
-		return ((StringUtils.equals(this.source, mySentence.source))
+		return ((this.ID == mySentence.ID)
+				&&(StringUtils.equals(this.source, mySentence.source))
 				&&(StringUtils.equals(this.sentence, mySentence.sentence))
 				&&(StringUtils.equals(this.originalSentence, mySentence.originalSentence))
 				&&(StringUtils.equals(this.lead, mySentence.lead))
@@ -115,6 +122,7 @@ public class Sentence {
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder(13, 37)
+		.append(this.ID)
 		.append(this.source)
 		.append(this.sentence)
 		.append(this.originalSentence)

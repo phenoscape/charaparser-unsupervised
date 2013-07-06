@@ -131,9 +131,10 @@ public class DataHolderTest {
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
 		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
-		myTester.getSentenceHolder().add(new Sentence("source", "word branches word1 end", "word branches word1 end", "lead", "status", "ignore", null, null));
-		myTester.getSentenceHolder().add(new Sentence("source", "word branches word2 end", "word branches word2 end", "lead", "status", "nonignore", null, null));
-		myTester.getSentenceHolder().add(new Sentence("source", "word branches word3 end", "word branches word3 end", "lead", "status", null, null, null));
+		myTester.getSentenceHolder().add(new Sentence(0, "source", "word branches word1 end", "word branches word1 end", "lead", "status", "ignore", null, null));
+		myTester.getSentenceHolder().add(new Sentence(1, "source", "word branches word2 end", "word branches word2 end", "lead", "status", "nonignore", null, null));
+		myTester.getSentenceHolder().add(new Sentence(2, "source", "word branches word3 end", "word branches word3 end", "lead", "status", null, null, null));
+		
 		assertEquals("resolveConfilct - otherPOS", "otherPOS", myTester.resolveConflict("word1", "bPOS", "otherPOS"));
 		assertEquals("resolveConfilct - otherPOS", "bPOS", myTester.resolveConflict("word2", "bPOS", "otherPOS"));
 		assertEquals("resolveConfilct - otherPOS", "bPOS", myTester.resolveConflict("word3", "bPOS", "otherPOS"));

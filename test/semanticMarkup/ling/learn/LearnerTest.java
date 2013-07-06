@@ -45,7 +45,7 @@ public class LearnerTest {
 		myHeuristicNounTable.put("word1", "type1");
 
 		List<Sentence> mySentenceTable = results.getSentenceHolder();
-		mySentenceTable.add(new Sentence("source1", "sentence1",
+		mySentenceTable.add(new Sentence(0, "source1", "sentence1",
 				"originalSentence", "lead1", "status1", "tag1", "modifier1",
 				"type1"));
 
@@ -522,7 +522,7 @@ public class LearnerTest {
 		myTester.markupByPattern();
 		
 		List<Sentence> targetSentenceHolder = new LinkedList<Sentence>();
-		targetSentenceHolder.add(new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1"));
+		targetSentenceHolder.add(new Sentence(0, "source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1"));
 		
 		assertEquals("markupByPattern", targetSentenceHolder, myTester.getDataHolder().getSentenceHolder());
 	}
@@ -530,44 +530,44 @@ public class LearnerTest {
 	@Test
 	public void testMarkupByPatternHelper(){
 		// case 1
-		Sentence mySentence1 = new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "tag1", "modifier1", "type1");
-		Sentence target1 = new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1");
+		Sentence mySentence1 = new Sentence(0, "source1", "sentence1", "x=word word word", "lead1", "status1", "tag1", "modifier1", "type1");
+		Sentence target1 = new Sentence(0, "source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1");
 		tester.markupByPatternHelper(mySentence1);
 		assertEquals("markupByPatternHelper - case 1", target1,mySentence1);
 		
 		// case 2
-		Sentence mySentence2 = new Sentence("source2", "sentence2", "2n=abc...", "lead2", "status2", "tag2", "modifier2", null);
-		Sentence target2 = new Sentence("source2", "sentence2", "2n=abc...", "lead2", "status2", "chromosome", "", null);
+		Sentence mySentence2 = new Sentence(1, "source2", "sentence2", "2n=abc...", "lead2", "status2", "tag2", "modifier2", null);
+		Sentence target2 = new Sentence(1, "source2", "sentence2", "2n=abc...", "lead2", "status2", "chromosome", "", null);
 		tester.markupByPatternHelper(mySentence2);
 		assertEquals("markupByPatternHelper - case 2", target2,mySentence2);
 		
 		// case 3
-		Sentence mySentence3 = new Sentence("source", "sentence", "x word word", "lead", "status", "tag", "modifier", null);
-		Sentence target3 = new Sentence("source", "sentence", "x word word", "lead", "status", "chromosome", "", null);
+		Sentence mySentence3 = new Sentence(2, "source", "sentence", "x word word", "lead", "status", "tag", "modifier", null);
+		Sentence target3 = new Sentence(2, "source", "sentence", "x word word", "lead", "status", "chromosome", "", null);
 		tester.markupByPatternHelper(mySentence3);
 		assertEquals("markupByPatternHelper - case 3", target3, mySentence3);
 		
 		// case 4
-		Sentence mySentence4 = new Sentence("source", "sentence", "2n word word", "lead",null, "tag", "modifier", null);
-		Sentence target4 = new Sentence("source", "sentence", "2n word word", "lead", null, "chromosome", "", null);
+		Sentence mySentence4 = new Sentence(3, "source", "sentence", "2n word word", "lead",null, "tag", "modifier", null);
+		Sentence target4 = new Sentence(3, "source", "sentence", "2n word word", "lead", null, "chromosome", "", null);
 		tester.markupByPatternHelper(mySentence4);
 		assertEquals("markupByPatternHelper - case 4", target4, mySentence4);
 		
 		// case 5
-		Sentence mySentence5 = new Sentence("source", "sentence", "2 nword word", "lead", "status", "tag", "modifier", "");
-		Sentence target5 = new Sentence("source", "sentence", "2 nword word", "lead", "status", "chromosome", "", "");
+		Sentence mySentence5 = new Sentence(4, "source", "sentence", "2 nword word", "lead", "status", "tag", "modifier", "");
+		Sentence target5 = new Sentence(4, "source", "sentence", "2 nword word", "lead", "status", "chromosome", "", "");
 		tester.markupByPatternHelper(mySentence5);
 		assertEquals("markupByPatternHelper - case 5", target5, mySentence5);
 		
 		// case 6
-		Sentence mySentence6 = new Sentence("source", "sentence", "fl. word word", "lead", "status", null, null, "");
-		Sentence target6 = new Sentence("source", "sentence", "fl. word word", "lead", "status", "flowerTime", "", "");
+		Sentence mySentence6 = new Sentence(5, "source", "sentence", "fl. word word", "lead", "status", null, null, "");
+		Sentence target6 = new Sentence(5, "source", "sentence", "fl. word word", "lead", "status", "flowerTime", "", "");
 		tester.markupByPatternHelper(mySentence6);
 		assertEquals("markupByPatternHelper - case 6", target6, mySentence6);
 		
 		// case 7
-		Sentence mySentence7 = new Sentence("source", "sentence", "fr.word word", "lead", "status", null, "", "");
-		Sentence target7 = new Sentence("source", "sentence", "fr.word word", "lead", "status", "fruitTime", "", "");
+		Sentence mySentence7 = new Sentence(6, "source", "sentence", "fr.word word", "lead", "status", null, "", "");
+		Sentence target7 = new Sentence(6, "source", "sentence", "fr.word word", "lead", "status", "fruitTime", "", "");
 		tester.markupByPatternHelper(mySentence7);
 		assertEquals("markupByPatternHelper - case 7", target7, mySentence7);
 	}
@@ -583,7 +583,7 @@ public class LearnerTest {
 		myTester.markupIgnore();
 		
 		List<Sentence> targetSentenceHolder = new LinkedList<Sentence>();
-		targetSentenceHolder.add(new Sentence("source1", "sentence1", "IGNOREPTN", "lead1", "status1", "ignore", "", "type1"));
+		targetSentenceHolder.add(new Sentence(0, "source1", "sentence1", "IGNOREPTN", "lead1", "status1", "ignore", "", "type1"));
 		
 		assertEquals("markupIgnore", targetSentenceHolder, myTester.getDataHolder().getSentenceHolder());
 
@@ -591,13 +591,13 @@ public class LearnerTest {
 
 	@Test
 	public void testMarkupIgnoreHelper() {
-		Sentence mySentence1 = new Sentence("source", "sentence", "IGNOREPTN", "lead", "status", null, "", "");
-		Sentence target1 = new Sentence("source", "sentence", "IGNOREPTN", "lead", "status", "ignore", "", "");
+		Sentence mySentence1 = new Sentence(0, "source", "sentence", "IGNOREPTN", "lead", "status", null, "", "");
+		Sentence target1 = new Sentence(0, "source", "sentence", "IGNOREPTN", "lead", "status", "ignore", "", "");
 		tester.markupIgnoreHelper(mySentence1);
 		assertEquals("markupIgnoreHelper", target1, mySentence1);
 		
-		Sentence mySentence2 = new Sentence("source", "sentence", " IGNOREPTN", "lead", "status", null, "", "");
-		Sentence target2 = new Sentence("source", "sentence", " IGNOREPTN", "lead", "status", "ignore", "", "");
+		Sentence mySentence2 = new Sentence(1, "source", "sentence", " IGNOREPTN", "lead", "status", null, "", "");
+		Sentence target2 = new Sentence(1, "source", "sentence", " IGNOREPTN", "lead", "status", "ignore", "", "");
 		tester.markupIgnoreHelper(mySentence2);
 		assertEquals("markupIgnoreHelper", target2, mySentence2);
 	}

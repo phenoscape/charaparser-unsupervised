@@ -16,13 +16,17 @@ public class SentenceLeadLengthComparatorTest {
 		Learner myTester = new Learner(myConfiguration, myUtility);
 		DataHolder target = new DataHolder(myConfiguration, myUtility);
 		
-		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent nor", "osent","lead","status",null,"m","type"}));
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent nor", "osent","lead lead","status",null,"m","type"}));
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent and", "osent","lea","status","","m","type"}));
-		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead1","status","unknown","m","type"}));
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead lead lead","status","unknown","m","type"}));
 		
-		target.add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead1","status","unknown","m","type"}));
-		target.add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent nor", "osent","lead","status",null,"m","type"}));
-		target.add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent and", "osent","lea","status","","m","type"}));
+//		target.add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead1","status","unknown","m","type"}));
+//		target.add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent nor", "osent","lead","status",null,"m","type"}));
+//		target.add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent and", "osent","lea","status","","m","type"}));
+		
+		target.getSentenceHolder().add(new Sentence(2, "src", "sent", "osent","lead lead lead","status","unknown","m","type"));
+		target.getSentenceHolder().add(new Sentence(0, "src", "sent nor", "osent","lead lead","status",null,"m","type"));
+		target.getSentenceHolder().add(new Sentence(1, "src", "sent and", "osent","lea","status","","m","type"));
 		
 		SentenceLeadLengthComparator myComparator = new SentenceLeadLengthComparator(false); 
 		
