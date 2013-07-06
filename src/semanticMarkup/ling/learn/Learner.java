@@ -2619,11 +2619,12 @@ public class Learner {
 	 * @param mode
 	 *            can be either "singletag" or "multitags"
 	 */
-    public void getKnownTags(String mode) {
+    public KnownTagCollection getKnownTags(String mode) {
     	PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.getKnownTags");
 		myLogger.trace("Enter (mode: "+mode+")");
 		
+		KnownTagCollection knownTags = null;
 		Set<String> nouns = new HashSet<String>(); // nouns
 		Set<String> o = new HashSet<String>(); // o
 		Set<String> modifiers = new HashSet<String>(); // modifiers
@@ -2653,7 +2654,6 @@ public class Learner {
 			myLogger.trace("Get o: "+o.toString());
 		}
 		
-		
 		// get modifiers
 		Set<String> modifierSet = new HashSet<String>();
 		modifierSet = this.getModifiers();
@@ -2677,6 +2677,10 @@ public class Learner {
 		// get proper nouns
 		properNouns = this.getProperNouns();
 		
+		// put all known tags into one KnownTagCollection object
+		knownTags = new KnownTagCollection(nouns, o, modifiers, boundaryWords, boundaryMarks, properNouns);
+		
+		return knownTags;
 	}
     
 	/**
