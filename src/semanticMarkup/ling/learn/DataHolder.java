@@ -1493,15 +1493,17 @@ public class DataHolder {
 		if (holderID == DataHolder.SENTENCE) {
 			for (int i = startIndex; i<=endIndex; i++) {
 				Sentence sentence = this.sentenceTable.get(i);
-				myLogger.info("Sentence ID: "+i);
-				myLogger.info("Source: "+sentence.getSource());
-				myLogger.info("Sentence: "+sentence.getSentence());
-				myLogger.info("Original Sentence: "+sentence.getSentence());
-				myLogger.info("Lead: "+sentence.getLead());
-				myLogger.info("Status: "+sentence.getStatus());
-				myLogger.info("Tag: "+sentence.getTag());
-				myLogger.info("Modifier: "+sentence.getModifier());
-				myLogger.info("Type: "+sentence.getType());
+				myLogger.info("Index: "+i);
+				myLogger.info(sentence.toString());
+//				myLogger.info("Sentence ID: "+sentence.getID());
+//				myLogger.info("Source: "+sentence.getSource());
+//				myLogger.info("Sentence: "+sentence.getSentence());
+//				myLogger.info("Original Sentence: "+sentence.getSentence());
+//				myLogger.info("Lead: "+sentence.getLead());
+//				myLogger.info("Status: "+sentence.getStatus());
+//				myLogger.info("Tag: "+sentence.getTag());
+//				myLogger.info("Modifier: "+sentence.getModifier());
+//				myLogger.info("Type: "+sentence.getType());
 				myLogger.info("\n");
 			}
 		}

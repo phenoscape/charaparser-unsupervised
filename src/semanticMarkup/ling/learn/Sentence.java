@@ -134,4 +134,20 @@ public class Sentence {
 		.toHashCode();
 	}
 	
+	@Override
+	public String toString() {
+		String sentenceString = "\n"
+				+ "Sentence ID: " + this.getID() + "\n"
+				+ "\tSource: " + this.getSource() + "\n"
+				+ "\tSentence: " + this.getSentence() + "\n" 
+				+ "\tOriginal Sentence: " + this.getSentence() + "\n"
+				+ "\tLead: " + this.getLead() + "\n"
+				+ "\tStatus: " + this.getStatus() + "\n" 
+				+ "\tTag: " + this.getTag() + "\n" 
+				+ "\tModifier: " + this.getModifier() + "\n"
+				+ "\tType: " + this.getType() + "\n";
+
+		return sentenceString;
+	}
+	
 }
