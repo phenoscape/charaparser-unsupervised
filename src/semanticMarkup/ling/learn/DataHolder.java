@@ -1577,29 +1577,12 @@ public class DataHolder {
 	 * @return a list of tags
 	 */
 	public List<String> getCurrentTags() {
-		/**
-sub currenttags{
-	my ($id, $sent, $sth, $TAGS, $lead);
-  	$sth = $dbh->prepare("select tag from ".$prefix."_sentence where (tag != 'ignore' or isnull(tag)) group by tag order by count(sentid) desc");
-  	$sth->execute();
-  	$TAGS = "";
-  	while( my ($tag)=$sth->fetchrow_array()){
-    	$TAGS .= $tag."|" if ($tag=~/\w+/);
-  	}
-  	chop($TAGS);
-  	return $TAGS;
-}
-		 */
 		List<String> tags = new ArrayList<String>();
 		
 		for (int i=0;i<this.sentenceTable.size();i++) {
 			Sentence sentence = this.sentenceTable.get(i);
 			String tag = sentence.getTag();
-			if (
-					(!StringUtils.equals(tag, "ignore"))
-					||
-					(tag == null)
-					){
+			if ((!StringUtils.equals(tag, "ignore"))||(tag == null)){
 				tags.add(tag);
 			}
 		}

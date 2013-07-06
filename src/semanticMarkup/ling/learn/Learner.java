@@ -118,8 +118,8 @@ public class Learner {
 		myLogger.info("Bootstrapping rules:");
 		this.discover("normal");
 		
-		//myLogger.info("Additional bootstrappings:");
-		//this.additionalBootStrapping();
+		myLogger.info("Additional bootstrappings:");
+		this.additionalBootstrapping();
 		
 		myLogger.trace("Quite Learn");
 		return myDataHolder;
@@ -2316,6 +2316,7 @@ public class Learner {
 
 			// one lead word markup
 			List<String> tags = myDataHolder.getCurrentTags();
+			myLogger.trace(tags.toString());
 			int omReturn = oneLeadWordMarkup(tags);
 			myLogger.trace(String.format("oneLeadWordMarkup() returned %d",
 					omReturn));
@@ -2407,8 +2408,14 @@ public class Learner {
 				false);
 		Collections.sort(sentenceList, myComparator);
 		
+		myLogger.trace(sentenceList.size());
+		myLogger.trace(sentence2IDMap.size());
 		for (int id1=0;id1<sentenceList.size();id1++){
 			Sentence sentence = sentenceList.get(id1);
+			myLogger.trace(sentence.getSentence());
+			if (sentence.hashCode() == 1081943917) {
+			myLogger.trace(sentence.hashCode());
+			}
 			int thisID = sentence2IDMap.get(sentence);
 			
 			// if this sentence has been checked, pass
@@ -2456,9 +2463,8 @@ public class Learner {
 								
 				String ptn = this.getPOSptn(sharedHead);
 				String wnPOS = this.myUtility.getWordFormUtility().checkWN(sharedHead.get(sharedHead.size()-1), "pos");
-				
 				if ((StringUtility.createMatcher("[nsp]$", ptn).find())						
-						|| ((StringUtility.createMatcher("?$", ptn).find())								
+						|| ((StringUtility.createMatcher("\\?$", ptn).find())								
 								&& (StringUtility.createMatcher("n", wnPOS).find()))) 
 				{	
 					for (int id = 0; id < idList.size(); id++) {
@@ -2863,7 +2869,7 @@ public class Learner {
 	
 	public boolean tagSentence(int sentenceID, String tag) {
 		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.tagIt");
+		Logger myLogger = Logger.getLogger("learn.tagSentence");
 		myLogger.trace(String.format("Enter (%d, %s)", sentenceID, tag));
 		
 		// case 1

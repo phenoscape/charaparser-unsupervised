@@ -14,7 +14,7 @@ public class LearnerUtility {
 	
 	public boolean tagSentence(DataHolder myDataHolder, int sentenceID, String tag) {
 		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.tagIt");
+		Logger myLogger = Logger.getLogger("learn.discover.tagSentence");
 		myLogger.trace(String.format("Enter (%d, %s)", sentenceID, tag));
 		
 		// case 1
