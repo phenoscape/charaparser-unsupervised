@@ -862,14 +862,20 @@ public class LearnerTest {
 
     @Test
     public void testHasHead(){
-        assertEquals("wrapupMarkupGetPattern", false, 
+        assertEquals("hasHead - null", false, 
         		tester.hasHead(	null, 
         						Arrays.asList("passing through most".split(" "))));
-        assertEquals("wrapupMarkupGetPattern", false, 
+        assertEquals("hasHead - not has", false, 
         		tester.hasHead(	Arrays.asList("passing through".split(" ")), 
         						Arrays.asList("passing throug most".split(" "))));
-        assertEquals("wrapupMarkupGetPattern", true, 
+        assertEquals("hasHead - empty head", true, 
+        		tester.hasHead(	new ArrayList<String>(), 
+        						Arrays.asList("passing through most".split(" "))));
+        assertEquals("hasHead - has", true, 
         		tester.hasHead(	Arrays.asList("passing through".split(" ")), 
+        						Arrays.asList("passing through most".split(" "))));
+        assertEquals("hasHead - head same as list", true, 
+        		tester.hasHead(	Arrays.asList("passing through most".split(" ")), 
         						Arrays.asList("passing through most".split(" "))));
     }
     

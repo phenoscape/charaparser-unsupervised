@@ -1504,7 +1504,7 @@ public class DataHolder {
 //				myLogger.info("Tag: "+sentence.getTag());
 //				myLogger.info("Modifier: "+sentence.getModifier());
 //				myLogger.info("Type: "+sentence.getType());
-				myLogger.info("\n");
+//				myLogger.info("\n");
 			}
 		}
 		
