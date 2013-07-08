@@ -2441,6 +2441,9 @@ public class Learner {
 				String ptn = this.getPOSptn(sharedHead);
 				String wnPOS = this.myUtility.getWordFormUtility().checkWN(
 						sharedHead.get(sharedHead.size() - 1), "pos");
+				
+				myLogger.trace("ptn: " + ptn);
+				myLogger.trace("wnPOS: " + wnPOS);
 
 				if ((StringUtility.createMatcher("[nsp]$", ptn).find())
 						|| ((StringUtility.createMatcher("\\?$", ptn).find()) && (StringUtility
@@ -2475,19 +2478,28 @@ public class Learner {
 							String nmatch = StringUtility.joinList(" ", words2);
 
 							this.tagSentence(ID, nmatch);
+							myLogger.trace(String.format("tag (%d, %s)", ID, nmatch));
 							this.tagSentence(ID1, match);
+							myLogger.trace(String.format("tag (%d, %s)", ID1, match));
 
+							String updatedWord = words2.get(words2.size() - 1); 
 							int update1 = this.myDataHolder.updateDataHolder(
-									words2.get(words2.size() - 1), "n", "-", "wordpos", 1);
+									updatedWord, "n", "-", "wordpos", 1);
 							sign += update1;
+							myLogger.trace(String.format("update (%s)", updatedWord));
+							
 							if (!StringUtils.equals(nb, "")) {
 								int update2 = 
 										this.myDataHolder.updateDataHolder(nb, "b", "", "wordpos", 1);
 								sign += update2;
+								myLogger.trace(String.format("update (%s)", nb));
 							}
+							
+							updatedWord = words.get(words.size() - 1);
 							int update3 = this.myDataHolder.updateDataHolder(
 									words.get(words.size() - 1), "b", "", "wordpos", 1);
 							sign += update3;
+							myLogger.trace(String.format("update (%s)", updatedWord));
 						}
 						// case 2
 						else {
@@ -2892,8 +2904,7 @@ public class Learner {
 				} else {
 					;
 				}
-				Sentence sentence = myDataHolder.getSentenceHolder().get(
-						sentenceID);
+				Sentence sentence = myDataHolder.getSentence(sentenceID);
 				sentence.setTag(tag);
 				myLogger.debug(String.format(
 						"\t:mark up sentence #%d with tag %s", sentenceID, tag));

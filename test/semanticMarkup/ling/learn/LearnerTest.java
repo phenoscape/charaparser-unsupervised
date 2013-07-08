@@ -988,4 +988,26 @@ public class LearnerTest {
 		
 		assertEquals("getProperNouns", target, myTester.getProperNouns());
     }
+    
+    @Test
+    public void testWrapupMarkup() {
+    	Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester1 = new Learner(myConfiguration, myUtility);
+		
+		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(7, "src", "sent", "osent","sensory line not null","status","notnull","modifer","type"));
+		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(192, "src", "sent", "osent","sensory line ignore","status","ignore","modifer","type"));
+		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(193, "src", "sent", "osent","sensory line canal","status",null,"modifer","type"));
+		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(267, "src", "sent", "osent","sensory line canals","status",null,"modifer","type"));
+		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(269, "src", "sent", "osent","opening via tubular","status",null,"modifer","type"));
+		
+		myTester1.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"line", "s", "*", "1", "1", "", null}));
+		myTester1.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"canals", "p", "*", "1", "1", "", null}));
+		
+		myTester1.wrapupMarkup();
+		
+		assertEquals("wrapupmarkup - case 1 - tag sentence", "sensory line canal", myTester1.getDataHolder().getSentence(193).getTag());
+		assertEquals("wrapupmarkup - case 1 - tag sentence", "sensory line", myTester1.getDataHolder().getSentence(267).getTag());
+		
+    }
 }
