@@ -993,6 +993,8 @@ public class LearnerTest {
     public void testWrapupMarkup() {
     	Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
+		
+		// case 1
 		Learner myTester1 = new Learner(myConfiguration, myUtility);
 		
 		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(7, "src", "sent", "osent","sensory line not null","status","notnull","modifer","type"));
@@ -1009,5 +1011,19 @@ public class LearnerTest {
 		assertEquals("wrapupmarkup - case 1 - tag sentence", "sensory line canal", myTester1.getDataHolder().getSentence(193).getTag());
 		assertEquals("wrapupmarkup - case 1 - tag sentence", "sensory line", myTester1.getDataHolder().getSentence(267).getTag());
 		
+		// case 2
+		Learner myTester2 = new Learner(myConfiguration, myUtility);
+		
+		myTester2.getDataHolder().getSentenceHolder().add(new Sentence(115, "src", "sent", "osent","midsagittal fontanel absent","status",null,"modifer","type"));
+		myTester2.getDataHolder().getSentenceHolder().add(new Sentence(116, "src", "sent", "osent","midsagittal fontanel present","status",null,"modifer","type"));
+		
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"fontanel", "s", "*", "1", "1", "", null}));
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"absent", "b", "*", "1", "1", "", null}));
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"present", "b", "*", "1", "1", "", null}));
+		
+		myTester2.wrapupMarkup();
+		
+		assertEquals("wrapupmarkup - case 2 - tag sentence", "midsagittal fontanel", myTester2.getDataHolder().getSentence(115).getTag());
+		assertEquals("wrapupmarkup - case 2 - tag sentence", "midsagittal fontanel", myTester2.getDataHolder().getSentence(116).getTag());
     }
 }
