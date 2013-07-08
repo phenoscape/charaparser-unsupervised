@@ -136,6 +136,19 @@ public class DataHolder {
 		
 		myLogger.trace("Quite\n");
 	}
+	
+	public Sentence getSentence(int ID) {
+		Iterator<Sentence> iter = this.sentenceTable.iterator();
+		
+		while(iter.hasNext()) {
+			Sentence sentence = iter.next();
+			if (sentence.getID()==ID) {
+				return sentence;
+			}
+		}
+		
+		return null;
+	}
     
     public List<Entry<WordPOSKey,WordPOSValue>> getWordPOSEntries(String word) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
