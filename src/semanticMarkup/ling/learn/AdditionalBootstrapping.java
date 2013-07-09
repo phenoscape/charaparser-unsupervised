@@ -35,11 +35,11 @@ public class AdditionalBootstrapping implements LearningModule {
 			flag += cmReturn;
 
 			// one lead word markup
-			List<String> tags = myDataHolder.getCurrentTags();
-			int omReturn = oneLeadWordMarkup(myDataHolder, tags);
-			myLogger.trace(String.format("oneLeadWordMarkup() returned %d",
-					omReturn));
-			flag += omReturn;
+			//Set<String> tags = myDataHolder.getCurrentTags();
+			//int omReturn = oneLeadWordMarkup(myDataHolder, tags);
+			//myLogger.trace(String.format("oneLeadWordMarkup() returned %d",
+//					omReturn));
+//			flag += omReturn;
 
 			// doit markup
 			int dmReturn = myUtility.getLearnerUtility().doItMarkup(myDataHolder);

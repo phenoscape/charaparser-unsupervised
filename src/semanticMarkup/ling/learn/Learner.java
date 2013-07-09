@@ -2318,7 +2318,7 @@ public class Learner {
 			flag += cmReturn;
 
 			// one lead word markup
-			List<String> tags = myDataHolder.getCurrentTags();
+			Set<String> tags = myDataHolder.getCurrentTags();
 			myLogger.trace(tags.toString());
 			int omReturn = oneLeadWordMarkup(tags);
 			myLogger.trace(String.format("oneLeadWordMarkup() returned %d",
@@ -2342,26 +2342,30 @@ public class Learner {
 	 * among the tags passed in, and add the lead into word POS collections as a
 	 * noun
 	 * 
-	 * @param tagList
+	 * @param tags
+	 *            a set of all tags in the tagged sentences in the sentence
+	 *            collection
 	 * @return the numbet of updates made
 	 */
-	public int oneLeadWordMarkup(List<String> tagList) {
+	public int oneLeadWordMarkup(Set<String> tags) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger
 				.getLogger("learn.additionalBootStrapping.oneLeadWordMarkup");
-		String tags = StringUtility.joinList("|", tagList);
+		//String tags = StringUtility.joinList("|", tags);
 		int sign = 0;
 		myLogger.trace(String.format("Enter (%s)", tags));
 
-		for (int i = 0; i < myDataHolder.getSentenceHolder().size(); i++) {
-			Sentence sentence = myDataHolder.getSentenceHolder().get(i);
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder().iterator();
+
+		while (iter.hasNext()) {
+			Sentence sentence = iter.next();
+			int ID = sentence.getID();
 			String tag = sentence.getTag();
 			String lead = sentence.getLead();
 
-			if ((tag == null) && (lead.matches("% %"))) {
-				if (StringUtility.createMatcher(
-						String.format("\\b%s\\|", lead), tags).find()) {
-					this.tagSentence(i, lead);
+			if ((tag == null) && (!(StringUtility.createMatcher(".* .*", lead).find()))) {
+				if (tags.contains(lead)) {
+					this.tagSentence(ID, lead);
 					myLogger.trace(String.format(
 							"updateDataHolder(%s, n, -, wordpos, 1)", lead));
 					sign += myDataHolder.updateDataHolder(lead, "n", "-",
@@ -2796,21 +2800,10 @@ public class Learner {
     		Entry<WordPOSKey, WordPOSValue> entry = iter.next();
     		String word = entry.getKey().getWord();
     		String POS = entry.getKey().getPOS();
-    		/**
-		if($word =~/^[-\(\)\[\]\{\}\.\|\+\*\?]$/){
-			$b1 .= "\\".$word."|"; #b1 includes punct marks, not need for \b when matching
-		}elsif($word !~/\w/ && $word ne "/"){
-			$b1 .= $word."|" if $word=~/^[a-zA-Z0-9_-]+$/;
-		}else{
-			$b .= $word."|" if $word=~/^[a-zA-Z0-9_-]+$/;
-		}
-    		 */
 
 			if (word != null && POS != null) {
 				if (StringUtils.equals(POS, "b")) {
 					String pattern = "^[-\\\\\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]$";
-					// String pattern =
-					// "^[-\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]$";
 					if (StringUtility.createMatcher(pattern, word).find()) {
 						bMarks.add(word);
 					} else if ((!(StringUtility.createMatcher("\\w", word)

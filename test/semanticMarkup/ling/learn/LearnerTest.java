@@ -1026,4 +1026,22 @@ public class LearnerTest {
 		assertEquals("wrapupmarkup - case 2 - tag sentence", "midsagittal fontanel", myTester2.getDataHolder().getSentence(115).getTag());
 		assertEquals("wrapupmarkup - case 2 - tag sentence", "midsagittal fontanel", myTester2.getDataHolder().getSentence(116).getTag());
     }
+    
+    @Test
+    public void testOneLeadMarkup(){
+    	Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(0, "src", "sent", "osent","lead1 lead2","status","tag tag","modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(1, "src", "sent", "osent","midsagittal fontanel present","status",null,"modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(2, "src", "sent", "osent","midsagittal fontanel present","status","tag1","modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(3, "src", "sent", "osent","tagx","status",null,"modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(4, "src", "sent", "osent","tagx tagx","status",null,"modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(5, "src", "sent", "osent","midsagittal fontanel present","status","tagx","modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(6, "src", "sent", "osent","midsagittal fontanel","status","tag2","modifer","type"));
+		
+		assertEquals("oneLeadMarkup", "tagx", myTester.getDataHolder().getSentence(3).getTag());
+		
+    }
 }

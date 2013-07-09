@@ -1592,17 +1592,17 @@ public class DataHolder {
 	}
 
 	/**
-	 * Get a list of all tags which is not "ignore" or is null.
+	 * Get a list of all tags which is not "ignore".
 	 * 
-	 * @return a list of tags
+	 * @return a set of tags
 	 */
-	public List<String> getCurrentTags() {
-		List<String> tags = new ArrayList<String>();
+	public Set<String> getCurrentTags() {
+		Set<String> tags = new HashSet<String>();
 		
 		for (int i=0;i<this.sentenceTable.size();i++) {
 			Sentence sentence = this.sentenceTable.get(i);
 			String tag = sentence.getTag();
-			if ((!StringUtils.equals(tag, "ignore"))||(tag == null)){
+			if ((!StringUtils.equals(tag, "ignore"))){
 				tags.add(tag);
 			}
 		}
