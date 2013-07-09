@@ -853,10 +853,24 @@ public class LearnerTest {
 		Utility myUtility = new Utility(myConfiguration);
 		Learner myTester = new Learner(myConfiguration, myUtility);
 		
-		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent nor", "osent","lead","status",null,"m","type"}));
-		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent and", "osent","lead","status","","m","type"}));
-		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","unknown","m","type"}));
-		assertEquals("doItMarkup - case 1", 0, myTester.doItMarkup());
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {
+				"src", "sent nor", "osent","lead","status",null,"m","type"}));
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {
+				"src", "sent and", "osent","lead","status","","m","type"}));
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {
+				"src", "sent", "osent","lead","status","unknown","m","type"}));
+//		assertEquals("doItMarkup - case 1", 0, myTester.doItMarkup());
+		
+		assertEquals("doItMarkup - Helper - true", true, myTester.doItMarkupHelper(null));
+		assertEquals("doItMarkup - Helper - true", true, myTester.doItMarkupHelper(""));
+		assertEquals("doItMarkup - Helper - true", true, myTester.doItMarkupHelper("unknown"));
+		assertEquals("doItMarkup - Helper - false", false, myTester.doItMarkupHelper("abc"));
+		
+		assertEquals("doItMarkup - case 1 - true", true, myTester.doItMarkupCase1Helper("postcleithra 2 and 3 fused into a single ossification"));
+		assertEquals("doItMarkup - case 1 - false", false, myTester.doItMarkupCase1Helper("postcleithra 2  3 fused into a single ossification"));
+		
+		assertEquals("doItMarkup - case 2 - true", true, myTester.doItMarkupCase2Helper("ossified as autogenous units"));
+		assertEquals("doItMarkup - case 2 - false", false, myTester.doItMarkupCase2Helper("ossified autogenous units"));
 		
 	}
 
@@ -1041,7 +1055,8 @@ public class LearnerTest {
 		myTester.getDataHolder().getSentenceHolder().add(new Sentence(5, "src", "sent", "osent","midsagittal fontanel present","status","tagx","modifer","type"));
 		myTester.getDataHolder().getSentenceHolder().add(new Sentence(6, "src", "sent", "osent","midsagittal fontanel","status","tag2","modifer","type"));
 		
-		assertEquals("oneLeadMarkup", "tagx", myTester.getDataHolder().getSentence(3).getTag());
-		
+		myTester.oneLeadWordMarkup(myTester.getDataHolder().getCurrentTags());
+		assertEquals("oneLeadMarkup", "tagx", myTester.getDataHolder().getSentence(3).getTag());		
     }
+
 }

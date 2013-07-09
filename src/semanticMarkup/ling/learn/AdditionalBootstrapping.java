@@ -42,9 +42,9 @@ public class AdditionalBootstrapping implements LearningModule {
 //			flag += omReturn;
 
 			// doit markup
-			int dmReturn = myUtility.getLearnerUtility().doItMarkup(myDataHolder);
-			myLogger.trace(String.format("doItMarkup() returned %d", dmReturn));
-			flag += dmReturn;
+//			int dmReturn = myUtility.getLearnerUtility().doItMarkup(myDataHolder);
+//			myLogger.trace(String.format("doItMarkup() returned %d", dmReturn));
+//			flag += dmReturn;
 
 			myLogger.trace(String.format("Quite this iteration with flag = %d",
 					flag));

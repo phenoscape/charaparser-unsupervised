@@ -1915,7 +1915,7 @@ public class Learner {
 				tag = tagAndNew.getString();
 				numNew = tagAndNew.getInt();
 				
-				this.myUtility.getLearnerUtility().tagSentence(this.myDataHolder, sentID, tag);				
+				this.tagSentence(sentID, tag);				
 				sign = sign + numNew;
 			}
 		}
@@ -2586,43 +2586,65 @@ public class Learner {
 		myLogger.trace("Enter");
 
 		int sign = 0;		
-		for (int i=0;i<myDataHolder.getSentenceHolder().size();i++) {
-			myDataHolder.getSentenceHolder().get(i);
-			String tag = myDataHolder.getSentenceHolder().get(i).getTag();
-			if ((tag == null) 
-					|| (StringUtils.equals(tag, ""))
-					|| (StringUtils.equals(tag, "unknown"))) {
-				int sentenceID = i;
-				String lead = myDataHolder.getSentenceHolder().get(i).getLead();
-				String sentence = myDataHolder.getSentenceHolder().get(i)
-						.getSentence();
+//		for (int i=0;i<myDataHolder.getSentenceHolder().size();i++) {			
+		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder().iterator();
+		while(iter.hasNext()) {
+			Sentence sentenceObject = iter.next();
+			String tag = sentenceObject.getTag();
+			if (doItMarkupHelper(tag)) {
+				int ID = sentenceObject.getID();
+				String lead = sentenceObject.getLead();
+				String sentence = sentenceObject.getSentence();
 				
                 // case 1
-				if (StringUtility.createMatcher("^.{0,40} (nor|or|and|\\/)", sentence).find()) {
-                    myLogger.trace(String.format("sent #%d: case 1", i));
+				if (doItMarkupCase1Helper(sentence)) {
+                    myLogger.trace(String.format("sent #%d: case 1", ID));
 					continue;
 				}
 				
                 // case 2
-				if (StringUtility.createMatcher("\\b("+Constant.STOP+")\\b", lead).find()) {
-					myLogger.trace(String.format("sent #%d: case 2", i));
+				if (doItMarkupCase2Helper(lead)) {
+					myLogger.trace(String.format("sent #%d: case 2", ID));
 					continue;
 				}
 				
-				StringAndInt tagAndSign = doIt(sentenceID);
+				StringAndInt tagAndSign = doIt(ID);
 				String doItTag = tagAndSign.getString();
-				int doItID = tagAndSign.getInt();
+				int doItSign = tagAndSign.getInt();
+				sign = doItSign;
                 
                 // case 3
-				if (StringUtility.createMatcher("\\w", tag).find()) {
-					myLogger.trace(String.format("sent #%d: case 3", i));
-					this.myUtility.getLearnerUtility().tagSentence(myDataHolder, doItID, doItTag);
+				if (StringUtility.createMatcher("\\w", doItTag).find()) {
+					myLogger.trace(String.format("sent #%d: case 3", ID));
+					this.tagSentence(ID, doItTag);
 				}
 			}
 		}
 		
 		myLogger.trace("Return: "+sign);
-		return 0;
+		return sign;
+	}
+	
+	public boolean doItMarkupHelper(String tag){
+		boolean flag = false;
+		flag = (tag == null) 
+				|| (StringUtils.equals(tag, ""))
+				|| (StringUtils.equals(tag, "unknown"));
+		
+		return flag;
+	}
+	
+	public boolean doItMarkupCase1Helper(String sentence) {
+		boolean flag = false;
+		flag = StringUtility.createMatcher("^.{0,40} (nor|or|and|\\/)", sentence).find();
+		return flag;
+	}
+	
+	public boolean doItMarkupCase2Helper(String lead) {
+		boolean flag = false;
+		flag = StringUtility.createMatcher("\\b("+Constant.STOP+")\\b", lead).find();
+		
+		return flag;
 	}
 	
 	public void unknownWordBootstrapping() {
