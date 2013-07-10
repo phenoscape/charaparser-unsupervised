@@ -21,7 +21,12 @@ Java implementation of unsupervised CharaParser code
         lepidotrichia of
     are kept.
     
-* Get All Unique Words
+* Get Unique Words
+Get all unique words in the treatments, and insert them into the unknown word collection.
+
+Since this is the first stage of the learning, all the words are "unknown" now, so mark all of them as "unknown".
+
+For any word which does not contain a word character, or ends with "ous", take is as a boundary word, and insert it into the word-POS collection.
 
 
 
