@@ -1,9 +1,10 @@
 package semanticMarkup.ling.learn;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class Sentence {
-	
+	private int ID;
 	private String source;
 	private String sentence;
 	private String originalSentence;
@@ -13,8 +14,9 @@ public class Sentence {
 	private String modifier;
 	private String type;
 
-	public Sentence(String source, String sentence, String originalSentence, String lead, String status, String tag, String modifier, String type) {
+	public Sentence(int id, String source, String sentence, String originalSentence, String lead, String status, String tag, String modifier, String type) {
 		// TODO Auto-generated constructor stub
+		this.ID = id;
 		this.source=source;
 		this.sentence=sentence;
 		this.originalSentence=originalSentence;
@@ -23,6 +25,10 @@ public class Sentence {
 		this.tag=tag;
 		this.modifier=modifier;
 		this.type=type;
+	}
+	
+	public int getID() {
+		return this.ID;
 	}
 	
 	public String getSource() {
@@ -101,7 +107,8 @@ public class Sentence {
 		
 		Sentence mySentence = (Sentence) obj;
 		
-		return ((StringUtils.equals(this.source, mySentence.source))
+		return ((this.ID == mySentence.ID)
+				&&(StringUtils.equals(this.source, mySentence.source))
 				&&(StringUtils.equals(this.sentence, mySentence.sentence))
 				&&(StringUtils.equals(this.originalSentence, mySentence.originalSentence))
 				&&(StringUtils.equals(this.lead, mySentence.lead))
@@ -110,6 +117,37 @@ public class Sentence {
 				&&(StringUtils.equals(this.modifier, mySentence.modifier))
 				&&(StringUtils.equals(this.type, mySentence.type))
 				);
+	}
+	
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder(13, 37)
+		.append(this.ID)
+		.append(this.source)
+		.append(this.sentence)
+		.append(this.originalSentence)
+		.append(this.lead)
+		.append(this.status)
+		.append(this.tag)
+		.append(this.modifier)
+		.append(this.type)
+		.toHashCode();
+	}
+	
+	@Override
+	public String toString() {
+		String sentenceString = "\n"
+				+ "Sentence ID: " + this.getID() + "\n"
+				+ "\tSource: " + this.getSource() + "\n"
+				+ "\tSentence: " + this.getSentence() + "\n" 
+				+ "\tOriginal Sentence: " + this.getSentence() + "\n"
+				+ "\tLead: " + this.getLead() + "\n"
+				+ "\tStatus: " + this.getStatus() + "\n" 
+				+ "\tTag: " + this.getTag() + "\n" 
+				+ "\tModifier: " + this.getModifier() + "\n"
+				+ "\tType: " + this.getType() + "\n";
+
+		return sentenceString;
 	}
 	
 }

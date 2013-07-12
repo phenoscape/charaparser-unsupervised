@@ -45,7 +45,7 @@ public class LearnerTest {
 		myHeuristicNounTable.put("word1", "type1");
 
 		List<Sentence> mySentenceTable = results.getSentenceHolder();
-		mySentenceTable.add(new Sentence("source1", "sentence1",
+		mySentenceTable.add(new Sentence(0, "source1", "sentence1",
 				"originalSentence", "lead1", "status1", "tag1", "modifier1",
 				"type1"));
 
@@ -155,11 +155,27 @@ public class LearnerTest {
 
 
 
-//	@Test
-//	public void testDiscount() {
-//		fail("Not yet implemented");
-//	}
+	@Test
+	public void testDiscountPOS() {
+		// case "all"
+		// see doItCaseHandle case 2
+	}
+	
+	@Test
+	public void testResolveConfict() {
+		// see doItCaseHandle case 2
+	}
 
+	@Test
+	public void testChangePOS(){
+		// see doItCaseHandle case 2
+	}
+	
+	@Test
+	public void testUpdatePOS(){
+		// see doItCaseHandle case 2
+	}
+	
 //	@Test
 //	public void testGetParentSentenceTag() {
 //		fail("Not yet implemented");
@@ -522,7 +538,7 @@ public class LearnerTest {
 		myTester.markupByPattern();
 		
 		List<Sentence> targetSentenceHolder = new LinkedList<Sentence>();
-		targetSentenceHolder.add(new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1"));
+		targetSentenceHolder.add(new Sentence(0, "source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1"));
 		
 		assertEquals("markupByPattern", targetSentenceHolder, myTester.getDataHolder().getSentenceHolder());
 	}
@@ -530,44 +546,44 @@ public class LearnerTest {
 	@Test
 	public void testMarkupByPatternHelper(){
 		// case 1
-		Sentence mySentence1 = new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "tag1", "modifier1", "type1");
-		Sentence target1 = new Sentence("source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1");
+		Sentence mySentence1 = new Sentence(0, "source1", "sentence1", "x=word word word", "lead1", "status1", "tag1", "modifier1", "type1");
+		Sentence target1 = new Sentence(0, "source1", "sentence1", "x=word word word", "lead1", "status1", "chromosome", "", "type1");
 		tester.markupByPatternHelper(mySentence1);
 		assertEquals("markupByPatternHelper - case 1", target1,mySentence1);
 		
 		// case 2
-		Sentence mySentence2 = new Sentence("source2", "sentence2", "2n=abc...", "lead2", "status2", "tag2", "modifier2", null);
-		Sentence target2 = new Sentence("source2", "sentence2", "2n=abc...", "lead2", "status2", "chromosome", "", null);
+		Sentence mySentence2 = new Sentence(1, "source2", "sentence2", "2n=abc...", "lead2", "status2", "tag2", "modifier2", null);
+		Sentence target2 = new Sentence(1, "source2", "sentence2", "2n=abc...", "lead2", "status2", "chromosome", "", null);
 		tester.markupByPatternHelper(mySentence2);
 		assertEquals("markupByPatternHelper - case 2", target2,mySentence2);
 		
 		// case 3
-		Sentence mySentence3 = new Sentence("source", "sentence", "x word word", "lead", "status", "tag", "modifier", null);
-		Sentence target3 = new Sentence("source", "sentence", "x word word", "lead", "status", "chromosome", "", null);
+		Sentence mySentence3 = new Sentence(2, "source", "sentence", "x word word", "lead", "status", "tag", "modifier", null);
+		Sentence target3 = new Sentence(2, "source", "sentence", "x word word", "lead", "status", "chromosome", "", null);
 		tester.markupByPatternHelper(mySentence3);
 		assertEquals("markupByPatternHelper - case 3", target3, mySentence3);
 		
 		// case 4
-		Sentence mySentence4 = new Sentence("source", "sentence", "2n word word", "lead",null, "tag", "modifier", null);
-		Sentence target4 = new Sentence("source", "sentence", "2n word word", "lead", null, "chromosome", "", null);
+		Sentence mySentence4 = new Sentence(3, "source", "sentence", "2n word word", "lead",null, "tag", "modifier", null);
+		Sentence target4 = new Sentence(3, "source", "sentence", "2n word word", "lead", null, "chromosome", "", null);
 		tester.markupByPatternHelper(mySentence4);
 		assertEquals("markupByPatternHelper - case 4", target4, mySentence4);
 		
 		// case 5
-		Sentence mySentence5 = new Sentence("source", "sentence", "2 nword word", "lead", "status", "tag", "modifier", "");
-		Sentence target5 = new Sentence("source", "sentence", "2 nword word", "lead", "status", "chromosome", "", "");
+		Sentence mySentence5 = new Sentence(4, "source", "sentence", "2 nword word", "lead", "status", "tag", "modifier", "");
+		Sentence target5 = new Sentence(4, "source", "sentence", "2 nword word", "lead", "status", "chromosome", "", "");
 		tester.markupByPatternHelper(mySentence5);
 		assertEquals("markupByPatternHelper - case 5", target5, mySentence5);
 		
 		// case 6
-		Sentence mySentence6 = new Sentence("source", "sentence", "fl. word word", "lead", "status", null, null, "");
-		Sentence target6 = new Sentence("source", "sentence", "fl. word word", "lead", "status", "flowerTime", "", "");
+		Sentence mySentence6 = new Sentence(5, "source", "sentence", "fl. word word", "lead", "status", null, null, "");
+		Sentence target6 = new Sentence(5, "source", "sentence", "fl. word word", "lead", "status", "flowerTime", "", "");
 		tester.markupByPatternHelper(mySentence6);
 		assertEquals("markupByPatternHelper - case 6", target6, mySentence6);
 		
 		// case 7
-		Sentence mySentence7 = new Sentence("source", "sentence", "fr.word word", "lead", "status", null, "", "");
-		Sentence target7 = new Sentence("source", "sentence", "fr.word word", "lead", "status", "fruitTime", "", "");
+		Sentence mySentence7 = new Sentence(6, "source", "sentence", "fr.word word", "lead", "status", null, "", "");
+		Sentence target7 = new Sentence(6, "source", "sentence", "fr.word word", "lead", "status", "fruitTime", "", "");
 		tester.markupByPatternHelper(mySentence7);
 		assertEquals("markupByPatternHelper - case 7", target7, mySentence7);
 	}
@@ -583,7 +599,7 @@ public class LearnerTest {
 		myTester.markupIgnore();
 		
 		List<Sentence> targetSentenceHolder = new LinkedList<Sentence>();
-		targetSentenceHolder.add(new Sentence("source1", "sentence1", "IGNOREPTN", "lead1", "status1", "ignore", "", "type1"));
+		targetSentenceHolder.add(new Sentence(0, "source1", "sentence1", "IGNOREPTN", "lead1", "status1", "ignore", "", "type1"));
 		
 		assertEquals("markupIgnore", targetSentenceHolder, myTester.getDataHolder().getSentenceHolder());
 
@@ -591,13 +607,13 @@ public class LearnerTest {
 
 	@Test
 	public void testMarkupIgnoreHelper() {
-		Sentence mySentence1 = new Sentence("source", "sentence", "IGNOREPTN", "lead", "status", null, "", "");
-		Sentence target1 = new Sentence("source", "sentence", "IGNOREPTN", "lead", "status", "ignore", "", "");
+		Sentence mySentence1 = new Sentence(0, "source", "sentence", "IGNOREPTN", "lead", "status", null, "", "");
+		Sentence target1 = new Sentence(0, "source", "sentence", "IGNOREPTN", "lead", "status", "ignore", "", "");
 		tester.markupIgnoreHelper(mySentence1);
 		assertEquals("markupIgnoreHelper", target1, mySentence1);
 		
-		Sentence mySentence2 = new Sentence("source", "sentence", " IGNOREPTN", "lead", "status", null, "", "");
-		Sentence target2 = new Sentence("source", "sentence", " IGNOREPTN", "lead", "status", "ignore", "", "");
+		Sentence mySentence2 = new Sentence(1, "source", "sentence", " IGNOREPTN", "lead", "status", null, "", "");
+		Sentence target2 = new Sentence(1, "source", "sentence", " IGNOREPTN", "lead", "status", "ignore", "", "");
 		tester.markupIgnoreHelper(mySentence2);
 		assertEquals("markupIgnoreHelper", target2, mySentence2);
 	}
@@ -716,6 +732,26 @@ public class LearnerTest {
 				Arrays.asList(new String[] {"submandibulars", "p", "", "0", "0", null, null}));
 		
 		assertEquals("CaseHandle - case 1", new StringAndInt("submandibulars",0), myTester1.doItCaseHandle("submandibulars", "submandibulars"));
+		
+		// case 2
+		Learner myTester2 = new Learner(myConfiguration, myUtility);
+		myTester2.getDataHolder().add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"src", 
+						"<N>stems</N> <B>usually</B> erect , sometimes prostrate to ascending <B>(</B> underground <N>stems</N> sometimes woody <O>caudices</O> or rhizomes , sometimes fleshy <B>)</B> . ", 
+						"Stems usually erect, sometimes prostrate to ascending (underground stems sometimes woody caudices or rhizomes, sometimes fleshy ).",
+						"lead","status",null,"m","type"}));
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"stems", "p", "", "0", "0", null, null}));
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"stem", "s", "", "0", "0", null, null}));		
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"usually", "s", "", "0", "0", null, null}));
+		String sentence = 
+				"stems usually erect , sometimes prostrate to ascending ( underground stems sometimes woody caudices or rhizomes , sometimes fleshy ) .";
+		String lead = "stems usually erect";
+		assertEquals("CaseHandle - case 2", new StringAndInt("stems",1), myTester2.doItCaseHandle(sentence, lead));
+		assertEquals("CaseHandle - case 2, updatePOS - case 2.1, resolveConfict, changePOS - case 2", true, myTester2.getDataHolder().getWordPOSHolder().containsKey(new WordPOSKey("usually", "b")));
+		assertEquals("CaseHandle - case 2, discountPOS - all", false, myTester2.getDataHolder().getWordPOSHolder().containsKey(new WordPOSKey("usually", "s")));
         
         // case 3.2
 		// This also tests method markKnown() - case 1.1
@@ -829,22 +865,234 @@ public class LearnerTest {
 	}
 	
 	@Test
-	public void testTagIt() {
+	public void testTagSentence() {		
 		Configuration myConfiguration = new Configuration();
 		myConfiguration.setMaxTagLength(10);
 		Utility myUtility = new Utility(myConfiguration);
 		Learner myTester = new Learner(myConfiguration, myUtility);
 		
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag","m","type"}));
+
+		assertEquals("tagIt - case 1", false, myTester.tagSentence(0, ""));
+		assertEquals("tagIt - case 2", false, myTester.tagSentence(0, "page"));
+		assertEquals("tagIt - case 3", true, myTester.tagSentence(0, "teeth"));
+		assertEquals("tagIt - max tag length", "teeth", myTester.getDataHolder().getSentenceHolder().get(0).getTag());
 		
-		assertEquals("tagIt - case 1", false, myTester.tagIt(0, ""));
-		assertEquals("tagIt - case 2", false, myTester.tagIt(0, "page"));
-		assertEquals("tagIt - case 3", true, myTester.tagIt(0, "teeth"));
-		myTester.tagIt(0, "abcdefghijkl");
+		assertEquals("tagIt - case 3", true, myTester.tagSentence(0, "abcdefghijkl"));
+		//myTester.tagSentence(0, "abcdefghijkl");
 		assertEquals("tagIt - max tag length", "abcdefghij", myTester.getDataHolder().getSentenceHolder().get(0).getTag());
 	}
 	
-	
-	
-	
+	@Test
+	public void testDoItMarkup() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {
+				"src", "sent nor", "osent","lead","status",null,"m","type"}));
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {
+				"src", "sent and", "osent","lead","status","","m","type"}));
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {
+				"src", "sent", "osent","lead","status","unknown","m","type"}));
+//		assertEquals("doItMarkup - case 1", 0, myTester.doItMarkup());
+		
+		assertEquals("doItMarkup - Helper - true", true, myTester.doItMarkupHelper(null));
+		assertEquals("doItMarkup - Helper - true", true, myTester.doItMarkupHelper(""));
+		assertEquals("doItMarkup - Helper - true", true, myTester.doItMarkupHelper("unknown"));
+		assertEquals("doItMarkup - Helper - false", false, myTester.doItMarkupHelper("abc"));
+		
+		assertEquals("doItMarkup - case 1 - true", true, myTester.doItMarkupCase1Helper("postcleithra 2 and 3 fused into a single ossification"));
+		assertEquals("doItMarkup - case 1 - false", false, myTester.doItMarkupCase1Helper("postcleithra 2  3 fused into a single ossification"));
+		
+		assertEquals("doItMarkup - case 2 - true", true, myTester.doItMarkupCase2Helper("ossified as autogenous units"));
+		assertEquals("doItMarkup - case 2 - false", false, myTester.doItMarkupCase2Helper("ossified autogenous units"));
+		
+	}
+
+    @Test
+    public void testHasHead(){
+        assertEquals("hasHead - null", false, 
+        		tester.hasHead(	null, 
+        						Arrays.asList("passing through most".split(" "))));
+        assertEquals("hasHead - not has", false, 
+        		tester.hasHead(	Arrays.asList("passing through".split(" ")), 
+        						Arrays.asList("passing throug most".split(" "))));
+        assertEquals("hasHead - empty head", true, 
+        		tester.hasHead(	new ArrayList<String>(), 
+        						Arrays.asList("passing through most".split(" "))));
+        assertEquals("hasHead - has", true, 
+        		tester.hasHead(	Arrays.asList("passing through".split(" ")), 
+        						Arrays.asList("passing through most".split(" "))));
+        assertEquals("hasHead - head same as list", true, 
+        		tester.hasHead(	Arrays.asList("passing through most".split(" ")), 
+        						Arrays.asList("passing through most".split(" "))));
+    }
+    
+    @Test
+    public void testGetPSWord(){
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+    	myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"acrodin", "s", "role", "0", "0", null, null}));
+    	myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"areas", "p", "role", "0", "0", null, null}));
+    	myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"(", "p", "role", "0", "0", null, null}));
+    	
+    	
+    	Set<String> target = new HashSet<String>();
+    	target.add("acrodin");
+    	target.add("areas");
+    	
+    	assertEquals("getPSWords", target, myTester.getPSWords());
+    }
+    
+    @Test
+    public void testGetO() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","ignore","m","type"}));
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status",null,"m","type"}));
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","taga tagb","m","type"}));
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","taga[tagb]","m","type"}));
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag1","m","type"}));
+    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag2","m","type"}));
+    	
+    	Set<String> target = new HashSet<String>();
+    	target.add("tag1");
+    	target.add("tag2");
+    	
+    	assertEquals("getOs", target, myTester.getOs());
+    }
+    
+    @Test
+    public void testGetModifiers(){
+    	Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"basal", "1", "false"}));
+		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"endoskeletal", "1", "false"}));
+		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"\\", "1", "false"}));
+		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {null, "1", "false"}));
+    	
+    	Set<String> target = new HashSet<String>();
+    	target.add("basal");
+    	target.add("endoskeletal");
+    	
+    	assertEquals("getModifiers", target, myTester.getModifiers());
+    }
+    
+    @Test
+    public void testGetBoundaries(){
+    	Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"\\", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {")", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"[", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"}", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {".", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"|", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"+", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"*", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"?", "b", "role", "0", "0", null, null}));
+		
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {",", "b", "role", "0", "0", null, null}));
+		
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"about", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"along", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"acrodin", "s", "role", "0", "0", null, null}));
+		
+		Set<String> targetWords = new HashSet<String>();
+		targetWords.addAll(Arrays.asList("about along".split(" ")));
+		
+		Set<String> targetMarks = new HashSet<String>();
+		targetMarks.addAll(Arrays.asList(") \\ [ } . | * + ?".split(" ")));
+		
+		List<Set<String>> target = new LinkedList<Set<String>>();
+		target.add(targetWords);
+		target.add(targetMarks);
+		
+		assertEquals("getBoundaries", target, myTester.getBoundaries());
+    }
+    
+    @Test
+    public void testGetProperNouns(){
+    	Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"propernoun1", "z", "*", "0", "0", "", null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"acrodin", "s", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"propernoun2", "z", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"(", "z", "role", "0", "0", null, null}));
+		
+		
+		Set<String> target = new HashSet<String>();
+		target.add("propernoun1");
+		target.add("propernoun2");
+		
+		assertEquals("getProperNouns", target, myTester.getProperNouns());
+    }
+    
+    @Test
+    public void testWrapupMarkup() {
+    	Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		
+		// case 1
+		Learner myTester1 = new Learner(myConfiguration, myUtility);
+		
+		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(7, "src", "sent", "osent","sensory line not null","status","notnull","modifer","type"));
+		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(192, "src", "sent", "osent","sensory line ignore","status","ignore","modifer","type"));
+		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(193, "src", "sent", "osent","sensory line canal","status",null,"modifer","type"));
+		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(267, "src", "sent", "osent","sensory line canals","status",null,"modifer","type"));
+		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(269, "src", "sent", "osent","opening via tubular","status",null,"modifer","type"));
+		
+		myTester1.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"line", "s", "*", "1", "1", "", null}));
+		myTester1.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"canals", "p", "*", "1", "1", "", null}));
+		
+		myTester1.wrapupMarkup();
+		
+		assertEquals("wrapupmarkup - case 1 - tag sentence", "sensory line canal", myTester1.getDataHolder().getSentence(193).getTag());
+		assertEquals("wrapupmarkup - case 1 - tag sentence", "sensory line", myTester1.getDataHolder().getSentence(267).getTag());
+		
+		// case 2
+		Learner myTester2 = new Learner(myConfiguration, myUtility);
+		
+		myTester2.getDataHolder().getSentenceHolder().add(new Sentence(115, "src", "sent", "osent","midsagittal fontanel absent","status",null,"modifer","type"));
+		myTester2.getDataHolder().getSentenceHolder().add(new Sentence(116, "src", "sent", "osent","midsagittal fontanel present","status",null,"modifer","type"));
+		
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"fontanel", "s", "*", "1", "1", "", null}));
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"absent", "b", "*", "1", "1", "", null}));
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"present", "b", "*", "1", "1", "", null}));
+		
+		myTester2.wrapupMarkup();
+		
+		assertEquals("wrapupmarkup - case 2 - tag sentence", "midsagittal fontanel", myTester2.getDataHolder().getSentence(115).getTag());
+		assertEquals("wrapupmarkup - case 2 - tag sentence", "midsagittal fontanel", myTester2.getDataHolder().getSentence(116).getTag());
+    }
+    
+    @Test
+    public void testOneLeadMarkup(){
+    	Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(0, "src", "sent", "osent","lead1 lead2","status","tag tag","modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(1, "src", "sent", "osent","midsagittal fontanel present","status",null,"modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(2, "src", "sent", "osent","midsagittal fontanel present","status","tag1","modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(3, "src", "sent", "osent","tagx","status",null,"modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(4, "src", "sent", "osent","tagx tagx","status",null,"modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(5, "src", "sent", "osent","midsagittal fontanel present","status","tagx","modifer","type"));
+		myTester.getDataHolder().getSentenceHolder().add(new Sentence(6, "src", "sent", "osent","midsagittal fontanel","status","tag2","modifer","type"));
+		
+		myTester.oneLeadWordMarkup(myTester.getDataHolder().getCurrentTags());
+		assertEquals("oneLeadMarkup", "tagx", myTester.getDataHolder().getSentence(3).getTag());		
+    }
+
 }

@@ -24,35 +24,37 @@ public class DataHolder {
 	
 	// Data holders
 	// Table heuristicnoun
-	private Map<String, String> heuristicNounTable = new HashMap<String, String>();
+	private Map<String, String> heuristicNounTable;
 	public static final byte HEURISTICNOUN = 1;
 
 	// Table discounted
-	private Map<DiscountedKey, String> discountedTable = new HashMap<DiscountedKey, String>();
+	private Map<DiscountedKey, String> discountedTable;
 	public static final byte DISCOUNTED = 2;
 	
 	// Table isATable
-	private Map<Integer, IsAValue> isATable = new HashMap<Integer, IsAValue>();
+	private Map<Integer, IsAValue> isATable;
 	public static final byte ISA = 3;
 	
 	// Table modifier
-	private Map<String, ModifierTableValue> modifierTable = new HashMap<String, ModifierTableValue>();
+	private Map<String, ModifierTableValue> modifierTable;
 	public static final byte MODIFIER = 4;
 	
 	// Table sentence
 	private List<Sentence> sentenceTable = new LinkedList<Sentence>();
+	private int sentenceCount;
+	//private Map<Integer, Sentence> sentenceCollection;
 	public static final byte SENTENCE = 5;
 
 	// Table singularPlural
-	private Set<SingularPluralPair> singularPluralTable = new HashSet<SingularPluralPair>();
+	private Set<SingularPluralPair> singularPluralTable;
 	public static final byte SINGULAR_PLURAL = 6;
 
 	// Table unknownword
-	private Map<String, String> unknownWordTable = new HashMap<String, String>();
+	private Map<String, String> unknownWordTable;
 	public static final byte UNKNOWNWORD = 7;
 
 	// Table wordpos
-	private Map<WordPOSKey, WordPOSValue> wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
+	private Map<WordPOSKey, WordPOSValue> wordPOSTable;
 	public static final byte WORDPOS = 8;
 
 	private Configuration myConfiguratio;
@@ -64,6 +66,8 @@ public class DataHolder {
 		this.allWords = new HashMap<String, Integer>();
 		
 		this.sentenceTable = new LinkedList<Sentence>();
+		this.sentenceCount = 0;
+		
 		this.unknownWordTable = new HashMap<String, String>();
 		this.wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
 		this.heuristicNounTable = new HashMap<String, String>();
@@ -116,8 +120,9 @@ public class DataHolder {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.addSentence");	
 		
-		Sentence newSent = new Sentence(source, sentence, originalSentence, lead,
+		Sentence newSent = new Sentence(this.sentenceCount, source, sentence, originalSentence, lead,
 				status, tag, modifier, type);
+		this.sentenceCount++;
 		this.sentenceTable.add(newSent);
 		myLogger.trace("Added Sentence: ");
 		myLogger.trace("\tSource: " + source);
@@ -130,6 +135,19 @@ public class DataHolder {
 		myLogger.trace("\tType: " + type);
 		
 		myLogger.trace("Quite\n");
+	}
+	
+	public Sentence getSentence(int ID) {
+		Iterator<Sentence> iter = this.sentenceTable.iterator();
+		
+		while(iter.hasNext()) {
+			Sentence sentence = iter.next();
+			if (sentence.getID()==ID) {
+				return sentence;
+			}
+		}
+		
+		return null;
 	}
     
     public List<Entry<WordPOSKey,WordPOSValue>> getWordPOSEntries(String word) {
@@ -338,12 +356,12 @@ public class DataHolder {
 	 * @param newWord
 	 * @param bPOS
 	 * @param otherPOS
-	 * @return if the newWord appears after a plural noun in the corpus, return the
-	 *         bPOS; otherwise, return the otherPOS
+	 * @return if the newWord appears after a plural noun in any untagged
+	 *         sentence, return the bPOS; otherwise, return the otherPOS
 	 */
 	public String resolveConflict(String newWord, String bPOS, String otherPOS) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.resolveConflict");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.resolveConflict");
 		
 		myLogger.trace("Enter resolveConflict");
 
@@ -355,26 +373,26 @@ public class DataHolder {
 			flag = sentence.getTag() == null ? 
 					true : (!sentence.getTag().equals("ignore"));
 			if (flag) {
-				String regex = "^.*([a-z]+(" + Constant.PLENDINGS + ")) ("
+				String regex = "^.*?([a-z]+(" + Constant.PLENDINGS + ")) ("
 						+ newWord + ").*$";
 				Pattern p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
 				String originalSentence = sentence.getOriginalSentence();
 				Matcher m = p.matcher(originalSentence);
-				if (m.lookingAt()) {
+				if (m.find()) {
 					String plural = m.group(1).toLowerCase();
 					if (this.myUtility.getWordFormUtility().getNumber(plural)
 							.equals("p")) {
 						count++;
 					}
 					if (count >= 1) {
-						myLogger.trace("Quite resolveConflict, return " + bPOS);
+						myLogger.trace("Quite resolveConflict, return: " + bPOS);
 						return bPOS;
 					}
 				}
 			}
 		}
 		
-		myLogger.trace("Quite resolveConflict, return otherPOS");
+		myLogger.trace("Quite resolveConflict, return: "+otherPOS);
 		return otherPOS;
 	}
 	
@@ -403,7 +421,7 @@ public class DataHolder {
 		 */
 		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.discountPOS");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.discountPOS");
 		
 		myLogger.trace("Enter discountPOS");
 		
@@ -620,10 +638,10 @@ public class DataHolder {
 	 * @param increment
 	 * @return
 	 */
-	public int updateTable(String word, String pos, String role, String table,
+	public int updateDataHolder(String word, String pos, String role, String table,
 			int increment) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder");
 		myLogger.trace(String.format("Enter (%s, %s, %s, %s, %d)", word, pos, role, table, increment));
 		
 		int result = 0;
@@ -715,7 +733,7 @@ public class DataHolder {
 	public int markKnown(String word, String pos, String role, String table,
 			int increment) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.markKnown");		
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.markKnown");		
 		myLogger.trace("Enter markKnown");
 		
 		String pattern = "";
@@ -828,7 +846,7 @@ public class DataHolder {
 	}
 	
 	/**
-	 * This method handles a new word when the updateTable method is called
+	 * This method handles a new word when the updateDataHolder method is called
 	 * 
 	 * @param newWord
 	 * @param pos
@@ -866,7 +884,7 @@ public class DataHolder {
 	 */
 	public int updatePOS(String newWord, String newPOS, String newRole, int increment) {		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.updatePOS");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.updatePOS");
 		
 		myLogger.trace("Enter updatePOS");
 		myLogger.trace("Word: "+newWord+", POS: "+newPOS);
@@ -1003,7 +1021,7 @@ public class DataHolder {
 	public int changePOS(String newWord, String oldPOS, String newPOS,
 			String newRole, int increment) {		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.changePOS");		
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.changePOS");		
 		myLogger.trace("Enter changePOS");
 		myLogger.trace("newWord: "+newWord);
 		myLogger.trace("oldPOS: "+oldPOS);
@@ -1079,7 +1097,7 @@ public class DataHolder {
 				String thisTag = this.getSentenceHolder().get(i).getTag();
 				int thisSentID = i;
 				String thisSent = this.getSentenceHolder().get(i).getSentence();
-				if (thisTag.equals(newWord)) {										
+				if (StringUtils.equals(thisTag, newWord)) {						
 					this.tagSentenceWithMT(thisSentID, thisSent, "", "NULL", "changePOS[s->b: reset to NULL]");
 				}
 			}
@@ -1144,7 +1162,7 @@ public class DataHolder {
 		 */
 		
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTable.tagSentenceWithWT");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.tagSentenceWithWT");
 		
 		myLogger.trace("Enter tagSentenceWithMT");
 		
@@ -1242,9 +1260,9 @@ public class DataHolder {
 	 * @param words
 	 * @return
 	 */
-	public int updateTableNN(int start, int end, List<String> words) {
+	public int updateDataHolderNN(int start, int end, List<String> words) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateTableNN");
+		Logger myLogger = Logger.getLogger("dataholder.updateDataHolderNN");
 		myLogger.trace(String.format("Enter (%d, %d, %s)", start, end,
 				words.toString()));
 				
@@ -1256,9 +1274,9 @@ public class DataHolder {
 
 			myLogger.trace("Check N: " + word);
 
-			if (this.updateTableNNConditionHelper(word)) {
+			if (this.updateDataHolderNNConditionHelper(word)) {
 				myLogger.trace("Update N: " + word);
-				int temp = this.updateTable(word, "m", "", "modifiers", 1);
+				int temp = this.updateDataHolder(word, "m", "", "modifiers", 1);
 				update = update + temp;
 				myLogger.trace("Return: " + temp);
 			}
@@ -1269,13 +1287,13 @@ public class DataHolder {
 	}
 	
 	/**
-	 * A helper of method updateTableNN. Check if the condition is meet.
+	 * A helper of method updateDataHolderNN. Check if the condition is meet.
 	 * 
 	 * @param word
 	 *            the word to check
 	 * @return a boolean variable
 	 */
-	public boolean updateTableNNConditionHelper(String word) {
+	public boolean updateDataHolderNNConditionHelper(String word) {
 		boolean flag = false;
 		
 		flag = (   (!word.matches("^.*\\b("+Constant.STOP+")\\b.*$"))
@@ -1344,6 +1362,10 @@ public class DataHolder {
 			this.isATable = this.add2IsAHolder(this.isATable, args);
 		}
 		
+		if (holderID == DataHolder.MODIFIER) {
+			this.modifierTable = this.add2ModifierHolder(this.modifierTable, args);
+		}
+		
 		if (holderID == DataHolder.SENTENCE) {
 			this.sentenceTable = this.add2SentenceHolder(this.sentenceTable,args);
 		}
@@ -1361,7 +1383,7 @@ public class DataHolder {
 		}
 		
 	}
-	
+
 	public Map<Integer, IsAValue> add2IsAHolder (Map<Integer, IsAValue> isAHolder, List<String> args) {
 		int index = 0;
 		
@@ -1371,6 +1393,23 @@ public class DataHolder {
 		isAHolder.put(isAHolder.size()+1, new IsAValue(instance, cls));
 		
 		return isAHolder;
+	}
+	
+	public Map<String, ModifierTableValue> add2ModifierHolder(Map<String, ModifierTableValue> modifierTable, List<String> args) {
+		int index = 0;
+		
+		String word = args.get(index++);
+		int count  = new Integer(args.get(index++));
+		boolean isTypeModifier = false;
+		String isTypeModifierString = args.get(index++);
+		if (StringUtils.equals(isTypeModifierString, "true")) {
+			isTypeModifier = true;
+		}
+
+		
+		modifierTable.put(word, new ModifierTableValue(count, isTypeModifier));
+		
+		return modifierTable;
 	}
 
 	public Map<String, String> add2UnknowWordHolder(Map<String, String> unknownWordHolder, List<String> args){
@@ -1434,7 +1473,8 @@ public class DataHolder {
 		String modifier=args.get(index++);
 		String type=args.get(index++);
 		
-		sentenceTable.add(new Sentence(source, sentence, originalSentence, lead, status, tag, modifier, type));
+		this.addSentence(source, sentence, originalSentence, lead, status, tag, modifier, type);
+		//sentenceTable.add(new Sentence(source, sentence, originalSentence, lead, status, tag, modifier, type));
 		return sentenceTable;
 
 	}
@@ -1466,16 +1506,18 @@ public class DataHolder {
 		if (holderID == DataHolder.SENTENCE) {
 			for (int i = startIndex; i<=endIndex; i++) {
 				Sentence sentence = this.sentenceTable.get(i);
-				myLogger.info("Sentence ID: "+i);
-				myLogger.info("Source: "+sentence.getSource());
-				myLogger.info("Sentence: "+sentence.getSentence());
-				myLogger.info("Original Sentence: "+sentence.getSentence());
-				myLogger.info("Lead: "+sentence.getLead());
-				myLogger.info("Status: "+sentence.getStatus());
-				myLogger.info("Tag: "+sentence.getTag());
-				myLogger.info("Modifier: "+sentence.getModifier());
-				myLogger.info("Type: "+sentence.getType());
-				myLogger.info("\n");
+				myLogger.info("Index: "+i);
+				myLogger.info(sentence.toString());
+//				myLogger.info("Sentence ID: "+sentence.getID());
+//				myLogger.info("Source: "+sentence.getSource());
+//				myLogger.info("Sentence: "+sentence.getSentence());
+//				myLogger.info("Original Sentence: "+sentence.getSentence());
+//				myLogger.info("Lead: "+sentence.getLead());
+//				myLogger.info("Status: "+sentence.getStatus());
+//				myLogger.info("Tag: "+sentence.getTag());
+//				myLogger.info("Modifier: "+sentence.getModifier());
+//				myLogger.info("Type: "+sentence.getType());
+//				myLogger.info("\n");
 			}
 		}
 		
@@ -1550,34 +1592,17 @@ public class DataHolder {
 	}
 
 	/**
-	 * Get a list of all tags which is not "ignore" or is null.
+	 * Get a list of all tags which is not "ignore".
 	 * 
-	 * @return a list of tags
+	 * @return a set of tags
 	 */
-	public List<String> getCurrentTags() {
-		/**
-sub currenttags{
-	my ($id, $sent, $sth, $TAGS, $lead);
-  	$sth = $dbh->prepare("select tag from ".$prefix."_sentence where (tag != 'ignore' or isnull(tag)) group by tag order by count(sentid) desc");
-  	$sth->execute();
-  	$TAGS = "";
-  	while( my ($tag)=$sth->fetchrow_array()){
-    	$TAGS .= $tag."|" if ($tag=~/\w+/);
-  	}
-  	chop($TAGS);
-  	return $TAGS;
-}
-		 */
-		List<String> tags = new ArrayList<String>();
+	public Set<String> getCurrentTags() {
+		Set<String> tags = new HashSet<String>();
 		
 		for (int i=0;i<this.sentenceTable.size();i++) {
 			Sentence sentence = this.sentenceTable.get(i);
 			String tag = sentence.getTag();
-			if (
-					(!StringUtils.equals(tag, "ignore"))
-					||
-					(tag == null)
-					){
+			if ((!StringUtils.equals(tag, "ignore"))){
 				tags.add(tag);
 			}
 		}

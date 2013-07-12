@@ -21,7 +21,12 @@ Java implementation of unsupervised CharaParser code
         lepidotrichia of
     are kept.
     
-* Get All Unique Words
+* Get Unique Words
+Get all unique words in the treatments, and insert them into the unknown word collection.
+
+Since this is the first stage of the learning, all the words are "unknown" now, so mark all of them as "unknown".
+
+For any word which does not contain a word character, or ends with "ous", take is as a boundary word, and insert it into the word-POS collection.
 
 
 
@@ -97,6 +102,16 @@ markup the tag of some sentence by "chromosome", "flowerTime", "fruitTime" accor
 	
 In this step, we do addition bootstrapping learning by using clues such as shared subject different boundary and one lead word.
 
+** wrapup markup
+Search for any shared lead words, take them as the tag and tag those sentences with them. The shared lead words are the first several continuous words by the lead of multiple sentences.
+
+The last word in the shared lead words are a boundary word.
+
+** one lead word markup
+If the lead of any sentence has only one word, and the words was taken as the tag in any other sentence, then we take this word as the tag to the sentence, and tag the sentence using that word.
+
+
+
 
 * Manage Data Holder
 ** Update Table
@@ -139,17 +154,44 @@ For each word, if it is not in the SingularPlural Table, if it is a singular and
 		    1.1.1. If the POS is "s" or "p", delete all entries contains word from Singularplural holder as well
         1.1. Else insert (nword, Oldpos, newpos) into discounted table
 
+if the word is a noun in singular form, try to find the plural form. If the word is a noun in plural form, try to find the singular form.
+        
 Apart the updates on the holders themselves, in this step the count of how many updates have been made in this step is returned.
 
 ** getPOSptn
 given a list of words, chech each of them in the WordPOS holder, find its POS tag, and returns a string with letters representing the POS tags. If the POS tag is not known for a word, use "?" to represent it.
 
 
-* Data Holder
+Data Holder
 
-** Unknown Word
-word: the word
-flag: If the flag is "unknown", then the word is unknown; otherwise, the flag indicates how the word was learned. For example, if the word "unicuspid" is "b", then by removing prefix of unicuspid, the word "bicuspid" is learned as a [b] as well. In this case, the flag of word "bicuspid" is "unicuspid", indicates that the word "bicuspid" was learned from the word "unicuspid".
+* Sentence Collection
+** tag: the subject of this sentence. In most cases it is a noun. Note that the tag could be a collection of more than one word. If it is null, then the sentence has not been tagged yet.
+
+* Word-POS Collection
+
+** pos: the POS tag of the word
+    "n" - noun
+        "s" - noun in singular form
+        "p" - noun in plural form
+    "m" - modififer word
+    "b" - boundary word
+    "z" - proper noun
+
+** role: the role of the word-POS pair. There are several legal values.
+    "" - the role is unknown
+    "*" - the word has been marked from "unknown" to "known" in the unknown word collection, but the role has not been determined yet.
+    "-" - the word in the word-POS pair is a head noun (main noun).
+    "_" - the word in the word-POS pair is a modifier prior to a head noun.
+    "+" - the word has more than one roles, mark it as "*"
+    (What is a head noun? in the leading word list, the last noun is the head noun, and the words prior to it are modifiers.)
+    
+
+
+* Unknown Word Collection
+** word: the word
+** flag: If the flag is "unknown", then the word is unknown; otherwise, the flag indicates how the word was learned. For example, if the word "unicuspid" is "b", then by removing prefix of unicuspid, the word "bicuspid" is learned as a [b] as well. In this case, the flag of word "bicuspid" is "unicuspid", indicates that the word "bicuspid" was learned from the word "unicuspid".
+
+
 
 
 ========
@@ -158,3 +200,6 @@ FAQ
 * What is the difference between checkWN() and getNumber()?
 checkWN:
 getNumber() uses checkWN. If checkWN() returns "x", change the return that to empty string "". In addition, it handles some more special cases. 
+
+* what is a modifer/boundary word?
+the word before a noun is its modifer. The word after a noun is its boundary word.

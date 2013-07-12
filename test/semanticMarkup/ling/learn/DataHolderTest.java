@@ -26,11 +26,11 @@ public class DataHolderTest {
 
 	@Test
 	public void testUpdateTable() {
-		// Method updateTable
-		assertEquals("updateTable - empty word", 0,
-				tester.updateTable("", "", "", "", 0));
-		assertEquals("updateTable - forbidden word", 0,
-				tester.updateTable("to", "", "", "", 0));
+		// Method updateDataHolder
+		assertEquals("updateDataHolder - empty word", 0,
+				tester.updateDataHolder("", "", "", "", 0));
+		assertEquals("updateDataHolder - forbidden word", 0,
+				tester.updateDataHolder("to", "", "", "", 0));
 	}
 	
 	@Test
@@ -131,9 +131,10 @@ public class DataHolderTest {
 		Configuration myConfiguration = new Configuration();
 		Utility myUtility = new Utility(myConfiguration);
 		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
-		myTester.getSentenceHolder().add(new Sentence("source", "word branches word1 end", "word branches word1 end", "lead", "status", "ignore", null, null));
-		myTester.getSentenceHolder().add(new Sentence("source", "word branches word2 end", "word branches word2 end", "lead", "status", "nonignore", null, null));
-		myTester.getSentenceHolder().add(new Sentence("source", "word branches word3 end", "word branches word3 end", "lead", "status", null, null, null));
+		myTester.getSentenceHolder().add(new Sentence(0, "source", "word branches word1 end", "word branches word1 end", "lead", "status", "ignore", null, null));
+		myTester.getSentenceHolder().add(new Sentence(1, "source", "word branches word2 end", "word branches word2 end", "lead", "status", "nonignore", null, null));
+		myTester.getSentenceHolder().add(new Sentence(2, "source", "word branches word3 end", "word branches word3 end", "lead", "status", null, null, null));
+		
 		assertEquals("resolveConfilct - otherPOS", "otherPOS", myTester.resolveConflict("word1", "bPOS", "otherPOS"));
 		assertEquals("resolveConfilct - otherPOS", "bPOS", myTester.resolveConflict("word2", "bPOS", "otherPOS"));
 		assertEquals("resolveConfilct - otherPOS", "bPOS", myTester.resolveConflict("word3", "bPOS", "otherPOS"));
@@ -184,13 +185,12 @@ public class DataHolderTest {
 	@Test
 	public void testMergeRole() {
 		// Method mergeRole
-		assertEquals("mergeRole - case 1", "new", tester.mergeRole("*", "new"));
-		assertEquals("mergeRole - case 2", "old", tester.mergeRole("old", "*"));
-		assertEquals("mergeRole - case 3", "new", tester.mergeRole("", "new"));
-		assertEquals("mergeRole - case 4", "old", tester.mergeRole("old", ""));
-		assertEquals("mergeRole - case 5", "+", tester.mergeRole("old", "new"));
-		assertEquals("mergeRole - case 0", "same",
-				tester.mergeRole("same", "same"));
+		assertEquals("mergeRole - case 1", "", tester.mergeRole("*", ""));
+		assertEquals("mergeRole - case 2", "", tester.mergeRole("", "*"));
+		assertEquals("mergeRole - case 3", "-", tester.mergeRole("", "-"));
+		assertEquals("mergeRole - case 4", "-", tester.mergeRole("-", ""));
+		assertEquals("mergeRole - case 5", "+", tester.mergeRole("-", "_"));
+		assertEquals("mergeRole - case 6", "-", tester.mergeRole("-", "-"));
 	}
 	
 	@Test
@@ -316,10 +316,10 @@ public class DataHolderTest {
 	
 	@Test
 	public void testUpdateTableNNConditionHelper(){
-		assertEquals("updateTableNN case 0 - true", true, tester.updateTableNNConditionHelper("word"));
-		assertEquals("updateTableNN case 1 stop words - false", false, tester.updateTableNNConditionHelper(" page"));
-		assertEquals("updateTableNN case 2 -ly ending words - false", false, tester.updateTableNNConditionHelper("hello abcly "));
-		assertEquals("updateTableNN case 3 forbidden words - false", false, tester.updateTableNNConditionHelper("nor $%^iwopf0-v"));
+		assertEquals("updateDataHolderNN case 0 - true", true, tester.updateDataHolderNNConditionHelper("word"));
+		assertEquals("updateDataHolderNN case 1 stop words - false", false, tester.updateDataHolderNNConditionHelper(" page"));
+		assertEquals("updateDataHolderNN case 2 -ly ending words - false", false, tester.updateDataHolderNNConditionHelper("hello abcly "));
+		assertEquals("updateDataHolderNN case 3 forbidden words - false", false, tester.updateDataHolderNNConditionHelper("nor $%^iwopf0-v"));
 	}
 	
 	@Test
@@ -327,7 +327,7 @@ public class DataHolderTest {
 		List<String> input1 = new ArrayList<String>();
 		input1.addAll(Arrays.asList("hyohyoidei muscle".split(" ")));
 		
-		assertEquals("updateTableNN case 3 forbidden words - false", 1, tester.updateTableNN(0, 2, input1));		
+		assertEquals("updateDataHolderNN case 3 forbidden words - false", 1, tester.updateDataHolderNN(0, 2, input1));		
 	}
 	
 }
