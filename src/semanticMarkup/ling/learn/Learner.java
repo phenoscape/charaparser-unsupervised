@@ -2121,6 +2121,22 @@ public class Learner {
 			}
 		}
 		
+		// case 8: "^bs$"
+		else if (StringUtility.createMatcher("^bs$", ptn).find()) {
+			myLogger.trace("Case 8");
+			tag = StringUtility.joinList(" ", words);
+			sign += this.getDataHolder().updateDataHolder(words.get(0), "b", "", "wordpos", 1);
+			sign += this.getDataHolder().updateDataHolder(words.get(1), "s", "-", "wordpos", 1);
+		}
+		
+		// case 9: ^bp$
+		else if (StringUtility.createMatcher("^bp$", ptn).find()) {
+			myLogger.trace("Case 9");
+			tag = StringUtility.joinList(" ", words);
+			sign += this.getDataHolder().updateDataHolder(words.get(0), "b", "", "wordpos", 1);
+			sign += this.getDataHolder().updateDataHolder(words.get(1), "p", "-", "wordpos", 1);
+		} 
+		
 		// case 10: "^\\?(b)"
 		else if (m10.find()) {
 			myLogger.trace("Case 10");
