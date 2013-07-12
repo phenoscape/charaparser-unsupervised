@@ -2159,7 +2159,9 @@ public class Learner {
                     myLogger.debug("\t:determine the tag: "+tag);
                     myLogger.debug("\t:updates on POSs");
                     sign += this.myDataHolder.updateDataHolder(word, "n", "-", "wordpos", 1);
-                    sign += this.myDataHolder.updateDataHolderNN(0, wordsTemp.size(), wordsTemp);
+                    myLogger.trace(String.format("updateDataHolder(%s, n, -, wordpos, 1)", word));
+                    sign += this.myDataHolder.updateDataHolderNN(0, wordsTemp.size()-1, wordsTemp);
+                    myLogger.trace(String.format("updateDataHolderNN(%d, %d, %s)", 0, wordsTemp.size()-1, wordsTemp));
 					
 				}
 				else{
