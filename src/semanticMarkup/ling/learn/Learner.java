@@ -1958,6 +1958,12 @@ public class Learner {
 		return returnValue;		
 	}
 
+	/**
+	 * 
+	 * @param thisSentence
+	 * @param thisLead
+	 * @return
+	 */
 	public StringAndInt doItCaseHandle(String thisSentence, String thisLead) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.doIt.doItCaseHandle");
@@ -1973,10 +1979,8 @@ public class Learner {
 		int sign = 0;
 		String tag = "";
 		
-		List<String> words = Arrays.asList(thisLead.split("\\s+"));
-		
-		String ptn = this.getPOSptn(words);
-		
+		List<String> words = Arrays.asList(thisLead.split("\\s+"));		
+		String ptn = this.getPOSptn(words);		
 		myLogger.trace("ptn: "+ptn);
 		
 		Pattern p2 = Pattern.compile("ps");
@@ -2008,9 +2012,23 @@ public class Learner {
 			int end = m2.end();
 			String pWord = words.get(start);
 			String sWord = words.get(end-1);
+			List<String> tempWords = StringUtility.stringArraySplice(words, 0, start+1);
+			tag = StringUtility.joinList(" ", tempWords);
 
-			sign += this.myDataHolder.updateDataHolder(pWord, "p", "-", "wordpos", 1);
-			sign += this.myDataHolder.updateDataHolder(sWord, "s", "", "wordpos", 1);
+			myLogger.debug("\tdetermine the tag: "+tag);
+			
+			int returnedSign = 0;
+			returnedSign = this.myDataHolder.updateDataHolder(pWord, "p", "-", "wordpos", 1);
+			sign += returnedSign;
+			myLogger.trace(String.format("updateDataHolder(%s, p, -, wordpos, 1), returned: %d", pWord, returnedSign));
+			
+			returnedSign = this.myDataHolder.updateDataHolderNN(0, tempWords.size(), tempWords);
+			sign += returnedSign;
+			myLogger.trace(String.format("updateDataHolderNN(0, %d, %s), returned: %d", tempWords.size(), tempWords.toString(), returnedSign));
+			
+			returnedSign = this.myDataHolder.updateDataHolder(sWord, "b", "", "wordpos", 1);
+			sign += returnedSign;
+			myLogger.trace(String.format("updateDataHolder(%s, b, , wordpos, 1), returned: %d", sWord, returnedSign));
 		} 
 		
 		// Case 3: "p(\\?)"

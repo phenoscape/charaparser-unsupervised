@@ -155,11 +155,27 @@ public class LearnerTest {
 
 
 
-//	@Test
-//	public void testDiscount() {
-//		fail("Not yet implemented");
-//	}
+	@Test
+	public void testDiscountPOS() {
+		// case "all"
+		// see doItCaseHandle case 2
+	}
+	
+	@Test
+	public void testResolveConfict() {
+		// see doItCaseHandle case 2
+	}
 
+	@Test
+	public void testChangePOS(){
+		// see doItCaseHandle case 2
+	}
+	
+	@Test
+	public void testUpdatePOS(){
+		// see doItCaseHandle case 2
+	}
+	
 //	@Test
 //	public void testGetParentSentenceTag() {
 //		fail("Not yet implemented");
@@ -716,6 +732,26 @@ public class LearnerTest {
 				Arrays.asList(new String[] {"submandibulars", "p", "", "0", "0", null, null}));
 		
 		assertEquals("CaseHandle - case 1", new StringAndInt("submandibulars",0), myTester1.doItCaseHandle("submandibulars", "submandibulars"));
+		
+		// case 2
+		Learner myTester2 = new Learner(myConfiguration, myUtility);
+		myTester2.getDataHolder().add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"src", 
+						"<N>stems</N> <B>usually</B> erect , sometimes prostrate to ascending <B>(</B> underground <N>stems</N> sometimes woody <O>caudices</O> or rhizomes , sometimes fleshy <B>)</B> . ", 
+						"Stems usually erect, sometimes prostrate to ascending (underground stems sometimes woody caudices or rhizomes, sometimes fleshy ).",
+						"lead","status",null,"m","type"}));
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"stems", "p", "", "0", "0", null, null}));
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"stem", "s", "", "0", "0", null, null}));		
+		myTester2.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"usually", "s", "", "0", "0", null, null}));
+		String sentence = 
+				"stems usually erect , sometimes prostrate to ascending ( underground stems sometimes woody caudices or rhizomes , sometimes fleshy ) .";
+		String lead = "stems usually erect";
+		assertEquals("CaseHandle - case 2", new StringAndInt("stems",1), myTester2.doItCaseHandle(sentence, lead));
+		assertEquals("CaseHandle - case 2, updatePOS - case 2.1, resolveConfict, changePOS - case 2", true, myTester2.getDataHolder().getWordPOSHolder().containsKey(new WordPOSKey("usually", "b")));
+		assertEquals("CaseHandle - case 2, discountPOS - all", false, myTester2.getDataHolder().getWordPOSHolder().containsKey(new WordPOSKey("usually", "s")));
         
         // case 3.2
 		// This also tests method markKnown() - case 1.1

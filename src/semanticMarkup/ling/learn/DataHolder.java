@@ -356,8 +356,8 @@ public class DataHolder {
 	 * @param newWord
 	 * @param bPOS
 	 * @param otherPOS
-	 * @return if the newWord appears after a plural noun in the corpus, return the
-	 *         bPOS; otherwise, return the otherPOS
+	 * @return if the newWord appears after a plural noun in any untagged
+	 *         sentence, return the bPOS; otherwise, return the otherPOS
 	 */
 	public String resolveConflict(String newWord, String bPOS, String otherPOS) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
@@ -373,26 +373,26 @@ public class DataHolder {
 			flag = sentence.getTag() == null ? 
 					true : (!sentence.getTag().equals("ignore"));
 			if (flag) {
-				String regex = "^.*([a-z]+(" + Constant.PLENDINGS + ")) ("
+				String regex = "^.*?([a-z]+(" + Constant.PLENDINGS + ")) ("
 						+ newWord + ").*$";
 				Pattern p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
 				String originalSentence = sentence.getOriginalSentence();
 				Matcher m = p.matcher(originalSentence);
-				if (m.lookingAt()) {
+				if (m.find()) {
 					String plural = m.group(1).toLowerCase();
 					if (this.myUtility.getWordFormUtility().getNumber(plural)
 							.equals("p")) {
 						count++;
 					}
 					if (count >= 1) {
-						myLogger.trace("Quite resolveConflict, return " + bPOS);
+						myLogger.trace("Quite resolveConflict, return: " + bPOS);
 						return bPOS;
 					}
 				}
 			}
 		}
 		
-		myLogger.trace("Quite resolveConflict, return otherPOS");
+		myLogger.trace("Quite resolveConflict, return: "+otherPOS);
 		return otherPOS;
 	}
 	
@@ -1097,7 +1097,7 @@ public class DataHolder {
 				String thisTag = this.getSentenceHolder().get(i).getTag();
 				int thisSentID = i;
 				String thisSent = this.getSentenceHolder().get(i).getSentence();
-				if (thisTag.equals(newWord)) {										
+				if (StringUtils.equals(thisTag, newWord)) {						
 					this.tagSentenceWithMT(thisSentID, thisSent, "", "NULL", "changePOS[s->b: reset to NULL]");
 				}
 			}

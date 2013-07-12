@@ -154,6 +154,8 @@ For each word, if it is not in the SingularPlural Table, if it is a singular and
 		    1.1.1. If the POS is "s" or "p", delete all entries contains word from Singularplural holder as well
         1.1. Else insert (nword, Oldpos, newpos) into discounted table
 
+if the word is a noun in singular form, try to find the plural form. If the word is a noun in plural form, try to find the singular form.
+        
 Apart the updates on the holders themselves, in this step the count of how many updates have been made in this step is returned.
 
 ** getPOSptn
@@ -178,7 +180,7 @@ Data Holder
 ** role: the role of the word-POS pair. There are several legal values.
     "" - the role is unknown
     "*" - the word has been marked from "unknown" to "known" in the unknown word collection, but the role has not been determined yet.
-    "-" - the word in the word-POS pair is a head noun.
+    "-" - the word in the word-POS pair is a head noun (main noun).
     "_" - the word in the word-POS pair is a modifier prior to a head noun.
     "+" - the word has more than one roles, mark it as "*"
     (What is a head noun? in the leading word list, the last noun is the head noun, and the words prior to it are modifiers.)
