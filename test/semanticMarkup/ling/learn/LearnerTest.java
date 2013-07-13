@@ -792,6 +792,21 @@ public class LearnerTest {
 //        assertEquals("CaseHandle - case 4.2", new StringAndInt("bases",0), 
 //                myTester42.doItCaseHandle("bases of tooth whorls", "bases of")); 
 //        
+		
+		
+		// case 9
+		Learner myTester9 = new Learner(myConfiguration, myUtility);
+		myTester9.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"basal", "b", "role", "24", "24", "", ""}));
+		myTester9.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"leaves", "p", "role", "112", "112", "", ""}));
+		myTester9.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"leaf", "s", "role", "112", "112", "", ""}));
+		assertEquals("CaseHandle - case 9", new StringAndInt("basal leaves",0), 
+				myTester9.doItCaseHandle("basal leaves :", "basal leaves")); 		
+		
+		
+		
 //
 //        
 //        // case 10
@@ -808,14 +823,14 @@ public class LearnerTest {
 //        assertEquals("CaseHandle - case 10.1.1", new StringAndInt("foramina",2), 
 //                myTester10_1_1.doItCaseHandle("foramina on external surface of lower jaw", 
 //                    "foramina on"));
-        // case 10.1.2
-		Learner myTester10_1_2 = new Learner(myConfiguration, myUtility);
-		myTester10_1_2.addStopWords();
-		
-        assertEquals("CaseHandle - case 10.1.1", new StringAndInt("stems",2), 
-                myTester10_1_2.doItCaseHandle("stems 1 ?several , erect or ascending , densely gray_tomentose ", 
-                    "stems NUM several")); 
-        
+//        // case 10.1.2
+//		Learner myTester10_1_2 = new Learner(myConfiguration, myUtility);
+//		myTester10_1_2.addStopWords();
+//		
+//        assertEquals("CaseHandle - case 10.1.1", new StringAndInt("stems",2), 
+//                myTester10_1_2.doItCaseHandle("stems 1 ?several , erect or ascending , densely gray_tomentose ", 
+//                    "stems NUM several")); 
+//        
 		
 //        // case 10.2
 //        Learner myTester10_2 = new Learner(myConfiguration, myUtility);
