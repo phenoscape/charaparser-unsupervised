@@ -1992,6 +1992,9 @@ public class Learner {
 		Pattern p4 = Pattern.compile("[psn](b)");
 		Matcher m4 = p4.matcher(ptn);
 		
+		Pattern p7 = Pattern.compile("^s(\\?)$");
+		Matcher m7 = p7.matcher(ptn);
+		
 		Pattern p10 = Pattern.compile("^\\?(b)");
 		Matcher m10 = p10.matcher(ptn);
 		
@@ -2121,6 +2124,31 @@ public class Learner {
 			}
 		}
 		
+		// case 7: "^s(\\?)$"
+		else if (m7.find()) {
+			myLogger.trace("Case 7");
+			String singularWord = words.get(0);
+			String questionedWord = words.get(1);
+			String wnPOS = this.myUtility.getWordFormUtility().checkWN(questionedWord, "pos");
+			
+			if (StringUtility.createMatcher("p", wnPOS).find()){
+				myLogger.trace("Case 7.1");
+				tag = singularWord+" "+questionedWord;
+				myLogger.debug("\t:determine the tag: "+tag);
+				myLogger.debug("\t:updates on POSs");
+				String questionedPOS = this.getUtility().getWordFormUtility().getNumber(singularWord);
+				sign += this.getDataHolder().updateDataHolder(questionedWord, questionedPOS, "-", "wordpos", 1);
+			}
+			else {
+				myLogger.trace("Case 7.2");
+				tag = words.get(0);
+				myLogger.debug("\t:determine the tag: "+tag);
+				myLogger.debug("\t:updates on POSs");
+				sign += this.getDataHolder().updateDataHolder(questionedWord, "b", "", "wordpos", 1);
+				sign += this.getDataHolder().updateDataHolder(singularWord, "s", "-", "wordpos", 1);
+			}
+		}
+		
 		// case 8: "^bs$"
 		else if (StringUtility.createMatcher("^bs$", ptn).find()) {
 			myLogger.trace("Case 8");
@@ -2201,6 +2229,16 @@ public class Learner {
 		
 		myLogger.trace("Return: "+returnValue.toString());
 		return returnValue;
+	}
+
+	public int doItCase7Helper(String regex, String ptn) {
+		Matcher m = StringUtility.createMatcher(regex, ptn);
+		if (m.find()) {
+			int start = m.start();
+			return start + 1;
+		} else {
+			return -1;
+		}
 	}
 
 	/**

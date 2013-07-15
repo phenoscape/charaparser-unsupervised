@@ -791,8 +791,10 @@ public class LearnerTest {
 //				Arrays.asList(new String[] {"of", "b", "role", "2", "2", "", ""}));
 //        assertEquals("CaseHandle - case 4.2", new StringAndInt("bases",0), 
 //                myTester42.doItCaseHandle("bases of tooth whorls", "bases of")); 
-//        
-		
+//      
+		// case 7
+		Learner myTester7 = new Learner(myConfiguration, myUtility);
+		myTester7.doItCase7Helper("^s(\\?)$", "")
 		
 		// case 9
 		Learner myTester9 = new Learner(myConfiguration, myUtility);
