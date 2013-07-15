@@ -2124,6 +2124,23 @@ public class Learner {
 			}
 		}
 		
+		// case 6: "b[?b]([psn])$" or "[?b]b([psn])$"
+		else if (
+				(StringUtility.createMatcher("b[?b]([psn])$", ptn).find())
+				|| 
+				StringUtility.createMatcher("[?b]b([psn])$", ptn).find()) {
+			myLogger.trace("Case 6");
+			myLogger.trace("Found [b?[psn]$] or [[?b]b([psn])$] pattern");
+//			$end = $-[1];#index of n
+//			my $cend = $end;
+//			my ($moren, $moreptn, $bword) = getNounsAfterPtn($sentence, $end+1);
+//			@ws = tokenize($sentence, "firstseg"
+			
+			List<String> sentenceHeadWords = this.getUtility().getPopulateSentenceUtility().tokenizeSentence(thisSentence, "firstseg");
+			
+		}
+		
+		
 		// case 7: "^s(\\?)$"
 		else if (m7.find()) {
 			myLogger.trace("Case 7");

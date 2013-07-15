@@ -794,7 +794,7 @@ public class LearnerTest {
 //      
 		// case 7
 		Learner myTester7 = new Learner(myConfiguration, myUtility);
-		myTester7.doItCase7Helper("^s(\\?)$", "")
+//		assertEquals(myTester7.doItCase7Helper("^s(\\?)$", "s?");
 		
 		// case 9
 		Learner myTester9 = new Learner(myConfiguration, myUtility);
