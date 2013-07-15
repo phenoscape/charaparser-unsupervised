@@ -2257,6 +2257,58 @@ public class Learner {
 			return -1;
 		}
 	}
+	
+	public GetNounsAfterPtnReturnValue getNounsAfterPtn(String sentence, int startWordIndex){
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.getNounsAfterPattern");
+		
+		String bWord = "";
+		List<String> nouns = new ArrayList<String>();
+		List<String> nounPtn = new ArrayList<String>();
+		
+		List<String> tempWords = new ArrayList<String>();
+		tempWords.addAll(this.getUtility().getPopulateSentenceUtility().tokenizeSentence(sentence, "firstset"));
+		List<String> words = StringUtility.stringArraySplice(tempWords, startWordIndex, tempWords.size());
+		String ptn = this.getPOSptn(words);
+		
+		if (ptn!=null) {
+			Matcher m1 = StringUtility.createMatcher("^([psn]+)", ptn);
+			Matcher m2 = StringUtility.createMatcher("^(\\?+)", ptn);
+			boolean case1 = false;
+			boolean case2 = false;
+			int end = -1;
+			if (m1.find()) {
+				case1 = true;
+				end = m1.end(1);
+			}
+			if (m2.find()) {
+				case2 = true;
+				end = m2.end(1);
+			}
+			if (case1 || case2) {
+				bWord = words.get(end+1);
+				List<String> nWords = new ArrayList<String>();
+				nWords.addAll(StringUtility.stringArraySplice(words, 0, end+1));
+				for (int i=0;i<nWords.size();i++) {
+					String p = ptn.substring(i, i+1);
+					p = StringUtils.equals(p, "?") ? 
+							this.getUtility().getWordFormUtility().checkWN(nWords.get(i), "pos")
+							: p;
+					if (StringUtility.createMatcher("^[psn]+$", p).find()) {
+						nouns.add(nWords.get(i));
+						nounPtn.add(p);
+					}
+					else {
+						bWord = nWords.get(i);
+						break;
+					}
+				}
+			}
+		}
+		
+		GetNounsAfterPtnReturnValue returnValue = new GetNounsAfterPtnReturnValue(nouns, nounPtn, bWord);
+		return (returnValue);
+	}
 
 	/**
 	 * Check if a lead is followed by a noun without any proposition in between
