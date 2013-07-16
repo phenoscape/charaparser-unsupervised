@@ -2125,19 +2125,40 @@ public class Learner {
 		}
 		
 		// case 6: "b[?b]([psn])$" or "[?b]b([psn])$"
-		else if (
-				(StringUtility.createMatcher("b[?b]([psn])$", ptn).find())
-				|| 
-				StringUtility.createMatcher("[?b]b([psn])$", ptn).find()) {
-			myLogger.trace("Case 6");
-			myLogger.trace("Found [b?[psn]$] or [[?b]b([psn])$] pattern");
-//			$end = $-[1];#index of n
-//			my $cend = $end;
-//			my ($moren, $moreptn, $bword) = getNounsAfterPtn($sentence, $end+1);
-//			@ws = tokenize($sentence, "firstseg"
-			
-			List<String> sentenceHeadWords = this.getUtility().getPopulateSentenceUtility().tokenizeSentence(thisSentence, "firstseg");
-			
+		else if ((StringUtility.createMatcher("b[?b]([psn])$", ptn).find())
+				|| StringUtility.createMatcher("[?b]b([psn])$", ptn).find()) {
+			myLogger.debug("Case 6: Found [b?[psn]$] or [[?b]b([psn])$] pattern");
+			int end = 2;
+			GetNounsAfterPtnReturnValue tempReturnValue = this
+					.getNounsAfterPtn(thisSentence, end + 1);
+			List<String> moreNouns = tempReturnValue.getNouns();
+			List<String> morePtn = tempReturnValue.getNounPtn();
+			String bWord = tempReturnValue.getBoundaryWord();
+
+			List<String> sentenceHeadWords = this.getUtility()
+					.getPopulateSentenceUtility()
+					.tokenizeSentence(thisSentence, "firstseg");
+			end += morePtn.size();
+			List<String> tempWords = StringUtility.stringArraySplice(
+					sentenceHeadWords, end + 1, sentenceHeadWords.size());
+			tag = StringUtility.joinList(" ", tempWords);
+			myLogger.debug("\t:updates on POSs");
+			sign += this.getDataHolder().updateDataHolder(bWord, "b", "",
+					"wordpos", 1);
+			String allPtn = "" + ptn;
+			allPtn = allPtn + StringUtility.joinList("", morePtn);
+			for (int i = 2; i < allPtn.length(); i++) {
+				if (i != allPtn.length() - 1) {
+					sign += this.getDataHolder().updateDataHolder(
+							sentenceHeadWords.get(i),
+							allPtn.substring(i, i + 2), "_", "wordpos", 1);
+				} else {
+					sign += this.getDataHolder().updateDataHolder(
+							sentenceHeadWords.get(i),
+							allPtn.substring(i, i + 2), "-", "wordpos", 1);
+				}
+			}
+			myLogger.debug("\t:determine the tag: " + tag);
 		}
 		
 		
