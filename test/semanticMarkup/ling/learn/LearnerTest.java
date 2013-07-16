@@ -878,6 +878,28 @@ public class LearnerTest {
 	}
 	
 	@Test
+	public void testGetNounsAfterPtn() {
+		Configuration myConfiguration = new Configuration();
+		Utility myUtility = new Utility(myConfiguration);
+		Learner myTester = new Learner(myConfiguration, myUtility);
+		
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"margins", "p", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"often", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"¡À", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"deeply", "b", "role", "0", "0", null, null}));
+		
+		List<String> nouns = new ArrayList<String>();
+		nouns.add("margins");
+		List<String> nounPtn = new ArrayList<String>();
+		nounPtn.add("p");
+		String bWord = "often";
+		GetNounsAfterPtnReturnValue target = new GetNounsAfterPtnReturnValue(nouns, nounPtn, bWord);
+		
+		assertEquals("getNounsAfterPtn", target, myTester.getNounsAfterPtn("proximal blade margins often ¡À deeply lobed , ( spiny in c . benedicta ) , distal ?smaller , often entire , faces glabrous or ?tomentose , sometimes also villous , strigose , or puberulent , often glandular_punctate .", 2));
+		
+	}
+	
+	@Test
 	public void testTagSentence() {		
 		Configuration myConfiguration = new Configuration();
 		myConfiguration.setMaxTagLength(10);

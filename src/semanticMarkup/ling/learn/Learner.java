@@ -2267,7 +2267,7 @@ public class Learner {
 		List<String> nounPtn = new ArrayList<String>();
 		
 		List<String> tempWords = new ArrayList<String>();
-		tempWords.addAll(this.getUtility().getPopulateSentenceUtility().tokenizeSentence(sentence, "firstset"));
+		tempWords.addAll(this.getUtility().getPopulateSentenceUtility().tokenizeSentence(sentence, "firstseg"));
 		List<String> words = StringUtility.stringArraySplice(tempWords, startWordIndex, tempWords.size());
 		String ptn = this.getPOSptn(words);
 		
@@ -2286,9 +2286,9 @@ public class Learner {
 				end = m2.end(1);
 			}
 			if (case1 || case2) {
-				bWord = words.get(end+1);
+				bWord = words.get(end);
 				List<String> nWords = new ArrayList<String>();
-				nWords.addAll(StringUtility.stringArraySplice(words, 0, end+1));
+				nWords.addAll(StringUtility.stringArraySplice(words, 0, end));
 				for (int i=0;i<nWords.size();i++) {
 					String p = ptn.substring(i, i+1);
 					p = StringUtils.equals(p, "?") ? 
