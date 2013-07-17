@@ -2828,7 +2828,66 @@ public class Learner {
 		
 		myLogger.trace("[unknownWordBootstrapping]End");
 	}
+	
+	/**
+	 * tag words with all o n m b tags that are applicable to the words
+	 * 
+	 * @param mode
+	 *            "singletag" or "multitags"
+	 * @param type
+	 *            "sentence" or "orginal"
+	 */
+	public void tagAllSentences (String mode, String type) {
+		List<StringAndInt> idAndSentenceList = new LinkedList<StringAndInt>();
+		
+		Iterator<Sentence> sentenceIter = 
+				this.getDataHolder().getSentenceHolder().iterator();
+		
+		if (StringUtils.equals(mode, "original")) {
+			while (sentenceIter.hasNext()) {
+				Sentence sentence = sentenceIter.next();
+				int thisID = sentence.getID();
+				String thisSentence = sentence.getSentence();
+				idAndSentenceList.add(new StringAndInt(thisSentence, thisID));
+			}
+		}
+		else {
+			while (sentenceIter.hasNext()) {
+				Sentence sentence = sentenceIter.next();
+				int thisID = sentence.getID();
+				String thisOriginalSentence = sentence.getOriginalSentence();
+				idAndSentenceList.add(new StringAndInt(thisOriginalSentence, thisID));
+			}
+		}
+		
+		KnownTagCollection myKnownTags = this.getKnownTags(mode);
+		
+		Iterator<StringAndInt> idAndSentenceListIter = idAndSentenceList.iterator();
+		while (idAndSentenceListIter.hasNext()) {
+			StringAndInt idAndSentence = idAndSentenceListIter.next();
+			int thisID = idAndSentence.getInt();
+			String thisString = idAndSentence.getString();
+			
+			thisString = tagAllSentencesHelper(thisString);
+			thisString = annotateSentence(thisString, myKnownTags);
+			
+			Sentence targetSentence = this.getDataHolder().getSentence(thisID);
+			targetSentence.setSentence(thisString);
+		}
+		
+	}
     
+	public String annotateSentence(String thisString,
+			KnownTagCollection myKnownTags) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String tagAllSentencesHelper(String text) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/**
 	 * 
 	 * @param mode
