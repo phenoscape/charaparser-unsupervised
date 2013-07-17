@@ -2130,7 +2130,7 @@ public class Learner {
 		else if ((StringUtility.createMatcher("b[?b]([psn])$", ptn).find())
 				|| StringUtility.createMatcher("[?b]b([psn])$", ptn).find()) {
 			myLogger.debug("Case 6: Found [b?[psn]$] or [[?b]b([psn])$] pattern");
-			int end = 2;
+			int end = 2; // the index of noun
 			GetNounsAfterPtnReturnValue tempReturnValue = this
 					.getNounsAfterPtn(thisSentence, end + 1);
 			List<String> moreNouns = tempReturnValue.getNouns();
@@ -2142,22 +2142,30 @@ public class Learner {
 					.tokenizeSentence(thisSentence, "firstseg");
 			end += morePtn.size();
 			List<String> tempWords = StringUtility.stringArraySplice(
-					sentenceHeadWords, end + 1, sentenceHeadWords.size());
+					sentenceHeadWords, 0, end + 1);
 			tag = StringUtility.joinList(" ", tempWords);
 			myLogger.debug("\t:updates on POSs");
-			sign += this.getDataHolder().updateDataHolder(bWord, "b", "",
+			if (StringUtility.createMatcher("\\w", bWord).find()) {
+				sign += this.getDataHolder().updateDataHolder(bWord, "b", "",
 					"wordpos", 1);
+			}
 			String allPtn = "" + ptn;
 			allPtn = allPtn + StringUtility.joinList("", morePtn);
+			// from the index of noun
 			for (int i = 2; i < allPtn.length(); i++) {
+				// last ptn
 				if (i != allPtn.length() - 1) {
+					myLogger.trace("Case 6.1");
 					sign += this.getDataHolder().updateDataHolder(
 							sentenceHeadWords.get(i),
-							allPtn.substring(i, i + 2), "_", "wordpos", 1);
-				} else {
+							allPtn.substring(i, i + 1), "_", "wordpos", 1);
+				} 
+				// not last ptn
+				else {
+					myLogger.trace("Case 6.2");
 					sign += this.getDataHolder().updateDataHolder(
 							sentenceHeadWords.get(i),
-							allPtn.substring(i, i + 2), "-", "wordpos", 1);
+							allPtn.substring(i, i + 1), "-", "wordpos", 1);
 				}
 			}
 			myLogger.debug("\t:determine the tag: " + tag);
