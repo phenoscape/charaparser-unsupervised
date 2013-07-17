@@ -1929,10 +1929,12 @@ public class Learner {
 
 	/**
 	 * update wordpos table (on certainty) when a sentence is tagged for the
-	 * first time. this update should not be done when a pos is looked up,
-	 * because we may lookup a pos for the same example multiple times. if the
-	 * tag need to be adjusted (not by doit function), also need to adjust
-	 * certainty counts.
+	 * first time. 
+	 * Note: 
+	 * 1) this update should not be done when a pos is looked
+	 * up, because we may lookup a pos for the same example multiple times. 
+	 * 2) if the tag need to be adjusted (not by doit function), also need 
+	 * to adjust certainty counts.
 	 * 
 	 * @param sentID
 	 *            the ID of the sentence
