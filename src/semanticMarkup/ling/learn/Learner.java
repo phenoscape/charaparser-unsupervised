@@ -2900,7 +2900,7 @@ public class Learner {
 		
 		KnownTagCollection knownTags = null;
 		Set<String> nouns = new HashSet<String>(); // nouns
-		Set<String> o = new HashSet<String>(); // o
+		Set<String> organs = new HashSet<String>(); // o
 		Set<String> modifiers = new HashSet<String>(); // modifiers
 		Set<String> boundaryWords = new HashSet<String>(); // boundary words
 		Set<String> boundaryMarks = new HashSet<String>(); // boundary marks
@@ -2913,8 +2913,8 @@ public class Learner {
 		nounSet .addAll(psWordSet);
 		// if the mode is "singletag", then get additional nouns from tags
 		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
-			Set<String> oSet = this.getOs();
-			nounSet.addAll(o);
+			Set<String> oSet = this.getOrgans();
+			nounSet.addAll(organs);
 		} else {
 			// do nothing
 		}
@@ -2923,9 +2923,9 @@ public class Learner {
 		
 		// get o
 		if(StringUtils.equals(mode, "multitags")){
-			Set<String> oSet = this.getOs();
-			o.addAll(oSet);
-			myLogger.trace("Get o: "+o.toString());
+			Set<String> oSet = this.getOrgans();
+			organs.addAll(oSet);
+			myLogger.trace("Get o: "+organs.toString());
 		}
 		
 		// get modifiers
@@ -2952,7 +2952,7 @@ public class Learner {
 		properNouns = this.getProperNouns();
 		
 		// put all known tags into one KnownTagCollection object
-		knownTags = new KnownTagCollection(nouns, o, modifiers, boundaryWords, boundaryMarks, properNouns);
+		knownTags = new KnownTagCollection(nouns, organs, modifiers, boundaryWords, boundaryMarks, properNouns);
 		
 		return knownTags;
 	}
@@ -2992,7 +2992,7 @@ public class Learner {
 	 * 
 	 * @return a set of o
 	 */
-	public Set<String> getOs() {
+	public Set<String> getOrgans() {
 		Set<String> oSet = new HashSet<String>(); // set of o
 		
 		Iterator<Sentence> iterSentence = this.myDataHolder
