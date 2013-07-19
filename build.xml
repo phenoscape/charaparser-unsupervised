@@ -24,7 +24,10 @@
 		<fileset dir="${lib}/OpenNLP">
 			<include name="*.jar" />
 		</fileset>
-		<pathelement path="${classfiles}"/>
+		<fileset dir="${lib}/commons-lang3-3.1">
+			<include name="*.jar" />
+		</fileset>
+		<pathelement path="${classfiles}" />
 	</path>
 
 	<target name="check-wordnet">
