@@ -1021,7 +1021,7 @@ public class LearnerTest {
     	target.add("tag1");
     	target.add("tag2");
     	
-    	assertEquals("getOs", target, myTester.getOs());
+    	assertEquals("getOs", target, myTester.getOrgans());
     }
     
     @Test

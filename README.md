@@ -179,6 +179,7 @@ Data Holder
     "m" - modififer word
     "b" - boundary word
     "z" - proper noun
+    Note: in this project, "o" means "organs", but "o" is not taken as a POS tag in the word-POS collection.
 
 ** role: the role of the word-POS pair. There are several legal values.
     "" - the role is unknown
