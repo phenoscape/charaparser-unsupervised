@@ -1,11 +1,13 @@
 package semanticMarkup.ling.learn;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -223,6 +225,21 @@ public class PopulateSentenceUtility {
 		}
 
 		return nWords;
+	}
+	
+	public List<String> tokenizeSentence(String sentence, String mode) {
+		if (StringUtils.equals(mode, "firstseg")) {
+			sentence = getSentenceHead(sentence);
+		}
+		else {
+			;
+		}
+		
+		String[] tempWords = sentence.split("\\s+");
+		List<String> words = new ArrayList<String>();
+		words.addAll(Arrays.asList(tempWords));
+		
+		return words;
 	}
 	
 	/**

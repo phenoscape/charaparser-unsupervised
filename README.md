@@ -98,7 +98,8 @@ markup the tag of some sentence by "chromosome", "flowerTime", "fruitTime" accor
 	Discover with parameter "normal"  
 	Same to the previous step, except that the parameter is "normal" instead of "start".  
 	
-* additional bootstrapping
+    
+* additional bootstrapping module
 	
 In this step, we do addition bootstrapping learning by using clues such as shared subject different boundary and one lead word.
 
@@ -111,6 +112,8 @@ The last word in the shared lead words are a boundary word.
 If the lead of any sentence has only one word, and the words was taken as the tag in any other sentence, then we take this word as the tag to the sentence, and tag the sentence using that word.
 
 
+* unknown word bootstrapping module
+learning based on "m o b" pattern
 
 
 * Manage Data Holder
@@ -176,6 +179,7 @@ Data Holder
     "m" - modififer word
     "b" - boundary word
     "z" - proper noun
+    Note: in this project, "o" means "organs", but "o" is not taken as a POS tag in the word-POS collection.
 
 ** role: the role of the word-POS pair. There are several legal values.
     "" - the role is unknown
@@ -192,6 +196,13 @@ Data Holder
 ** flag: If the flag is "unknown", then the word is unknown; otherwise, the flag indicates how the word was learned. For example, if the word "unicuspid" is "b", then by removing prefix of unicuspid, the word "bicuspid" is learned as a [b] as well. In this case, the flag of word "bicuspid" is "unicuspid", indicates that the word "bicuspid" was learned from the word "unicuspid".
 
 
+========
+Learner Utilities
+========
+doIt
+* Used in: additional bootstrapping
+Update on certainty value of word-POS pair collection when first tag a sentence. When tag a sentence based on some pattern. From the pattern, we will be able to update the certainty values of some words (nouns/modifier/boundary) in the word-POS collection. 
+
 
 
 ========
@@ -203,3 +214,21 @@ getNumber() uses checkWN. If checkWN() returns "x", change the return that to em
 
 * what is a modifer/boundary word?
 the word before a noun is its modifer. The word after a noun is its boundary word.
+
+Learner Module Method List
+* Methods used only in one module is considered as module methods
+
+    Module                      |   Method Name
+*   AdditionalBoostrapping      |   wrapupMarkup    
+*   AdditionalBoostrapping      |   oneLeadWordMarkup
+*   AdditionalBoostrapping      |   currenttags
+*   AdditionalBoostrapping      |   doitMarkup
+*   UnknownWordBootstrapping    |  
+*   MarkupByPOS 
+
+
+Learner Utility Method List
+* Methods used in multiply modules are considered as utility methods
+    Name            | Used by
+*   tagAllSentences | UnknownWordBootstrapping / AdjectiveSubjectBootstrapping 
+*   getKnownTags    | tagAllSentences / tagUnknowns

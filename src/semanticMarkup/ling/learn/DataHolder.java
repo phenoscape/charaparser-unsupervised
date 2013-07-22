@@ -1254,11 +1254,16 @@ public class DataHolder {
 	}
 	
 	/**
-	 * for the nouns in @words, make the last n the main noun("-"). update NN's roles. return a positive number if an update is made,
+	 * mark the words between the start index and the end index as modifiers if
+	 * they are valid words.
+	 * 
 	 * @param start
+	 *            the start index
 	 * @param end
+	 *            the end index
 	 * @param words
-	 * @return
+	 *            a list of words
+	 * @return number of updates made
 	 */
 	public int updateDataHolderNN(int start, int end, List<String> words) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );

@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -1929,10 +1930,12 @@ public class Learner {
 
 	/**
 	 * update wordpos table (on certainty) when a sentence is tagged for the
-	 * first time. this update should not be done when a pos is looked up,
-	 * because we may lookup a pos for the same example multiple times. if the
-	 * tag need to be adjusted (not by doit function), also need to adjust
-	 * certainty counts.
+	 * first time. 
+	 * Note: 
+	 * 1) this update should not be done when a pos is looked
+	 * up, because we may lookup a pos for the same example multiple times. 
+	 * 2) if the tag need to be adjusted (not by doit function), also need 
+	 * to adjust certainty counts.
 	 * 
 	 * @param sentID
 	 *            the ID of the sentence
@@ -1991,6 +1994,9 @@ public class Learner {
 		
 		Pattern p4 = Pattern.compile("[psn](b)");
 		Matcher m4 = p4.matcher(ptn);
+		
+		Pattern p7 = Pattern.compile("^s(\\?)$");
+		Matcher m7 = p7.matcher(ptn);
 		
 		Pattern p10 = Pattern.compile("^\\?(b)");
 		Matcher m10 = p10.matcher(ptn);
@@ -2121,6 +2127,93 @@ public class Learner {
 			}
 		}
 		
+		// case 6: "b[?b]([psn])$" or "[?b]b([psn])$"
+		else if ((StringUtility.createMatcher("b[?b]([psn])$", ptn).find())
+				|| StringUtility.createMatcher("[?b]b([psn])$", ptn).find()) {
+			myLogger.debug("Case 6: Found [b?[psn]$] or [[?b]b([psn])$] pattern");
+			int end = 2; // the index of noun
+			GetNounsAfterPtnReturnValue tempReturnValue = this
+					.getNounsAfterPtn(thisSentence, end + 1);
+			List<String> moreNouns = tempReturnValue.getNouns();
+			List<String> morePtn = tempReturnValue.getNounPtn();
+			String bWord = tempReturnValue.getBoundaryWord();
+
+			List<String> sentenceHeadWords = this.getUtility()
+					.getPopulateSentenceUtility()
+					.tokenizeSentence(thisSentence, "firstseg");
+			end += morePtn.size();
+			List<String> tempWords = StringUtility.stringArraySplice(
+					sentenceHeadWords, 0, end + 1);
+			tag = StringUtility.joinList(" ", tempWords);
+			myLogger.debug("\t:updates on POSs");
+			if (StringUtility.createMatcher("\\w", bWord).find()) {
+				sign += this.getDataHolder().updateDataHolder(bWord, "b", "",
+					"wordpos", 1);
+			}
+			String allPtn = "" + ptn;
+			allPtn = allPtn + StringUtility.joinList("", morePtn);
+			// from the index of noun
+			for (int i = 2; i < allPtn.length(); i++) {
+				// last ptn
+				if (i != allPtn.length() - 1) {
+					myLogger.trace("Case 6.1");
+					sign += this.getDataHolder().updateDataHolder(
+							sentenceHeadWords.get(i),
+							allPtn.substring(i, i + 1), "_", "wordpos", 1);
+				} 
+				// not last ptn
+				else {
+					myLogger.trace("Case 6.2");
+					sign += this.getDataHolder().updateDataHolder(
+							sentenceHeadWords.get(i),
+							allPtn.substring(i, i + 1), "-", "wordpos", 1);
+				}
+			}
+			myLogger.debug("\t:determine the tag: " + tag);
+		}
+		
+		
+		// case 7: "^s(\\?)$"
+		else if (m7.find()) {
+			myLogger.trace("Case 7");
+			String singularWord = words.get(0);
+			String questionedWord = words.get(1);
+			String wnPOS = this.myUtility.getWordFormUtility().checkWN(questionedWord, "pos");
+			
+			if (StringUtility.createMatcher("p", wnPOS).find()){
+				myLogger.trace("Case 7.1");
+				tag = singularWord+" "+questionedWord;
+				myLogger.debug("\t:determine the tag: "+tag);
+				myLogger.debug("\t:updates on POSs");
+				String questionedPOS = this.getUtility().getWordFormUtility().getNumber(singularWord);
+				sign += this.getDataHolder().updateDataHolder(questionedWord, questionedPOS, "-", "wordpos", 1);
+			}
+			else {
+				myLogger.trace("Case 7.2");
+				tag = words.get(0);
+				myLogger.debug("\t:determine the tag: "+tag);
+				myLogger.debug("\t:updates on POSs");
+				sign += this.getDataHolder().updateDataHolder(questionedWord, "b", "", "wordpos", 1);
+				sign += this.getDataHolder().updateDataHolder(singularWord, "s", "-", "wordpos", 1);
+			}
+		}
+		
+		// case 8: "^bs$"
+		else if (StringUtility.createMatcher("^bs$", ptn).find()) {
+			myLogger.trace("Case 8");
+			tag = StringUtility.joinList(" ", words);
+			sign += this.getDataHolder().updateDataHolder(words.get(0), "b", "", "wordpos", 1);
+			sign += this.getDataHolder().updateDataHolder(words.get(1), "s", "-", "wordpos", 1);
+		}
+		
+		// case 9: ^bp$
+		else if (StringUtility.createMatcher("^bp$", ptn).find()) {
+			myLogger.trace("Case 9");
+			tag = StringUtility.joinList(" ", words);
+			sign += this.getDataHolder().updateDataHolder(words.get(0), "b", "", "wordpos", 1);
+			sign += this.getDataHolder().updateDataHolder(words.get(1), "p", "-", "wordpos", 1);
+		} 
+		
 		// case 10: "^\\?(b)"
 		else if (m10.find()) {
 			myLogger.trace("Case 10");
@@ -2159,7 +2252,9 @@ public class Learner {
                     myLogger.debug("\t:determine the tag: "+tag);
                     myLogger.debug("\t:updates on POSs");
                     sign += this.myDataHolder.updateDataHolder(word, "n", "-", "wordpos", 1);
-                    sign += this.myDataHolder.updateDataHolderNN(0, wordsTemp.size(), wordsTemp);
+                    myLogger.trace(String.format("updateDataHolder(%s, n, -, wordpos, 1)", word));
+                    sign += this.myDataHolder.updateDataHolderNN(0, wordsTemp.size()-1, wordsTemp);
+                    myLogger.trace(String.format("updateDataHolderNN(%d, %d, %s)", 0, wordsTemp.size()-1, wordsTemp));
 					
 				}
 				else{
@@ -2183,6 +2278,68 @@ public class Learner {
 		
 		myLogger.trace("Return: "+returnValue.toString());
 		return returnValue;
+	}
+
+	public int doItCase7Helper(String regex, String ptn) {
+		Matcher m = StringUtility.createMatcher(regex, ptn);
+		if (m.find()) {
+			int start = m.start();
+			return start + 1;
+		} else {
+			return -1;
+		}
+	}
+	
+	public GetNounsAfterPtnReturnValue getNounsAfterPtn(String sentence, int startWordIndex){
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.getNounsAfterPattern");
+		
+		String bWord = "";
+		List<String> nouns = new ArrayList<String>();
+		List<String> nounPtn = new ArrayList<String>();
+		
+		List<String> tempWords = new ArrayList<String>();
+		tempWords.addAll(this.getUtility().getPopulateSentenceUtility().tokenizeSentence(sentence, "firstseg"));
+		List<String> words = StringUtility.stringArraySplice(tempWords, startWordIndex, tempWords.size());
+		String ptn = this.getPOSptn(words);
+		
+		if (ptn!=null) {
+			Matcher m1 = StringUtility.createMatcher("^([psn]+)", ptn);
+			Matcher m2 = StringUtility.createMatcher("^(\\?+)", ptn);
+			boolean case1 = false;
+			boolean case2 = false;
+			int end = -1;
+			if (m1.find()) {
+				case1 = true;
+				end = m1.end(1);
+			}
+			if (m2.find()) {
+				case2 = true;
+				end = m2.end(1);
+			}
+			if (case1 || case2) {
+				bWord = words.get(end);
+				List<String> nWords = new ArrayList<String>();
+				nWords.addAll(StringUtility.stringArraySplice(words, 0, end));
+				for (int i=0;i<nWords.size();i++) {
+					String p = ptn.substring(i, i+1);
+					p = StringUtils.equals(p, "?") ? 
+							this.getUtility().getWordFormUtility().checkWN(nWords.get(i), "pos")
+							: p;
+					if (StringUtility.createMatcher("^[psn]+$", p).find()) {
+						nouns.add(nWords.get(i));
+						nounPtn.add(p);
+					}
+					else {
+						bWord = nWords.get(i);
+						break;
+					}
+				}
+			}
+		}
+		
+		GetNounsAfterPtnReturnValue returnValue = new GetNounsAfterPtnReturnValue(nouns, nounPtn, bWord);
+		return (returnValue);
 	}
 
 	/**
@@ -2672,7 +2829,66 @@ public class Learner {
 		
 		myLogger.trace("[unknownWordBootstrapping]End");
 	}
+	
+	/**
+	 * tag words with all o n m b tags that are applicable to the words
+	 * 
+	 * @param mode
+	 *            "singletag" or "multitags"
+	 * @param type
+	 *            "sentence" or "orginal"
+	 */
+	public void tagAllSentences (String mode, String type) {
+		List<StringAndInt> idAndSentenceList = new LinkedList<StringAndInt>();
+		
+		Iterator<Sentence> sentenceIter = 
+				this.getDataHolder().getSentenceHolder().iterator();
+		
+		if (StringUtils.equals(mode, "original")) {
+			while (sentenceIter.hasNext()) {
+				Sentence sentence = sentenceIter.next();
+				int thisID = sentence.getID();
+				String thisSentence = sentence.getSentence();
+				idAndSentenceList.add(new StringAndInt(thisSentence, thisID));
+			}
+		}
+		else {
+			while (sentenceIter.hasNext()) {
+				Sentence sentence = sentenceIter.next();
+				int thisID = sentence.getID();
+				String thisOriginalSentence = sentence.getOriginalSentence();
+				idAndSentenceList.add(new StringAndInt(thisOriginalSentence, thisID));
+			}
+		}
+		
+		KnownTagCollection myKnownTags = this.getKnownTags(mode);
+		
+		Iterator<StringAndInt> idAndSentenceListIter = idAndSentenceList.iterator();
+		while (idAndSentenceListIter.hasNext()) {
+			StringAndInt idAndSentence = idAndSentenceListIter.next();
+			int thisID = idAndSentence.getInt();
+			String thisString = idAndSentence.getString();
+			
+			thisString = tagAllSentencesHelper(thisString);
+			thisString = annotateSentence(thisString, myKnownTags);
+			
+			Sentence targetSentence = this.getDataHolder().getSentence(thisID);
+			targetSentence.setSentence(thisString);
+		}
+		
+	}
     
+	public String annotateSentence(String thisString,
+			KnownTagCollection myKnownTags) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String tagAllSentencesHelper(String text) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/**
 	 * 
 	 * @param mode
@@ -2685,7 +2901,7 @@ public class Learner {
 		
 		KnownTagCollection knownTags = null;
 		Set<String> nouns = new HashSet<String>(); // nouns
-		Set<String> o = new HashSet<String>(); // o
+		Set<String> organs = new HashSet<String>(); // o
 		Set<String> modifiers = new HashSet<String>(); // modifiers
 		Set<String> boundaryWords = new HashSet<String>(); // boundary words
 		Set<String> boundaryMarks = new HashSet<String>(); // boundary marks
@@ -2698,8 +2914,8 @@ public class Learner {
 		nounSet .addAll(psWordSet);
 		// if the mode is "singletag", then get additional nouns from tags
 		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
-			Set<String> oSet = this.getOs();
-			nounSet.addAll(o);
+			Set<String> oSet = this.getOrgans();
+			nounSet.addAll(organs);
 		} else {
 			// do nothing
 		}
@@ -2708,9 +2924,9 @@ public class Learner {
 		
 		// get o
 		if(StringUtils.equals(mode, "multitags")){
-			Set<String> oSet = this.getOs();
-			o.addAll(oSet);
-			myLogger.trace("Get o: "+o.toString());
+			Set<String> oSet = this.getOrgans();
+			organs.addAll(oSet);
+			myLogger.trace("Get o: "+organs.toString());
 		}
 		
 		// get modifiers
@@ -2737,7 +2953,7 @@ public class Learner {
 		properNouns = this.getProperNouns();
 		
 		// put all known tags into one KnownTagCollection object
-		knownTags = new KnownTagCollection(nouns, o, modifiers, boundaryWords, boundaryMarks, properNouns);
+		knownTags = new KnownTagCollection(nouns, organs, modifiers, boundaryWords, boundaryMarks, properNouns);
 		
 		return knownTags;
 	}
@@ -2777,7 +2993,7 @@ public class Learner {
 	 * 
 	 * @return a set of o
 	 */
-	public Set<String> getOs() {
+	public Set<String> getOrgans() {
 		Set<String> oSet = new HashSet<String>(); // set of o
 		
 		Iterator<Sentence> iterSentence = this.myDataHolder
@@ -2945,5 +3161,41 @@ public class Learner {
 			}
 		}
 	}
+	
+	// some unused variables in perl
+	// directory of /descriptions folder
+	private String desDir = "";
+	// directory of /characters folder
+	private String chrDir = "";
+	// prefix for all tables generated by this program
+	private String prefix = "";
+	// default general tag
+	private String defaultGeneralTag = "general";
+	// knowledge base
+	private String knlgBase = "phenoscape";
+
+	private int DECISIONID = 0;
+
+	private Map<String, String> numberRecords = new HashMap<String, String>(); // word->(p|s)
+	private Map<String, String> singularRecords = new HashMap<String, String>();// word->singular
+	private Map<String, String> POSRecords = new HashMap<String, String>(); // word->POSs
+	// private Map<String, String> POSRecordsRECORDS = new HashMap<String,
+	// String>();
+	private String NEWDESCRIPTION = ""; // record the index of sentences that
+										// ends a description
+
+	private Hashtable<String, String> PLURALS = new Hashtable<String, String>();
+
+	private String TAGS = "";
+
+	// grouped #may contain q but not the last m, unless it is followed by a p
+	private String mptn = "((?:[mbq][,&]*)*(?:m|b|q(?=[pon])))";
+	// grouped #must present, no q allowed
+	private String nptn = "((?:[nop][,&]*)*[nop])";
+	// grouped #when following a p, a b could be a q
+	private String bptn = "([,;:\\\\.]*\\$|,*[bm]|(?<=[pon]),*q)";
+	private String SEGANDORPTN = "(?:" + mptn + nptn + ")";
+	private String ANDORPTN = "^(?:" + SEGANDORPTN + "[,&]+)*" + SEGANDORPTN
+			+ bptn;
 	
 }

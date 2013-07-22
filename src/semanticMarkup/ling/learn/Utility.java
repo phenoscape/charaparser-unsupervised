@@ -71,8 +71,8 @@ public class Utility {
 		this.myLearnerUtility = new LearnerUtility(myConfiguration);
 	}
 	
-	public SentenceDetectorME getPopulateSentenceUtility(){
-		return this.mySentenceDetector;
+	public  PopulateSentenceUtility getPopulateSentenceUtility(){
+		return this.myPopulateSentenceUtility;
 	}
 	
 	public WordFormUtility getWordFormUtility(){
