@@ -179,10 +179,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Map<String, String> myHeuristicNouns = new HashMap<String, String>();
 		myHeuristicNouns.putAll(this.getDataHolder().getHeuristicNounHolder());
+		
 		return myHeuristicNouns;
 		
 	}
 
+	// need wordroles table
 	public Map<String, Set<String>> readRoleToWords() {
 		if (this.myDataHolder == null) {
 			return null;
@@ -192,6 +194,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
+	// use treatment
 	public Map<Treatment, List<String>> readSentences() {
 		if (this.myDataHolder == null) {
 			return null;
@@ -200,6 +203,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return null;
 	}
 
+	// use treatment
 	public Map<Treatment, List<String>> readSentencesForOrganStateMarker() {
 		if (this.myDataHolder == null) {
 			return null;
@@ -209,6 +213,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
+	// use treatment
 	public Map<Treatment, List<String>> readSentenceTags() {
 		if (this.myDataHolder == null) {
 			return null;
@@ -218,6 +223,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
+	// need term_category table
 	public Map<String, Set<String>> readTermCategories() {
 		if (this.myDataHolder == null) {
 			return null;
@@ -227,6 +233,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
+	// need wordrole table
 	public Set<String> readWordRoleTags() {
 		if (this.myDataHolder == null) {
 			return null;
@@ -236,6 +243,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
+	// need wordrole table
 	public Map<String, Set<String>> readWordsToRoles() {
 		if (this.myDataHolder == null) {
 			return null;
