@@ -134,7 +134,41 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return null;
 		}
 		
-		return null;
+		Set<String> tags = new HashSet<String>();
+		
+		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder().iterator();
+		
+		while (iter.hasNext()) {
+			Sentence sentence = iter.next();
+			String thisTag = sentence.getTag();
+			if (thisTag != null) {
+				if (StringUtility.createMatcher("^\\[.*\\]$", thisTag).find()) {
+					String thisModifier = sentence.getModifier();
+					String modifier = thisModifier
+							.replaceAll("\\[^\\[*\\]", "");
+					if (!modifier.equals("")) {
+						String tag;
+						if (modifier.lastIndexOf(" ") < 0) {
+							tag = modifier;
+						} else {
+							// last word from modifier
+							tag = modifier
+									.substring(modifier.lastIndexOf(" ") + 1); 
+						}
+						boolean case1 = tag.indexOf("[") >= 0;
+						boolean case2 = tag.matches(".*?(\\d|" + Constant.STOP
+								+ ").*");
+						if (tag.indexOf("[") >= 0
+								|| tag.matches(".*?(\\d|" + Constant.STOP
+										+ ").*"))
+							continue;
+						tags.add(tag);
+					}
+				}
+			}
+		}
+		
+		return tags;
 		
 	}
 

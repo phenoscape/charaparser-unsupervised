@@ -5,6 +5,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.HashMap;
 //import java.util.HashMap;
@@ -69,6 +70,19 @@ public class UnsupervisedClauseMarkupTest {
 
 		assertEquals("Method readAdjNouns", resultGetAdjNounSent,
 				tester.readAdjNounSent());
+	}
+	
+	@Test
+	public void testReadBracketTags() {
+		UnsupervisedClauseMarkup myTester = new UnsupervisedClauseMarkup("plain",
+				"res/WordNet/WordNet-3.0/dict");
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag","start","type"}));
+		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","[tag]","start end","type"}));
+		
+		Set<String> target = new HashSet<String>();
+		target.add("end");
+		
+		assertEquals("Method readBracketTags", target, myTester.readBracketTags());
 	}
 
 	@Test
