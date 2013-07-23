@@ -24,6 +24,20 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// Learner
 	private Learner myLearner;
+	
+	protected Map<Treatment, List<String>> sentences;
+	protected Map<Treatment, List<String>> sentencesForOrganStateMarker;
+	protected List<String> adjnouns;
+	protected Map<String, String> adjnounsent;
+	protected Map<Treatment, List<String>> sentenceTags;
+	protected Set<String> bracketTags;
+	protected Set<String> wordRoleTags;
+	protected Map<String, Set<String>> wordToSources;
+	protected Map<String, Set<String>> roleToWords;
+	protected Map<String, Set<String>> wordsToRoles;
+	protected Map<String, String> heuristicNouns;
+	protected Map<String, Set<String>> termCategories;
+	
 
 	/**
 	 * Constructor of UnsupervisedClauseMarkup class. Create a new
@@ -44,30 +58,27 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
+	// learn
 	public void learn(List<Treatment> treatments) {
 		this.myDataHolder = this.myLearner.Learn(treatments);
-	}
-
-	// interface methods
-	public Map<Treatment, List<String>> getSentences() {
-		if (this.myDataHolder == null) {
-			return null;
-		}
 		
-		System.out.println("Method: getSentences\n");
-		return null;
+		// import data from data holder
+		this.adjnouns = readAdjNouns();
+		this.adjnounsent = readAdjNounSent();
+		this.bracketTags = readBracketTags();
+		this.heuristicNouns = readHeuristicNouns();
+		this.roleToWords = readRoleToWords();
+		this.sentences = readSentences();
+		this.sentencesForOrganStateMarker = readSentencesForOrganStateMarker();
+		this.sentenceTags = readSentenceTags();
+		this.termCategories = readTermCategories();
+		this.wordRoleTags = readWordRoleTags();
+		this.wordsToRoles = readWordsToRoles();
+		this.wordToSources = readWordToSources();	
 	}
-
-	public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
-		if (this.myDataHolder == null) {
-			return null;
-		}
-		
-		System.out.println("Method: getSentencesForOrganStateMarker\n");
-		return null;
-	}
-
-	public List<String> getAdjNouns() {
+	
+	// import data from data holder to class variables
+	public List<String> readAdjNouns() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -93,7 +104,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return myAdjNouns;
 	}
 
-	public Map<String, String> getAdjNounSent() {
+	public Map<String, String> readAdjNounSent() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -117,25 +128,87 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return myAdjNounSent;
 	}
 
-	public Set<String> getBracketTags() {
+	private Set<String> readBracketTags() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
 		
-		System.out.println("Method: getAdjNounsSent\n");
 		return null;
+		
 	}
 
-	public Set<String> getWordRoleTags() {
+	private Map<String, String> readHeuristicNouns() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
 		
-		System.out.println("Method: getSentenceTags\n");
 		return null;
 	}
 
-	public Map<String, Set<String>> getWordToSources() {
+	private Map<String, Set<String>> readRoleToWords() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		return null;
+		
+		
+	}
+
+	private Map<Treatment, List<String>> readSentences() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		return null;
+	}
+
+	private Map<Treatment, List<String>> readSentencesForOrganStateMarker() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		return null;
+		
+	}
+
+	private Map<Treatment, List<String>> readSentenceTags() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		return null;
+		
+	}
+
+	private Map<String, Set<String>> readTermCategories() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		return null;
+		
+	}
+
+	private Set<String> readWordRoleTags() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		return null;
+		
+	}
+
+	private Map<String, Set<String>> readWordsToRoles() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		return null;
+		
+	}
+
+	public Map<String, Set<String>> readWordToSources() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -162,51 +235,56 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return myWordToSources;
 	}
 
+	
+	// interface methods
+	public Map<Treatment, List<String>> getSentences() {
+		return this.sentences;
+	}
+
+	public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
+		return this.sentencesForOrganStateMarker;
+	}
+
+	public List<String> getAdjNouns() {
+		return this.adjnouns;
+	}
+
+	public Map<String, String> getAdjNounSent() {
+		return this.adjnounsent;
+	}
+
+	public Set<String> getBracketTags() {
+		return this.bracketTags;
+	}
+
+	public Set<String> getWordRoleTags() {
+		return this.wordRoleTags;
+	}
+
+	public Map<String, Set<String>> getWordToSources() {
+		return this.wordToSources;
+	}	
+
 	public Map<String, Set<String>> getRoleToWords() {
-		if (this.myDataHolder == null) {
-			return null;
-		}
-		
-		System.out.println("Method: getRoleToWords\n");
-		return null;
+		return this.roleToWords;
 
 	}
 
 	public Map<String, Set<String>> getWordsToRoles() {
-		if (this.myDataHolder == null) {
-			return null;
-		}
-		
-		System.out.println("Method: getWordsToRoles\n");
-		return null;
+		return this.wordsToRoles;
 	}
 
 	public Map<String, String> getHeuristicNouns() {
-		if (this.myDataHolder == null) {
-			return null;
-		}
-		
-		return this.myDataHolder.getHeuristicNounTable();
+		return this.heuristicNouns;
 	}
 
 	public Map<Treatment, List<String>> getSentenceTags() {
-		if (this.myDataHolder == null) {
-			return null;
-		}
-		
-		System.out.println("Method: getTermCategories\n");
-		return null;
+		return this.sentenceTags;
 	}
 
 	public Map<String, Set<String>> getTermCategories() {
-		if (this.myDataHolder == null) {
-			return null;
-		}
-		
-		System.out.println("Method: getTermCategories\n");
-		return null;
+		return this.termCategories;
 	}
-
 
 	//Utilities
 	public DataHolder getDataHolder() {
