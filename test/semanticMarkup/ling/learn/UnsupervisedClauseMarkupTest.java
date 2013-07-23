@@ -27,7 +27,7 @@ public class UnsupervisedClauseMarkupTest {
 	}
 
 	@Test
-	public void testGetAdjNouns() {
+	public void testReadAdjNouns() {
 		DataHolder myDataHolder = tester.getDataHolder();
 		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
 		sentenceTable.add(new Sentence(0, "source1", "word1 word2", "", "", "",
@@ -43,12 +43,12 @@ public class UnsupervisedClauseMarkupTest {
 		resultGetAdjNouns.add("modifier3");
 		resultGetAdjNouns.add("modifier2");
 
-		assertEquals("Method getAdjNouns", resultGetAdjNouns,
-				tester.getAdjNouns());
+		assertEquals("Method readAdjNouns", resultGetAdjNouns,
+				tester.readAdjNouns());
 	}
 
 	@Test
-	public void testGetAdjNounSent() {
+	public void testReadAdjNounSent() {
 		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
 				"res/WordNet/WordNet-3.0/dict");
 		DataHolder myDataHolder = tester.getDataHolder();
@@ -67,12 +67,12 @@ public class UnsupervisedClauseMarkupTest {
 		resultGetAdjNounSent.put("[tag3", "modifier2");
 		resultGetAdjNounSent.put("[tag4", "modifier3");
 
-		assertEquals("Method getAdjNouns", resultGetAdjNounSent,
-				tester.getAdjNounSent());
+		assertEquals("Method readAdjNouns", resultGetAdjNounSent,
+				tester.readAdjNounSent());
 	}
 
 	@Test
-	public void testGetWordToSoures() {
+	public void testReadWordToSoures() {
 		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
 				"res/WordNet/WordNet-3.0/dict");
 		DataHolder myDataHolder = tester.getDataHolder();
@@ -104,12 +104,12 @@ public class UnsupervisedClauseMarkupTest {
 		resultGetWordToSources.put("word4", new HashSet<String>());
 		resultGetWordToSources.get("word4").add("source4");
 
-		assertEquals("Method getWordToSources", resultGetWordToSources,
-				tester.getWordToSources());
+		assertEquals("Method readWordToSources", resultGetWordToSources,
+				tester.readWordToSources());
 	}
 
 	@Test
-	public void testGetHeuristicNouns() {
+	public void testReadHeuristicNouns() {
 		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
 				"res/WordNet/WordNet-3.0/dict");
 		DataHolder myDataHolder = tester.getDataHolder();
@@ -122,8 +122,8 @@ public class UnsupervisedClauseMarkupTest {
 		resultGetHeuristicNouns.put("word2", "type2");
 		resultGetHeuristicNouns.put("word1", "type1");
 
-		assertEquals("Method getHeuristicNouns", resultGetHeuristicNouns,
-				tester.getHeuristicNouns());
+		assertEquals("Method readHeuristicNouns", resultGetHeuristicNouns,
+				tester.readHeuristicNouns());
 	}
 
 }

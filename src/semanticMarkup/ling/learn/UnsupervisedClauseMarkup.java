@@ -25,19 +25,20 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// Learner
 	private Learner myLearner;
 	
-	protected Map<Treatment, List<String>> sentences;
-	protected Map<Treatment, List<String>> sentencesForOrganStateMarker;
+
 	protected List<String> adjnouns;
 	protected Map<String, String> adjnounsent;
-	protected Map<Treatment, List<String>> sentenceTags;
 	protected Set<String> bracketTags;
-	protected Set<String> wordRoleTags;
-	protected Map<String, Set<String>> wordToSources;
-	protected Map<String, Set<String>> roleToWords;
-	protected Map<String, Set<String>> wordsToRoles;
 	protected Map<String, String> heuristicNouns;
+	protected Map<String, Set<String>> roleToWords;
+	protected Map<Treatment, List<String>> sentences;
+	protected Map<Treatment, List<String>> sentencesForOrganStateMarker;
+	protected Map<Treatment, List<String>> sentenceTags;
 	protected Map<String, Set<String>> termCategories;
-	
+	protected Set<String> wordRoleTags;
+	protected Map<String, Set<String>> wordsToRoles;
+	protected Map<String, Set<String>> wordToSources;
+
 
 	/**
 	 * Constructor of UnsupervisedClauseMarkup class. Create a new
@@ -128,7 +129,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return myAdjNounSent;
 	}
 
-	private Set<String> readBracketTags() {
+	public Set<String> readBracketTags() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -137,33 +138,18 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
-	private Map<String, String> readHeuristicNouns() {
+	public Map<String, String> readHeuristicNouns() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
 		
-		return null;
-	}
-
-	private Map<String, Set<String>> readRoleToWords() {
-		if (this.myDataHolder == null) {
-			return null;
-		}
-		
-		return null;
-		
+		Map<String, String> myHeuristicNouns = new HashMap<String, String>();
+		myHeuristicNouns.putAll(this.getDataHolder().getHeuristicNounHolder());
+		return myHeuristicNouns;
 		
 	}
 
-	private Map<Treatment, List<String>> readSentences() {
-		if (this.myDataHolder == null) {
-			return null;
-		}
-		
-		return null;
-	}
-
-	private Map<Treatment, List<String>> readSentencesForOrganStateMarker() {
+	public Map<String, Set<String>> readRoleToWords() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -172,7 +158,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
-	private Map<Treatment, List<String>> readSentenceTags() {
+	public Map<Treatment, List<String>> readSentences() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		return null;
+	}
+
+	public Map<Treatment, List<String>> readSentencesForOrganStateMarker() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -181,7 +175,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
-	private Map<String, Set<String>> readTermCategories() {
+	public Map<Treatment, List<String>> readSentenceTags() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -190,7 +184,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
-	private Set<String> readWordRoleTags() {
+	public Map<String, Set<String>> readTermCategories() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -199,7 +193,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
-	private Map<String, Set<String>> readWordsToRoles() {
+	public Set<String> readWordRoleTags() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		return null;
+		
+	}
+
+	public Map<String, Set<String>> readWordsToRoles() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -237,14 +240,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	
 	// interface methods
-	public Map<Treatment, List<String>> getSentences() {
-		return this.sentences;
-	}
-
-	public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
-		return this.sentencesForOrganStateMarker;
-	}
-
 	public List<String> getAdjNouns() {
 		return this.adjnouns;
 	}
@@ -256,34 +251,42 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public Set<String> getBracketTags() {
 		return this.bracketTags;
 	}
-
-	public Set<String> getWordRoleTags() {
-		return this.wordRoleTags;
+	
+	public Map<String, String> getHeuristicNouns() {
+		return this.heuristicNouns;
 	}
-
-	public Map<String, Set<String>> getWordToSources() {
-		return this.wordToSources;
-	}	
-
+	
 	public Map<String, Set<String>> getRoleToWords() {
 		return this.roleToWords;
 
 	}
-
-	public Map<String, Set<String>> getWordsToRoles() {
-		return this.wordsToRoles;
+	
+	public Map<Treatment, List<String>> getSentences() {
+		return this.sentences;
 	}
-
-	public Map<String, String> getHeuristicNouns() {
-		return this.heuristicNouns;
-	}
-
+	
+	public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
+		return this.sentencesForOrganStateMarker;
+	}	
+	
 	public Map<Treatment, List<String>> getSentenceTags() {
 		return this.sentenceTags;
 	}
-
+	
 	public Map<String, Set<String>> getTermCategories() {
 		return this.termCategories;
+	}
+	
+	public Set<String> getWordRoleTags() {
+		return this.wordRoleTags;
+	}
+	
+	public Map<String, Set<String>> getWordsToRoles() {
+		return this.wordsToRoles;
+	}
+	
+	public Map<String, Set<String>> getWordToSources() {
+		return this.wordToSources;
 	}
 
 	//Utilities
