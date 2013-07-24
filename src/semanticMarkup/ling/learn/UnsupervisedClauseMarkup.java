@@ -54,8 +54,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * @param wordnetDir
 	 *            directory of WordNet dictionary
 	 */
-	public UnsupervisedClauseMarkup(String learningMode, String wordnetDir) {
+	public UnsupervisedClauseMarkup(String learningMode, String wordnetDir, Set<String> selectedSources) {
+		
 		//this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
+		
+		this.selectedSources = new HashSet<String>();
+		this.selectedSources.addAll(selectedSources);
 		
 		this.myConfiguration = new Configuration();
 		this.myUtility = new Utility(myConfiguration);
@@ -65,7 +69,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	// learn
-	public void learn(List<Treatment> treatments) {
+	public void learn(List<Treatment> treatments, String glossaryTable) {
 		this.myDataHolder = this.myLearner.Learn(treatments);
 		
 		// import data from data holder
@@ -411,22 +415,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return this.wordToSources;
 	}
 
-	//Utilities
-	public DataHolder getDataHolder() {
-		return this.myDataHolder;
-	}
-	
-	protected String getTreatmentId(String sourceString) {
-		String[] sourceParts = sourceString.split("\\.");
-		return sourceParts[0];
-	}
-
-	@Override
-	public void learn(List<Treatment> treatments, String glossaryTable) {
-		// TODO Auto-generated method stub
-		
-	}
-
+	// new added
 	@Override
 	public void readResults(List<Treatment> treatments) {
 		// TODO Auto-generated method stub
@@ -449,6 +438,22 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public Map<String, Set<String>> getCategoryTerms() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public Map<String, AjectiveReplacementForNoun> getAdjectiveReplacementsForNouns() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	//Utilities
+	public DataHolder getDataHolder() {
+		return this.myDataHolder;
+	}
+	
+	protected String getTreatmentId(String sourceString) {
+		String[] sourceParts = sourceString.split("\\.");
+		return sourceParts[0];
 	}
 
 }

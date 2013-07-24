@@ -103,6 +103,6 @@ public interface ITerminologyLearner {
 	/**
 	 * @return <source, AjectiveReplacementForNoun> map used in sentence table
 	 */
-	//public Map<String, AjectiveReplacementForNoun> getAdjectiveReplacementsForNouns();
+	public Map<String, AjectiveReplacementForNoun> getAdjectiveReplacementsForNouns();
 	
 }
