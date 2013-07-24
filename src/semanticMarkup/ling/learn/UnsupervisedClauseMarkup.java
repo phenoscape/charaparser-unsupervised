@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,13 +33,16 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	protected Set<String> bracketTags;
 	protected Map<String, String> heuristicNouns;
 	protected Map<String, Set<String>> roleToWords;
-	protected Map<Treatment, List<String>> sentences;
-	protected Map<Treatment, List<String>> sentencesForOrganStateMarker;
-	protected Map<Treatment, List<String>> sentenceTags;
+	protected Set<String> sentences;
+	protected Map<Treatment, LinkedHashMap<String, String>> sentencesForOrganStateMarker;
+	protected Map<Treatment, LinkedHashMap<String, String>> sentenceTags;
 	protected Map<String, Set<String>> termCategories;
 	protected Set<String> wordRoleTags;
 	protected Map<String, Set<String>> wordsToRoles;
 	protected Map<String, Set<String>> wordToSources;
+	
+	protected Map<String, Treatment> fileTreatments = new HashMap<String, Treatment>();
+	private Set<String> selectedSources;
 
 
 	/**
@@ -69,9 +74,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		this.bracketTags = readBracketTags();
 		this.heuristicNouns = readHeuristicNouns();
 		this.roleToWords = readRoleToWords();
-		this.sentences = readSentences();
-		this.sentencesForOrganStateMarker = readSentencesForOrganStateMarker();
-		this.sentenceTags = readSentenceTags();
+		this.sentences = readSentences(treatments);
+		this.sentencesForOrganStateMarker = readSentencesForOrganStateMarker(treatments);
+		this.sentenceTags = readSentenceTags(treatments);
 		this.termCategories = readTermCategories();
 		this.wordRoleTags = readWordRoleTags();
 		this.wordsToRoles = readWordsToRoles();
@@ -155,9 +160,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 							tag = modifier
 									.substring(modifier.lastIndexOf(" ") + 1); 
 						}
-						boolean case1 = tag.indexOf("[") >= 0;
-						boolean case2 = tag.matches(".*?(\\d|" + Constant.STOP
-								+ ").*");
+
 						if (tag.indexOf("[") >= 0
 								|| tag.matches(".*?(\\d|" + Constant.STOP
 										+ ").*"))
@@ -195,32 +198,109 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	// use treatment
-	public Map<Treatment, List<String>> readSentences() {
+	public Set<String> readSentences(List<Treatment> treatments) {
 		if (this.myDataHolder == null) {
 			return null;
 		}
 		
-		return null;
+		Set<String> result = new HashSet<String>();
+		
+		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder().iterator();
+		while (iter.hasNext()) {
+			Sentence sentenceObject = iter.next();
+			String sentence = sentenceObject.getSentence();
+			result.add(sentence);
+		}
+
+		return sentences;
 	}
 
 	// use treatment
-	public Map<Treatment, List<String>> readSentencesForOrganStateMarker() {
+	public HashMap<Treatment,  LinkedHashMap<String, String>> readSentencesForOrganStateMarker(List<Treatment> treatments) {
 		if (this.myDataHolder == null) {
 			return null;
 		}
 		
-		return null;
+		HashMap<Treatment, LinkedHashMap<String, String>> sentences = new  HashMap<Treatment, LinkedHashMap<String, String>>();
+		
+		List<Sentence> sentenceHolder = this.getDataHolder().getSentenceHolder();
+		String previousTreatmentId = "-1";
+		for (int i = sentenceHolder.size()-1;i>=0;i--) {
+			Sentence sentenceObject = sentenceHolder.get(i);
+			String source = sentenceObject.getSource();
+			String modifier = sentenceObject.getModifier();
+			String tag = sentenceObject.getTag();
+			String sentence = sentenceObject.getSentence().trim();
+			String orginalSentence = sentenceObject.getOriginalSentence();
+			
+			if(sentence.length()!=0){
+				String treatmentId = getTreatmentId(source);
+				
+				if(selectedSources.isEmpty() || selectedSources.contains(source)) {
+					if(!treatmentId.equals(previousTreatmentId)) {
+						previousTreatmentId = treatmentId;
+					}
+					
+					String text = sentence;
+					text = text.replaceAll("[ _-]+\\s*shaped", "-shaped").replaceAll("(?<=\\s)µ\\s+m\\b", "um");
+					text = text.replaceAll("&#176;", "°");
+					text = text.replaceAll("\\bca\\s*\\.", "ca");
+					text = modifier+"##"+tag+"##"+text;
+					
+					Treatment treatment = fileTreatments.get(treatmentId);
+					if(!sentences.containsKey(treatment))
+						sentences.put(treatment, new LinkedHashMap<String, String>());
+					sentences.get(treatment).put(source, text);
+				}
+			}
+			
+		}
+
+		return sentences;
 		
 	}
 
 	// use treatment
-	public Map<Treatment, List<String>> readSentenceTags() {
+	public Map<Treatment, LinkedHashMap<String, String>> readSentenceTags(List<Treatment> treatments) {
 		if (this.myDataHolder == null) {
 			return null;
 		}
 		
-		return null;
+		Map<Treatment, LinkedHashMap<String, String>> tags = new HashMap<Treatment, LinkedHashMap<String, String>>();		
+		String previousTag = null;
+		String previousTreatmentId = "-1";
 		
+		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder().iterator();
+		while (iter.hasNext()) {
+			Sentence sentenceObject = iter.next();
+			
+			String source = sentenceObject.getSource();
+			String treatmentId = getTreatmentId(source);
+			if(selectedSources.isEmpty() || selectedSources.contains(source)) {
+				
+				if(!treatmentId.equals(previousTreatmentId)) {
+					previousTreatmentId = treatmentId;
+					//listId++;
+				}
+				
+				String tag = sentenceObject.getTag();
+				if(tag == null)
+					tag = "";
+				tag = tag.replaceAll("\\W", "");
+				
+				Treatment treatment = fileTreatments.get(treatmentId);
+				if(!tags.containsKey(treatment)) 
+					tags.put(treatment, new LinkedHashMap<String, String>());
+				if(!tag.equals("ditto")) {
+					tags.get(treatment).put(source, tag);
+					previousTag = tag;
+				} else {
+					tags.get(treatment).put(source, previousTag);
+				}			
+			}
+		}
+
+		return tags;
 	}
 
 	// need term_category table
@@ -303,15 +383,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	}
 	
-	public Map<Treatment, List<String>> getSentences() {
+	public Set<String> getSentences() {
 		return this.sentences;
 	}
 	
-	public Map<Treatment, List<String>> getSentencesForOrganStateMarker() {
+	public Map<Treatment, LinkedHashMap<String, String>> getSentencesForOrganStateMarker() {
 		return this.sentencesForOrganStateMarker;
 	}	
 	
-	public Map<Treatment, List<String>> getSentenceTags() {
+	public Map<Treatment, LinkedHashMap<String, String>> getSentenceTags() {
 		return this.sentenceTags;
 	}
 	
@@ -334,6 +414,41 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	//Utilities
 	public DataHolder getDataHolder() {
 		return this.myDataHolder;
+	}
+	
+	protected String getTreatmentId(String sourceString) {
+		String[] sourceParts = sourceString.split("\\.");
+		return sourceParts[0];
+	}
+
+	@Override
+	public void learn(List<Treatment> treatments, String glossaryTable) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void readResults(List<Treatment> treatments) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Set<String> getTags() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Set<String> getModifiers() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Map<String, Set<String>> getCategoryTerms() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -1,5 +1,6 @@
 package semanticMarkup.ling.learn;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -7,26 +8,32 @@ import java.util.Set;
 import semanticMarkup.core.Treatment;
 
 /**
- * For a better explanation of what is to be returned see PerlTerminologyLearner in combination with the perl code
+ * ITerminologyLearner learns the terminology of a list of treatments
  * @author rodenhausen
  */
 public interface ITerminologyLearner {
 
 	/**
-	 * learns the terminology used in the treatments
+	 * Learns the terminology used in the treatments
 	 * @param treatments
 	 */
-	public void learn(List<Treatment> treatments);
+	public void learn(List<Treatment> treatments, String glossaryTable);
 	
 	/**
-	 * @return <treatment, sentence list> map
+	 * Reads the results for the treatments, so that any other function returns the 'freshest' results
+	 * @param treatments
 	 */
-	public Map<Treatment, List<String>> getSentences();
+	public void readResults(List<Treatment> treatments);
 	
 	/**
-	 * @return <treatment, sentence list> map used by OrganStateMarker
+	 * @return <treatment, <source, sentence>> map
 	 */
-	public Map<Treatment, List<String>> getSentencesForOrganStateMarker();
+	public Set<String> getSentences();
+	
+	/**
+	 * @return <treatment, <source, sentence> map used by OrganStateMarker
+	 */
+	public Map<Treatment, LinkedHashMap<String, String>> getSentencesForOrganStateMarker();
 	
 	/**
 	 * @return modifier list used in the sentence table 
@@ -69,13 +76,33 @@ public interface ITerminologyLearner {
 	public Map<String, String> getHeuristicNouns();
 	
 	/**
-	 * @return <treatment, tag list> map used in sentence table
+	 * @return <treatment, <source, tag> map used in sentence table
 	 */
-	public Map<Treatment, List<String>> getSentenceTags();
+	public Map<Treatment, LinkedHashMap<String, String>> getSentenceTags();
 	
 	/**
 	 * @return <term, category set> map used in term_category table
 	 */
 	public Map<String, Set<String>> getTermCategories();
+	
+	/**
+	 * @return tag set used in sentence table
+	 */
+	public Set<String> getTags();
+	
+	/**
+	 * @return modifier set used in sentence table
+	 */
+	public Set<String> getModifiers();
+
+	/**
+	 * @return <category, term set> map used in term_category table
+	 */
+	public Map<String, Set<String>> getCategoryTerms();
+	
+	/**
+	 * @return <source, AjectiveReplacementForNoun> map used in sentence table
+	 */
+	//public Map<String, AjectiveReplacementForNoun> getAdjectiveReplacementsForNouns();
 	
 }
