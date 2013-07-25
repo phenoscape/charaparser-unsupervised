@@ -194,17 +194,30 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
-	// need wordroles table
 	public Map<String, Set<String>> readRoleToWords() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
-		
-		return null;
-		
+
+		Map<String, Set<String>> roleToWords = new HashMap<String, Set<String>>();
+
+		Iterator<Entry<WordRoleKey, String>> iter = this.getDataHolder()
+				.getWordRoleHolder().entrySet().iterator();
+		while (iter.hasNext()) {
+			Entry<WordRoleKey, String> wordRoleObject = iter.next();
+			String word = wordRoleObject.getKey().getWord();
+			// perl treated hyphens as underscores
+			word = word.replaceAll("_", "-");
+			String semanticRole = wordRoleObject.getKey().getRole();
+			if (!roleToWords.containsKey(semanticRole))
+				roleToWords.put(semanticRole, new HashSet<String>());
+			roleToWords.get(semanticRole).add(word);
+		}
+
+		return roleToWords;
+
 	}
 
-	// use treatment
 	public Set<String> readSentences(List<Treatment> treatments) {
 		if (this.myDataHolder == null) {
 			return null;
@@ -222,7 +235,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return sentences;
 	}
 
-	// use treatment
 	public HashMap<Treatment,  LinkedHashMap<String, String>> readSentencesForOrganStateMarker(List<Treatment> treatments) {
 		if (this.myDataHolder == null) {
 			return null;
@@ -267,7 +279,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
-	// use treatment
 	public Map<Treatment, LinkedHashMap<String, String>> readSentenceTags(List<Treatment> treatments) {
 		if (this.myDataHolder == null) {
 			return null;
@@ -348,7 +359,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	}
 
-	// need wordrole table
 	public Map<String, Set<String>> readWordsToRoles() {
 		if (this.myDataHolder == null) {
 			return null;
