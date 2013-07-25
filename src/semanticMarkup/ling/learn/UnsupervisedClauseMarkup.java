@@ -29,22 +29,26 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// Learner
 	private Learner myLearner;
-	
 
 	protected List<String> adjnouns;
 	protected Map<String, String> adjnounsent;
 	protected Set<String> bracketTags;
+	protected Map<String, Set<String>> categoryTerms;
 	protected Map<String, String> heuristicNouns;
+	protected Set<String> modifiers;
 	protected Map<String, Set<String>> roleToWords;
 	protected Set<String> sentences;
 	protected Map<Treatment, LinkedHashMap<String, String>> sentencesForOrganStateMarker;
 	protected Map<Treatment, LinkedHashMap<String, String>> sentenceTags;
+	protected Set<String> tags;
 	protected Map<String, Set<String>> termCategories;
 	protected Set<String> wordRoleTags;
 	protected Map<String, Set<String>> wordsToRoles;
 	protected Map<String, Set<String>> wordToSources;
 	
 	protected Map<String, Treatment> fileTreatments = new HashMap<String, Treatment>();
+	
+	private Map<String, AjectiveReplacementForNoun> adjectiveReplacementsForNouns;
 	private Set<String> selectedSources;
 
 
@@ -74,20 +78,28 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	// learn
 	public void learn(List<Treatment> treatments, String glossaryTable) {
 		this.myDataHolder = this.myLearner.Learn(treatments);
-		
+		readResults(treatments);
+	}
+	
+	@Override
+	public void readResults(List<Treatment> treatments) {
 		// import data from data holder
-		this.adjnouns = readAdjNouns();
-		this.adjnounsent = readAdjNounSent();
-		this.bracketTags = readBracketTags();
-		this.heuristicNouns = readHeuristicNouns();
-		this.roleToWords = readRoleToWords();
-		this.sentences = readSentences(treatments);
-		this.sentencesForOrganStateMarker = readSentencesForOrganStateMarker(treatments);
-		this.sentenceTags = readSentenceTags(treatments);
-		this.termCategories = readTermCategories();
-		this.wordRoleTags = readWordRoleTags();
-		this.wordsToRoles = readWordsToRoles();
-		this.wordToSources = readWordToSources();	
+		// this.adjectiveReplacementsForNouns = readAdjectiveReplacementsForNouns();
+		this.adjnouns = this.readAdjNouns();
+		this.adjnounsent = this.readAdjNounSent();
+		this.bracketTags = this.readBracketTags();
+		this.heuristicNouns = this.readHeuristicNouns();
+		this.categoryTerms = this.readCategoryTerms();
+		this.modifiers = this.readModifiers();
+		this.roleToWords = this.readRoleToWords();
+		this.sentences = this.readSentences(treatments);
+		this.sentencesForOrganStateMarker = this.readSentencesForOrganStateMarker(treatments);
+		this.sentenceTags = this.readSentenceTags(treatments);
+		this.tags = this.readTags();
+		this.termCategories = this.readTermCategories();
+		this.wordRoleTags = this.readWordRoleTags();
+		this.wordsToRoles = this.readWordsToRoles();
+		this.wordToSources = this.readWordToSources();
 	}
 	
 	// import data from data holder to class variables
@@ -181,6 +193,25 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return tags;
 		
 	}
+	
+	protected Map<String, Set<String>> readCategoryTerms() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		Map<String, Set<String>> categoryNames = new HashMap<String, Set<String>>();
+		Iterator<StringPair> iter = this.getDataHolder().getTermCategoryHolder().iterator();
+		while (iter.hasNext()) {
+			StringPair termCategoryObject = iter.next();
+			String term = termCategoryObject.getHead();
+			String category = termCategoryObject.getTail();
+			if (!categoryNames.containsKey(category))
+				categoryNames.put(category, new HashSet<String>());
+			categoryNames.get(category).add(term);
+		}
+
+		return categoryNames;
+	}
 
 	public Map<String, String> readHeuristicNouns() {
 		if (this.myDataHolder == null) {
@@ -192,6 +223,21 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		return myHeuristicNouns;
 		
+	}
+	
+	public Set<String> readModifiers() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		Set<String> modifiers = new HashSet<String>();
+		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+				.iterator();
+		while (iter.hasNext()) {
+			String modifier = iter.next().getTag();
+			modifiers.add(modifier);
+		}
+		return modifiers;
 	}
 
 	public Map<String, Set<String>> readRoleToWords() {
@@ -235,7 +281,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return sentences;
 	}
 
-	public HashMap<Treatment,  LinkedHashMap<String, String>> readSentencesForOrganStateMarker(List<Treatment> treatments) {
+	public HashMap<Treatment, LinkedHashMap<String, String>> readSentencesForOrganStateMarker(List<Treatment> treatments) {
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -320,6 +366,23 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		return tags;
 	}
+	
+	public Set<String> readTags() {
+		if (this.myDataHolder == null) {
+			return null;
+		}
+		
+		Set<String> tags = new HashSet<String>();
+		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+				.iterator();
+		while (iter.hasNext()) {
+			String tag = iter.next().getTag();
+
+			tags.add(tag);
+		}
+
+		return tags;
+	}
 
 	public Map<String, Set<String>> readTermCategories() {
 		if (this.myDataHolder == null) {
@@ -350,10 +413,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 		
 		Set<String> tags = new HashSet<String>();
-		// TODO wordroles table is populated by the GUI User interaction see
-		// MainForm.java. Therefore simply left as empty for now
 
-		 Iterator<Entry<StringPair, String>> iter = this.getDataHolder()
+		Iterator<Entry<StringPair, String>> iter = this.getDataHolder()
 				.getWordRoleHolder().entrySet().iterator();
 		while (iter.hasNext()) {
 			Entry<StringPair, String> wordRoleObject = iter.next();
@@ -378,10 +439,8 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 		
 		Map<String, Set<String>> wordsToRoles = new HashMap<String, Set<String>>();
-		// TODO wordroles table is populated by the GUI User interaction see
-		// MainForm.java. Therefore simply left as empty for now
 
-		 Iterator<Entry<StringPair, String>> iter = this.getDataHolder()
+		Iterator<Entry<StringPair, String>> iter = this.getDataHolder()
 				.getWordRoleHolder().entrySet().iterator();
 		while (iter.hasNext()) {
 			Entry<StringPair, String> wordRoleObject = iter.next();
@@ -477,35 +536,29 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	// new added
-	@Override
-	public void readResults(List<Treatment> treatments) {
-		// TODO Auto-generated method stub
-		
-	}
+
 
 	@Override
 	public Set<String> getTags() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.tags;
 	}
 
 	@Override
 	public Set<String> getModifiers() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.modifiers;
 	}
 
 	@Override
 	public Map<String, Set<String>> getCategoryTerms() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.categoryTerms;
 	}
 	
 	@Override
 	public Map<String, AjectiveReplacementForNoun> getAdjectiveReplacementsForNouns() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.adjectiveReplacementsForNouns;
 	}
+	
+	
 	
 	//Utilities
 	public DataHolder getDataHolder() {
