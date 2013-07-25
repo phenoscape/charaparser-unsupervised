@@ -354,7 +354,24 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			return null;
 		}
 		
-		return null;
+		Map<String, Set<String>> wordsToRoles = new HashMap<String, Set<String>>();
+		// TODO wordroles table is populated by the GUI User interaction see
+		// MainForm.java. Therefore simply left as empty for now
+
+		Iterator<Entry<WordRoleKey, String>> iter = this.getDataHolder()
+				.getWordRoleHolder().entrySet().iterator();
+		while (iter.hasNext()) {
+			Entry<WordRoleKey, String> wordRoleObject = iter.next();
+			String word = wordRoleObject.getKey().getWord();
+			// learner treated hyphens as underscores
+			word = word.replaceAll("_", "-");
+			String semanticRole = wordRoleObject.getKey().getRole();
+			if (!wordsToRoles.containsKey(word))
+				wordsToRoles.put(word, new HashSet<String>());
+			wordsToRoles.get(word).add(semanticRole);
+		}
+
+		return wordsToRoles;
 		
 	}
 
