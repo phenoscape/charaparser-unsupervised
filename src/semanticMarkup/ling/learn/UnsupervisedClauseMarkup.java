@@ -8,7 +8,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
 
 import opennlp.tools.tokenize.TokenizerME;
 
@@ -317,14 +320,32 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 	}
 
-	// need wordrole table
 	public Set<String> readWordRoleTags() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
 		
-		return null;
-		
+		Set<String> tags = new HashSet<String>();
+		// TODO wordroles table is populated by the GUI User interaction see
+		// MainForm.java. Therefore simply left as empty for now
+
+		Iterator<Entry<WordRoleKey, String>> iter = this.getDataHolder()
+				.getWordRoleHolder().entrySet().iterator();
+		while (iter.hasNext()) {
+			Entry<WordRoleKey, String> wordRoleObject = iter.next();
+			String role = wordRoleObject.getKey().getRole();
+			if (StringUtils.equals(role, "op")
+					|| StringUtils.equals(role, "os")) {
+				String word = wordRoleObject.getKey().getWord();
+				String tag = word.replaceAll("_", "-").trim();
+				if (!tag.isEmpty())
+					tags.add(tag);
+			}
+
+		}
+
+		return tags;
+
 	}
 
 	// need wordrole table
