@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -2130,7 +2131,7 @@ public class Learner {
 		else if ((StringUtility.createMatcher("b[?b]([psn])$", ptn).find())
 				|| StringUtility.createMatcher("[?b]b([psn])$", ptn).find()) {
 			myLogger.debug("Case 6: Found [b?[psn]$] or [[?b]b([psn])$] pattern");
-			int end = 2;
+			int end = 2; // the index of noun
 			GetNounsAfterPtnReturnValue tempReturnValue = this
 					.getNounsAfterPtn(thisSentence, end + 1);
 			List<String> moreNouns = tempReturnValue.getNouns();
@@ -2142,22 +2143,30 @@ public class Learner {
 					.tokenizeSentence(thisSentence, "firstseg");
 			end += morePtn.size();
 			List<String> tempWords = StringUtility.stringArraySplice(
-					sentenceHeadWords, end + 1, sentenceHeadWords.size());
+					sentenceHeadWords, 0, end + 1);
 			tag = StringUtility.joinList(" ", tempWords);
 			myLogger.debug("\t:updates on POSs");
-			sign += this.getDataHolder().updateDataHolder(bWord, "b", "",
+			if (StringUtility.createMatcher("\\w", bWord).find()) {
+				sign += this.getDataHolder().updateDataHolder(bWord, "b", "",
 					"wordpos", 1);
+			}
 			String allPtn = "" + ptn;
 			allPtn = allPtn + StringUtility.joinList("", morePtn);
+			// from the index of noun
 			for (int i = 2; i < allPtn.length(); i++) {
+				// last ptn
 				if (i != allPtn.length() - 1) {
+					myLogger.trace("Case 6.1");
 					sign += this.getDataHolder().updateDataHolder(
 							sentenceHeadWords.get(i),
-							allPtn.substring(i, i + 2), "_", "wordpos", 1);
-				} else {
+							allPtn.substring(i, i + 1), "_", "wordpos", 1);
+				} 
+				// not last ptn
+				else {
+					myLogger.trace("Case 6.2");
 					sign += this.getDataHolder().updateDataHolder(
 							sentenceHeadWords.get(i),
-							allPtn.substring(i, i + 2), "-", "wordpos", 1);
+							allPtn.substring(i, i + 1), "-", "wordpos", 1);
 				}
 			}
 			myLogger.debug("\t:determine the tag: " + tag);
@@ -2820,7 +2829,66 @@ public class Learner {
 		
 		myLogger.trace("[unknownWordBootstrapping]End");
 	}
+	
+	/**
+	 * tag words with all o n m b tags that are applicable to the words
+	 * 
+	 * @param mode
+	 *            "singletag" or "multitags"
+	 * @param type
+	 *            "sentence" or "orginal"
+	 */
+	public void tagAllSentences (String mode, String type) {
+		List<StringAndInt> idAndSentenceList = new LinkedList<StringAndInt>();
+		
+		Iterator<Sentence> sentenceIter = 
+				this.getDataHolder().getSentenceHolder().iterator();
+		
+		if (StringUtils.equals(mode, "original")) {
+			while (sentenceIter.hasNext()) {
+				Sentence sentence = sentenceIter.next();
+				int thisID = sentence.getID();
+				String thisSentence = sentence.getSentence();
+				idAndSentenceList.add(new StringAndInt(thisSentence, thisID));
+			}
+		}
+		else {
+			while (sentenceIter.hasNext()) {
+				Sentence sentence = sentenceIter.next();
+				int thisID = sentence.getID();
+				String thisOriginalSentence = sentence.getOriginalSentence();
+				idAndSentenceList.add(new StringAndInt(thisOriginalSentence, thisID));
+			}
+		}
+		
+		KnownTagCollection myKnownTags = this.getKnownTags(mode);
+		
+		Iterator<StringAndInt> idAndSentenceListIter = idAndSentenceList.iterator();
+		while (idAndSentenceListIter.hasNext()) {
+			StringAndInt idAndSentence = idAndSentenceListIter.next();
+			int thisID = idAndSentence.getInt();
+			String thisString = idAndSentence.getString();
+			
+			thisString = tagAllSentencesHelper(thisString);
+			thisString = annotateSentence(thisString, myKnownTags);
+			
+			Sentence targetSentence = this.getDataHolder().getSentence(thisID);
+			targetSentence.setSentence(thisString);
+		}
+		
+	}
     
+	public String annotateSentence(String thisString,
+			KnownTagCollection myKnownTags) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public String tagAllSentencesHelper(String text) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/**
 	 * 
 	 * @param mode
@@ -2833,7 +2901,7 @@ public class Learner {
 		
 		KnownTagCollection knownTags = null;
 		Set<String> nouns = new HashSet<String>(); // nouns
-		Set<String> o = new HashSet<String>(); // o
+		Set<String> organs = new HashSet<String>(); // o
 		Set<String> modifiers = new HashSet<String>(); // modifiers
 		Set<String> boundaryWords = new HashSet<String>(); // boundary words
 		Set<String> boundaryMarks = new HashSet<String>(); // boundary marks
@@ -2846,8 +2914,8 @@ public class Learner {
 		nounSet .addAll(psWordSet);
 		// if the mode is "singletag", then get additional nouns from tags
 		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
-			Set<String> oSet = this.getOs();
-			nounSet.addAll(o);
+			Set<String> oSet = this.getOrgans();
+			nounSet.addAll(organs);
 		} else {
 			// do nothing
 		}
@@ -2856,9 +2924,9 @@ public class Learner {
 		
 		// get o
 		if(StringUtils.equals(mode, "multitags")){
-			Set<String> oSet = this.getOs();
-			o.addAll(oSet);
-			myLogger.trace("Get o: "+o.toString());
+			Set<String> oSet = this.getOrgans();
+			organs.addAll(oSet);
+			myLogger.trace("Get o: "+organs.toString());
 		}
 		
 		// get modifiers
@@ -2885,7 +2953,7 @@ public class Learner {
 		properNouns = this.getProperNouns();
 		
 		// put all known tags into one KnownTagCollection object
-		knownTags = new KnownTagCollection(nouns, o, modifiers, boundaryWords, boundaryMarks, properNouns);
+		knownTags = new KnownTagCollection(nouns, organs, modifiers, boundaryWords, boundaryMarks, properNouns);
 		
 		return knownTags;
 	}
@@ -2925,7 +2993,7 @@ public class Learner {
 	 * 
 	 * @return a set of o
 	 */
-	public Set<String> getOs() {
+	public Set<String> getOrgans() {
 		Set<String> oSet = new HashSet<String>(); // set of o
 		
 		Iterator<Sentence> iterSentence = this.myDataHolder
@@ -3093,5 +3161,41 @@ public class Learner {
 			}
 		}
 	}
+	
+	// some unused variables in perl
+	// directory of /descriptions folder
+	private String desDir = "";
+	// directory of /characters folder
+	private String chrDir = "";
+	// prefix for all tables generated by this program
+	private String prefix = "";
+	// default general tag
+	private String defaultGeneralTag = "general";
+	// knowledge base
+	private String knlgBase = "phenoscape";
+
+	private int DECISIONID = 0;
+
+	private Map<String, String> numberRecords = new HashMap<String, String>(); // word->(p|s)
+	private Map<String, String> singularRecords = new HashMap<String, String>();// word->singular
+	private Map<String, String> POSRecords = new HashMap<String, String>(); // word->POSs
+	// private Map<String, String> POSRecordsRECORDS = new HashMap<String,
+	// String>();
+	private String NEWDESCRIPTION = ""; // record the index of sentences that
+										// ends a description
+
+	private Hashtable<String, String> PLURALS = new Hashtable<String, String>();
+
+	private String TAGS = "";
+
+	// grouped #may contain q but not the last m, unless it is followed by a p
+	private String mptn = "((?:[mbq][,&]*)*(?:m|b|q(?=[pon])))";
+	// grouped #must present, no q allowed
+	private String nptn = "((?:[nop][,&]*)*[nop])";
+	// grouped #when following a p, a b could be a q
+	private String bptn = "([,;:\\\\.]*\\$|,*[bm]|(?<=[pon]),*q)";
+	private String SEGANDORPTN = "(?:" + mptn + nptn + ")";
+	private String ANDORPTN = "^(?:" + SEGANDORPTN + "[,&]+)*" + SEGANDORPTN
+			+ bptn;
 	
 }

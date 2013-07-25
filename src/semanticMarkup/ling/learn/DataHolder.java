@@ -56,6 +56,10 @@ public class DataHolder {
 	// Table wordpos
 	private Map<WordPOSKey, WordPOSValue> wordPOSTable;
 	public static final byte WORDPOS = 8;
+	
+	// Table wordrole
+	private Map<WordRoleKey, String> wordRoleTable;
+	public static final byte WORDROLE = 9;
 
 	private Configuration myConfiguratio;
 	private Utility myUtility;
@@ -68,12 +72,13 @@ public class DataHolder {
 		this.sentenceTable = new LinkedList<Sentence>();
 		this.sentenceCount = 0;
 		
+		this.discountedTable = new HashMap<DiscountedKey, String>();
+		this.heuristicNounTable = new HashMap<String, String>();		
+		this.modifierTable = new HashMap<String, ModifierTableValue>();
+		this.singularPluralTable = new HashSet<SingularPluralPair>();
 		this.unknownWordTable = new HashMap<String, String>();
 		this.wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
-		this.heuristicNounTable = new HashMap<String, String>();
-		this.singularPluralTable = new HashSet<SingularPluralPair>();
-		this.modifierTable = new HashMap<String, ModifierTableValue>();
-		this.discountedTable = new HashMap<DiscountedKey, String>();
+		this.wordRoleTable = new HashMap<WordRoleKey, String>();
 	}
 	
 //	/**
@@ -207,8 +212,25 @@ public class DataHolder {
 	}	
 	
 	/** Sentence Table Utility***************************************/
+
+	public Map<DiscountedKey, String> getDiscountedHolder(){
+		return this.discountedTable;
+	}
+	
+	public Map<String, ModifierTableValue> getModifierHolder(){
+		return this.modifierTable;
+	}
+	
+	public Map<String, String> getHeuristicNounHolder(){
+		return this.heuristicNounTable;
+	}
+
 	public List<Sentence> getSentenceHolder(){
 		return this.sentenceTable;
+	}
+	
+	public Set<SingularPluralPair> getSingularPluralHolder(){
+		return this.singularPluralTable;
 	}
 
 	public Map<String, String> getUnknownWordHolder(){
@@ -218,21 +240,9 @@ public class DataHolder {
 	public Map<WordPOSKey, WordPOSValue> getWordPOSHolder(){
 		return this.wordPOSTable;
 	}
-
-	public Map<String, String> getHeuristicNounHolder(){
-		return this.heuristicNounTable;
-	}
-
-	public Set<SingularPluralPair> getSingularPluralHolder(){
-		return this.singularPluralTable;
-	}
-
-	public Map<String, ModifierTableValue> getModifierHolder(){
-		return this.modifierTable;
-	}
-
-	public Map<DiscountedKey, String> getDiscountedHolder(){
-		return this.discountedTable;
+	
+	public Map<WordRoleKey, String> getWordRoleHolder(){
+		return this.wordRoleTable;
 	}
 	
 	
@@ -1254,11 +1264,16 @@ public class DataHolder {
 	}
 	
 	/**
-	 * for the nouns in @words, make the last n the main noun("-"). update NN's roles. return a positive number if an update is made,
+	 * mark the words between the start index and the end index as modifiers if
+	 * they are valid words.
+	 * 
 	 * @param start
+	 *            the start index
 	 * @param end
+	 *            the end index
 	 * @param words
-	 * @return
+	 *            a list of words
+	 * @return number of updates made
 	 */
 	public int updateDataHolderNN(int start, int end, List<String> words) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );

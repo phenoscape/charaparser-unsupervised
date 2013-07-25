@@ -792,20 +792,42 @@ public class LearnerTest {
 //        assertEquals("CaseHandle - case 4.2", new StringAndInt("bases",0), 
 //                myTester42.doItCaseHandle("bases of tooth whorls", "bases of")); 
 //      
-		// case 7
-		Learner myTester7 = new Learner(myConfiguration, myUtility);
+		
+		// case 6.2
+		Learner myTester62 = new Learner(myConfiguration, myUtility);
+		
+		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"cauline", "b", "role", "1", "1", "", ""}));
+		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"much", "s", "role", "1", "1", "", ""}));
+		
+		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"reduced", "b", "role", "11", "11", "", ""}));
+		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"distally", "b", "role", "2", "2", "", ""}));
+		
+		StringAndInt returnedValue62 = myTester62.doItCaseHandle(
+				"principal cauline much reduced distally , sessile , bases decurrent or not , as spiny wings ;", 
+				"principal cauline much");
+		assertEquals("CaseHandle - case 6.2", "principal cauline much", returnedValue62.getString());
+		
+		
 //		assertEquals(myTester7.doItCase7Helper("^s(\\?)$", "s?");
 		
-		// case 9
-		Learner myTester9 = new Learner(myConfiguration, myUtility);
-		myTester9.getDataHolder().add2Holder(DataHolder.WORDPOS, 
-				Arrays.asList(new String[] {"basal", "b", "role", "24", "24", "", ""}));
-		myTester9.getDataHolder().add2Holder(DataHolder.WORDPOS, 
-				Arrays.asList(new String[] {"leaves", "p", "role", "112", "112", "", ""}));
-		myTester9.getDataHolder().add2Holder(DataHolder.WORDPOS, 
-				Arrays.asList(new String[] {"leaf", "s", "role", "112", "112", "", ""}));
-		assertEquals("CaseHandle - case 9", new StringAndInt("basal leaves",0), 
-				myTester9.doItCaseHandle("basal leaves :", "basal leaves")); 		
+//		// case 7
+//		Learner myTester7 = new Learner(myConfiguration, myUtility);
+//		assertEquals(myTester7.doItCase7Helper("^s(\\?)$", "s?");
+		
+//		// case 9
+//		Learner myTester9 = new Learner(myConfiguration, myUtility);
+//		myTester9.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+//				Arrays.asList(new String[] {"basal", "b", "role", "24", "24", "", ""}));
+//		myTester9.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+//				Arrays.asList(new String[] {"leaves", "p", "role", "112", "112", "", ""}));
+//		myTester9.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+//				Arrays.asList(new String[] {"leaf", "s", "role", "112", "112", "", ""}));
+//		assertEquals("CaseHandle - case 9", new StringAndInt("basal leaves",0), 
+//				myTester9.doItCaseHandle("basal leaves :", "basal leaves")); 		
 		
 		
 		
@@ -999,7 +1021,7 @@ public class LearnerTest {
     	target.add("tag1");
     	target.add("tag2");
     	
-    	assertEquals("getOs", target, myTester.getOs());
+    	assertEquals("getOs", target, myTester.getOrgans());
     }
     
     @Test
