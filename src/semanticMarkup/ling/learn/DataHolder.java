@@ -49,6 +49,10 @@ public class DataHolder {
 	private Set<SingularPluralPair> singularPluralTable;
 	public static final byte SINGULAR_PLURAL = 6;
 
+	// Table termCategory
+	private Set<StringPair> termCategoryTable;
+	public static final byte TERM_CATEGORY = 10;
+	
 	// Table unknownword
 	private Map<String, String> unknownWordTable;
 	public static final byte UNKNOWNWORD = 7;
@@ -58,7 +62,7 @@ public class DataHolder {
 	public static final byte WORDPOS = 8;
 	
 	// Table wordrole
-	private Map<WordRoleKey, String> wordRoleTable;
+	private Map<StringPair, String> wordRoleTable;
 	public static final byte WORDROLE = 9;
 
 	private Configuration myConfiguratio;
@@ -78,7 +82,7 @@ public class DataHolder {
 		this.singularPluralTable = new HashSet<SingularPluralPair>();
 		this.unknownWordTable = new HashMap<String, String>();
 		this.wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
-		this.wordRoleTable = new HashMap<WordRoleKey, String>();
+		this.wordRoleTable = new HashMap<StringPair, String>();
 	}
 	
 //	/**
@@ -232,6 +236,10 @@ public class DataHolder {
 	public Set<SingularPluralPair> getSingularPluralHolder(){
 		return this.singularPluralTable;
 	}
+	
+	public Set<StringPair> getTermCategoryHolder() {
+		return this.termCategoryTable;
+	}
 
 	public Map<String, String> getUnknownWordHolder(){
 		return this.unknownWordTable;
@@ -241,7 +249,7 @@ public class DataHolder {
 		return this.wordPOSTable;
 	}
 	
-	public Map<WordRoleKey, String> getWordRoleHolder(){
+	public Map<StringPair, String> getWordRoleHolder(){
 		return this.wordRoleTable;
 	}
 	

@@ -201,14 +201,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		Map<String, Set<String>> roleToWords = new HashMap<String, Set<String>>();
 
-		Iterator<Entry<WordRoleKey, String>> iter = this.getDataHolder()
+		 Iterator<Entry<StringPair, String>> iter = this.getDataHolder()
 				.getWordRoleHolder().entrySet().iterator();
 		while (iter.hasNext()) {
-			Entry<WordRoleKey, String> wordRoleObject = iter.next();
-			String word = wordRoleObject.getKey().getWord();
+			Entry<StringPair, String> wordRoleObject = iter.next();
+			String word = wordRoleObject.getKey().getHead();
 			// perl treated hyphens as underscores
 			word = word.replaceAll("_", "-");
-			String semanticRole = wordRoleObject.getKey().getRole();
+			String semanticRole = wordRoleObject.getKey().getTail();
 			if (!roleToWords.containsKey(semanticRole))
 				roleToWords.put(semanticRole, new HashSet<String>());
 			roleToWords.get(semanticRole).add(word);
@@ -321,14 +321,27 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return tags;
 	}
 
-	// need term_category table
 	public Map<String, Set<String>> readTermCategories() {
 		if (this.myDataHolder == null) {
 			return null;
 		}
-		
-		return null;
-		
+
+		Map<String, Set<String>> termCategories = new HashMap<String, Set<String>>();
+
+		Iterator<StringPair> iter = this.getDataHolder()
+				.getTermCategoryHolder().iterator();
+		StringPair myTermCategoryPair;
+		while (iter.hasNext()) {
+			myTermCategoryPair = iter.next();
+			String term = myTermCategoryPair.getHead();
+			String category = myTermCategoryPair.getTail();
+			if (!termCategories.containsKey(term))
+				termCategories.put(term, new HashSet<String>());
+			termCategories.get(term).add(category);
+		}
+
+		return termCategories;
+
 	}
 
 	public Set<String> readWordRoleTags() {
@@ -340,14 +353,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// TODO wordroles table is populated by the GUI User interaction see
 		// MainForm.java. Therefore simply left as empty for now
 
-		Iterator<Entry<WordRoleKey, String>> iter = this.getDataHolder()
+		 Iterator<Entry<StringPair, String>> iter = this.getDataHolder()
 				.getWordRoleHolder().entrySet().iterator();
 		while (iter.hasNext()) {
-			Entry<WordRoleKey, String> wordRoleObject = iter.next();
-			String role = wordRoleObject.getKey().getRole();
+			Entry<StringPair, String> wordRoleObject = iter.next();
+			String role = wordRoleObject.getKey().getTail();
 			if (StringUtils.equals(role, "op")
 					|| StringUtils.equals(role, "os")) {
-				String word = wordRoleObject.getKey().getWord();
+				String word = wordRoleObject.getKey().getHead();
 				String tag = word.replaceAll("_", "-").trim();
 				if (!tag.isEmpty())
 					tags.add(tag);
@@ -368,14 +381,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		// TODO wordroles table is populated by the GUI User interaction see
 		// MainForm.java. Therefore simply left as empty for now
 
-		Iterator<Entry<WordRoleKey, String>> iter = this.getDataHolder()
+		 Iterator<Entry<StringPair, String>> iter = this.getDataHolder()
 				.getWordRoleHolder().entrySet().iterator();
 		while (iter.hasNext()) {
-			Entry<WordRoleKey, String> wordRoleObject = iter.next();
-			String word = wordRoleObject.getKey().getWord();
+			Entry<StringPair, String> wordRoleObject = iter.next();
+			String word = wordRoleObject.getKey().getHead();
 			// learner treated hyphens as underscores
 			word = word.replaceAll("_", "-");
-			String semanticRole = wordRoleObject.getKey().getRole();
+			String semanticRole = wordRoleObject.getKey().getTail();
 			if (!wordsToRoles.containsKey(word))
 				wordsToRoles.put(word, new HashSet<String>());
 			wordsToRoles.get(word).add(semanticRole);
