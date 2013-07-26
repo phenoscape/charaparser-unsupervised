@@ -181,4 +181,14 @@ public class StringUtilityTest {
 		assertEquals("stringArraySplice", "word1+++word2+++word3", StringUtility.joinList(sep, input));
 	}
 	
+	@Test
+	public void testIsEntireMatched(){
+		assertEquals("not match - pattern null", false, StringUtility.isEntireMatched(null, "[abc]"));
+		assertEquals("not match - text null", false, StringUtility.isEntireMatched("^\\[.*$", null));
+		assertEquals("not match - pattern empty", false, StringUtility.isEntireMatched("", "[abc]"));
+		assertEquals("not match - text empty", false, StringUtility.isEntireMatched("^\\[.*$", ""));
+		assertEquals("not match", false, StringUtility.isEntireMatched("^\\z.*$", "abc"));
+		assertEquals("match", true, StringUtility.isEntireMatched("^\\[.*$", "[abc]"));
+	}
+	
 }

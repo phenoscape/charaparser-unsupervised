@@ -49,6 +49,10 @@ public class DataHolder {
 	private Set<SingularPluralPair> singularPluralTable;
 	public static final byte SINGULAR_PLURAL = 6;
 
+	// Table termCategory
+	private Set<StringPair> termCategoryTable;
+	public static final byte TERM_CATEGORY = 10;
+	
 	// Table unknownword
 	private Map<String, String> unknownWordTable;
 	public static final byte UNKNOWNWORD = 7;
@@ -56,6 +60,10 @@ public class DataHolder {
 	// Table wordpos
 	private Map<WordPOSKey, WordPOSValue> wordPOSTable;
 	public static final byte WORDPOS = 8;
+	
+	// Table wordrole
+	private Map<StringPair, String> wordRoleTable;
+	public static final byte WORDROLE = 9;
 
 	private Configuration myConfiguratio;
 	private Utility myUtility;
@@ -68,12 +76,13 @@ public class DataHolder {
 		this.sentenceTable = new LinkedList<Sentence>();
 		this.sentenceCount = 0;
 		
+		this.discountedTable = new HashMap<DiscountedKey, String>();
+		this.heuristicNounTable = new HashMap<String, String>();		
+		this.modifierTable = new HashMap<String, ModifierTableValue>();
+		this.singularPluralTable = new HashSet<SingularPluralPair>();
 		this.unknownWordTable = new HashMap<String, String>();
 		this.wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
-		this.heuristicNounTable = new HashMap<String, String>();
-		this.singularPluralTable = new HashSet<SingularPluralPair>();
-		this.modifierTable = new HashMap<String, ModifierTableValue>();
-		this.discountedTable = new HashMap<DiscountedKey, String>();
+		this.wordRoleTable = new HashMap<StringPair, String>();
 	}
 	
 //	/**
@@ -207,8 +216,29 @@ public class DataHolder {
 	}	
 	
 	/** Sentence Table Utility***************************************/
+
+	public Map<DiscountedKey, String> getDiscountedHolder(){
+		return this.discountedTable;
+	}
+	
+	public Map<String, ModifierTableValue> getModifierHolder(){
+		return this.modifierTable;
+	}
+	
+	public Map<String, String> getHeuristicNounHolder(){
+		return this.heuristicNounTable;
+	}
+
 	public List<Sentence> getSentenceHolder(){
 		return this.sentenceTable;
+	}
+	
+	public Set<SingularPluralPair> getSingularPluralHolder(){
+		return this.singularPluralTable;
+	}
+	
+	public Set<StringPair> getTermCategoryHolder() {
+		return this.termCategoryTable;
 	}
 
 	public Map<String, String> getUnknownWordHolder(){
@@ -218,21 +248,9 @@ public class DataHolder {
 	public Map<WordPOSKey, WordPOSValue> getWordPOSHolder(){
 		return this.wordPOSTable;
 	}
-
-	public Map<String, String> getHeuristicNounHolder(){
-		return this.heuristicNounTable;
-	}
-
-	public Set<SingularPluralPair> getSingularPluralHolder(){
-		return this.singularPluralTable;
-	}
-
-	public Map<String, ModifierTableValue> getModifierHolder(){
-		return this.modifierTable;
-	}
-
-	public Map<DiscountedKey, String> getDiscountedHolder(){
-		return this.discountedTable;
+	
+	public Map<StringPair, String> getWordRoleHolder(){
+		return this.wordRoleTable;
 	}
 	
 	
