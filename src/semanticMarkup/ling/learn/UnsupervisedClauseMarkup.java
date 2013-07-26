@@ -84,7 +84,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	@Override
 	public void readResults(List<Treatment> treatments) {
 		// import data from data holder
-		// this.adjectiveReplacementsForNouns = readAdjectiveReplacementsForNouns();
 		this.adjnouns = this.readAdjNouns();
 		this.adjnounsent = this.readAdjNounSent();
 		this.bracketTags = this.readBracketTags();
@@ -100,9 +99,116 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		this.wordRoleTags = this.readWordRoleTags();
 		this.wordsToRoles = this.readWordsToRoles();
 		this.wordToSources = this.readWordToSources();
+		
+		this.adjectiveReplacementsForNouns = readAdjectiveReplacementsForNouns();
+	}
+		
+	// interface methods
+	@Override
+	public List<String> getAdjNouns() {
+		return this.adjnouns;
+	}
+
+	@Override
+	public Map<String, String> getAdjNounSent() {
+		return this.adjnounsent;
+	}
+
+	@Override
+	public Set<String> getBracketTags() {
+		return this.bracketTags;
 	}
 	
-	// import data from data holder to class variables
+	@Override
+	public Map<String, Set<String>> getCategoryTerms() {
+		return this.categoryTerms;
+	}
+
+	@Override
+	public Map<String, String> getHeuristicNouns() {
+		return this.heuristicNouns;
+	}
+	
+	@Override
+	public Set<String> getModifiers() {
+		return this.modifiers;
+	}
+
+	@Override
+	public Map<String, Set<String>> getRoleToWords() {
+		return this.roleToWords;
+
+	}
+
+	@Override
+	public Set<String> getSentences() {
+		return this.sentences;
+	}
+
+	@Override
+	public Map<Treatment, LinkedHashMap<String, String>> getSentencesForOrganStateMarker() {
+		return this.sentencesForOrganStateMarker;
+	}	
+
+	@Override
+	public Map<Treatment, LinkedHashMap<String, String>> getSentenceTags() {
+		return this.sentenceTags;
+	}
+	
+	@Override
+	public Set<String> getTags() {
+		return this.tags;
+	}
+
+	@Override
+	public Map<String, Set<String>> getTermCategories() {
+		return this.termCategories;
+	}
+
+	@Override
+	public Set<String> getWordRoleTags() {
+		return this.wordRoleTags;
+	}
+
+	@Override
+	public Map<String, Set<String>> getWordsToRoles() {
+		return this.wordsToRoles;
+	}
+	
+	@Override
+	public Map<String, Set<String>> getWordToSources() {
+		return this.wordToSources;
+	}
+
+	// methods dealing with ajectiveReplacementForNoun
+	public Map<String, AjectiveReplacementForNoun> readAdjectiveReplacementsForNouns() {
+		Map<String, AjectiveReplacementForNoun> result = new HashMap<String, AjectiveReplacementForNoun>();
+
+		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+				.iterator();
+		while (iter.hasNext()) {
+			Sentence sentenceObject = iter.next();
+			String modifier = sentenceObject.getModifier();
+			String tag = sentenceObject.getTag();
+
+			if ((!StringUtils.equals(modifier, ""))
+					&& (StringUtility.isEntireMatched("^\\[.*$", tag))) {
+				String source = sentenceObject.getSource();
+				modifier = modifier.replaceAll("\\[|\\]|>|<|(|)", "");
+				tag = tag.replaceAll("\\[|\\]|>|<|(|)", "");
+				result.put(source, new AjectiveReplacementForNoun(modifier,tag, source));
+			}
+		}
+
+		return result;
+	}
+	
+	@Override
+	public Map<String, AjectiveReplacementForNoun> getAdjectiveReplacementsForNouns() {
+		return this.adjectiveReplacementsForNouns;
+	}
+	
+	// methods importing data from data holder to class variables
 	public List<String> readAdjNouns() {
 		if (this.myDataHolder == null) {
 			return null;
@@ -483,103 +589,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		return myWordToSources;
 	}
-
-	
-	// interface methods
-	public List<String> getAdjNouns() {
-		return this.adjnouns;
-	}
-
-	public Map<String, String> getAdjNounSent() {
-		return this.adjnounsent;
-	}
-
-	public Set<String> getBracketTags() {
-		return this.bracketTags;
-	}
-	
-	public Map<String, String> getHeuristicNouns() {
-		return this.heuristicNouns;
-	}
-	
-	public Map<String, Set<String>> getRoleToWords() {
-		return this.roleToWords;
-
-	}
-	
-	public Set<String> getSentences() {
-		return this.sentences;
-	}
-	
-	public Map<Treatment, LinkedHashMap<String, String>> getSentencesForOrganStateMarker() {
-		return this.sentencesForOrganStateMarker;
-	}	
-	
-	public Map<Treatment, LinkedHashMap<String, String>> getSentenceTags() {
-		return this.sentenceTags;
-	}
-	
-	public Map<String, Set<String>> getTermCategories() {
-		return this.termCategories;
-	}
-	
-	public Set<String> getWordRoleTags() {
-		return this.wordRoleTags;
-	}
-	
-	public Map<String, Set<String>> getWordsToRoles() {
-		return this.wordsToRoles;
-	}
-	
-	public Map<String, Set<String>> getWordToSources() {
-		return this.wordToSources;
-	}
-
-	// new added
-
-
-	@Override
-	public Set<String> getTags() {
-		return this.tags;
-	}
-
-	@Override
-	public Set<String> getModifiers() {
-		return this.modifiers;
-	}
-
-	@Override
-	public Map<String, Set<String>> getCategoryTerms() {
-		return this.categoryTerms;
-	}
-	
-	public Map<String, AjectiveReplacementForNoun> readAdjectiveReplacementsForNouns() {
-		Map<String, AjectiveReplacementForNoun> result = new HashMap<String, AjectiveReplacementForNoun>();
-
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
-				.iterator();
-		while (iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
-			String modifier = sentenceObject.getModifier();
-			String tag = sentenceObject.getTag();
-
-			if ((!StringUtils.equals(modifier, ""))
-					&& (StringUtility.isEntireMatched("^\\[.*$", tag))) {
-				String source = sentenceObject.getSource();
-				modifier = modifier.replaceAll("\\[|\\]|>|<|(|)", "");
-				tag = tag.replaceAll("\\[|\\]|>|<|(|)", "");
-				result.put(source, new AjectiveReplacementForNoun(modifier,tag, source));
-			}
-		}
-
-		return result;
-	}
-	
-	@Override
-	public Map<String, AjectiveReplacementForNoun> getAdjectiveReplacementsForNouns() {
-		return this.adjectiveReplacementsForNouns;
-	}
-	
 	
 	
 	//Utilities
