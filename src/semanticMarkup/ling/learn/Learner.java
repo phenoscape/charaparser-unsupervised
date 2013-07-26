@@ -1995,6 +1995,9 @@ public class Learner {
 		Pattern p4 = Pattern.compile("[psn](b)");
 		Matcher m4 = p4.matcher(ptn);
 		
+		Pattern p5 = Pattern.compile("([psn][psn]+)");
+		Matcher m5 = p5.matcher(ptn);
+		
 		Pattern p7 = Pattern.compile("^s(\\?)$");
 		Matcher m7 = p7.matcher(ptn);
 		
@@ -2124,6 +2127,99 @@ public class Learner {
 
 				myLogger.debug("\t:determine the tag: " + tag);
 				myLogger.debug("\t:updates on POSs");
+			}
+		}
+		
+		// case 5: "pp"
+		else if (m5.find()) {
+			myLogger.debug("Case 5: Found [[psn][psn]+] pattern");
+			int start = m5.start(1);
+			int end = m5.end(1);
+			List<String> copyWords = new ArrayList<String>();
+			copyWords.addAll(words);
+			GetNounsAfterPtnReturnValue returnedValue = this.getNounsAfterPtn(thisSentence, end);
+			List<String> moreNoun = new LinkedList<String>();
+			List<String> morePtn = new LinkedList<String>();
+			String bWord = "";
+			
+			moreNoun.addAll(returnedValue.getNouns());
+			morePtn.addAll(returnedValue.getNounPtn());
+			bWord = returnedValue.getBoundaryWord();
+			List<POSInfo> t;
+			
+			if (StringUtility.createMatcher("pp", ptn).find()) {
+				myLogger.trace("Case 5.1");
+				
+				String morePtnStr = StringUtility.joinList("", morePtn);
+				Pattern p511 = Pattern.compile("/^p*(s)");
+				Matcher m511 = p511.matcher(morePtnStr);
+				Pattern p512 = Pattern.compile("^(p+)");
+				Matcher m512 = p512.matcher(morePtnStr);
+				
+				
+				if (m511.find()) {
+					myLogger.trace("Case 5.1.1");
+					// find last p word, and reset it to "b"
+					int sAfterPIndex = m511.start(1);
+					int lastPIndex = sAfterPIndex - 1;
+					String sWord = moreNoun.get(sAfterPIndex);
+					String lastPWord = lastPIndex >=0? moreNoun.get(lastPIndex):"";
+					bWord = lastPWord;
+					if (StringUtils.equals(lastPWord, "")) {
+						tag = words.get(ptn.lastIndexOf("p"));
+					}
+					else {
+						tag = lastPWord;
+					}
+					sign += this.getDataHolder().updateDataHolder(sWord, "b", "", "wordpos", 1);
+				}
+				else if (m512.find()) {
+					myLogger.trace("Case 5.1.2");
+					tag = moreNoun.get(m512.end(1)-1);
+				}
+				else {
+					myLogger.trace("Case 5.1.3");
+					int lastPIndex = ptn.lastIndexOf("p");
+					tag = words.get(lastPIndex);
+				}
+				t = this.getDataHolder().checkPOSInfo(tag);
+			}
+			else {
+				myLogger.trace("Case 5.2");
+				List<String> tempWords = new LinkedList<String>();
+				tempWords.addAll(StringUtility.stringArraySplice(words, 0, end));
+				tag = StringUtility.joinList(" ", tempWords);
+				if (moreNoun.size()>0) {
+					tag = tag + " "+ StringUtility.joinList(" ", moreNoun);
+				}
+				
+				t = this.getDataHolder().checkPOSInfo(tag.substring(tag.lastIndexOf(" ")+1, tag.length()));
+			}
+			
+			String pos = t.get(0).getPOS();
+			String role = t.get(0).getRole();
+			int certiantyU = t.get(0).getCertaintyU();
+			int certiantyL = t.get(0).getCertaintyL();
+			
+			if (StringUtility.createMatcher("[psn]", pos).find()) {
+				myLogger.debug("relax this condition");
+				List<String> tWords = new LinkedList<String>();
+				tWords.addAll(Arrays.asList(thisSentence.split(" ")));
+				sign += this.getDataHolder().updateDataHolder(bWord, "b", "", "wordpos", 1);
+				ptn = ptn.substring(start, end-start);
+				String tempPtn = ptn + StringUtility.joinList("", morePtn);
+				for (int k = start; k<tempPtn.length();k++) {
+					if (k == tempPtn.length()-1) {
+						sign += this.getDataHolder().updateDataHolder(tWords.get(k), tempPtn.substring(k, k+1), "_", "wordpos", 1);
+					}
+					else {
+						sign += this.getDataHolder().updateDataHolder(tWords.get(k), tempPtn.substring(k, k+1), "-", "wordpos", 1);
+					}
+					
+					if (tWords.size()>1) {
+						sign += this.getDataHolder().updateDataHolderNN(0, tempPtn.length(), tWords);
+					}
+				}
 			}
 		}
 		
