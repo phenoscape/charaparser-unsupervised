@@ -553,6 +553,28 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return this.categoryTerms;
 	}
 	
+	public Map<String, AjectiveReplacementForNoun> readAdjectiveReplacementsForNouns() {
+		Map<String, AjectiveReplacementForNoun> result = new HashMap<String, AjectiveReplacementForNoun>();
+
+		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+				.iterator();
+		while (iter.hasNext()) {
+			Sentence sentenceObject = iter.next();
+			String modifier = sentenceObject.getModifier();
+			String tag = sentenceObject.getTag();
+
+			if ((!StringUtils.equals(modifier, ""))
+					&& (StringUtility.isEntireMatched("^\\[.*$", tag))) {
+				String source = sentenceObject.getSource();
+				modifier = modifier.replaceAll("\\[|\\]|>|<|(|)", "");
+				tag = tag.replaceAll("\\[|\\]|>|<|(|)", "");
+				result.put(source, new AjectiveReplacementForNoun(modifier,tag, source));
+			}
+		}
+
+		return result;
+	}
+	
 	@Override
 	public Map<String, AjectiveReplacementForNoun> getAdjectiveReplacementsForNouns() {
 		return this.adjectiveReplacementsForNouns;

@@ -239,5 +239,30 @@ public class StringUtility {
 		Matcher m = p.matcher(input);
 		return m;
 	}
+
+	/**
+	 * Null-safe method to match a entire text against the pattern
+	 * 
+	 * @param pattern
+	 *            the pattern to match against
+	 * @param text
+	 *            the text to match
+	 * @return true if matches, false otherwise
+	 */
+	public static boolean isEntireMatched(String pattern, String text) {
+		if (pattern == null || text == null) {
+			return false;
+		}
+		
+		Pattern p = Pattern.compile(pattern);
+		Matcher m = p.matcher(text);
+		if (m.matches()) {
+			return true;
+		}
+		else {
+			return false;
+		}
+
+	}
 	
 }
