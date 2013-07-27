@@ -2202,23 +2202,23 @@ public class Learner {
 			int certiantyL = t.get(0).getCertaintyL();
 			
 			if (StringUtility.createMatcher("[psn]", pos).find()) {
-				myLogger.debug("relax this condition");
+				// case 5.x
+				myLogger.debug("Case 5.x: relax this condition");
 				List<String> tWords = new LinkedList<String>();
 				tWords.addAll(Arrays.asList(thisSentence.split(" ")));
 				sign += this.getDataHolder().updateDataHolder(bWord, "b", "", "wordpos", 1);
 				ptn = ptn.substring(start, end-start);
 				String tempPtn = ptn + StringUtility.joinList("", morePtn);
 				for (int k = start; k<tempPtn.length();k++) {
-					if (k == tempPtn.length()-1) {
+					if (k != tempPtn.length()-1) {
 						sign += this.getDataHolder().updateDataHolder(tWords.get(k), tempPtn.substring(k, k+1), "_", "wordpos", 1);
 					}
 					else {
 						sign += this.getDataHolder().updateDataHolder(tWords.get(k), tempPtn.substring(k, k+1), "-", "wordpos", 1);
 					}
-					
-					if (tWords.size()>1) {
-						sign += this.getDataHolder().updateDataHolderNN(0, tempPtn.length(), tWords);
-					}
+				}
+				if (tWords.size()>1) {
+					sign += this.getDataHolder().updateDataHolderNN(0, tempPtn.length(), tWords);
 				}
 			}
 		}

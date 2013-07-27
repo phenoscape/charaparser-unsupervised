@@ -793,23 +793,37 @@ public class LearnerTest {
 //                myTester42.doItCaseHandle("bases of tooth whorls", "bases of")); 
 //      
 		
-		// case 6.2
-		Learner myTester62 = new Learner(myConfiguration, myUtility);
+		// case 5.1.3 and case x
+		Learner myTester513x = new Learner(myConfiguration, myUtility);
+		myTester513x.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"styles", "p", "role", "1", "1", "", ""}));
+		myTester513x.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"style", "s", "role", "1", "1", "", ""}));
+		myTester513x.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"branches", "p", "role", "23", "23", "", ""}));
+		myTester513x.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"branch", "s", "role", "23", "23", "", ""}));
+		StringAndInt result = myTester513x.doItCaseHandle("styles branches :", "styles branches");
+		StringAndInt target = new StringAndInt("branches",1);
+		assertEquals("CaseHandle - case 5.1", result, target); 
 		
-		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
-				Arrays.asList(new String[] {"cauline", "b", "role", "1", "1", "", ""}));
-		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
-				Arrays.asList(new String[] {"much", "s", "role", "1", "1", "", ""}));
-		
-		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
-				Arrays.asList(new String[] {"reduced", "b", "role", "11", "11", "", ""}));
-		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
-				Arrays.asList(new String[] {"distally", "b", "role", "2", "2", "", ""}));
-		
-		StringAndInt returnedValue62 = myTester62.doItCaseHandle(
-				"principal cauline much reduced distally , sessile , bases decurrent or not , as spiny wings ;", 
-				"principal cauline much");
-		assertEquals("CaseHandle - case 6.2", "principal cauline much", returnedValue62.getString());
+//		// case 6.2
+//		Learner myTester62 = new Learner(myConfiguration, myUtility);
+//		
+//		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+//				Arrays.asList(new String[] {"cauline", "b", "role", "1", "1", "", ""}));
+//		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+//				Arrays.asList(new String[] {"much", "s", "role", "1", "1", "", ""}));
+//		
+//		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+//				Arrays.asList(new String[] {"reduced", "b", "role", "11", "11", "", ""}));
+//		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+//				Arrays.asList(new String[] {"distally", "b", "role", "2", "2", "", ""}));
+//		
+//		StringAndInt returnedValue62 = myTester62.doItCaseHandle(
+//				"principal cauline much reduced distally , sessile , bases decurrent or not , as spiny wings ;", 
+//				"principal cauline much");
+//		assertEquals("CaseHandle - case 6.2", "principal cauline much", returnedValue62.getString());
 		
 		
 //		assertEquals(myTester7.doItCase7Helper("^s(\\?)$", "s?");
