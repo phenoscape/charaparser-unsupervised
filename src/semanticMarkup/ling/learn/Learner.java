@@ -2207,7 +2207,7 @@ public class Learner {
 				List<String> tWords = new LinkedList<String>();
 				tWords.addAll(Arrays.asList(thisSentence.split(" ")));
 				sign += this.getDataHolder().updateDataHolder(bWord, "b", "", "wordpos", 1);
-				ptn = ptn.substring(start, end-start);
+				ptn = ptn.substring(start, end);
 				String tempPtn = ptn + StringUtility.joinList("", morePtn);
 				for (int k = start; k<tempPtn.length();k++) {
 					if (k != tempPtn.length()-1) {
@@ -2414,7 +2414,7 @@ public class Learner {
 				end = m2.end(1);
 			}
 			if (case1 || case2) {
-				bWord = words.get(end);
+				bWord = words.get(end-1);
 				List<String> nWords = new ArrayList<String>();
 				nWords.addAll(StringUtility.stringArraySplice(words, 0, end));
 				for (int i=0;i<nWords.size();i++) {
