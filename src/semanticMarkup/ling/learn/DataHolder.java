@@ -1336,6 +1336,9 @@ public class DataHolder {
 	 *         list
 	 */
 	public List<POSInfo> checkPOSInfo(String word) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.checkPOSInfo");
+		myLogger.trace("Enter ("+word+")");
 		List<POSInfo> POSInfoList = new ArrayList<POSInfo>();
 
 		word = StringUtility.removeAll(word, "^\\s*");
@@ -1344,6 +1347,7 @@ public class DataHolder {
 		if (word.matches("^\\d+.*$")) {
 			POSInfo p = new POSInfo(word, "b", "", 1, 1);
 			POSInfoList.add(p);
+			myLogger.trace("Reture: "+POSInfoList);
 			return POSInfoList;
 		}
 
@@ -1368,7 +1372,8 @@ public class DataHolder {
 			// reverse it into descending order
 			Collections.reverse(POSInfoList);
 		}
-		
+
+		myLogger.trace("Reture: "+POSInfoList);
 		return POSInfoList;
 
 	}

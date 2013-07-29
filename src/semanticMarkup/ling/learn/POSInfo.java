@@ -92,4 +92,9 @@ public class POSInfo implements Comparable<POSInfo>{
 				);
 				
 	}
+	
+	@Override
+	public String toString(){
+		return String.format("[%s, %s, %s, %d, %d]", this.word, this.POS, this.role, this.certaintyU, this.certaintyU);
+	}
 }
