@@ -2423,7 +2423,7 @@ public class Learner {
 				end = m2.end(1);
 			}
 			if (case1 || case2) {
-				bWord = words.get(end-1);
+				bWord = words.get(end);
 				List<String> nWords = new ArrayList<String>();
 				nWords.addAll(StringUtility.stringArraySplice(words, 0, end));
 				for (int i=0;i<nWords.size();i++) {
