@@ -1729,7 +1729,7 @@ public class Learner {
 				String pattern = buildPattern(startWords);
 				
 				if (pattern != null) {
-                    myLogger.info("Build pattern ["+pattern+"] from starting words ["+thisLead+"]");
+                    myLogger.debug("Build pattern ["+pattern+"] from starting words ["+thisLead+"]");
 					// IDs of untagged sentences that match the pattern
 					Set<Integer> matched = matchPattern(pattern, status, false);
 					int round = 0;
@@ -1742,7 +1742,7 @@ public class Learner {
 					} while (numNew > 0);
 				}
                 else {
-                    myLogger.info("Build no pattern from starting words ["+thisLead+"]");
+                    myLogger.debug("Build no pattern from starting words ["+thisLead+"]");
                 }
 			}
 		}
