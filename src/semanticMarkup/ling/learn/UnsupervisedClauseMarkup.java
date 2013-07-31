@@ -13,9 +13,9 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
-import opennlp.tools.tokenize.TokenizerME;
-
 import semanticMarkup.core.Treatment;
+import semanticMarkup.ling.Token;
+import semanticMarkup.ling.transform.ITokenizer;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {	
 	// Date holder
@@ -49,24 +49,25 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	protected Map<String, Treatment> fileTreatments = new HashMap<String, Treatment>();
 	
 	private Map<String, AjectiveReplacementForNoun> adjectiveReplacementsForNouns;
+	private String markupMode;
 	private Set<String> selectedSources;
+	private ITokenizer tokenizer;
 
 
 	/**
 	 * Constructor of UnsupervisedClauseMarkup class. Create a new
 	 * UnsupervisedClauseMarkup object.
 	 * 
-	 * @param learningMode
-	 *            learning mode. There two legal values, "adj" and "plain"
-	 * @param wordnetDir
-	 *            directory of WordNet dictionary
 	 */
-	public UnsupervisedClauseMarkup(String learningMode, String wordnetDir, Set<String> selectedSources) {
+	public UnsupervisedClauseMarkup(String markupMode, Set<String> selectedSources, ITokenizer tokenizer) {
 		
 		//this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		
 		this.selectedSources = new HashSet<String>();
 		this.selectedSources.addAll(selectedSources);
+		
+		this.markupMode = markupMode;
+		this.tokenizer = tokenizer;
 		
 		this.myConfiguration = new Configuration();
 		this.myUtility = new Utility(myConfiguration);
@@ -572,18 +573,17 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
-
-		TokenizerME myTokenizer = this.myUtility.getTokenizer();
+		
 		while (iter.hasNext()) {
 			Sentence sentenceElement = iter.next();
 			String source = sentenceElement.getSource();
 			String sentence = sentenceElement.getSentence();			
-			String[] words = myTokenizer.tokenize(sentence);
-			for (int i = 0; i < words.length; i++) {
-				String word = words[i];
-				if (!myWordToSources.containsKey(word))
-					myWordToSources.put(word, new HashSet<String>());
-				myWordToSources.get(word).add(source);
+			List<Token> tokens = this.tokenizer.tokenize(sentence);
+			for(Token token : tokens) {
+				String word = token.getContent();
+				if(!wordToSources.containsKey(word))
+					wordToSources.put(word, new HashSet<String>());
+				wordToSources.get(word).add(source);
 			}
 		}
 
