@@ -227,7 +227,7 @@ public class PopulateSentenceUtility {
 		return nWords;
 	}
 	
-	public List<String> tokenizeSentence(String sentence, String mode) {
+	public List<String> tokenizeText(String sentence, String mode) {
 		if (StringUtils.equals(mode, "firstseg")) {
 			sentence = getSentenceHead(sentence);
 		}

@@ -2245,7 +2245,7 @@ public class Learner {
 
 			List<String> sentenceHeadWords = this.getUtility()
 					.getPopulateSentenceUtility()
-					.tokenizeSentence(thisSentence, "firstseg");
+					.tokenizeText(thisSentence, "firstseg");
 			end += morePtn.size();
 			List<String> tempWords = StringUtility.stringArraySplice(
 					sentenceHeadWords, 0, end + 1);
@@ -2404,7 +2404,7 @@ public class Learner {
 		List<String> nounPtn = new ArrayList<String>();
 		
 		List<String> tempWords = new ArrayList<String>();
-		tempWords.addAll(this.getUtility().getPopulateSentenceUtility().tokenizeSentence(sentence, "firstseg"));
+		tempWords.addAll(this.getUtility().getPopulateSentenceUtility().tokenizeText(sentence, "firstseg"));
 		List<String> words = StringUtility.stringArraySplice(tempWords, startWordIndex, tempWords.size());
 		String ptn = this.getPOSptn(words);
 		
