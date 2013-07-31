@@ -10,12 +10,12 @@ import opennlp.tools.sentdetect.SentenceModel;
 import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
 import opennlp.tools.util.InvalidFormatException;
-import semanticMarkup.knowledge.lib.WordNetAPI;
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class Utility {
 
-	private WordNetAPI myWN = null;
+	private WordNetPOSKnowledgeBase myWN = null;
 	private SentenceDetectorME mySentenceDetector = null;
 	
 	private ITokenizer myTokenizer;
@@ -28,7 +28,7 @@ public class Utility {
 		// get those tools
 		// Get WordNetAPI instance
 		try {
-			this.myWN = new WordNetAPI(configuration.getWordNetDictDir(), false);
+			this.myWN = new WordNetPOSKnowledgeBase(configuration.getWordNetDictDir(), false);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -72,7 +72,7 @@ public class Utility {
 		return this.myLearnerUtility;
 	}
 
-	public WordNetAPI getWordNet() {
+	public WordNetPOSKnowledgeBase getWordNet() {
 		return this.myWN;
 	}
 	

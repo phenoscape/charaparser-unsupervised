@@ -1,4 +1,4 @@
-package semanticMarkup.knowledge.lib;
+package semanticMarkup.know.lib;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import semanticMarkup.knowledge.IPOSKnowledgeBase;
+import semanticMarkup.know.IPOSKnowledgeBase;
 import semanticMarkup.ling.pos.POS;
 
 import com.google.inject.Inject;
@@ -31,7 +31,7 @@ import edu.mit.jwi.morph.WordnetStemmer;
  * (e.g. first thread causes cached dictionary to change its content while second iterates over dictionary content)
  * @author rodenhausen
  */
-public class WordNetAPI implements IPOSKnowledgeBase {
+public class WordNetPOSKnowledgeBase implements IPOSKnowledgeBase {
 
 	private IDictionary dictionary;
 	
@@ -41,7 +41,7 @@ public class WordNetAPI implements IPOSKnowledgeBase {
 	 * @throws IOException
 	 */
 	@Inject
-	public WordNetAPI(@Named("WordNetAPI_Sourcefile") String path, @Named("WordNetAPI_LoadInRAM") boolean loadInRAM) throws IOException {
+	public WordNetPOSKnowledgeBase(@Named("WordNetAPI_Sourcefile") String path, @Named("WordNetAPI_LoadInRAM") boolean loadInRAM) throws IOException {
 		if(loadInRAM) 
 			dictionary = new RAMDictionary(new File(path), RAMDictionary.BACKGROUND_LOAD);
 		else 
@@ -216,7 +216,7 @@ public class WordNetAPI implements IPOSKnowledgeBase {
 	
 	public static void main(String[] args) throws IOException{
 		
-		WordNetAPI wordNetAPI = new WordNetAPI("res//WordNet//WordNet-3.0//dict", false);
+		WordNetPOSKnowledgeBase wordNetAPI = new WordNetPOSKnowledgeBase("res//WordNet//WordNet-3.0//dict", false);
 		
 		System.out.println(wordNetAPI.isNoun("apples"));
 		

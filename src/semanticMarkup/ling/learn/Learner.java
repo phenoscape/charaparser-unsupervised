@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.core.Treatment;
-import semanticMarkup.knowledge.lib.WordNetAPI;
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class Learner {	
@@ -1489,7 +1489,7 @@ public class Learner {
 		boolean flag = false; // return value
 		boolean wordInWN = false; // if this word is in WordNet
 		boolean baseInWN = false;
-		WordNetAPI myWN = this.myUtility.getWordNet();
+		WordNetPOSKnowledgeBase myWN = this.myUtility.getWordNet();
 
 		// check base
 		if (base.length() == 0) {

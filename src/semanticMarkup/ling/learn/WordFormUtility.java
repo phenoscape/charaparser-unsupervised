@@ -12,11 +12,11 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import semanticMarkup.knowledge.Stemmer;
-import semanticMarkup.knowledge.lib.WordNetAPI;
+import semanticMarkup.know.Stemmer;
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 
 public class WordFormUtility {
-	private WordNetAPI myWN;
+	private WordNetPOSKnowledgeBase myWN;
 	private Map<String, String> numberRecords = new HashMap<String, String>(); // word->(p|s)
 	private Map<String, String> singularRecords = new HashMap<String, String>();// word->singular
 	private Map<String, String> POSRecords = new HashMap<String, String>(); // word->POSs
@@ -27,7 +27,7 @@ public class WordFormUtility {
 	// Porter Stemmer
 	private Stemmer myStemmer;
 
-	public WordFormUtility(WordNetAPI wn) {
+	public WordFormUtility(WordNetPOSKnowledgeBase wn) {
 		this.myWN = wn;
 		this.myStemmer = new Stemmer();
 	}

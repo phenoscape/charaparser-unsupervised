@@ -1,4 +1,4 @@
-package semanticMarkup.knowledge;
+package semanticMarkup.know;
 
 import java.util.List;
 
