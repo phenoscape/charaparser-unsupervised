@@ -2391,6 +2391,7 @@ public class Learner {
 	public GetNounsAfterPtnReturnValue getNounsAfterPtn(String sentence, int startWordIndex){
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.getNounsAfterPattern");
+		myLogger.trace(String.format("enter (%s, %d)", sentence, startWordIndex));
 		
 		String bWord = "";
 		List<String> nouns = new ArrayList<String>();
@@ -2399,7 +2400,9 @@ public class Learner {
 		List<String> tempWords = new ArrayList<String>();
 		tempWords.addAll(this.getUtility().getLearnerUtility().tokenizeText(sentence, "firstseg"));
 		List<String> words = StringUtility.stringArraySplice(tempWords, startWordIndex, tempWords.size());
+		myLogger.trace("words: "+words);
 		String ptn = this.getPOSptn(words);
+		myLogger.trace("ptn: " + ptn);
 		
 		if (ptn!=null) {
 			Matcher m1 = StringUtility.createMatcher("^([psn]+)", ptn);
@@ -2416,7 +2419,10 @@ public class Learner {
 				end = m2.end(1);
 			}
 			if (case1 || case2) {
-				bWord = words.get(end);
+				myLogger.trace("end: " + end);
+				if (end<words.size()) {
+					bWord = words.get(end);
+				}
 				List<String> nWords = new ArrayList<String>();
 				nWords.addAll(StringUtility.stringArraySplice(words, 0, end));
 				for (int i=0;i<nWords.size();i++) {
@@ -2437,6 +2443,7 @@ public class Learner {
 		}
 		
 		GetNounsAfterPtnReturnValue returnValue = new GetNounsAfterPtnReturnValue(nouns, nounPtn, bWord);
+		myLogger.trace("return " + returnValue);
 		return (returnValue);
 	}
 
