@@ -1,9 +1,5 @@
 package semanticMarkup.ling.learn;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,14 +19,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
-
-
 import semanticMarkup.core.Treatment;
 import semanticMarkup.knowledge.lib.WordNetAPI;
+import semanticMarkup.ling.transform.ITokenizer;
 
 public class Learner {	
 	private Configuration myConfiguration;
 	private Utility myUtility;
+	private ITokenizer myTokenizer;
 	
 	// Data holder
 	private DataHolder myDataHolder;
@@ -47,19 +43,20 @@ public class Learner {
 	// leading three words of sentences 
 	private Set<String> checkedWordSet;
 	
-	public Learner(Configuration configuration, Utility utility) {
+	public Learner(Configuration configuration, ITokenizer tokenizer, Utility utility) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learner");
 		
 		this.myConfiguration = configuration;
 		this.myUtility = utility;
+		this.myTokenizer = tokenizer;
 		
 		// Data holder
 		myDataHolder = new DataHolder(myConfiguration, myUtility);
 		
 		// Utilities
 		this.myWordFormUtility = new WordFormUtility(this.myUtility.getWordNet());
-		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.myUtility.getSentenceDetector(), this.myUtility.getTokenizer());
+		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.myUtility.getSentenceDetector());
 		
 		// Class variables
 		NUM_LEAD_WORDS = 3; // Set the number of leading words be 3
@@ -199,7 +196,7 @@ public class Learner {
 					sentences[j] = this.handleSentence(sentences[j]);
 
 					// store all words
-					this.myDataHolder.allWords = this.myPopulateSentenceUtility.getAllWords(sentences[j], this.myDataHolder.allWords);
+					this.myDataHolder.allWords = this.getAllWords(sentences[j], this.myDataHolder.allWords);
 				}
 
 				for (int j = 0; j < validIndex.size(); j++) {
@@ -225,7 +222,7 @@ public class Learner {
 					oline = this.myPopulateSentenceUtility.restoreMarksInBrackets(oline);
 					oline = oline.replaceAll("\'", " ");
 
-					List<String> nWords = this.myPopulateSentenceUtility.getFirstNWords(line,
+					List<String> nWords = this.getFirstNWords(line,
 							this.NUM_LEAD_WORDS);
 					String lead = "";
 					Iterator<String> iter = nWords.iterator();
@@ -631,12 +628,9 @@ public class Learner {
 			}
 
 			// add words
-			String[] tokens = this.myUtility.getTokenizer().tokenize(sentence);
-			for (int j = 0; j < tokens.length; j++) {
-				String token = tokens[j];
+			List<String> tokens = this.myUtility.getLearnerUtility().tokenizeText(sentence, "all");
+			for (String token: tokens) {
 				if (StringUtility.isWord(token)) {
-					// if (token.equals("arch"))
-					// token="arch";
 					words.add(token);
 					myLogger.trace("Add a word into words: "+token);
 				}
@@ -966,8 +960,7 @@ public class Learner {
 	 *            set of descriptors
 	 * @return set of nouns that are not descriptors
 	 */
-	Set<String> filterOutDescriptors(Set<String> rNouns,
-			Set<String> rDescriptors) {
+	public Set<String> filterOutDescriptors(Set<String> rNouns, Set<String> rDescriptors) {
 		Set<String> filtedNouns = new HashSet<String>();
 
 		Iterator<String> iter = rNouns.iterator();
@@ -2244,7 +2237,7 @@ public class Learner {
 			String bWord = tempReturnValue.getBoundaryWord();
 
 			List<String> sentenceHeadWords = this.getUtility()
-					.getPopulateSentenceUtility()
+					.getLearnerUtility()
 					.tokenizeText(thisSentence, "firstseg");
 			end += morePtn.size();
 			List<String> tempWords = StringUtility.stringArraySplice(
@@ -2404,7 +2397,7 @@ public class Learner {
 		List<String> nounPtn = new ArrayList<String>();
 		
 		List<String> tempWords = new ArrayList<String>();
-		tempWords.addAll(this.getUtility().getPopulateSentenceUtility().tokenizeText(sentence, "firstseg"));
+		tempWords.addAll(this.getUtility().getLearnerUtility().tokenizeText(sentence, "firstseg"));
 		List<String> words = StringUtility.stringArraySplice(tempWords, startWordIndex, tempWords.size());
 		String ptn = this.getPOSptn(words);
 		
@@ -3226,9 +3219,7 @@ public class Learner {
 		this.checkedWordSet = wordSet;
 	}
 	
-	public Utility getUtility() {
-		return this.myUtility;
-	}
+
 	
 	public boolean tagSentence(int sentenceID, String tag) {
 		PropertyConfigurator.configure("conf/log4j.properties");
@@ -3267,6 +3258,59 @@ public class Learner {
 		}
 	}
 	
+	/**
+	 * returns the first n words of the sentence
+	 * 
+	 * @param sent
+	 *            the sentence
+	 * @param n
+	 *            number of words to be returned
+	 * @return the first n words of the sentence. If the number of words in the
+	 *         sentence is less than n, return all of them.
+	 */
+	public List<String> getFirstNWords(String sentence, int n) {
+		List<String> nWords = new ArrayList<String>();
+
+		if (sentence == null || sentence == "") {
+			return nWords;
+		}
+		
+		List<String> tokens = this.getUtility().getLearnerUtility().tokenizeText(sentence, "firstseg");
+		
+		
+		int minL = tokens.size() > n ? n : tokens.size();
+		for (int i = 0; i < minL; i++) {
+			nWords.add(tokens.get(i));
+		}
+
+		return nWords;
+	}
+	
+	/**
+	 * Put all words in this sentence into the words map
+	 * 
+	 * @param sent
+	 * @param words
+	 *            a map mapping all words already known to their counts
+	 * @return a new map of all words, including words in sent
+	 */
+	public Map<String, Integer> getAllWords(String sentence,
+			Map<String, Integer> words) {
+		List<String> tokens = this.getUtility().getLearnerUtility().tokenizeText(sentence, "all");
+
+		for (String token: tokens) {
+			if (words.containsKey(token)) {
+				int count = words.get(token);
+				count = count + 1;
+				words.put(token, count);
+			} else {
+				words.put(token, 1);
+			}
+		}
+
+		return words;
+	}
+	
 	// some unused variables in perl
 	// directory of /descriptions folder
 	private String desDir = "";
@@ -3302,5 +3346,14 @@ public class Learner {
 	private String SEGANDORPTN = "(?:" + mptn + nptn + ")";
 	private String ANDORPTN = "^(?:" + SEGANDORPTN + "[,&]+)*" + SEGANDORPTN
 			+ bptn;
+	
+	// utility method
+	public Utility getUtility() {
+		return this.myUtility;
+	}
+	
+	public ITokenizer getTokenizer(){
+		return this.myTokenizer;
+	}
 	
 }

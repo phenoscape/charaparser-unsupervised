@@ -70,9 +70,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		this.tokenizer = tokenizer;
 		
 		this.myConfiguration = new Configuration();
-		this.myUtility = new Utility(myConfiguration);
+		this.myUtility = new Utility(myConfiguration, tokenizer);
 		this.myDataHolder = new DataHolder(myConfiguration, myUtility);
-		myLearner = new Learner(this.myConfiguration, this.myUtility);
+		myLearner = new Learner(this.myConfiguration, this.tokenizer, this.myUtility);
 		
 	}
 
@@ -581,9 +581,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			List<Token> tokens = this.tokenizer.tokenize(sentence);
 			for(Token token : tokens) {
 				String word = token.getContent();
-				if(!wordToSources.containsKey(word))
-					wordToSources.put(word, new HashSet<String>());
-				wordToSources.get(word).add(source);
+				if(!myWordToSources.containsKey(word))
+					myWordToSources.put(word, new HashSet<String>());
+				myWordToSources.get(word).add(source);
 			}
 		}
 

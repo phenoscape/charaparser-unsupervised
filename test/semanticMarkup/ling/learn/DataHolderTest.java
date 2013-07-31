@@ -13,14 +13,18 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
+import semanticMarkup.ling.transform.ITokenizer;
+import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
+
 public class DataHolderTest {
 	
 	private DataHolder tester;
 	
 	@Before
-	public void initialize(){
+	public void initialize(){		
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
 		tester = new DataHolder(myConfiguration, myUtility);
 	}
 
@@ -54,8 +58,10 @@ public class DataHolderTest {
 	@Test
 	public void testUpdatePOS() {
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
+
 		assertEquals("updatePOS - no update", 0, myTester.getDataHolder().updatePOS("NUM", "n", "", 1));
 		assertEquals("updatePOS - no update", 0, myTester.getDataHolder().updatePOS("two", "s", "", 1));
 		assertEquals("updatePOS - no update", 0, myTester.getDataHolder().updatePOS("series", "p", "", 1));
@@ -71,8 +77,10 @@ public class DataHolderTest {
 	@Test
 	public void testChangePOS() {
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
+
 		//assertEquals("changePOS", "", myTester.getDataHolder().changePOS("newWord", "oldPOS", "newPOS", "newRole", 3));
 	}
 
@@ -129,7 +137,9 @@ public class DataHolderTest {
 	@Test
 	public void testResolveConflict(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+
 		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		myTester.getSentenceHolder().add(new Sentence(0, "source", "word branches word1 end", "word branches word1 end", "lead", "status", "ignore", null, null));
 		myTester.getSentenceHolder().add(new Sentence(1, "source", "word branches word2 end", "word branches word2 end", "lead", "status", "nonignore", null, null));
@@ -143,7 +153,8 @@ public class DataHolderTest {
 	@Test
 	public void testDiscountPOS(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
 		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"word1", "flag1"}));
 		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList(new String[] {"word2", "unknown"}));
@@ -196,7 +207,8 @@ public class DataHolderTest {
 	@Test
 	public void testGetParentSentenceTag(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
 		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		
 		myTester.add2Holder(DataHolder.SENTENCE, 
@@ -236,7 +248,8 @@ public class DataHolderTest {
 	@Test
 	public void testRemoveLyEndingBoundary(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
 		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"word1ly", "b", "role1", "1", "1", null, null}));
 		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"word2ly", "*", "role1", "1", "1", null, null}));
@@ -247,7 +260,8 @@ public class DataHolderTest {
 	@Test 
 	public void testTagSentWithMTPreProcessing(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
 		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		assertEquals("RemoveLyEndingBoundary - remove <>", "word1  word3", myTester.tagSentWithMTPreProcessing("word1 <word2> word3"));
 		assertEquals("RemoveLyEndingBoundary remove beginning stop words", "word", myTester.tagSentWithMTPreProcessing("after <word2> after above word"));
@@ -257,7 +271,8 @@ public class DataHolderTest {
 	@Test 
 	public void testGetSumCertaintyU(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
 		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"target", "pos1", "role", "1", "5", null, null}));
 		myTester.add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"target", "pos2", "role", "1", "5", null, null}));
@@ -284,7 +299,8 @@ public class DataHolderTest {
 	@Test
 	public void testCheckPOSInfo(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
 		DataHolder myTester = new DataHolder(myConfiguration, myUtility);
 		
 		myTester.add2Holder(DataHolder.WORDPOS, 

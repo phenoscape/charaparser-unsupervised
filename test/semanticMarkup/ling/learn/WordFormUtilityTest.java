@@ -8,6 +8,9 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import semanticMarkup.ling.transform.ITokenizer;
+import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
+
 public class WordFormUtilityTest {
 	
 	private WordFormUtility tester;
@@ -15,7 +18,8 @@ public class WordFormUtilityTest {
 	@Before
 	public void initialize(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
 		tester = new WordFormUtility(myUtility.getWordNet());
 	}
 

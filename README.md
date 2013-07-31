@@ -223,7 +223,7 @@ The tokenizer is used in two different ways:
 1) mode "all"
 Tokenize the whole text into tokens.
 2) mode "firstseg"
-Only tokenize the text prior to the first occurrence of any preposition into tokens
+Only tokenize the text prior to the first occurrence of any ",:;.[(" or preposition into tokens
 
 These two different modes are combined into a single method, tokenizeText(). This method is used in the following methods:
 

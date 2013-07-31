@@ -17,13 +17,17 @@ import semanticMarkup.core.Treatment;
 import semanticMarkup.ling.learn.UnsupervisedClauseMarkup;
 import semanticMarkup.ling.learn.FileLoader;
 
+import semanticMarkup.ling.transform.ITokenizer;
+import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
+
 public class UnsupervisedClauseMarkupTest {
 	UnsupervisedClauseMarkup tester;
 
 	@Before
 	public void initialize() {
-		tester = new UnsupervisedClauseMarkup("plain",
-				"res/WordNet/WordNet-3.0/dict", new HashSet<String>());
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		tester = new UnsupervisedClauseMarkup("plain", new HashSet<String>(), tokenizer);
 
 	}
 
@@ -50,8 +54,10 @@ public class UnsupervisedClauseMarkupTest {
 
 	@Test
 	public void testReadAdjNounSent() {
-		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
-				"res/WordNet/WordNet-3.0/dict", new HashSet<String>());
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		UnsupervisedClauseMarkup myTester = new UnsupervisedClauseMarkup("plain", new HashSet<String>(), tokenizer);
+		
 		DataHolder myDataHolder = tester.getDataHolder();
 		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
 		sentenceTable.add(new Sentence(0, "source1", "word1 word2", "", "", "",
@@ -74,8 +80,10 @@ public class UnsupervisedClauseMarkupTest {
 	
 	@Test
 	public void testReadBracketTags() {
-		UnsupervisedClauseMarkup myTester = new UnsupervisedClauseMarkup("plain",
-				"res/WordNet/WordNet-3.0/dict", new HashSet<String>());
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		UnsupervisedClauseMarkup myTester = new UnsupervisedClauseMarkup("plain", new HashSet<String>(), tokenizer);
+		
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag","start","type"}));
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","[tag]","start end","type"}));
 		
@@ -87,8 +95,10 @@ public class UnsupervisedClauseMarkupTest {
 
 	@Test
 	public void testReadWordToSoures() {
-		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
-				"res/WordNet/WordNet-3.0/dict", new HashSet<String>());
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		UnsupervisedClauseMarkup myTester = new UnsupervisedClauseMarkup("plain", new HashSet<String>(), tokenizer);
+		
 		DataHolder myDataHolder = tester.getDataHolder();
 		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
 		sentenceTable.add(new Sentence(0, "source1", "word1 word2", "", "", "",
@@ -124,8 +134,10 @@ public class UnsupervisedClauseMarkupTest {
 
 	@Test
 	public void testReadHeuristicNouns() {
-		UnsupervisedClauseMarkup tester = new UnsupervisedClauseMarkup("plain",
-				"res/WordNet/WordNet-3.0/dict", new HashSet<String>());
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		UnsupervisedClauseMarkup myTester = new UnsupervisedClauseMarkup("plain", new HashSet<String>(), tokenizer);
+		
 		DataHolder myDataHolder = tester.getDataHolder();
 		Map<String, String> myHeuristicNouns = myDataHolder
 				.getHeuristicNounTable();

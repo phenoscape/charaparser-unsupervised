@@ -15,6 +15,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import semanticMarkup.core.Treatment;
+import semanticMarkup.ling.transform.ITokenizer;
+import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
 
 public class LearnerTest {
 
@@ -23,33 +25,34 @@ public class LearnerTest {
 	@Before
 	public void initialize() {
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		this.tester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		this.tester = new Learner(myConfiguration, tokenizer, myUtility);
 	}
 
-	@Test
-	public void testLearn() {
-		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		DataHolder results = new DataHolder(myConfiguration, myUtility);
-
-		Map<String, String> myHeuristicNounTable = results
-				.getHeuristicNounTable();
-		myHeuristicNounTable.put("word1", "type1");
-
-		List<Sentence> mySentenceTable = results.getSentenceHolder();
-		mySentenceTable.add(new Sentence(0, "source1", "sentence1",
-				"originalSentence", "lead1", "status1", "tag1", "modifier1",
-				"type1"));
-
-		// Learner tester = new Learner("plain","res/WordNet/WordNet-3.0/dict");
-
-		// assertEquals ("learner", results, tester.Learn(tms));
-
-		// results = tester.Learn(tms);
-
-		// assertEquals ("learner", results, tester.Learn(tms));
-	}
+//	@Test
+//	public void testLearn() {
+//		Configuration myConfiguration = new Configuration();
+//		Utility myUtility = new Utility(myConfiguration);
+//		DataHolder results = new DataHolder(myConfiguration, myUtility);
+//
+//		Map<String, String> myHeuristicNounTable = results
+//				.getHeuristicNounTable();
+//		myHeuristicNounTable.put("word1", "type1");
+//
+//		List<Sentence> mySentenceTable = results.getSentenceHolder();
+//		mySentenceTable.add(new Sentence(0, "source1", "sentence1",
+//				"originalSentence", "lead1", "status1", "tag1", "modifier1",
+//				"type1"));
+//
+//		// Learner tester = new Learner("plain","res/WordNet/WordNet-3.0/dict");
+//
+//		// assertEquals ("learner", results, tester.Learn(tms));
+//
+//		// results = tester.Learn(tms);
+//
+//		// assertEquals ("learner", results, tester.Learn(tms));
+//	}
 
 	@Test
 	public void testHandleText() {
@@ -518,8 +521,9 @@ public class LearnerTest {
 	@Test
 	public void testMarkupByPattern() {
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, 
 				Arrays.asList(new String[] {"source1", "sentence1", "x=word word word", "lead1", "status1", "tag1", "modifier1", "type1"}));
@@ -579,8 +583,9 @@ public class LearnerTest {
 	@Test
 	public void testMarkupIgnore() {
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, 
 				Arrays.asList(new String[] {"source1", "sentence1", "IGNOREPTN", "lead1", "status1", "tag1", "modifier1", "type1"}));
@@ -644,8 +649,9 @@ public class LearnerTest {
 	@Test
 	public void testBuildPattern() {		
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 
 		// Method buildPattern
 //		assertEquals(
@@ -687,8 +693,9 @@ public class LearnerTest {
 	@Test
 	public void testGetPOSptn(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
@@ -705,15 +712,17 @@ public class LearnerTest {
 	@Test
 	public void testDoItCaseHandle(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+//		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		// case x: boundary case
-		Learner myTesterBoundary = new Learner(myConfiguration, myUtility);
+		Learner myTesterBoundary = new Learner(myConfiguration, tokenizer, myUtility);
 		assertEquals("CaseHandle - boundary case", null, myTesterBoundary.doItCaseHandle(null, null));   
 		assertEquals("CaseHandle - boundary case", new StringAndInt("",0), myTesterBoundary.doItCaseHandle("", ""));   
 		
         // case 1
-		Learner myTester1 = new Learner(myConfiguration, myUtility);	
+		Learner myTester1 = new Learner(myConfiguration, tokenizer, myUtility);
 		myTester1.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"submandibular", "s", "", "0", "0", null, null}));
 		myTester1.getDataHolder().add2Holder(DataHolder.WORDPOS, 
@@ -722,7 +731,7 @@ public class LearnerTest {
 		assertEquals("CaseHandle - case 1", new StringAndInt("submandibulars",0), myTester1.doItCaseHandle("submandibulars", "submandibulars"));
 		
 		// case 2
-		Learner myTester2 = new Learner(myConfiguration, myUtility);
+		Learner myTester2 = new Learner(myConfiguration, tokenizer, myUtility);
 		myTester2.getDataHolder().add2Holder(DataHolder.SENTENCE, 
 				Arrays.asList(new String[] {"src", 
 						"<N>stems</N> <B>usually</B> erect , sometimes prostrate to ascending <B>(</B> underground <N>stems</N> sometimes woody <O>caudices</O> or rhizomes , sometimes fleshy <B>)</B> . ", 
@@ -743,7 +752,7 @@ public class LearnerTest {
         
         // case 3.2
 		// This also tests method markKnown() - case 1.1
-		Learner myTester32 = new Learner(myConfiguration, myUtility);
+		Learner myTester32 = new Learner(myConfiguration, tokenizer, myUtility);
 		myTester32.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
 		myTester32.getDataHolder().add2Holder(DataHolder.WORDPOS, 
@@ -761,7 +770,7 @@ public class LearnerTest {
         
         // case 4
         // case 4.2	
-		Learner myTester42 = new Learner(myConfiguration, myUtility);
+		Learner myTester42 = new Learner(myConfiguration, tokenizer, myUtility);
 		// test case 1
 		myTester42.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"teeth", "p", "role", "1", "1", "", ""}));
@@ -794,7 +803,7 @@ public class LearnerTest {
       
 		
 		// case 5.1.3 and case x
-		Learner myTester513x = new Learner(myConfiguration, myUtility);
+		Learner myTester513x = new Learner(myConfiguration, tokenizer, myUtility);
 		myTester513x.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"styles", "p", "role", "1", "1", "", ""}));
 		myTester513x.getDataHolder().add2Holder(DataHolder.WORDPOS, 
@@ -807,7 +816,7 @@ public class LearnerTest {
 		StringAndInt target513x = new StringAndInt("branches",1);
 		assertEquals("CaseHandle - case 5.1.3 and case x", result513x, target513x); 
 		
-		Learner myTester52 = new Learner(myConfiguration, myUtility);
+		Learner myTester52 = new Learner(myConfiguration, tokenizer, myUtility);
 		myTester52.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"basal", "b", "role", "30", "30", "", ""}));
 		myTester52.getDataHolder().add2Holder(DataHolder.WORDPOS, 
@@ -826,7 +835,7 @@ public class LearnerTest {
 
 		
 		// case 6.2
-		Learner myTester62 = new Learner(myConfiguration, myUtility);
+		Learner myTester62 = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		myTester62.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"cauline", "b", "role", "1", "1", "", ""}));
@@ -851,7 +860,7 @@ public class LearnerTest {
 //		assertEquals(myTester7.doItCase7Helper("^s(\\?)$", "s?");
 		
 		// case 9
-		Learner myTester9 = new Learner(myConfiguration, myUtility);
+		Learner myTester9 = new Learner(myConfiguration, tokenizer, myUtility);
 		myTester9.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"basal", "b", "role", "24", "24", "", ""}));
 		myTester9.getDataHolder().add2Holder(DataHolder.WORDPOS, 
@@ -863,7 +872,7 @@ public class LearnerTest {
     
         // case 10
 		// case 10.1.1
-		Learner myTester10_1_1 = new Learner(myConfiguration, myUtility);
+		Learner myTester10_1_1 = new Learner(myConfiguration, tokenizer, myUtility);
         myTester10_1_1.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"of", "b", "role", "0", "0", "", ""}));
         assertEquals("CaseHandle - case 10.1.1", new StringAndInt("teeth",2), 
@@ -876,7 +885,7 @@ public class LearnerTest {
                 myTester10_1_1.doItCaseHandle("foramina on external surface of lower jaw", 
                     "foramina on"));
         // case 10.1.2
-		Learner myTester10_1_2 = new Learner(myConfiguration, myUtility);
+		Learner myTester10_1_2 = new Learner(myConfiguration, tokenizer, myUtility);
 		myTester10_1_2.addStopWords();
 		
         assertEquals("CaseHandle - case 10.1.1", new StringAndInt("stems",2), 
@@ -885,7 +894,7 @@ public class LearnerTest {
         
 		
         // case 10.2
-        Learner myTester10_2 = new Learner(myConfiguration, myUtility);
+        Learner myTester10_2 = new Learner(myConfiguration, tokenizer, myUtility);
         myTester10_2.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"between", "b", "role", "0", "0", "", ""}));
         myTester10_2.getDataHolder().add2Holder(DataHolder.WORDPOS, 
@@ -897,7 +906,7 @@ public class LearnerTest {
                     "passes between")); 
                     
         // case 0
-        Learner myTester0 = new Learner(myConfiguration, myUtility);
+        Learner myTester0 = new Learner(myConfiguration, tokenizer, myUtility);
         
 		myTester0.getDataHolder().add2Holder(DataHolder.WORDPOS, 
 				Arrays.asList(new String[] {"does", "b", "role", "0", "0", "", ""}));
@@ -913,8 +922,9 @@ public class LearnerTest {
 	@Test
 	public void testIsFollowedByNoun() {
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"rhombic", "b", "role", "0", "0", null, null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"bones", "p", "role", "0", "0", null, null}));
@@ -930,8 +940,9 @@ public class LearnerTest {
 	@Test
 	public void testGetNounsAfterPtn() {
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"margins", "p", "role", "0", "0", null, null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"often", "b", "role", "0", "0", null, null}));
@@ -953,8 +964,9 @@ public class LearnerTest {
 	public void testTagSentence() {		
 		Configuration myConfiguration = new Configuration();
 		myConfiguration.setMaxTagLength(10);
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag","m","type"}));
 
@@ -971,8 +983,9 @@ public class LearnerTest {
 	@Test
 	public void testDoItMarkup() {
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {
 				"src", "sent nor", "osent","lead","status",null,"m","type"}));
@@ -1017,8 +1030,9 @@ public class LearnerTest {
     @Test
     public void testGetPSWord(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 		
     	myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"acrodin", "s", "role", "0", "0", null, null}));
     	myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"areas", "p", "role", "0", "0", null, null}));
@@ -1035,8 +1049,9 @@ public class LearnerTest {
     @Test
     public void testGetO() {
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 
     	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","ignore","m","type"}));
     	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status",null,"m","type"}));
@@ -1054,9 +1069,10 @@ public class LearnerTest {
     
     @Test
     public void testGetModifiers(){
-    	Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"basal", "1", "false"}));
 		myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"endoskeletal", "1", "false"}));
@@ -1072,9 +1088,10 @@ public class LearnerTest {
     
     @Test
     public void testGetBoundaries(){
-    	Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"\\", "b", "role", "0", "0", null, null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {")", "b", "role", "0", "0", null, null}));
@@ -1107,9 +1124,10 @@ public class LearnerTest {
     
     @Test
     public void testGetProperNouns(){
-    	Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"propernoun1", "z", "*", "0", "0", "", null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"acrodin", "s", "role", "0", "0", null, null}));
@@ -1126,11 +1144,13 @@ public class LearnerTest {
     
     @Test
     public void testWrapupMarkup() {
-    	Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+//		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		// case 1
-		Learner myTester1 = new Learner(myConfiguration, myUtility);
+		Learner myTester1 = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(7, "src", "sent", "osent","sensory line not null","status","notnull","modifer","type"));
 		myTester1.getDataHolder().getSentenceHolder().add(new Sentence(192, "src", "sent", "osent","sensory line ignore","status","ignore","modifer","type"));
@@ -1147,7 +1167,7 @@ public class LearnerTest {
 		assertEquals("wrapupmarkup - case 1 - tag sentence", "sensory line", myTester1.getDataHolder().getSentence(267).getTag());
 		
 		// case 2
-		Learner myTester2 = new Learner(myConfiguration, myUtility);
+		Learner myTester2 = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		myTester2.getDataHolder().getSentenceHolder().add(new Sentence(115, "src", "sent", "osent","midsagittal fontanel absent","status",null,"modifer","type"));
 		myTester2.getDataHolder().getSentenceHolder().add(new Sentence(116, "src", "sent", "osent","midsagittal fontanel present","status",null,"modifer","type"));
@@ -1164,9 +1184,10 @@ public class LearnerTest {
     
     @Test
     public void testOneLeadMarkup(){
-    	Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
-		Learner myTester = new Learner(myConfiguration, myUtility);
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
 		
 		myTester.getDataHolder().getSentenceHolder().add(new Sentence(0, "src", "sent", "osent","lead1 lead2","status","tag tag","modifer","type"));
 		myTester.getDataHolder().getSentenceHolder().add(new Sentence(1, "src", "sent", "osent","midsagittal fontanel present","status",null,"modifer","type"));
@@ -1179,5 +1200,42 @@ public class LearnerTest {
 		myTester.oneLeadWordMarkup(myTester.getDataHolder().getCurrentTags());
 		assertEquals("oneLeadMarkup", "tagx", myTester.getDataHolder().getSentence(3).getTag());		
     }
+    
+	@Test
+	public void testGetFirstNWords() {
+		List<String> nWords = new ArrayList<String>();
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords(null, -1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("", -1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords(null, 1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("", 1));
+		nWords.add("word1");
+		nWords.add("word2");
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("word1 word2 word3 word4", 2));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("word1 word2", 3));
+	}
+	
+	@Test
+	public void testGetAllWords() {
+		Map<String, Integer> wordsBefore = new HashMap<String, Integer>();
+		wordsBefore.put("word1", 1);
+		wordsBefore.put("word2", 2);
+		Map<String, Integer> wordsAfter = new HashMap<String, Integer>();
+		wordsAfter.put("word1", 2);
+		wordsAfter.put("word2", 4);
+		wordsAfter.put("word3", 2);
+		wordsAfter.put("word4", 1);
+		wordsAfter.put("word5", 1);
+		assertEquals("PopulateSent Helper - getAllWords", wordsAfter,
+				tester.getAllWords("word1 word2 word3 word2 word3 word4 word5",
+						wordsBefore));
+	}
+	
+
 
 }
