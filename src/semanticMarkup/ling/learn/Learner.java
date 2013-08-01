@@ -52,7 +52,7 @@ public class Learner {
 		this.myTokenizer = tokenizer;
 		
 		// Data holder
-		myDataHolder = new DataHolder(myConfiguration, myUtility);
+		this.myDataHolder = new DataHolder(myConfiguration, myUtility);
 		
 		// Utilities
 		this.myWordFormUtility = new WordFormUtility(this.myUtility.getWordNet());

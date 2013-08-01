@@ -73,16 +73,20 @@ public class DataHolder {
 		this.myUtility = myUtility;
 		this.allWords = new HashMap<String, Integer>();
 		
+		this.discountedTable = new HashMap<DiscountedKey, String>();
+		this.heuristicNounTable = new HashMap<String, String>();
+		this.isATable = new HashMap<Integer, IsAValue>();
+		this.modifierTable = new HashMap<String, ModifierTableValue>();
+		
 		this.sentenceTable = new LinkedList<Sentence>();
 		this.sentenceCount = 0;
 		
-		this.discountedTable = new HashMap<DiscountedKey, String>();
-		this.heuristicNounTable = new HashMap<String, String>();		
-		this.modifierTable = new HashMap<String, ModifierTableValue>();
 		this.singularPluralTable = new HashSet<SingularPluralPair>();
+		this.termCategoryTable = new HashSet<StringPair>();
 		this.unknownWordTable = new HashMap<String, String>();
 		this.wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
 		this.wordRoleTable = new HashMap<StringPair, String>();
+		
 	}
 	
 //	/**

@@ -12,6 +12,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.core.Treatment;
 import semanticMarkup.ling.Token;
@@ -211,6 +213,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	// methods importing data from data holder to class variables
 	public List<String> readAdjNouns() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("unsupervisedClauseMarkup.getAdjectiveReplacementsForNouns");
+		
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -221,12 +226,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				.iterator();
 
 		while (iter.hasNext()) {
-			Sentence sentence = iter.next();
-			String modifier = sentence.getModifier();
-			String tag = sentence.getTag();
-			if (tag.matches("^\\[.*$")) {
-				modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
-				myAdjNounSet.add(modifier);
+			Sentence sentenceObject = iter.next();
+			String modifier = sentenceObject.getModifier();
+			String tag = sentenceObject.getTag();
+			myLogger.trace("tag: "+tag);
+			if (tag != null) {
+				if (tag.matches("^\\[.*$")) {
+					modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
+					myAdjNounSet.add(modifier);
+				}
 			}
 		}
 
@@ -237,6 +245,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public Map<String, String> readAdjNounSent() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("unsupervisedClauseMarkup.readAdjNounSent");
+		
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -248,12 +259,15 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				.iterator();
 
 		while (iter.hasNext()) {
-			Sentence sentence = iter.next();
-			String modifier = sentence.getModifier();
-			String tag = sentence.getTag();
-			if ((!(modifier.equals(""))) && (tag.matches("^\\[.*$"))) {
-				modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
-				myAdjNounSent.put(tag, modifier);
+			Sentence sentenceObject = iter.next();
+			String modifier = sentenceObject.getModifier();
+			String tag = sentenceObject.getTag();
+			myLogger.trace("tag: "+tag);
+			if ((modifier != null)&&(tag != null)) {
+				if ((!(modifier.equals(""))) && (tag.matches("^\\[.*$"))) {
+					modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
+					myAdjNounSent.put(tag, modifier);
+				}
 			}
 		}
 
