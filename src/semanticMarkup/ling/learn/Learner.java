@@ -828,7 +828,7 @@ public class Learner {
 		for (int i = 0; i < sent_num; i++) {
 
 			// taxon rule
-			Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
+			SentenceStructure sent = this.myDataHolder.getSentenceHolder().get(i);
 			String source = sent.getSource();
 			String sentence = sent.getSentence();
 			String originalSentence = sent.getOriginalSentence();
@@ -1579,7 +1579,7 @@ public class Learner {
 		myLogger.trace("Quite markupByPattern");
 	}
 
-	public boolean markupByPatternHelper(Sentence sentence) {
+	public boolean markupByPatternHelper(SentenceStructure sentence) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("markupByPattern");	
 		// case 1
@@ -1650,7 +1650,7 @@ public class Learner {
 		myLogger.trace("Quite markupIgnore");
 	}
 
-	public boolean markupIgnoreHelper(Sentence sentence) {
+	public boolean markupIgnoreHelper(SentenceStructure sentence) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("markupIgnore");		
 		
@@ -1684,7 +1684,7 @@ public class Learner {
 //		this.myDataHolder.printHolder(DataHolder.SENTENCE);
 		
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(i);
+			SentenceStructure sentEntry = this.myDataHolder.getSentenceHolder().get(i);
 			// sentid
 			String thisSentence = sentEntry.getSentence();
 			String thisLead = sentEntry.getLead();
@@ -1754,7 +1754,7 @@ public class Learner {
 	 * @return if the tag of the i-th sentence is NOT null, returns true;
 	 *         otherwise returns false
 	 */
-	public boolean isMarked(Sentence sentence) {
+	public boolean isMarked(SentenceStructure sentence) {
 		String thisTag = sentence.getTag();
 
 		if (thisTag != null) {
@@ -1849,7 +1849,7 @@ public class Learner {
 		Set<Integer> matchedIDs = new HashSet<Integer>();
 
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
+			SentenceStructure sent = this.myDataHolder.getSentenceHolder().get(i);
 			String thisSentence = sent.getSentence();
 			String thisStatus = sent.getStatus();
 			String thisTag = sent.getTag();
@@ -1899,7 +1899,7 @@ public class Learner {
 		Iterator<Integer> iter = matched.iterator();
 		while (iter.hasNext()) {
 			int sentID = iter.next().intValue();
-			Sentence sentence = this.myDataHolder.getSentenceHolder().get(sentID);
+			SentenceStructure sentence = this.myDataHolder.getSentenceHolder().get(sentID);
 			if (!isMarked(sentence)) {
 				StringAndInt tagAndNew = null;
 				String tag = null;
@@ -1941,7 +1941,7 @@ public class Learner {
 		myLogger.trace("Enter doIt");
 		myLogger.trace("sentence ID: " + sentID);
 		
-		Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(sentID);
+		SentenceStructure sentEntry = this.myDataHolder.getSentenceHolder().get(sentID);
 		String thisSentence = sentEntry.getSentence();
 		String thisLead = sentEntry.getLead();
 		
@@ -2635,10 +2635,10 @@ public class Learner {
 		int sign = 0;
 		myLogger.trace(String.format("Enter (%s)", tags));
 
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder().iterator();
+		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder().iterator();
 
 		while (iter.hasNext()) {
-			Sentence sentence = iter.next();
+			SentenceStructure sentence = iter.next();
 			int ID = sentence.getID();
 			String tag = sentence.getTag();
 			String lead = sentence.getLead();
@@ -2677,10 +2677,10 @@ public class Learner {
 		
 		int sign = 0;
 		Set<Integer> checkedIDs = new HashSet<Integer>();
-		List<Sentence> sentenceList = new LinkedList<Sentence>();
+		List<SentenceStructure> sentenceList = new LinkedList<SentenceStructure>();
 		
 		for (int id1 = 0; id1 < this.myDataHolder.getSentenceHolder().size(); id1++) {
-			Sentence sentence = this.myDataHolder.getSentenceHolder().get(id1);
+			SentenceStructure sentence = this.myDataHolder.getSentenceHolder().get(id1);
 			String tag = sentence.getTag();
 			String lead = sentence.getLead();
 
@@ -2694,9 +2694,9 @@ public class Learner {
 				false);
 		Collections.sort(sentenceList, myComparator);
 
-		Iterator<Sentence> iter1 = sentenceList.iterator();
+		Iterator<SentenceStructure> iter1 = sentenceList.iterator();
 		while (iter1.hasNext()){
-			Sentence sentence = iter1.next();
+			SentenceStructure sentence = iter1.next();
 			int ID1 = sentence.getID();
 			String lead = sentence.getLead();
 			// if this sentence has been checked, pass
@@ -2711,9 +2711,9 @@ public class Learner {
 			sharedHead.addAll(words.subList(0, words.size()-1));
 			String match = StringUtility.joinList(" ", sharedHead);
 			
-			Set<Sentence> sentenceSet = new HashSet<Sentence>();
+			Set<SentenceStructure> sentenceSet = new HashSet<SentenceStructure>();
 			for (int index=0;index<this.myDataHolder.getSentenceHolder().size();index++) {
-				Sentence thisSentence = this.myDataHolder.getSentenceHolder().get(index);
+				SentenceStructure thisSentence = this.myDataHolder.getSentenceHolder().get(index);
 				String thisLead = thisSentence.getLead();
 				String tag = thisSentence.getTag();
 				if ((tag==null)&&hasHead(sharedHead, Arrays.asList(thisLead.split(" ")))) {
@@ -2733,9 +2733,9 @@ public class Learner {
 						|| ((StringUtility.createMatcher("\\?$", ptn).find()) && (StringUtility
 								.createMatcher("n", wnPOS).find()))) {
 
-					Iterator<Sentence> iter2 = sentenceSet.iterator();
+					Iterator<SentenceStructure> iter2 = sentenceSet.iterator();
 					while (iter2.hasNext()) {
-						Sentence thisSentence = iter2.next();
+						SentenceStructure thisSentence = iter2.next();
 						int ID = thisSentence.getID();
 						String thisLead = thisSentence.getLead();
 
@@ -2810,9 +2810,9 @@ public class Learner {
 						checkedIDs.add(ID);
 					}
 				} else {
-					Iterator<Sentence> iter2 = sentenceSet.iterator();
+					Iterator<SentenceStructure> iter2 = sentenceSet.iterator();
 					while (iter2.hasNext()) { 
-						Sentence thisSentence = iter2.next();
+						SentenceStructure thisSentence = iter2.next();
 						int ID = thisSentence.getID();
 						checkedIDs.add(ID);
 					}
@@ -2867,9 +2867,9 @@ public class Learner {
 
 		int sign = 0;		
 //		for (int i=0;i<myDataHolder.getSentenceHolder().size();i++) {			
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder().iterator();
+		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder().iterator();
 		while(iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 			String tag = sentenceObject.getTag();
 			if (doItMarkupHelper(tag)) {
 				int ID = sentenceObject.getID();
@@ -2946,12 +2946,12 @@ public class Learner {
 	public void tagAllSentences (String mode, String type) {
 		List<StringAndInt> idAndSentenceList = new LinkedList<StringAndInt>();
 		
-		Iterator<Sentence> sentenceIter = 
+		Iterator<SentenceStructure> sentenceIter = 
 				this.getDataHolder().getSentenceHolder().iterator();
 		
 		if (StringUtils.equals(mode, "original")) {
 			while (sentenceIter.hasNext()) {
-				Sentence sentence = sentenceIter.next();
+				SentenceStructure sentence = sentenceIter.next();
 				int thisID = sentence.getID();
 				String thisSentence = sentence.getSentence();
 				idAndSentenceList.add(new StringAndInt(thisSentence, thisID));
@@ -2959,7 +2959,7 @@ public class Learner {
 		}
 		else {
 			while (sentenceIter.hasNext()) {
-				Sentence sentence = sentenceIter.next();
+				SentenceStructure sentence = sentenceIter.next();
 				int thisID = sentence.getID();
 				String thisOriginalSentence = sentence.getOriginalSentence();
 				idAndSentenceList.add(new StringAndInt(thisOriginalSentence, thisID));
@@ -2977,7 +2977,7 @@ public class Learner {
 			thisString = tagAllSentencesHelper(thisString);
 			thisString = annotateSentence(thisString, myKnownTags);
 			
-			Sentence targetSentence = this.getDataHolder().getSentence(thisID);
+			SentenceStructure targetSentence = this.getDataHolder().getSentence(thisID);
 			targetSentence.setSentence(thisString);
 		}
 		
@@ -3101,10 +3101,10 @@ public class Learner {
 	public Set<String> getOrgans() {
 		Set<String> oSet = new HashSet<String>(); // set of o
 		
-		Iterator<Sentence> iterSentence = this.myDataHolder
+		Iterator<SentenceStructure> iterSentence = this.myDataHolder
 				.getSentenceHolder().iterator();
 		while (iterSentence.hasNext()) {
-			Sentence sentence = iterSentence.next();
+			SentenceStructure sentence = iterSentence.next();
 			String tag = sentence.getTag();
 
 			if (tag != null) {
@@ -3256,7 +3256,7 @@ public class Learner {
 				} else {
 					;
 				}
-				Sentence sentence = myDataHolder.getSentence(sentenceID);
+				SentenceStructure sentence = myDataHolder.getSentence(sentenceID);
 				sentence.setTag(tag);
 				myLogger.debug(String.format(
 						"\t:mark up sentence #%d with tag %s", sentenceID, tag));

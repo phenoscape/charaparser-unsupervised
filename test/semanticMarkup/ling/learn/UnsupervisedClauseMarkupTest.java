@@ -32,14 +32,14 @@ public class UnsupervisedClauseMarkupTest {
 	@Test
 	public void testReadAdjNouns() {
 		DataHolder myDataHolder = tester.getDataHolder();
-		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
-		sentenceTable.add(new Sentence(0, "source1", "word1 word2", "", "", "",
+		List<SentenceStructure> sentenceTable = myDataHolder.getSentenceHolder();
+		sentenceTable.add(new SentenceStructure(0, "source1", "word1 word2", "", "", "",
 				"tag1", "modifier1", ""));
-		sentenceTable.add(new Sentence(1, "source2", "word2 word3", "", "", "",
+		sentenceTable.add(new SentenceStructure(1, "source2", "word2 word3", "", "", "",
 				"[tag2", " modifier2[abc]", ""));
-		sentenceTable.add(new Sentence(2, "source3", "word3", "", "", "", "[tag3",
+		sentenceTable.add(new SentenceStructure(2, "source3", "word3", "", "", "", "[tag3",
 				"[abc]modifier2	", ""));
-		sentenceTable.add(new Sentence(3, "source4", "word1 word3 word4", "", "",
+		sentenceTable.add(new SentenceStructure(3, "source4", "word1 word3 word4", "", "",
 				"", "[tag4", "	mo[123]difier3", ""));
 
 		List<String> resultGetAdjNouns = new ArrayList<String>();
@@ -55,14 +55,14 @@ public class UnsupervisedClauseMarkupTest {
 		UnsupervisedClauseMarkup myTester = UnsupervisedClauseMarkupFactory();
 		
 		DataHolder myDataHolder = myTester.getDataHolder();
-		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
-		sentenceTable.add(new Sentence(0, "source1", "word1 word2", "", "", "",
+		List<SentenceStructure> sentenceTable = myDataHolder.getSentenceHolder();
+		sentenceTable.add(new SentenceStructure(0, "source1", "word1 word2", "", "", "",
 				"tag1", "modifier1", ""));
-		sentenceTable.add(new Sentence(1, "source2", "word2 word3", "", "", "",
+		sentenceTable.add(new SentenceStructure(1, "source2", "word2 word3", "", "", "",
 				"[tag2", " modifier2[abc]", ""));
-		sentenceTable.add(new Sentence(2, "source3", "word3", "", "", "", "[tag3",
+		sentenceTable.add(new SentenceStructure(2, "source3", "word3", "", "", "", "[tag3",
 				"[abc]modifier2	", ""));
-		sentenceTable.add(new Sentence(3, "source4", "word1 word3 word4", "", "",
+		sentenceTable.add(new SentenceStructure(3, "source4", "word1 word3 word4", "", "",
 				"", "[tag4", "	mo[123]difier3", ""));
 
 		Map<String, String> resultGetAdjNounSent = new HashMap<String, String>();
@@ -92,14 +92,14 @@ public class UnsupervisedClauseMarkupTest {
 		UnsupervisedClauseMarkup myTester = UnsupervisedClauseMarkupFactory();
 		
 		DataHolder myDataHolder = myTester.getDataHolder();
-		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
-		sentenceTable.add(new Sentence(0, "source.ignore.1", "word1 word2", "", "", "",
+		List<SentenceStructure> sentenceTable = myDataHolder.getSentenceHolder();
+		sentenceTable.add(new SentenceStructure(0, "source.ignore.1", "word1 word2", "", "", "",
 				"tag1", "modifier1", ""));
-		sentenceTable.add(new Sentence(1, "source.ignore.2", "word2 word3", "", "", "",
+		sentenceTable.add(new SentenceStructure(1, "source.ignore.2", "word2 word3", "", "", "",
 				"[tag2", " modifier2[abc]", ""));
-		sentenceTable.add(new Sentence(2, "source.ignore.3", "word3", "", "", "", "[tag3",
+		sentenceTable.add(new SentenceStructure(2, "source.ignore.3", "word3", "", "", "", "[tag3",
 				"[abc]modifier2	", ""));
-		sentenceTable.add(new Sentence(3, "source.ignore.4", "word1 word3 word4", "", "",
+		sentenceTable.add(new SentenceStructure(3, "source.ignore.4", "word1 word3 word4", "", "",
 				"", "[tag4", "	mo[123]difier3", ""));
 
 		// getWordToSources

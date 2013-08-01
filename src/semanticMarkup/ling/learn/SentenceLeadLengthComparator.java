@@ -3,7 +3,7 @@ package semanticMarkup.ling.learn;
 import java.util.Comparator;
 
 
-public class SentenceLeadLengthComparator implements Comparator<Sentence> {
+public class SentenceLeadLengthComparator implements Comparator<SentenceStructure> {
 
 	private boolean isAscendOrder;
 	
@@ -12,7 +12,7 @@ public class SentenceLeadLengthComparator implements Comparator<Sentence> {
 	}
 	
 	@Override
-	public int compare(Sentence sentenceA, Sentence sentenceB) {
+	public int compare(SentenceStructure sentenceA, SentenceStructure sentenceB) {
 		int leadLengthA = sentenceA.getLead().length();
 		int leadLengthB = sentenceB.getLead().length();
 

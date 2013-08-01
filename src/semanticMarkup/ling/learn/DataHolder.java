@@ -40,7 +40,7 @@ public class DataHolder {
 	public static final byte MODIFIER = 4;
 	
 	// Table sentence
-	private List<Sentence> sentenceTable = new LinkedList<Sentence>();
+	private List<SentenceStructure> sentenceTable = new LinkedList<SentenceStructure>();
 	private int sentenceCount;
 	//private Map<Integer, Sentence> sentenceCollection;
 	public static final byte SENTENCE = 5;
@@ -78,7 +78,7 @@ public class DataHolder {
 		this.isATable = new HashMap<Integer, IsAValue>();
 		this.modifierTable = new HashMap<String, ModifierTableValue>();
 		
-		this.sentenceTable = new LinkedList<Sentence>();
+		this.sentenceTable = new LinkedList<SentenceStructure>();
 		this.sentenceCount = 0;
 		
 		this.singularPluralTable = new HashSet<SingularPluralPair>();
@@ -133,7 +133,7 @@ public class DataHolder {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.addSentence");	
 		
-		Sentence newSent = new Sentence(this.sentenceCount, source, sentence, originalSentence, lead,
+		SentenceStructure newSent = new SentenceStructure(this.sentenceCount, source, sentence, originalSentence, lead,
 				status, tag, modifier, type);
 		this.sentenceCount++;
 		this.sentenceTable.add(newSent);
@@ -150,11 +150,11 @@ public class DataHolder {
 		myLogger.trace("Quite\n");
 	}
 	
-	public Sentence getSentence(int ID) {
-		Iterator<Sentence> iter = this.sentenceTable.iterator();
+	public SentenceStructure getSentence(int ID) {
+		Iterator<SentenceStructure> iter = this.sentenceTable.iterator();
 		
 		while(iter.hasNext()) {
-			Sentence sentence = iter.next();
+			SentenceStructure sentence = iter.next();
 			if (sentence.getID()==ID) {
 				return sentence;
 			}
@@ -233,7 +233,7 @@ public class DataHolder {
 		return this.heuristicNounTable;
 	}
 
-	public List<Sentence> getSentenceHolder(){
+	public List<SentenceStructure> getSentenceHolder(){
 		return this.sentenceTable;
 	}
 	
@@ -388,9 +388,9 @@ public class DataHolder {
 		myLogger.trace("Enter resolveConflict");
 
 		int count = 0;
-		List<Sentence> mySentenceHolder = this.getSentenceHolder();
+		List<SentenceStructure> mySentenceHolder = this.getSentenceHolder();
 		for (int i = 0; i < mySentenceHolder.size(); i++) {
-			Sentence sentence = mySentenceHolder.get(i);
+			SentenceStructure sentence = mySentenceHolder.get(i);
 			boolean flag = false;
 			flag = sentence.getTag() == null ? 
 					true : (!sentence.getTag().equals("ignore"));
@@ -573,7 +573,7 @@ public class DataHolder {
 		if (originalSentence.matches("^\\s*[^A-Z].*$")) {
 		//if (originalSent.matches("^\\s*([a-z]|\\d).*$")) {
 			for (int i = 0; i < sentID; i++) {
-				Sentence sentence = this.sentenceTable.get(i);
+				SentenceStructure sentence = this.sentenceTable.get(i);
 				tag = sentence.getTag();
 				oSentence = sentence.getOriginalSentence();
 				boolean flag = (tag == null)? true : (!tag.matches("ignore"));
@@ -1067,7 +1067,7 @@ public class DataHolder {
 			
 			// For all the sentences tagged with $word (m), re tag by finding their parent tag.
 			for (int i = 0; i < this.getSentenceHolder().size(); i++) {
-				Sentence sent = this.getSentenceHolder().get(i);
+				SentenceStructure sent = this.getSentenceHolder().get(i);
 				if (sent.getTag().equals(newWord)) {
 					int sentID = i;
 					modifier = sent.getModifier();
@@ -1492,7 +1492,7 @@ public class DataHolder {
 		return discountedHolder; 
 	}
 
-	public List<Sentence> add2SentenceHolder(List<Sentence> sentenceTable,
+	public List<SentenceStructure> add2SentenceHolder(List<SentenceStructure> sentenceTable,
 			List<String> args) {
 		int index = 0;
 		
@@ -1537,7 +1537,7 @@ public class DataHolder {
 		
 		if (holderID == DataHolder.SENTENCE) {
 			for (int i = startIndex; i<=endIndex; i++) {
-				Sentence sentence = this.sentenceTable.get(i);
+				SentenceStructure sentence = this.sentenceTable.get(i);
 				myLogger.info("Index: "+i);
 				myLogger.info(sentence.toString());
 //				myLogger.info("Sentence ID: "+sentence.getID());
@@ -1632,7 +1632,7 @@ public class DataHolder {
 		Set<String> tags = new HashSet<String>();
 		
 		for (int i=0;i<this.sentenceTable.size();i++) {
-			Sentence sentence = this.sentenceTable.get(i);
+			SentenceStructure sentence = this.sentenceTable.get(i);
 			String tag = sentence.getTag();
 			if ((!StringUtils.equals(tag, "ignore"))){
 				tags.add(tag);

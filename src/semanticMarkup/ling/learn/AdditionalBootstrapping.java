@@ -64,7 +64,7 @@ public class AdditionalBootstrapping implements LearningModule {
 		myLogger.trace(String.format("Enter (%s)", tags));
 
 		for (int i = 0; i < myDataHolder.getSentenceHolder().size(); i++) {
-			Sentence sentence = myDataHolder.getSentenceHolder().get(i);
+			SentenceStructure sentence = myDataHolder.getSentenceHolder().get(i);
 			String tag = sentence.getTag();
 			String lead = sentence.getLead();
 

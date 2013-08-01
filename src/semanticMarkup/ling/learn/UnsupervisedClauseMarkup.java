@@ -190,10 +190,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public Map<String, AjectiveReplacementForNoun> readAdjectiveReplacementsForNouns() {
 		Map<String, AjectiveReplacementForNoun> result = new HashMap<String, AjectiveReplacementForNoun>();
 
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder()
 				.iterator();
 		while (iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 			String modifier = sentenceObject.getModifier();
 			String tag = sentenceObject.getTag();
 
@@ -225,11 +225,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Set<String> myAdjNounSet = new HashSet<String>();
 
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 
 		while (iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 			String modifier = sentenceObject.getModifier();
 			String tag = sentenceObject.getTag();
 			myLogger.trace("tag: "+tag);
@@ -258,11 +258,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Map<String, String> myAdjNounSent = new HashMap<String, String>();
 
 		// collect sentences that need adj-nn disambiguation
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 
 		while (iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 			String modifier = sentenceObject.getModifier();
 			String tag = sentenceObject.getTag();
 			myLogger.trace("tag: "+tag);
@@ -284,10 +284,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Set<String> tags = new HashSet<String>();
 		
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder().iterator();
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder().iterator();
 		
 		while (iter.hasNext()) {
-			Sentence sentence = iter.next();
+			SentenceStructure sentence = iter.next();
 			String thisTag = sentence.getTag();
 			if (thisTag != null) {
 				if (StringUtility.createMatcher("^\\[.*\\]$", thisTag).find()) {
@@ -355,7 +355,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 		
 		Set<String> modifiers = new HashSet<String>();
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder()
 				.iterator();
 		while (iter.hasNext()) {
 			String modifier = iter.next().getTag();
@@ -395,9 +395,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Set<String> result = new HashSet<String>();
 		
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder().iterator();
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder().iterator();
 		while (iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 			String sentence = sentenceObject.getSentence();
 			result.add(sentence);
 		}
@@ -412,10 +412,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		HashMap<Treatment, LinkedHashMap<String, String>> sentences = new  HashMap<Treatment, LinkedHashMap<String, String>>();
 		
-		List<Sentence> sentenceHolder = this.getDataHolder().getSentenceHolder();
+		List<SentenceStructure> sentenceHolder = this.getDataHolder().getSentenceHolder();
 		String previousTreatmentId = "-1";
 		for (int i = sentenceHolder.size()-1;i>=0;i--) {
-			Sentence sentenceObject = sentenceHolder.get(i);
+			SentenceStructure sentenceObject = sentenceHolder.get(i);
 			String source = this.getSource(sentenceObject.getSource());
 			String modifier = sentenceObject.getModifier();
 			String tag = sentenceObject.getTag();
@@ -457,9 +457,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String previousTag = null;
 		String previousTreatmentId = "-1";
 		
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder().iterator();
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder().iterator();
 		while (iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 			
 			String source = this.getSource(sentenceObject.getSource());
 			String treatmentId = getTreatmentId(source);
@@ -496,7 +496,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 		
 		Set<String> tags = new HashSet<String>();
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder()
 				.iterator();
 		while (iter.hasNext()) {
 			String tag = iter.next().getTag();
@@ -587,11 +587,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Map<String, Set<String>> myWordToSources = new HashMap<String, Set<String>>();
 
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 		
 		while (iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 			String source = this.getSource(sentenceObject.getSource());
 			String sentence = sentenceObject.getSentence();			
 			List<Token> tokens = this.tokenizer.tokenize(sentence);
@@ -611,10 +611,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		HashMap<String, String> parentTags = new HashMap<String, String>();
 		HashMap<String, String> grandParentTags = new HashMap<String, String>();
 			
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder()
 				.iterator();
 		while (iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 
 			String parentTag = "";
 			String grandParentTag = "";
