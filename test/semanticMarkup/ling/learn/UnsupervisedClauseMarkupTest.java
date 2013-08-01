@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import semanticMarkup.core.Treatment;
+import semanticMarkup.io.input.lib.db.ParentTagProvider;
 import semanticMarkup.ling.learn.UnsupervisedClauseMarkup;
 import semanticMarkup.ling.learn.FileLoader;
 
@@ -25,10 +26,7 @@ public class UnsupervisedClauseMarkupTest {
 
 	@Before
 	public void initialize() {
-		Configuration myConfiguration = new Configuration();
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
-		tester = new UnsupervisedClauseMarkup("plain", new HashSet<String>(), tokenizer);
-
+		tester = UnsupervisedClauseMarkupFactory();
 	}
 
 	@Test
@@ -56,7 +54,7 @@ public class UnsupervisedClauseMarkupTest {
 	public void testReadAdjNounSent() {
 		Configuration myConfiguration = new Configuration();
 		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
-		UnsupervisedClauseMarkup myTester = new UnsupervisedClauseMarkup("plain", new HashSet<String>(), tokenizer);
+		UnsupervisedClauseMarkup myTester = UnsupervisedClauseMarkupFactory();
 		
 		DataHolder myDataHolder = tester.getDataHolder();
 		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
@@ -82,7 +80,7 @@ public class UnsupervisedClauseMarkupTest {
 	public void testReadBracketTags() {
 		Configuration myConfiguration = new Configuration();
 		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
-		UnsupervisedClauseMarkup myTester = new UnsupervisedClauseMarkup("plain", new HashSet<String>(), tokenizer);
+		UnsupervisedClauseMarkup myTester = UnsupervisedClauseMarkupFactory();
 		
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag","start","type"}));
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","[tag]","start end","type"}));
@@ -97,36 +95,36 @@ public class UnsupervisedClauseMarkupTest {
 	public void testReadWordToSoures() {
 		Configuration myConfiguration = new Configuration();
 		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
-		UnsupervisedClauseMarkup myTester = new UnsupervisedClauseMarkup("plain", new HashSet<String>(), tokenizer);
+		UnsupervisedClauseMarkup myTester = UnsupervisedClauseMarkupFactory();
 		
 		DataHolder myDataHolder = tester.getDataHolder();
 		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
-		sentenceTable.add(new Sentence(0, "source1", "word1 word2", "", "", "",
+		sentenceTable.add(new Sentence(0, "source.ignore.1", "word1 word2", "", "", "",
 				"tag1", "modifier1", ""));
-		sentenceTable.add(new Sentence(1, "source2", "word2 word3", "", "", "",
+		sentenceTable.add(new Sentence(1, "source.ignore.2", "word2 word3", "", "", "",
 				"[tag2", " modifier2[abc]", ""));
-		sentenceTable.add(new Sentence(2, "source3", "word3", "", "", "", "[tag3",
+		sentenceTable.add(new Sentence(2, "source.ignore.3", "word3", "", "", "", "[tag3",
 				"[abc]modifier2	", ""));
-		sentenceTable.add(new Sentence(3, "source4", "word1 word3 word4", "", "",
+		sentenceTable.add(new Sentence(3, "source.ignore.4", "word1 word3 word4", "", "",
 				"", "[tag4", "	mo[123]difier3", ""));
 
 		// getWordToSources
 		Map<String, Set<String>> resultGetWordToSources = new HashMap<String, Set<String>>();
 		resultGetWordToSources.put("word1", new HashSet<String>());
-		resultGetWordToSources.get("word1").add("source1");
-		resultGetWordToSources.get("word1").add("source4");
+		resultGetWordToSources.get("word1").add("source.1");
+		resultGetWordToSources.get("word1").add("source.4");
 
 		resultGetWordToSources.put("word2", new HashSet<String>());
-		resultGetWordToSources.get("word2").add("source1");
-		resultGetWordToSources.get("word2").add("source2");
+		resultGetWordToSources.get("word2").add("source.1");
+		resultGetWordToSources.get("word2").add("source.2");
 
 		resultGetWordToSources.put("word3", new HashSet<String>());
-		resultGetWordToSources.get("word3").add("source2");
-		resultGetWordToSources.get("word3").add("source3");
-		resultGetWordToSources.get("word3").add("source4");
+		resultGetWordToSources.get("word3").add("source.2");
+		resultGetWordToSources.get("word3").add("source.3");
+		resultGetWordToSources.get("word3").add("source.4");
 
 		resultGetWordToSources.put("word4", new HashSet<String>());
-		resultGetWordToSources.get("word4").add("source4");
+		resultGetWordToSources.get("word4").add("source.4");
 
 		assertEquals("Method readWordToSources", resultGetWordToSources,
 				tester.readWordToSources());
@@ -136,7 +134,7 @@ public class UnsupervisedClauseMarkupTest {
 	public void testReadHeuristicNouns() {
 		Configuration myConfiguration = new Configuration();
 		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
-		UnsupervisedClauseMarkup myTester = new UnsupervisedClauseMarkup("plain", new HashSet<String>(), tokenizer);
+		UnsupervisedClauseMarkup myTester = UnsupervisedClauseMarkupFactory();
 		
 		DataHolder myDataHolder = tester.getDataHolder();
 		Map<String, String> myHeuristicNouns = myDataHolder
@@ -150,6 +148,16 @@ public class UnsupervisedClauseMarkupTest {
 
 		assertEquals("Method readHeuristicNouns", resultGetHeuristicNouns,
 				tester.readHeuristicNouns());
+	}
+	
+	private UnsupervisedClauseMarkup UnsupervisedClauseMarkupFactory() {
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		ParentTagProvider parentTagProvider = new ParentTagProvider();
+		Set<String> selectedSources = new HashSet<String>();
+		UnsupervisedClauseMarkup myUnsupervisedClauseMarkup = new UnsupervisedClauseMarkup("plain", parentTagProvider, selectedSources, tokenizer);
+		
+		return myUnsupervisedClauseMarkup;
 	}
 
 }

@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.core.Treatment;
+import semanticMarkup.io.input.lib.db.ParentTagProvider;
 import semanticMarkup.ling.Token;
 import semanticMarkup.ling.transform.ITokenizer;
 
@@ -52,6 +53,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	private Map<String, AjectiveReplacementForNoun> adjectiveReplacementsForNouns;
 	private String markupMode;
+	private ParentTagProvider parentTagProvider;
 	private Set<String> selectedSources;
 	private ITokenizer tokenizer;
 
@@ -61,7 +63,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * UnsupervisedClauseMarkup object.
 	 * 
 	 */
-	public UnsupervisedClauseMarkup(String markupMode, Set<String> selectedSources, ITokenizer tokenizer) {
+	public UnsupervisedClauseMarkup(String markupMode, ParentTagProvider parentTagProvider, Set<String> selectedSources, ITokenizer tokenizer) {
 		
 		//this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		
@@ -69,6 +71,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		this.selectedSources.addAll(selectedSources);
 		
 		this.markupMode = markupMode;
+		this.parentTagProvider = parentTagProvider;
 		this.tokenizer = tokenizer;
 		
 		this.myConfiguration = new Configuration();
@@ -413,11 +416,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String previousTreatmentId = "-1";
 		for (int i = sentenceHolder.size()-1;i>=0;i--) {
 			Sentence sentenceObject = sentenceHolder.get(i);
-			String source = sentenceObject.getSource();
+			String source = this.getSource(sentenceObject.getSource());
 			String modifier = sentenceObject.getModifier();
 			String tag = sentenceObject.getTag();
 			String sentence = sentenceObject.getSentence().trim();
-			String orginalSentence = sentenceObject.getOriginalSentence();
 			
 			if(sentence.length()!=0){
 				String treatmentId = getTreatmentId(source);
@@ -459,7 +461,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		while (iter.hasNext()) {
 			Sentence sentenceObject = iter.next();
 			
-			String source = sentenceObject.getSource();
+			String source = this.getSource(sentenceObject.getSource());
 			String treatmentId = getTreatmentId(source);
 			if(selectedSources.isEmpty() || selectedSources.contains(source)) {
 				
@@ -589,9 +591,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 				.iterator();
 		
 		while (iter.hasNext()) {
-			Sentence sentenceElement = iter.next();
-			String source = sentenceElement.getSource();
-			String sentence = sentenceElement.getSentence();			
+			Sentence sentenceObject = iter.next();
+			String source = this.getSource(sentenceObject.getSource());
+			String sentence = sentenceObject.getSentence();			
 			List<Token> tokens = this.tokenizer.tokenize(sentence);
 			for(Token token : tokens) {
 				String word = token.getContent();
@@ -604,6 +606,34 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		return myWordToSources;
 	}
 	
+	// Miscellaneous
+	public void initParentTagProvider(ParentTagProvider parentTagProvider2) {
+		HashMap<String, String> parentTags = new HashMap<String, String>();
+		HashMap<String, String> grandParentTags = new HashMap<String, String>();
+			
+		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+				.iterator();
+		while (iter.hasNext()) {
+			Sentence sentenceObject = iter.next();
+
+			String parentTag = "";
+			String grandParentTag = "";
+
+			String source = getSource(sentenceObject.getSource());
+			String tag = sentenceObject.getTag();
+			parentTags.put(source, parentTag);
+			grandParentTags.put(source, grandParentTag);
+
+			grandParentTag = parentTag;
+			if (tag != null && !tag.equals("ditto"))
+				parentTag = tag;
+			else if (tag == null)
+				parentTag = "";
+		}
+
+		this.parentTagProvider.init(parentTags, grandParentTags);
+	}
+	
 	
 	//Utilities
 	public DataHolder getDataHolder() {
@@ -613,6 +643,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	protected String getTreatmentId(String sourceString) {
 		String[] sourceParts = sourceString.split("\\.");
 		return sourceParts[0];
+	}
+	
+	protected String getSource(String sourceString) {
+		String[] sourceParts = sourceString.split("\\.");
+		return sourceParts[0] + "." + sourceParts[2];
 	}
 
 }
