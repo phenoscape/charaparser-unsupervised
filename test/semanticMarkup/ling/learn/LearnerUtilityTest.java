@@ -8,7 +8,10 @@ import java.util.HashSet;
 import org.junit.Before;
 import org.junit.Test;
 
+import semanticMarkup.ling.Sentence;
+import semanticMarkup.ling.transform.ISentenceDetector;
 import semanticMarkup.ling.transform.ITokenizer;
+import semanticMarkup.ling.transform.lib.UnsupervisedLearningSentenceDetector;
 import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
 
 public class LearnerUtilityTest {
@@ -18,9 +21,10 @@ public class LearnerUtilityTest {
 	@Before
 	public void initialize() {
 		Configuration myConfiguration = new Configuration();
+		ISentenceDetector sentenceDetector = new UnsupervisedLearningSentenceDetector(
+				myConfiguration.getOpenNLPSentenceDetectorDir());
 		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
-		Utility myUtility = new Utility(myConfiguration, tokenizer);
-		this.tester = new LearnerUtility(myConfiguration, tokenizer);
+		this.tester = new LearnerUtility(myConfiguration, sentenceDetector, tokenizer);
 	}
 	
 	@Test
@@ -42,4 +46,33 @@ public class LearnerUtilityTest {
 		assertEquals("getSentenceHead - case n", "word1 word2 word3", tester.getSentenceHead("word1 word2 word3"));
 	}
 
+	@Test
+	public void testHideAbbreviations(){
+		assertEquals("hideAbbreviations", "Word1 jr[DOT] name word2.", tester.hideAbbreviations("Word1 jr. name word2."));
+		assertEquals("hideAbbreviations", "Word1 Gen[DOT] name word2.", tester.hideAbbreviations("Word1 Gen. name word2."));
+		assertEquals("hideAbbreviations", "Word1 uNiV[DOT] name word2.", tester.hideAbbreviations("Word1 uNiV. name word2."));
+		assertEquals("hideAbbreviations", "Word1 blvd[DOT] name coRp[DOT] word 3 name word2.", tester.hideAbbreviations("Word1 blvd. name coRp. word 3 name word2."));
+		assertEquals("hideAbbreviations", "Word1 bld[DOT] name coRp[DOT] word 3 name word2.", tester.hideAbbreviations("Word1 bld. name coRp. word 3 name word2."));		
+		assertEquals("hideAbbreviations", "Word1 uNiV[DOT] name coRp[DOT] word 3 name word2.", tester.hideAbbreviations("Word1 uNiV. name coRp. word 3 name word2."));	
+	}
+	
+	@Test
+	public void testRestoreAbbreviations(){
+		assertEquals("hideAbbreviations", "Word1 jr. name word2.", tester.restoreAbbreviations("Word1 jr[DOT] name word2."));
+		assertEquals("hideAbbreviations", "Word1 Gen. name word2.", tester.restoreAbbreviations("Word1 Gen[DOT] name word2."));
+		assertEquals("hideAbbreviations", "Word1 uNiV. name word2.", tester.restoreAbbreviations("Word1 uNiV[DOT] name word2."));
+		assertEquals("hideAbbreviations", "Word1 uNiV. name coRp. word 3 name word2.", tester.restoreAbbreviations("Word1 uNiV[DOT] name coRp[DOT] word 3 name word2."));
+		assertEquals("hideAbbreviations", "Word1 uNiV. name pde. word 3 name word2.", tester.restoreAbbreviations("Word1 uNiV[DOT] name pde[DOT] word 3 name word2."));
+		assertEquals("hideAbbreviations", "Word1 uNiV. name pd. word 3 name word2.", tester.restoreAbbreviations("Word1 uNiV[DOT] name pd[DOT] word 3 name word2."));
+	}
+	
+	@Test
+	public void testSegmentSentence(){
+		assertEquals("segmentSentence - handle abbreviations", new Sentence("This is jr. Gates."), tester.segmentSentence("This is jr. Gates. This is second sentence.").get(0));
+		assertEquals("segmentSentence - handle abbreviations", new Sentence("This is second sentence."), tester.segmentSentence("This is jr. Gates. This is second sentence.").get(1));
+		assertEquals("segmentSentence - handle abbreviations", new Sentence("The Energy DEPT. is holding a work shop now."), tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ").get(0));
+		assertEquals("segmentSentence - handle abbreviations", new Sentence("This is second sentence."), tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ").get(1));
+		assertEquals("segmentSentence - handle abbreviations", new Sentence("Mr. Gates from the Energy DEPT. is holding a work shop now."), tester.segmentSentence("Mr. Gates from the Energy DEPT. is holding a work shop now. This is second sentence. ").get(0));
+		
+	}
 }

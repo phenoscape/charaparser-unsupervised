@@ -18,6 +18,7 @@ import org.apache.log4j.PropertyConfigurator;
 import semanticMarkup.core.Treatment;
 import semanticMarkup.io.input.lib.db.ParentTagProvider;
 import semanticMarkup.ling.Token;
+import semanticMarkup.ling.transform.ISentenceDetector;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {	
@@ -54,8 +55,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private Map<String, AjectiveReplacementForNoun> adjectiveReplacementsForNouns;
 	private String markupMode;
 	private ParentTagProvider parentTagProvider;
+	private ISentenceDetector sentenceDetector;
 	private Set<String> selectedSources;
 	private ITokenizer tokenizer;
+	
 
 
 	/**
@@ -63,21 +66,26 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * UnsupervisedClauseMarkup object.
 	 * 
 	 */
-	public UnsupervisedClauseMarkup(String markupMode, ParentTagProvider parentTagProvider, Set<String> selectedSources, ITokenizer tokenizer) {
-		
+	public UnsupervisedClauseMarkup(String markupMode,
+			ParentTagProvider parentTagProvider,
+			Set<String> selectedSources,
+			ISentenceDetector sentenceDetector, 
+			ITokenizer tokenizer) {		
 		//this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
+		
+		this.markupMode = markupMode;
+		this.parentTagProvider = parentTagProvider;
+		this.sentenceDetector = sentenceDetector;
 		
 		this.selectedSources = new HashSet<String>();
 		this.selectedSources.addAll(selectedSources);
 		
-		this.markupMode = markupMode;
-		this.parentTagProvider = parentTagProvider;
 		this.tokenizer = tokenizer;
 		
 		this.myConfiguration = new Configuration();
-		this.myUtility = new Utility(myConfiguration, tokenizer);
+		this.myUtility = new Utility(myConfiguration, this.sentenceDetector, this.tokenizer);
 		this.myDataHolder = new DataHolder(myConfiguration, myUtility);
-		myLearner = new Learner(this.myConfiguration, this.tokenizer, this.myUtility);
+		this.myLearner = new Learner(this.myConfiguration, this.tokenizer, this.myUtility);
 		
 	}
 

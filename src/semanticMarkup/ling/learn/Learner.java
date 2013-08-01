@@ -21,6 +21,7 @@ import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.core.Treatment;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
+import semanticMarkup.ling.Sentence;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class Learner {	
@@ -56,7 +57,7 @@ public class Learner {
 		
 		// Utilities
 		this.myWordFormUtility = new WordFormUtility(this.myUtility.getWordNet());
-		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.myUtility.getSentenceDetector());
+		this.myPopulateSentenceUtility = new PopulateSentenceUtility();
 		
 		// Class variables
 		NUM_LEAD_WORDS = 3; // Set the number of leading words be 3
@@ -168,19 +169,18 @@ public class Learner {
 				text = this.handleText(text);
 				myLogger.debug("Text: " + text);
 
-				// use Apache OpenNLP to do sentence segmentation
-				String sentences[] = {};
-				sentences = this.myPopulateSentenceUtility.segmentSentence(text);
+				//do sentence segmentation
+				List<Sentence> sentences = this.myUtility.getLearnerUtility().segmentSentence(text);
 
 				List<String> sentCopy = new LinkedList<String>();
 				List<Integer> validIndex = new LinkedList<Integer>();
 				
 				// for each sentence, do some operations
-				for (int j = 0; j < sentences.length; j++) {
-					myLogger.debug("Sentence " + j + ": " + sentences[j]);
+				for (int j = 0; j < sentences.size(); j++) {
+					myLogger.debug("Sentence " + j + ": " + sentences.get(j).getContent());
 					
 					// if(!/\w+/){next;}
-					if (!sentences[j].matches("^.*\\w+.*$")) {
+					if (!sentences.get(j).getContent().matches("^.*\\w+.*$")) {
 						continue;
 					}
 
@@ -188,19 +188,19 @@ public class Learner {
 					validIndex.add(j);
 
 					// restore marks in brackets
-					sentences[j] = this.myPopulateSentenceUtility.restoreMarksInBrackets(sentences[j]);
+					sentences.get(j).setContent(this.myPopulateSentenceUtility.restoreMarksInBrackets(sentences.get(j).getContent()));
 					// Make a copy of the sentence
-					sentCopy.add(sentences[j]);
+					sentCopy.add(sentences.get(j).getContent());
 
 					// process the sentence
-					sentences[j] = this.handleSentence(sentences[j]);
+					sentences.get(j).setContent(this.handleSentence(sentences.get(j).getContent()));
 
 					// store all words
-					this.myDataHolder.allWords = this.getAllWords(sentences[j], this.myDataHolder.allWords);
+					this.myDataHolder.allWords = this.getAllWords(sentences.get(j).getContent(), this.myDataHolder.allWords);
 				}
 
 				for (int j = 0; j < validIndex.size(); j++) {
-					String line = sentences[validIndex.get(j)];
+					String line = sentences.get(validIndex.get(j)).getContent();
 					String oline = sentCopy.get(j);
 
 					// handle line first
@@ -3361,6 +3361,10 @@ public class Learner {
 	
 	public ITokenizer getTokenizer(){
 		return this.myTokenizer;
+	}
+	
+	public Configuration getConfiguration(){
+		return this.myConfiguration;
 	}
 	
 }

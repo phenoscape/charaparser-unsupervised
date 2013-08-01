@@ -11,20 +11,21 @@ import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
 import opennlp.tools.util.InvalidFormatException;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
+import semanticMarkup.ling.transform.ISentenceDetector;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class Utility {
 
 	private WordNetPOSKnowledgeBase myWN = null;
-	private SentenceDetectorME mySentenceDetector = null;
 	
+	private ISentenceDetector mySentenceDetector;
 	private ITokenizer myTokenizer;
 
 	private PopulateSentenceUtility myPopulateSentenceUtility = null;
 	private WordFormUtility myWordFormUtility = null;
 	private LearnerUtility myLearnerUtility = null;
 	
-	public Utility(Configuration configuration, ITokenizer tokenizer) {
+	public Utility(Configuration configuration, ISentenceDetector sentenceDetector, ITokenizer tokenizer) {
 		// get those tools
 		// Get WordNetAPI instance
 		try {
@@ -34,36 +35,22 @@ public class Utility {
 			e.printStackTrace();
 		}
 		
+		this.mySentenceDetector = sentenceDetector;
 		this.myTokenizer = tokenizer;
 		
-		// Get OpenNLP sentence detector
-		InputStream sentModelIn;
-		try {
-			sentModelIn = new FileInputStream(configuration.getOpenNLPSentenceDetectorDir());
-			SentenceModel model = new SentenceModel(sentModelIn);
-			this.mySentenceDetector = new SentenceDetectorME(model);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		
-		
-		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.mySentenceDetector);
+		this.myPopulateSentenceUtility = new PopulateSentenceUtility();
 		this.myWordFormUtility = new WordFormUtility(this.myWN);
-		this.myLearnerUtility = new LearnerUtility(configuration, myTokenizer);
+		this.myLearnerUtility = new LearnerUtility(configuration, this.mySentenceDetector, myTokenizer);
 	}
 	
 	public  PopulateSentenceUtility getPopulateSentenceUtility(){
 		return this.myPopulateSentenceUtility;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	public WordFormUtility getWordFormUtility(){
 		return this.myWordFormUtility;
 	}
@@ -76,7 +63,7 @@ public class Utility {
 		return this.myWN;
 	}
 	
-	public SentenceDetectorME getSentenceDetector(){
+	public ISentenceDetector getSentenceDetector(){
 		return this.mySentenceDetector;
 	}
 

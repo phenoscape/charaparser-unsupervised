@@ -8,7 +8,9 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import semanticMarkup.ling.transform.ISentenceDetector;
 import semanticMarkup.ling.transform.ITokenizer;
+import semanticMarkup.ling.transform.lib.UnsupervisedLearningSentenceDetector;
 import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
 
 public class WordFormUtilityTest {
@@ -18,8 +20,10 @@ public class WordFormUtilityTest {
 	@Before
 	public void initialize(){
 		Configuration myConfiguration = new Configuration();
+		ISentenceDetector sentenceDetector = new UnsupervisedLearningSentenceDetector(
+				myConfiguration.getOpenNLPSentenceDetectorDir());
 		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
-		Utility myUtility = new Utility(myConfiguration, tokenizer);
+		Utility myUtility = new Utility(myConfiguration, sentenceDetector, tokenizer);
 		tester = new WordFormUtility(myUtility.getWordNet());
 	}
 

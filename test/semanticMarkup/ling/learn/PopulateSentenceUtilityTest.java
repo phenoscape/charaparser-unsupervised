@@ -27,45 +27,7 @@ public class PopulateSentenceUtilityTest {
 
 	@Before
 	public void initialize() {
-		// Get OpenNLP tokenizer
-		InputStream tokenModelIn;
-		
-		SentenceDetectorME mySentenceDetector = null;
-		Tokenizer myTokenizer = null;
-		
-		// Get OpenNLP sentence detector
-		InputStream sentModelIn;
-		try {
-			sentModelIn = new FileInputStream("res/en-sent.bin");
-			SentenceModel model = new SentenceModel(sentModelIn);
-		    mySentenceDetector = new SentenceDetectorME(model);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		try {
-			tokenModelIn = new FileInputStream("res/en-token.bin");
-			TokenizerModel model = new TokenizerModel(tokenModelIn);
-			myTokenizer = new TokenizerME(model);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		tester = new PopulateSentenceUtility(mySentenceDetector);
+		tester = new PopulateSentenceUtility();
 	}
 
 	@Test
@@ -120,37 +82,4 @@ public class PopulateSentenceUtilityTest {
 				tester.addSpace("word,word;word:word!word?word.", "\\W"));
 	}
 	
-	@Test
-	public void testHideAbbreviations(){
-		assertEquals("hideAbbreviations", "Word1 jr[DOT] name word2.", tester.hideAbbreviations("Word1 jr. name word2."));
-		assertEquals("hideAbbreviations", "Word1 Gen[DOT] name word2.", tester.hideAbbreviations("Word1 Gen. name word2."));
-		assertEquals("hideAbbreviations", "Word1 uNiV[DOT] name word2.", tester.hideAbbreviations("Word1 uNiV. name word2."));
-		assertEquals("hideAbbreviations", "Word1 blvd[DOT] name coRp[DOT] word 3 name word2.", tester.hideAbbreviations("Word1 blvd. name coRp. word 3 name word2."));
-		assertEquals("hideAbbreviations", "Word1 bld[DOT] name coRp[DOT] word 3 name word2.", tester.hideAbbreviations("Word1 bld. name coRp. word 3 name word2."));		
-		assertEquals("hideAbbreviations", "Word1 uNiV[DOT] name coRp[DOT] word 3 name word2.", tester.hideAbbreviations("Word1 uNiV. name coRp. word 3 name word2."));	
-	}
-	
-	@Test
-	public void testRestoreAbbreviations(){
-		assertEquals("hideAbbreviations", "Word1 jr. name word2.", tester.restoreAbbreviations("Word1 jr[DOT] name word2."));
-		assertEquals("hideAbbreviations", "Word1 Gen. name word2.", tester.restoreAbbreviations("Word1 Gen[DOT] name word2."));
-		assertEquals("hideAbbreviations", "Word1 uNiV. name word2.", tester.restoreAbbreviations("Word1 uNiV[DOT] name word2."));
-		assertEquals("hideAbbreviations", "Word1 uNiV. name coRp. word 3 name word2.", tester.restoreAbbreviations("Word1 uNiV[DOT] name coRp[DOT] word 3 name word2."));
-		assertEquals("hideAbbreviations", "Word1 uNiV. name pde. word 3 name word2.", tester.restoreAbbreviations("Word1 uNiV[DOT] name pde[DOT] word 3 name word2."));
-		assertEquals("hideAbbreviations", "Word1 uNiV. name pd. word 3 name word2.", tester.restoreAbbreviations("Word1 uNiV[DOT] name pd[DOT] word 3 name word2."));
-	}
-	
-	@Test
-	public void testSegmentSentence(){
-		assertEquals("segmentSentence - handle abbreviations", "This is jr. Gates.", tester.segmentSentence("This is jr. Gates. This is second sentence.")[0]);
-		assertEquals("segmentSentence - handle abbreviations", "This is second sentence.", tester.segmentSentence("This is jr. Gates. This is second sentence.")[1]);
-		assertEquals("The Energy DEPT. is holding a work shop now.", tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ")[0]);
-		assertEquals("This is second sentence.", tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ")[1]);
-		assertEquals("Mr. Gates from the Energy DEPT. is holding a work shop now.", tester.segmentSentence("Mr. Gates from the Energy DEPT. is holding a work shop now. This is second sentence. ")[0]);
-		
-	}
-	
-
-	
-
 }

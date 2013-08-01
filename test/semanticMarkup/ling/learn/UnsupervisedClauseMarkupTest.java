@@ -18,7 +18,9 @@ import semanticMarkup.io.input.lib.db.ParentTagProvider;
 import semanticMarkup.ling.learn.UnsupervisedClauseMarkup;
 import semanticMarkup.ling.learn.FileLoader;
 
+import semanticMarkup.ling.transform.ISentenceDetector;
 import semanticMarkup.ling.transform.ITokenizer;
+import semanticMarkup.ling.transform.lib.UnsupervisedLearningSentenceDetector;
 import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
 
 public class UnsupervisedClauseMarkupTest {
@@ -144,10 +146,13 @@ public class UnsupervisedClauseMarkupTest {
 	
 	private UnsupervisedClauseMarkup UnsupervisedClauseMarkupFactory() {
 		Configuration myConfiguration = new Configuration();
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+
 		ParentTagProvider parentTagProvider = new ParentTagProvider();
+		ISentenceDetector sentenceDetector = new UnsupervisedLearningSentenceDetector(
+				myConfiguration.getOpenNLPSentenceDetectorDir());
 		Set<String> selectedSources = new HashSet<String>();
-		UnsupervisedClauseMarkup myUnsupervisedClauseMarkup = new UnsupervisedClauseMarkup("plain", parentTagProvider, selectedSources, tokenizer);
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		UnsupervisedClauseMarkup myUnsupervisedClauseMarkup = new UnsupervisedClauseMarkup("plain", parentTagProvider, selectedSources, sentenceDetector, tokenizer);
 		
 		return myUnsupervisedClauseMarkup;
 	}

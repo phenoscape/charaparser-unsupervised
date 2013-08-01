@@ -10,20 +10,28 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
+import semanticMarkup.ling.Sentence;
+import semanticMarkup.ling.transform.ISentenceDetector;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class LearnerUtility {
 
 	private Configuration myConfiguration;
+	private ISentenceDetector mySentenceDetector;
 	private ITokenizer mytokenizer;
 	
-	public LearnerUtility(Configuration configuration, ITokenizer tokenizer) {
+	public LearnerUtility(Configuration configuration, ISentenceDetector sentenceDetector, ITokenizer tokenizer) {
 		this.myConfiguration = configuration;
+		this.mySentenceDetector = sentenceDetector;
 		this.mytokenizer = tokenizer;
 	}
 	
 	public ITokenizer getTokenizer(){
 		return this.mytokenizer;
+	}
+	
+	public ISentenceDetector getSentenceDetector(){
+		return this.mySentenceDetector;
 	}
 	
 	public List<String> tokenizeText(String sentence, String mode) {
@@ -101,6 +109,113 @@ public class LearnerUtility {
 			myLogger.trace("Return: " + head);
 			return head;
 		}
+	}
+	
+	/**
+	 * Segment a text into sentences using the OpenNLP sentence detector. Note
+	 * how dot after any abbreviations is handled: to avoid segmenting at
+	 * abbreviations, the dots of abbreviations are first replaced by a special
+	 * mark before the text is segmented. Then after the segmentation, they are
+	 * restored back.
+	 * 
+	 * @param text
+	 * @return List of Sentence
+	 */
+	List<Sentence> segmentSentence(String text) {
+		List<Sentence> sentences;
+		
+		//hide abbreviations
+		text = this.hideAbbreviations(text);
+		
+		// do sentence segmentation
+		
+		sentences = this.mySentenceDetector.segment(text);
+		
+		// restore Abbreviations
+		
+		for (Sentence sentence: sentences){
+			String contentHideAbbreviations = sentence.getContent();
+			String contentRestoreAbbreviations = this.restoreAbbreviations(contentHideAbbreviations);
+			sentence.setContent(contentRestoreAbbreviations); 
+		}
+		
+		return sentences;
+	}
+	
+	/**
+	 * replace the dot (.) mark of abbreviations in the text by a special mark
+	 * ([DOT])
+	 * 
+	 * @param text
+	 * @return the text after replacement
+	 */
+	public String hideAbbreviations(String text) {
+		String pattern = "(^.*)("
+				+Constant.PEOPLE_ABBR
+				+"|"+Constant.ARMY_ABBR
+				+"|"+Constant.INSTITUTES_ABBR
+				+"|"+Constant.COMPANIES_ABBR
+				+"|"+Constant.PLACES_ABBR
+				+"|"+Constant.MONTHS_ABBR
+				+"|"+Constant.MISC_ABBR
+				+"|"+Constant.BOT1_ABBR
+				+"|"+Constant.BOT2_ABBR
+				+"|"+Constant.LATIN_ABBR
+				+")(\\.)(.*$)";
+		//pattern = "(^.*)(jr|abc)(\\.)(.*$)";
+		
+		Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+		Matcher m;
+		m= p.matcher(text);
+		while (m.matches()){
+			String head = m.group(1);
+			String abbr = m.group(2);
+			String dot = m.group(3);
+			String remaining = m.group(4);
+			dot = "[DOT]";
+			text= head+abbr+dot+remaining;
+			m=p.matcher(text);
+		}
+		
+		return text;
+	}
+	
+	/**
+	 * restore the dot (.) mark of abbreviations in the text from special mark
+	 * ([DOT])
+	 * 
+	 * @param text
+	 * @return the text after replacement
+	 */
+	public String restoreAbbreviations(String text) {
+		String pattern = "(^.*)("
+				+Constant.PEOPLE_ABBR
+				+"|"+Constant.ARMY_ABBR
+				+"|"+Constant.INSTITUTES_ABBR
+				+"|"+Constant.COMPANIES_ABBR
+				+"|"+Constant.PLACES_ABBR
+				+"|"+Constant.MONTHS_ABBR
+				+"|"+Constant.MISC_ABBR
+				+"|"+Constant.BOT1_ABBR
+				+"|"+Constant.BOT2_ABBR
+				+"|"+Constant.LATIN_ABBR
+				+")(\\[DOT\\])(.*$)";
+		//pattern = "(^.*)(jr|abc)(\\.)(.*$)";
+		
+		Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+		Matcher m;
+		m= p.matcher(text);
+		while (m.matches()){
+			String head = m.group(1);
+			String abbr = m.group(2);
+			String dot = m.group(3);
+			String remaining = m.group(4);
+			dot = ".";
+			text= head+abbr+dot+remaining;
+			m=p.matcher(text);
+		}
+		
+		return text;
 	}
 
 
