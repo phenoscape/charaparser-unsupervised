@@ -52,11 +52,9 @@ public class UnsupervisedClauseMarkupTest {
 
 	@Test
 	public void testReadAdjNounSent() {
-		Configuration myConfiguration = new Configuration();
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
 		UnsupervisedClauseMarkup myTester = UnsupervisedClauseMarkupFactory();
 		
-		DataHolder myDataHolder = tester.getDataHolder();
+		DataHolder myDataHolder = myTester.getDataHolder();
 		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
 		sentenceTable.add(new Sentence(0, "source1", "word1 word2", "", "", "",
 				"tag1", "modifier1", ""));
@@ -73,13 +71,11 @@ public class UnsupervisedClauseMarkupTest {
 		resultGetAdjNounSent.put("[tag4", "modifier3");
 
 		assertEquals("Method readAdjNouns", resultGetAdjNounSent,
-				tester.readAdjNounSent());
+				myTester.readAdjNounSent());
 	}
 	
 	@Test
 	public void testReadBracketTags() {
-		Configuration myConfiguration = new Configuration();
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
 		UnsupervisedClauseMarkup myTester = UnsupervisedClauseMarkupFactory();
 		
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag","start","type"}));
@@ -93,11 +89,9 @@ public class UnsupervisedClauseMarkupTest {
 
 	@Test
 	public void testReadWordToSoures() {
-		Configuration myConfiguration = new Configuration();
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
 		UnsupervisedClauseMarkup myTester = UnsupervisedClauseMarkupFactory();
 		
-		DataHolder myDataHolder = tester.getDataHolder();
+		DataHolder myDataHolder = myTester.getDataHolder();
 		List<Sentence> sentenceTable = myDataHolder.getSentenceHolder();
 		sentenceTable.add(new Sentence(0, "source.ignore.1", "word1 word2", "", "", "",
 				"tag1", "modifier1", ""));
@@ -127,16 +121,14 @@ public class UnsupervisedClauseMarkupTest {
 		resultGetWordToSources.get("word4").add("source.4");
 
 		assertEquals("Method readWordToSources", resultGetWordToSources,
-				tester.readWordToSources());
+				myTester.readWordToSources());
 	}
 
 	@Test
 	public void testReadHeuristicNouns() {
-		Configuration myConfiguration = new Configuration();
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
 		UnsupervisedClauseMarkup myTester = UnsupervisedClauseMarkupFactory();
 		
-		DataHolder myDataHolder = tester.getDataHolder();
+		DataHolder myDataHolder = myTester.getDataHolder();
 		Map<String, String> myHeuristicNouns = myDataHolder
 				.getHeuristicNounTable();
 		myHeuristicNouns.put("word1", "type1");
@@ -147,7 +139,7 @@ public class UnsupervisedClauseMarkupTest {
 		resultGetHeuristicNouns.put("word1", "type1");
 
 		assertEquals("Method readHeuristicNouns", resultGetHeuristicNouns,
-				tester.readHeuristicNouns());
+				myTester.readHeuristicNouns());
 	}
 	
 	private UnsupervisedClauseMarkup UnsupervisedClauseMarkupFactory() {
