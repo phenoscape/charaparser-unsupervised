@@ -71,7 +71,7 @@ public class Learner {
 		
 	}
 
-	public DataHolder Learn(List<Treatment> treatments) {
+	public DataHolder Learn(List<Treatment> treatments, String glossaryTable, String markupMode) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learn");
 		myLogger.trace("Enter Learn");

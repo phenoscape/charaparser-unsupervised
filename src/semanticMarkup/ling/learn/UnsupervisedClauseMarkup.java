@@ -17,6 +17,7 @@ import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.core.Treatment;
 import semanticMarkup.io.input.lib.db.ParentTagProvider;
+import semanticMarkup.know.IGlossary;
 import semanticMarkup.ling.Token;
 import semanticMarkup.ling.transform.ISentenceDetector;
 import semanticMarkup.ling.transform.ITokenizer;
@@ -53,6 +54,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	protected Map<String, Treatment> fileTreatments = new HashMap<String, Treatment>();
 	
 	private Map<String, AjectiveReplacementForNoun> adjectiveReplacementsForNouns;
+	private IGlossary glossary;
 	private String markupMode;
 	private ParentTagProvider parentTagProvider;
 	private ISentenceDetector sentenceDetector;
@@ -67,12 +69,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	 * 
 	 */
 	public UnsupervisedClauseMarkup(String markupMode,
+			IGlossary glossary,
 			ParentTagProvider parentTagProvider,
 			Set<String> selectedSources,
 			ISentenceDetector sentenceDetector, 
 			ITokenizer tokenizer) {		
 		//this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		
+		this.glossary = glossary;
 		this.markupMode = markupMode;
 		this.parentTagProvider = parentTagProvider;
 		this.sentenceDetector = sentenceDetector;
@@ -91,7 +95,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// learn
 	public void learn(List<Treatment> treatments, String glossaryTable) {
-		this.myDataHolder = this.myLearner.Learn(treatments);
+		this.myDataHolder = this.myLearner.Learn(treatments, glossaryTable, this.markupMode);
 		readResults(treatments);
 	}
 	
