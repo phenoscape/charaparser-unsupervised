@@ -1991,6 +1991,15 @@ public class Learner {
 		Pattern p5 = Pattern.compile("([psn][psn]+)");
 		Matcher m5 = p5.matcher(ptn);
 		
+		Pattern p6A = Pattern.compile("b[?b]([psn])$");
+		Matcher m6A = p6A.matcher(ptn);
+		
+		Pattern p6B = Pattern.compile("[?b]b([psn])$");
+		Matcher m6B = p6B.matcher(ptn);
+		
+		boolean case6A = m6A.find();
+		boolean case6B = m6B.find();
+		
 		Pattern p7 = Pattern.compile("^s(\\?)$");
 		Matcher m7 = p7.matcher(ptn);
 		
@@ -2226,10 +2235,16 @@ public class Learner {
 		}
 		
 		// case 6: "b[?b]([psn])$" or "[?b]b([psn])$"
-		else if ((StringUtility.createMatcher("b[?b]([psn])$", ptn).find())
-				|| StringUtility.createMatcher("[?b]b([psn])$", ptn).find()) {
+		else if (case6A || case6B) {
 			myLogger.debug("Case 6: Found [b?[psn]$] or [[?b]b([psn])$] pattern");
-			int end = 2; // the index of noun
+			int end = -1;
+			// the index of noun
+			if (case6A) {
+				end = m6A.end(1)-1;
+			}
+			else {
+				end = m6B.end(1)-1;
+			}
 			GetNounsAfterPtnReturnValue tempReturnValue = this
 					.getNounsAfterPtn(thisSentence, end + 1);
 			List<String> moreNouns = tempReturnValue.getNouns();
@@ -2252,14 +2267,14 @@ public class Learner {
 			allPtn = allPtn + StringUtility.joinList("", morePtn);
 			// from the index of noun
 			for (int i = 2; i < allPtn.length(); i++) {
-				// last ptn
+				// case 6.1: last ptn
 				if (i != allPtn.length() - 1) {
 					myLogger.trace("Case 6.1");
 					sign += this.getDataHolder().updateDataHolder(
 							sentenceHeadWords.get(i),
 							allPtn.substring(i, i + 1), "_", "wordpos", 1);
 				} 
-				// not last ptn
+				// case 6.2: not last ptn
 				else {
 					myLogger.trace("Case 6.2");
 					sign += this.getDataHolder().updateDataHolder(
