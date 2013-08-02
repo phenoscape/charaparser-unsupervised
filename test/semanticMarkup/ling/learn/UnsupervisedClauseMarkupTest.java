@@ -152,7 +152,7 @@ public class UnsupervisedClauseMarkupTest {
 				myConfiguration.getOpenNLPSentenceDetectorDir());
 		Set<String> selectedSources = new HashSet<String>();
 		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
-		UnsupervisedClauseMarkup myUnsupervisedClauseMarkup = new UnsupervisedClauseMarkup("plain", parentTagProvider, selectedSources, sentenceDetector, tokenizer);
+		UnsupervisedClauseMarkup myUnsupervisedClauseMarkup = new UnsupervisedClauseMarkup("plain", null, parentTagProvider, selectedSources, sentenceDetector, tokenizer);
 		
 		return myUnsupervisedClauseMarkup;
 	}
