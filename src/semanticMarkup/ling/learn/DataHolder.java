@@ -1415,6 +1415,27 @@ public class DataHolder {
 		}
 		
 	}
+	
+	/**
+	 * Add the terms into the heuristicNounTable with the type specified
+	 * 
+	 * @param terms
+	 *            set of terms
+	 * @param type
+	 *            type of the terms
+	 */
+	public int add2HeuristicNounTable(Set<String> terms, String type) {
+		int count = 0;
+
+		Iterator<String> iter = terms.iterator();
+		while (iter.hasNext()) {
+			String term = iter.next();
+			this.getHeuristicNounHolder().put(term, type);
+			count++;
+		}
+
+		return count;
+	}
 
 	public Map<Integer, IsAValue> add2IsAHolder (Map<Integer, IsAValue> isAHolder, List<String> args) {
 		int index = 0;

@@ -914,10 +914,10 @@ public class Learner {
 		anouns = this.filterOutDescriptors(anouns, descriptors);
 		pnouns = this.filterOutDescriptors(pnouns, descriptors);
 
-		this.add2HeuristicNounTable(nouns, "organ");
-		this.add2HeuristicNounTable(anouns, "acronyms");
-		this.add2HeuristicNounTable(pnouns, "propernouns");
-		this.add2HeuristicNounTable(taxonNames, "taxonnames");
+		this.getDataHolder().add2HeuristicNounTable(nouns, "organ");
+		this.getDataHolder().add2HeuristicNounTable(anouns, "acronyms");
+		this.getDataHolder().add2HeuristicNounTable(pnouns, "propernouns");
+		this.getDataHolder().add2HeuristicNounTable(taxonNames, "taxonnames");
 
 		nouns.addAll(anouns);
 		nouns.addAll(pnouns);
@@ -930,26 +930,7 @@ public class Learner {
 		return results;
 	}
 
-	/**
-	 * Add the terms into the heuristicNounTable with the type specified
-	 * 
-	 * @param terms
-	 *            set of terms
-	 * @param type
-	 *            type of the terms
-	 */
-	public int add2HeuristicNounTable(Set<String> terms, String type) {
-		int count = 0;
 
-		Iterator<String> iter = terms.iterator();
-		while (iter.hasNext()) {
-			String term = iter.next();
-			this.myDataHolder.getHeuristicNounHolder().put(term, type);
-			count++;
-		}
-
-		return count;
-	}
 
 	/**
 	 * filter out descriptors from nouns, and return remaining nouns
