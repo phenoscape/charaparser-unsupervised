@@ -10,71 +10,47 @@ import opennlp.tools.sentdetect.SentenceModel;
 import opennlp.tools.tokenize.TokenizerME;
 import opennlp.tools.tokenize.TokenizerModel;
 import opennlp.tools.util.InvalidFormatException;
-import semanticMarkup.knowledge.lib.WordNetAPI;
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
+import semanticMarkup.ling.transform.ISentenceDetector;
+import semanticMarkup.ling.transform.ITokenizer;
 
 public class Utility {
 
-	private WordNetAPI myWN = null;
-	private SentenceDetectorME mySentenceDetector = null;
-	private TokenizerME myTokenizer = null;
+	private WordNetPOSKnowledgeBase myWN = null;
+	
+	private ISentenceDetector mySentenceDetector;
+	private ITokenizer myTokenizer;
 
 	private PopulateSentenceUtility myPopulateSentenceUtility = null;
 	private WordFormUtility myWordFormUtility = null;
 	private LearnerUtility myLearnerUtility = null;
 	
-	public Utility(Configuration myConfiguration) {
+	public Utility(Configuration configuration, ISentenceDetector sentenceDetector, ITokenizer tokenizer) {
 		// get those tools
 		// Get WordNetAPI instance
 		try {
-			this.myWN = new WordNetAPI(myConfiguration.getWordNetDictDir(), false);
+			this.myWN = new WordNetPOSKnowledgeBase(configuration.getWordNetDictDir(), false);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
-		// Get OpenNLP sentence detector
-		InputStream sentModelIn;
-		try {
-			sentModelIn = new FileInputStream(myConfiguration.getOpenNLPSentenceDetectorDir());
-			SentenceModel model = new SentenceModel(sentModelIn);
-			this.mySentenceDetector = new SentenceDetectorME(model);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		// Get OpenNLP tokenizer
-		InputStream tokenModelIn;
-		try {
-			tokenModelIn = new FileInputStream(myConfiguration.getOpenNLPTokenizerDir());
-			TokenizerModel model = new TokenizerModel(tokenModelIn);
-			this.myTokenizer = new TokenizerME(model);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.mySentenceDetector = sentenceDetector;
+		this.myTokenizer = tokenizer;
 		
-		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.mySentenceDetector, this.myTokenizer);
+		this.myPopulateSentenceUtility = new PopulateSentenceUtility();
 		this.myWordFormUtility = new WordFormUtility(this.myWN);
-		this.myLearnerUtility = new LearnerUtility(myConfiguration);
+		this.myLearnerUtility = new LearnerUtility(configuration, this.mySentenceDetector, myTokenizer);
 	}
 	
 	public  PopulateSentenceUtility getPopulateSentenceUtility(){
 		return this.myPopulateSentenceUtility;
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
 	public WordFormUtility getWordFormUtility(){
 		return this.myWordFormUtility;
 	}
@@ -83,15 +59,11 @@ public class Utility {
 		return this.myLearnerUtility;
 	}
 
-	public WordNetAPI getWordNet() {
+	public WordNetPOSKnowledgeBase getWordNet() {
 		return this.myWN;
 	}
 	
-	public TokenizerME getTokenizer() {
-		return this.myTokenizer;
-	}
-	
-	public SentenceDetectorME getSentenceDetector(){
+	public ISentenceDetector getSentenceDetector(){
 		return this.mySentenceDetector;
 	}
 

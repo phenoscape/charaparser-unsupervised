@@ -12,11 +12,11 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import semanticMarkup.knowledge.Stemmer;
-import semanticMarkup.knowledge.lib.WordNetAPI;
+import semanticMarkup.know.Stemmer;
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 
 public class WordFormUtility {
-	private WordNetAPI myWN;
+	private WordNetPOSKnowledgeBase myWN;
 	private Map<String, String> numberRecords = new HashMap<String, String>(); // word->(p|s)
 	private Map<String, String> singularRecords = new HashMap<String, String>();// word->singular
 	private Map<String, String> POSRecords = new HashMap<String, String>(); // word->POSs
@@ -27,7 +27,7 @@ public class WordFormUtility {
 	// Porter Stemmer
 	private Stemmer myStemmer;
 
-	public WordFormUtility(WordNetAPI wn) {
+	public WordFormUtility(WordNetPOSKnowledgeBase wn) {
 		this.myWN = wn;
 		this.myStemmer = new Stemmer();
 	}
@@ -236,6 +236,10 @@ public class WordFormUtility {
 	 * @return
 	 */
 	public String getNumber(String word) {
+		//remove non-word characters, such as <>
+		Matcher m = StringUtility.createMatcher("\\W", word);
+		word = m.replaceAll("");
+		
 		String number = checkWN(word, "number");
 		String rt = "";
 
@@ -250,7 +254,7 @@ public class WordFormUtility {
 		if (rt != null) {
 			return rt;
 		} 
-		// Case 3
+		// Case 3: return "s"
 		else {
 			return "s";
 		}
@@ -267,10 +271,13 @@ public class WordFormUtility {
 		if (number.matches("^.*[sp].*$")) {
 			return number;
 		}
-		if (number.matches("^.*x.*$")) {
-			return "";
+		// return "?" for "x"
+		else if (number.matches("^.*x.*$")) {
+			return "?";
 		}
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	/**
@@ -285,35 +292,41 @@ public class WordFormUtility {
 		if (word.matches("^.*i$")) {
 			return "p";
 		}
-		if (word.matches("^.*ss$")) {
+		else if (word.matches("^.*ss$")) {
 			return "s";
 		}
-		if (word.matches("^.*ia$")) {
+		else if (word.matches("^.*ia$")) {
 			return "p";
 		}
-		if (word.matches("^.*[it]um$")) {
+		else if (word.matches("^.*[it]um$")) {
 			return "s";
 		}
-		if (word.matches("^.*ae$")) {
+		else if (word.matches("^.*ae$")) {
 			return "p";
 		}
-		if (word.matches("^.*ous$")) {
-			return "";
+		// non-noun cases
+		else if (word.matches("^.*ous$")) {
+			return "?"; 
+		}
+		// non-noun cases
+		else if (word.matches("^[aiu]s$")) {
+			return "?";
 		}
 		// this case only handle three words: as, is, us
-		if (word.matches("^[aiu]s$")) {
-			return "";
-		}
-		if (word.matches("^.*us$")) {
+		else if (word.matches("^.*us$")) {
 			return "s";
 		}
-		if (word.matches("^.*es$") || word.matches("^.*s$")) {
+		else if (word.matches("^.*es$") || word.matches("^.*s$")) {
 			return "p";
 		}
-		if (word.matches("^.*ate$")) {
-			return "";
+		// non-noun cases
+		else if (word.matches("^.*ate$")) {
+			return "?";
 		}
-		return null;
+		else {
+			return null;
+		}
+		
 	}	
 
 	/**

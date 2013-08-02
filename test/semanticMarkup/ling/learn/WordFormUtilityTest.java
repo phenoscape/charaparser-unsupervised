@@ -8,6 +8,11 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import semanticMarkup.ling.transform.ISentenceDetector;
+import semanticMarkup.ling.transform.ITokenizer;
+import semanticMarkup.ling.transform.lib.UnsupervisedLearningSentenceDetector;
+import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
+
 public class WordFormUtilityTest {
 	
 	private WordFormUtility tester;
@@ -15,7 +20,10 @@ public class WordFormUtilityTest {
 	@Before
 	public void initialize(){
 		Configuration myConfiguration = new Configuration();
-		Utility myUtility = new Utility(myConfiguration);
+		ISentenceDetector sentenceDetector = new UnsupervisedLearningSentenceDetector(
+				myConfiguration.getOpenNLPSentenceDetectorDir());
+		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		Utility myUtility = new Utility(myConfiguration, sentenceDetector, tokenizer);
 		tester = new WordFormUtility(myUtility.getWordNet());
 	}
 
@@ -64,8 +72,12 @@ public class WordFormUtilityTest {
 	public void testGetNumber() {
 		// Method getNumberHelper1
 		assertEquals ("getNumberHelp1 - case 1: s or p", "s", tester.getNumberHelper1("s"));
-		assertEquals ("getNumberHelp1 - case 2: x", "", tester.getNumberHelper1("x"));	
+		assertEquals ("getNumberHelp1 - case 2: x", "?", tester.getNumberHelper1("x"));
 		assertEquals ("getNumberHelp1 - case 3: null", null, tester.getNumberHelper1("a"));
+
+		
+		
+		
 		// Method getNumberHelper2
 		assertEquals ("getNumberHelp2 - end with i", "p", tester.getNumberHelper2("pappi"));
 		assertEquals ("getNumberHelp2 - end with ss", "s", tester.getNumberHelper2("wordss"));
@@ -73,52 +85,29 @@ public class WordFormUtilityTest {
 		assertEquals ("getNumberHelp2 - end with ium", "s", tester.getNumberHelper2("medium"));
 		assertEquals ("getNumberHelp2 - end with tum", "s", tester.getNumberHelper2("datum"));
 		assertEquals ("getNumberHelp2 - end with ae", "p", tester.getNumberHelper2("alumnae"));
-		assertEquals ("getNumberHelp2 - end with ous", "", tester.getNumberHelper2("various"));
-		assertEquals ("getNumberHelp2 - word as", "", tester.getNumberHelper2("as"));
-		assertEquals ("getNumberHelp2 - word is", "", tester.getNumberHelper2("is"));
-		assertEquals ("getNumberHelp2 - word us", "", tester.getNumberHelper2("us"));
+		
 		assertEquals ("getNumberHelp2 - end with us", "s", tester.getNumberHelper2("corpus"));
 		assertEquals ("getNumberHelp2 - end with es", "p", tester.getNumberHelper2("phases"));
 		assertEquals ("getNumberHelp2 - end with s", "p", tester.getNumberHelper2("mouths"));
-		assertEquals ("getNumberHelp2 - end with ate", "", tester.getNumberHelper2("differentiate"));
 		assertEquals ("getNumberHelp2 - not match", null, tester.getNumberHelper2("jxbz"));
+		
+		// non-noun case
+		assertEquals ("getNumberHelp2 - end with ous", "?", tester.getNumberHelper2("various"));
+		assertEquals ("getNumberHelp2 - word as", "?", tester.getNumberHelper2("as"));
+		assertEquals ("getNumberHelp2 - word is", "?", tester.getNumberHelper2("is"));
+		assertEquals ("getNumberHelp2 - word us", "?", tester.getNumberHelper2("us"));
+		assertEquals ("getNumberHelp2 - end with ate", "?", tester.getNumberHelper2("differentiate"));
+
 		// Method getNumber
 		assertEquals ("getNumber - not match", "s", tester.getNumber("jxbz"));
-		assertEquals ("getNumber - case 1", "", tester.getNumber("only"));
+		assertEquals ("getNumber - case 1", "?", tester.getNumber("only"));
 		assertEquals ("getNumber - case 3", "s", tester.getNumber("uroneural"));
+		assertEquals ("getNumber - remove non-word characters, such as <>", "s", tester.getNumber("ur:one<ur>a}l"));
 		
 		// These test cases are added from the point when populateSentence() is
 		// called, it check the first the first word, if it is a "p", mark the
 		// its tag as "start", otherwise mark it as "normal". 
 		//assertEquals ("getNumber - discover", "p", tester.getNumber("smaller"));
-	}
-	
-	@Test
-	public void testGetNumberHelp1(){
-		// Method getNumberHelper1
-		assertEquals ("getNumberHelp1 - case 1: s or p", "s", tester.getNumberHelper1("s"));
-		assertEquals ("getNumberHelp1 - case 2: x", "", tester.getNumberHelper1("x"));	
-		assertEquals ("getNumberHelp1 - case 3: null", null, tester.getNumberHelper1("a"));
-	}
-	
-	@Test
-	public void testGetNumberHelp2(){
-		// Method getNumberHelper2
-		assertEquals ("getNumberHelp2 - end with i", "p", tester.getNumberHelper2("pappi"));
-		assertEquals ("getNumberHelp2 - end with ss", "s", tester.getNumberHelper2("wordss"));
-		assertEquals ("getNumberHelp2 - end with ia", "p", tester.getNumberHelper2("criteria"));
-		assertEquals ("getNumberHelp2 - end with ium", "s", tester.getNumberHelper2("medium"));
-		assertEquals ("getNumberHelp2 - end with tum", "s", tester.getNumberHelper2("datum"));
-		assertEquals ("getNumberHelp2 - end with ae", "p", tester.getNumberHelper2("alumnae"));
-		assertEquals ("getNumberHelp2 - end with ous", "", tester.getNumberHelper2("various"));
-		assertEquals ("getNumberHelp2 - word as", "", tester.getNumberHelper2("as"));
-		assertEquals ("getNumberHelp2 - word is", "", tester.getNumberHelper2("is"));
-		assertEquals ("getNumberHelp2 - word us", "", tester.getNumberHelper2("us"));
-		assertEquals ("getNumberHelp2 - end with us", "s", tester.getNumberHelper2("corpus"));
-		assertEquals ("getNumberHelp2 - end with es", "p", tester.getNumberHelper2("phases"));
-		assertEquals ("getNumberHelp2 - end with s", "p", tester.getNumberHelper2("mouths"));
-		assertEquals ("getNumberHelp2 - end with ate", "", tester.getNumberHelper2("differentiate"));
-		assertEquals ("getNumberHelp2 - not match", null, tester.getNumberHelper2("jxbz"));
 	}
 
 	@Test

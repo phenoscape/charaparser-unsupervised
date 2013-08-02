@@ -1,9 +1,5 @@
 package semanticMarkup.ling.learn;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,14 +19,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
-
-
 import semanticMarkup.core.Treatment;
-import semanticMarkup.knowledge.lib.WordNetAPI;
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
+import semanticMarkup.ling.Sentence;
+import semanticMarkup.ling.transform.ITokenizer;
 
 public class Learner {	
 	private Configuration myConfiguration;
 	private Utility myUtility;
+	private ITokenizer myTokenizer;
 	
 	// Data holder
 	private DataHolder myDataHolder;
@@ -47,19 +44,20 @@ public class Learner {
 	// leading three words of sentences 
 	private Set<String> checkedWordSet;
 	
-	public Learner(Configuration configuration, Utility utility) {
+	public Learner(Configuration configuration, ITokenizer tokenizer, Utility utility) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learner");
 		
 		this.myConfiguration = configuration;
 		this.myUtility = utility;
+		this.myTokenizer = tokenizer;
 		
 		// Data holder
-		myDataHolder = new DataHolder(myConfiguration, myUtility);
+		this.myDataHolder = new DataHolder(myConfiguration, myUtility);
 		
 		// Utilities
 		this.myWordFormUtility = new WordFormUtility(this.myUtility.getWordNet());
-		this.myPopulateSentenceUtility = new PopulateSentenceUtility(this.myUtility.getSentenceDetector(), this.myUtility.getTokenizer());
+		this.myPopulateSentenceUtility = new PopulateSentenceUtility();
 		
 		// Class variables
 		NUM_LEAD_WORDS = 3; // Set the number of leading words be 3
@@ -73,7 +71,7 @@ public class Learner {
 		
 	}
 
-	public DataHolder Learn(List<Treatment> treatments) {
+	public DataHolder Learn(List<Treatment> treatments, String glossaryTable, String markupMode) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learn");
 		myLogger.trace("Enter Learn");
@@ -171,19 +169,18 @@ public class Learner {
 				text = this.handleText(text);
 				myLogger.debug("Text: " + text);
 
-				// use Apache OpenNLP to do sentence segmentation
-				String sentences[] = {};
-				sentences = this.myPopulateSentenceUtility.segmentSentence(text);
+				//do sentence segmentation
+				List<Sentence> sentences = this.myUtility.getLearnerUtility().segmentSentence(text);
 
 				List<String> sentCopy = new LinkedList<String>();
 				List<Integer> validIndex = new LinkedList<Integer>();
 				
 				// for each sentence, do some operations
-				for (int j = 0; j < sentences.length; j++) {
-					myLogger.debug("Sentence " + j + ": " + sentences[j]);
+				for (int j = 0; j < sentences.size(); j++) {
+					myLogger.debug("Sentence " + j + ": " + sentences.get(j).getContent());
 					
 					// if(!/\w+/){next;}
-					if (!sentences[j].matches("^.*\\w+.*$")) {
+					if (!sentences.get(j).getContent().matches("^.*\\w+.*$")) {
 						continue;
 					}
 
@@ -191,19 +188,19 @@ public class Learner {
 					validIndex.add(j);
 
 					// restore marks in brackets
-					sentences[j] = this.myPopulateSentenceUtility.restoreMarksInBrackets(sentences[j]);
+					sentences.get(j).setContent(this.myPopulateSentenceUtility.restoreMarksInBrackets(sentences.get(j).getContent()));
 					// Make a copy of the sentence
-					sentCopy.add(sentences[j]);
+					sentCopy.add(sentences.get(j).getContent());
 
 					// process the sentence
-					sentences[j] = this.handleSentence(sentences[j]);
+					sentences.get(j).setContent(this.handleSentence(sentences.get(j).getContent()));
 
 					// store all words
-					this.myDataHolder.allWords = this.myPopulateSentenceUtility.getAllWords(sentences[j], this.myDataHolder.allWords);
+					this.myDataHolder.allWords = this.getAllWords(sentences.get(j).getContent(), this.myDataHolder.allWords);
 				}
 
 				for (int j = 0; j < validIndex.size(); j++) {
-					String line = sentences[validIndex.get(j)];
+					String line = sentences.get(validIndex.get(j)).getContent();
 					String oline = sentCopy.get(j);
 
 					// handle line first
@@ -225,7 +222,7 @@ public class Learner {
 					oline = this.myPopulateSentenceUtility.restoreMarksInBrackets(oline);
 					oline = oline.replaceAll("\'", " ");
 
-					List<String> nWords = this.myPopulateSentenceUtility.getFirstNWords(line,
+					List<String> nWords = this.getFirstNWords(line,
 							this.NUM_LEAD_WORDS);
 					String lead = "";
 					Iterator<String> iter = nWords.iterator();
@@ -631,12 +628,9 @@ public class Learner {
 			}
 
 			// add words
-			String[] tokens = this.myUtility.getTokenizer().tokenize(sentence);
-			for (int j = 0; j < tokens.length; j++) {
-				String token = tokens[j];
+			List<String> tokens = this.myUtility.getLearnerUtility().tokenizeText(sentence, "all");
+			for (String token: tokens) {
 				if (StringUtility.isWord(token)) {
-					// if (token.equals("arch"))
-					// token="arch";
 					words.add(token);
 					myLogger.trace("Add a word into words: "+token);
 				}
@@ -834,7 +828,7 @@ public class Learner {
 		for (int i = 0; i < sent_num; i++) {
 
 			// taxon rule
-			Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
+			SentenceStructure sent = this.myDataHolder.getSentenceHolder().get(i);
 			String source = sent.getSource();
 			String sentence = sent.getSentence();
 			String originalSentence = sent.getOriginalSentence();
@@ -966,8 +960,7 @@ public class Learner {
 	 *            set of descriptors
 	 * @return set of nouns that are not descriptors
 	 */
-	Set<String> filterOutDescriptors(Set<String> rNouns,
-			Set<String> rDescriptors) {
+	public Set<String> filterOutDescriptors(Set<String> rNouns, Set<String> rDescriptors) {
 		Set<String> filtedNouns = new HashSet<String>();
 
 		Iterator<String> iter = rNouns.iterator();
@@ -1496,7 +1489,7 @@ public class Learner {
 		boolean flag = false; // return value
 		boolean wordInWN = false; // if this word is in WordNet
 		boolean baseInWN = false;
-		WordNetAPI myWN = this.myUtility.getWordNet();
+		WordNetPOSKnowledgeBase myWN = this.myUtility.getWordNet();
 
 		// check base
 		if (base.length() == 0) {
@@ -1586,7 +1579,7 @@ public class Learner {
 		myLogger.trace("Quite markupByPattern");
 	}
 
-	public boolean markupByPatternHelper(Sentence sentence) {
+	public boolean markupByPatternHelper(SentenceStructure sentence) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("markupByPattern");	
 		// case 1
@@ -1657,7 +1650,7 @@ public class Learner {
 		myLogger.trace("Quite markupIgnore");
 	}
 
-	public boolean markupIgnoreHelper(Sentence sentence) {
+	public boolean markupIgnoreHelper(SentenceStructure sentence) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("markupIgnore");		
 		
@@ -1688,10 +1681,10 @@ public class Learner {
 		
 		int newDisc = 0;
 		
-		this.myDataHolder.printHolder(DataHolder.SENTENCE);
+//		this.myDataHolder.printHolder(DataHolder.SENTENCE);
 		
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(i);
+			SentenceStructure sentEntry = this.myDataHolder.getSentenceHolder().get(i);
 			// sentid
 			String thisSentence = sentEntry.getSentence();
 			String thisLead = sentEntry.getLead();
@@ -1729,7 +1722,7 @@ public class Learner {
 				String pattern = buildPattern(startWords);
 				
 				if (pattern != null) {
-                    myLogger.info("Build pattern ["+pattern+"] from starting words ["+thisLead+"]");
+                    myLogger.debug("Build pattern ["+pattern+"] from starting words ["+thisLead+"]");
 					// IDs of untagged sentences that match the pattern
 					Set<Integer> matched = matchPattern(pattern, status, false);
 					int round = 0;
@@ -1742,7 +1735,7 @@ public class Learner {
 					} while (numNew > 0);
 				}
                 else {
-                    myLogger.info("Build no pattern from starting words ["+thisLead+"]");
+                    myLogger.debug("Build no pattern from starting words ["+thisLead+"]");
                 }
 			}
 		}
@@ -1761,7 +1754,7 @@ public class Learner {
 	 * @return if the tag of the i-th sentence is NOT null, returns true;
 	 *         otherwise returns false
 	 */
-	public boolean isMarked(Sentence sentence) {
+	public boolean isMarked(SentenceStructure sentence) {
 		String thisTag = sentence.getTag();
 
 		if (thisTag != null) {
@@ -1856,7 +1849,7 @@ public class Learner {
 		Set<Integer> matchedIDs = new HashSet<Integer>();
 
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			Sentence sent = this.myDataHolder.getSentenceHolder().get(i);
+			SentenceStructure sent = this.myDataHolder.getSentenceHolder().get(i);
 			String thisSentence = sent.getSentence();
 			String thisStatus = sent.getStatus();
 			String thisTag = sent.getTag();
@@ -1906,7 +1899,7 @@ public class Learner {
 		Iterator<Integer> iter = matched.iterator();
 		while (iter.hasNext()) {
 			int sentID = iter.next().intValue();
-			Sentence sentence = this.myDataHolder.getSentenceHolder().get(sentID);
+			SentenceStructure sentence = this.myDataHolder.getSentenceHolder().get(sentID);
 			if (!isMarked(sentence)) {
 				StringAndInt tagAndNew = null;
 				String tag = null;
@@ -1948,7 +1941,7 @@ public class Learner {
 		myLogger.trace("Enter doIt");
 		myLogger.trace("sentence ID: " + sentID);
 		
-		Sentence sentEntry = this.myDataHolder.getSentenceHolder().get(sentID);
+		SentenceStructure sentEntry = this.myDataHolder.getSentenceHolder().get(sentID);
 		String thisSentence = sentEntry.getSentence();
 		String thisLead = sentEntry.getLead();
 		
@@ -1997,6 +1990,15 @@ public class Learner {
 		
 		Pattern p5 = Pattern.compile("([psn][psn]+)");
 		Matcher m5 = p5.matcher(ptn);
+		
+		Pattern p6A = Pattern.compile("b[?b]([psn])$");
+		Matcher m6A = p6A.matcher(ptn);
+		
+		Pattern p6B = Pattern.compile("[?b]b([psn])$");
+		Matcher m6B = p6B.matcher(ptn);
+		
+		boolean case6A = m6A.find();
+		boolean case6B = m6B.find();
 		
 		Pattern p7 = Pattern.compile("^s(\\?)$");
 		Matcher m7 = p7.matcher(ptn);
@@ -2196,38 +2198,53 @@ public class Learner {
 				t = this.getDataHolder().checkPOSInfo(tag.substring(tag.lastIndexOf(" ")+1, tag.length()));
 			}
 			
-			String pos = t.get(0).getPOS();
-			String role = t.get(0).getRole();
-			int certiantyU = t.get(0).getCertaintyU();
-			int certiantyL = t.get(0).getCertaintyL();
-			
-			if (StringUtility.createMatcher("[psn]", pos).find()) {
-				myLogger.debug("relax this condition");
-				List<String> tWords = new LinkedList<String>();
-				tWords.addAll(Arrays.asList(thisSentence.split(" ")));
-				sign += this.getDataHolder().updateDataHolder(bWord, "b", "", "wordpos", 1);
-				ptn = ptn.substring(start, end-start);
-				String tempPtn = ptn + StringUtility.joinList("", morePtn);
-				for (int k = start; k<tempPtn.length();k++) {
-					if (k == tempPtn.length()-1) {
-						sign += this.getDataHolder().updateDataHolder(tWords.get(k), tempPtn.substring(k, k+1), "_", "wordpos", 1);
+			if (t.size() > 0) {
+				String pos = t.get(0).getPOS();
+				String role = t.get(0).getRole();
+				int certiantyU = t.get(0).getCertaintyU();
+				int certiantyL = t.get(0).getCertaintyL();
+
+				if (StringUtility.createMatcher("[psn]", pos).find()) {
+					// case 5.x
+					myLogger.debug("Case 5.x: relax this condition");
+					List<String> tWords = new LinkedList<String>();
+					tWords.addAll(Arrays.asList(thisSentence.split(" ")));
+					sign += this.getDataHolder().updateDataHolder(bWord, "b",
+							"", "wordpos", 1);
+					ptn = ptn.substring(start, end);
+					String tempPtn = ptn + StringUtility.joinList("", morePtn);
+					for (int k = start; k < tempPtn.length(); k++) {
+						if (k != tempPtn.length() - 1) {
+							sign += this.getDataHolder().updateDataHolder(
+									tWords.get(k), tempPtn.substring(k, k + 1),
+									"_", "wordpos", 1);
+						} else {
+							sign += this.getDataHolder().updateDataHolder(
+									tWords.get(k), tempPtn.substring(k, k + 1),
+									"-", "wordpos", 1);
+						}
 					}
-					else {
-						sign += this.getDataHolder().updateDataHolder(tWords.get(k), tempPtn.substring(k, k+1), "-", "wordpos", 1);
-					}
-					
-					if (tWords.size()>1) {
-						sign += this.getDataHolder().updateDataHolderNN(0, tempPtn.length(), tWords);
+					if (tWords.size() > 1) {
+						sign += this.getDataHolder().updateDataHolderNN(0,
+								tempPtn.length(), tWords);
 					}
 				}
 			}
+			myLogger.debug("\t:determine the tag: "+tag);
+			
 		}
 		
 		// case 6: "b[?b]([psn])$" or "[?b]b([psn])$"
-		else if ((StringUtility.createMatcher("b[?b]([psn])$", ptn).find())
-				|| StringUtility.createMatcher("[?b]b([psn])$", ptn).find()) {
+		else if (case6A || case6B) {
 			myLogger.debug("Case 6: Found [b?[psn]$] or [[?b]b([psn])$] pattern");
-			int end = 2; // the index of noun
+			int end = -1;
+			// the index of noun
+			if (case6A) {
+				end = m6A.end(1)-1;
+			}
+			else {
+				end = m6B.end(1)-1;
+			}
 			GetNounsAfterPtnReturnValue tempReturnValue = this
 					.getNounsAfterPtn(thisSentence, end + 1);
 			List<String> moreNouns = tempReturnValue.getNouns();
@@ -2235,8 +2252,8 @@ public class Learner {
 			String bWord = tempReturnValue.getBoundaryWord();
 
 			List<String> sentenceHeadWords = this.getUtility()
-					.getPopulateSentenceUtility()
-					.tokenizeSentence(thisSentence, "firstseg");
+					.getLearnerUtility()
+					.tokenizeText(thisSentence, "firstseg");
 			end += morePtn.size();
 			List<String> tempWords = StringUtility.stringArraySplice(
 					sentenceHeadWords, 0, end + 1);
@@ -2250,14 +2267,14 @@ public class Learner {
 			allPtn = allPtn + StringUtility.joinList("", morePtn);
 			// from the index of noun
 			for (int i = 2; i < allPtn.length(); i++) {
-				// last ptn
+				// case 6.1: last ptn
 				if (i != allPtn.length() - 1) {
 					myLogger.trace("Case 6.1");
 					sign += this.getDataHolder().updateDataHolder(
 							sentenceHeadWords.get(i),
 							allPtn.substring(i, i + 1), "_", "wordpos", 1);
 				} 
-				// not last ptn
+				// case 6.2: not last ptn
 				else {
 					myLogger.trace("Case 6.2");
 					sign += this.getDataHolder().updateDataHolder(
@@ -2389,15 +2406,18 @@ public class Learner {
 	public GetNounsAfterPtnReturnValue getNounsAfterPtn(String sentence, int startWordIndex){
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.getNounsAfterPattern");
+		myLogger.trace(String.format("enter (%s, %d)", sentence, startWordIndex));
 		
 		String bWord = "";
 		List<String> nouns = new ArrayList<String>();
 		List<String> nounPtn = new ArrayList<String>();
 		
 		List<String> tempWords = new ArrayList<String>();
-		tempWords.addAll(this.getUtility().getPopulateSentenceUtility().tokenizeSentence(sentence, "firstseg"));
+		tempWords.addAll(this.getUtility().getLearnerUtility().tokenizeText(sentence, "firstseg"));
 		List<String> words = StringUtility.stringArraySplice(tempWords, startWordIndex, tempWords.size());
+		myLogger.trace("words: "+words);
 		String ptn = this.getPOSptn(words);
+		myLogger.trace("ptn: " + ptn);
 		
 		if (ptn!=null) {
 			Matcher m1 = StringUtility.createMatcher("^([psn]+)", ptn);
@@ -2414,7 +2434,10 @@ public class Learner {
 				end = m2.end(1);
 			}
 			if (case1 || case2) {
-				bWord = words.get(end);
+				myLogger.trace("end: " + end);
+				if (end<words.size()) {
+					bWord = words.get(end);
+				}
 				List<String> nWords = new ArrayList<String>();
 				nWords.addAll(StringUtility.stringArraySplice(words, 0, end));
 				for (int i=0;i<nWords.size();i++) {
@@ -2435,6 +2458,7 @@ public class Learner {
 		}
 		
 		GetNounsAfterPtnReturnValue returnValue = new GetNounsAfterPtnReturnValue(nouns, nounPtn, bWord);
+		myLogger.trace("return " + returnValue);
 		return (returnValue);
 	}
 
@@ -2575,7 +2599,7 @@ public class Learner {
 
 		int flag = 0;
 
-		this.myDataHolder.printHolder(DataHolder.SENTENCE);
+//		this.myDataHolder.printHolder(DataHolder.SENTENCE);
 		
 		/*
 		do {
@@ -2626,10 +2650,10 @@ public class Learner {
 		int sign = 0;
 		myLogger.trace(String.format("Enter (%s)", tags));
 
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder().iterator();
+		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder().iterator();
 
 		while (iter.hasNext()) {
-			Sentence sentence = iter.next();
+			SentenceStructure sentence = iter.next();
 			int ID = sentence.getID();
 			String tag = sentence.getTag();
 			String lead = sentence.getLead();
@@ -2668,10 +2692,10 @@ public class Learner {
 		
 		int sign = 0;
 		Set<Integer> checkedIDs = new HashSet<Integer>();
-		List<Sentence> sentenceList = new LinkedList<Sentence>();
+		List<SentenceStructure> sentenceList = new LinkedList<SentenceStructure>();
 		
 		for (int id1 = 0; id1 < this.myDataHolder.getSentenceHolder().size(); id1++) {
-			Sentence sentence = this.myDataHolder.getSentenceHolder().get(id1);
+			SentenceStructure sentence = this.myDataHolder.getSentenceHolder().get(id1);
 			String tag = sentence.getTag();
 			String lead = sentence.getLead();
 
@@ -2685,9 +2709,9 @@ public class Learner {
 				false);
 		Collections.sort(sentenceList, myComparator);
 
-		Iterator<Sentence> iter1 = sentenceList.iterator();
+		Iterator<SentenceStructure> iter1 = sentenceList.iterator();
 		while (iter1.hasNext()){
-			Sentence sentence = iter1.next();
+			SentenceStructure sentence = iter1.next();
 			int ID1 = sentence.getID();
 			String lead = sentence.getLead();
 			// if this sentence has been checked, pass
@@ -2702,9 +2726,9 @@ public class Learner {
 			sharedHead.addAll(words.subList(0, words.size()-1));
 			String match = StringUtility.joinList(" ", sharedHead);
 			
-			Set<Sentence> sentenceSet = new HashSet<Sentence>();
+			Set<SentenceStructure> sentenceSet = new HashSet<SentenceStructure>();
 			for (int index=0;index<this.myDataHolder.getSentenceHolder().size();index++) {
-				Sentence thisSentence = this.myDataHolder.getSentenceHolder().get(index);
+				SentenceStructure thisSentence = this.myDataHolder.getSentenceHolder().get(index);
 				String thisLead = thisSentence.getLead();
 				String tag = thisSentence.getTag();
 				if ((tag==null)&&hasHead(sharedHead, Arrays.asList(thisLead.split(" ")))) {
@@ -2724,9 +2748,9 @@ public class Learner {
 						|| ((StringUtility.createMatcher("\\?$", ptn).find()) && (StringUtility
 								.createMatcher("n", wnPOS).find()))) {
 
-					Iterator<Sentence> iter2 = sentenceSet.iterator();
+					Iterator<SentenceStructure> iter2 = sentenceSet.iterator();
 					while (iter2.hasNext()) {
-						Sentence thisSentence = iter2.next();
+						SentenceStructure thisSentence = iter2.next();
 						int ID = thisSentence.getID();
 						String thisLead = thisSentence.getLead();
 
@@ -2801,9 +2825,9 @@ public class Learner {
 						checkedIDs.add(ID);
 					}
 				} else {
-					Iterator<Sentence> iter2 = sentenceSet.iterator();
+					Iterator<SentenceStructure> iter2 = sentenceSet.iterator();
 					while (iter2.hasNext()) { 
-						Sentence thisSentence = iter2.next();
+						SentenceStructure thisSentence = iter2.next();
 						int ID = thisSentence.getID();
 						checkedIDs.add(ID);
 					}
@@ -2858,9 +2882,9 @@ public class Learner {
 
 		int sign = 0;		
 //		for (int i=0;i<myDataHolder.getSentenceHolder().size();i++) {			
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder().iterator();
+		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder().iterator();
 		while(iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 			String tag = sentenceObject.getTag();
 			if (doItMarkupHelper(tag)) {
 				int ID = sentenceObject.getID();
@@ -2937,12 +2961,12 @@ public class Learner {
 	public void tagAllSentences (String mode, String type) {
 		List<StringAndInt> idAndSentenceList = new LinkedList<StringAndInt>();
 		
-		Iterator<Sentence> sentenceIter = 
+		Iterator<SentenceStructure> sentenceIter = 
 				this.getDataHolder().getSentenceHolder().iterator();
 		
 		if (StringUtils.equals(mode, "original")) {
 			while (sentenceIter.hasNext()) {
-				Sentence sentence = sentenceIter.next();
+				SentenceStructure sentence = sentenceIter.next();
 				int thisID = sentence.getID();
 				String thisSentence = sentence.getSentence();
 				idAndSentenceList.add(new StringAndInt(thisSentence, thisID));
@@ -2950,7 +2974,7 @@ public class Learner {
 		}
 		else {
 			while (sentenceIter.hasNext()) {
-				Sentence sentence = sentenceIter.next();
+				SentenceStructure sentence = sentenceIter.next();
 				int thisID = sentence.getID();
 				String thisOriginalSentence = sentence.getOriginalSentence();
 				idAndSentenceList.add(new StringAndInt(thisOriginalSentence, thisID));
@@ -2968,7 +2992,7 @@ public class Learner {
 			thisString = tagAllSentencesHelper(thisString);
 			thisString = annotateSentence(thisString, myKnownTags);
 			
-			Sentence targetSentence = this.getDataHolder().getSentence(thisID);
+			SentenceStructure targetSentence = this.getDataHolder().getSentence(thisID);
 			targetSentence.setSentence(thisString);
 		}
 		
@@ -3092,10 +3116,10 @@ public class Learner {
 	public Set<String> getOrgans() {
 		Set<String> oSet = new HashSet<String>(); // set of o
 		
-		Iterator<Sentence> iterSentence = this.myDataHolder
+		Iterator<SentenceStructure> iterSentence = this.myDataHolder
 				.getSentenceHolder().iterator();
 		while (iterSentence.hasNext()) {
-			Sentence sentence = iterSentence.next();
+			SentenceStructure sentence = iterSentence.next();
 			String tag = sentence.getTag();
 
 			if (tag != null) {
@@ -3217,9 +3241,7 @@ public class Learner {
 		this.checkedWordSet = wordSet;
 	}
 	
-	public Utility getUtility() {
-		return this.myUtility;
-	}
+
 	
 	public boolean tagSentence(int sentenceID, String tag) {
 		PropertyConfigurator.configure("conf/log4j.properties");
@@ -3249,13 +3271,66 @@ public class Learner {
 				} else {
 					;
 				}
-				Sentence sentence = myDataHolder.getSentence(sentenceID);
+				SentenceStructure sentence = myDataHolder.getSentence(sentenceID);
 				sentence.setTag(tag);
 				myLogger.debug(String.format(
 						"\t:mark up sentence #%d with tag %s", sentenceID, tag));
 				return true;
 			}
 		}
+	}
+	
+	/**
+	 * returns the first n words of the sentence
+	 * 
+	 * @param sent
+	 *            the sentence
+	 * @param n
+	 *            number of words to be returned
+	 * @return the first n words of the sentence. If the number of words in the
+	 *         sentence is less than n, return all of them.
+	 */
+	public List<String> getFirstNWords(String sentence, int n) {
+		List<String> nWords = new ArrayList<String>();
+
+		if (sentence == null || sentence == "") {
+			return nWords;
+		}
+		
+		List<String> tokens = this.getUtility().getLearnerUtility().tokenizeText(sentence, "firstseg");
+		
+		
+		int minL = tokens.size() > n ? n : tokens.size();
+		for (int i = 0; i < minL; i++) {
+			nWords.add(tokens.get(i));
+		}
+
+		return nWords;
+	}
+	
+	/**
+	 * Put all words in this sentence into the words map
+	 * 
+	 * @param sent
+	 * @param words
+	 *            a map mapping all words already known to their counts
+	 * @return a new map of all words, including words in sent
+	 */
+	public Map<String, Integer> getAllWords(String sentence,
+			Map<String, Integer> words) {
+		List<String> tokens = this.getUtility().getLearnerUtility().tokenizeText(sentence, "all");
+
+		for (String token: tokens) {
+			if (words.containsKey(token)) {
+				int count = words.get(token);
+				count = count + 1;
+				words.put(token, count);
+			} else {
+				words.put(token, 1);
+			}
+		}
+
+		return words;
 	}
 	
 	// some unused variables in perl
@@ -3293,5 +3368,18 @@ public class Learner {
 	private String SEGANDORPTN = "(?:" + mptn + nptn + ")";
 	private String ANDORPTN = "^(?:" + SEGANDORPTN + "[,&]+)*" + SEGANDORPTN
 			+ bptn;
+	
+	// utility method
+	public Utility getUtility() {
+		return this.myUtility;
+	}
+	
+	public ITokenizer getTokenizer(){
+		return this.myTokenizer;
+	}
+	
+	public Configuration getConfiguration(){
+		return this.myConfiguration;
+	}
 	
 }

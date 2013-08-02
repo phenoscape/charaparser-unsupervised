@@ -215,7 +215,27 @@ getNumber() uses checkWN. If checkWN() returns "x", change the return that to em
 * what is a modifer/boundary word?
 the word before a noun is its modifer. The word after a noun is its boundary word.
 
+* Where tokenizer is used?
+To use UnsupervisedClauseMarkup class, you need to pass an object of a Tokenizer class which implements the ITokenizer interface and provides a tokenizer() method.
+
+The tokenizer is used in two different ways:
+
+1) mode "all"
+Tokenize the whole text into tokens.
+2) mode "firstseg"
+Only tokenize the text prior to the first occurrence of any ",:;.[(" or preposition into tokens
+
+These two different modes are combined into a single method, tokenizeText(). This method is used in the following methods:
+
+Method Name 		|	Mode
+getFirstNWords		|	firstseg
+getAllWords			|	all
+doIt				|	firstseg
+getNounsAfterPtn	|	firstseg
+
+========
 Learner Module Method List
+========
 * Methods used only in one module is considered as module methods
 
     Module                      |   Method Name

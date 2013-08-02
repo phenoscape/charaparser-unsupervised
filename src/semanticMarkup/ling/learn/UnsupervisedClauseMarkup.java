@@ -12,10 +12,15 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-
-import opennlp.tools.tokenize.TokenizerME;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.core.Treatment;
+import semanticMarkup.io.input.lib.db.ParentTagProvider;
+import semanticMarkup.know.IGlossary;
+import semanticMarkup.ling.Token;
+import semanticMarkup.ling.transform.ISentenceDetector;
+import semanticMarkup.ling.transform.ITokenizer;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {	
 	// Date holder
@@ -49,35 +54,48 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	protected Map<String, Treatment> fileTreatments = new HashMap<String, Treatment>();
 	
 	private Map<String, AjectiveReplacementForNoun> adjectiveReplacementsForNouns;
+	private IGlossary glossary;
+	private String markupMode;
+	private ParentTagProvider parentTagProvider;
+	private ISentenceDetector sentenceDetector;
 	private Set<String> selectedSources;
+	private ITokenizer tokenizer;
+	
 
 
 	/**
 	 * Constructor of UnsupervisedClauseMarkup class. Create a new
 	 * UnsupervisedClauseMarkup object.
 	 * 
-	 * @param learningMode
-	 *            learning mode. There two legal values, "adj" and "plain"
-	 * @param wordnetDir
-	 *            directory of WordNet dictionary
 	 */
-	public UnsupervisedClauseMarkup(String learningMode, String wordnetDir, Set<String> selectedSources) {
-		
+	public UnsupervisedClauseMarkup(String markupMode,
+			IGlossary glossary,
+			ParentTagProvider parentTagProvider,
+			Set<String> selectedSources,
+			ISentenceDetector sentenceDetector, 
+			ITokenizer tokenizer) {		
 		//this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
+		
+		this.glossary = glossary;
+		this.markupMode = markupMode;
+		this.parentTagProvider = parentTagProvider;
+		this.sentenceDetector = sentenceDetector;
 		
 		this.selectedSources = new HashSet<String>();
 		this.selectedSources.addAll(selectedSources);
 		
+		this.tokenizer = tokenizer;
+		
 		this.myConfiguration = new Configuration();
-		this.myUtility = new Utility(myConfiguration);
+		this.myUtility = new Utility(myConfiguration, this.sentenceDetector, this.tokenizer);
 		this.myDataHolder = new DataHolder(myConfiguration, myUtility);
-		myLearner = new Learner(this.myConfiguration, this.myUtility);
+		this.myLearner = new Learner(this.myConfiguration, this.tokenizer, this.myUtility);
 		
 	}
 
 	// learn
 	public void learn(List<Treatment> treatments, String glossaryTable) {
-		this.myDataHolder = this.myLearner.Learn(treatments);
+		this.myDataHolder = this.myLearner.Learn(treatments, glossaryTable, this.markupMode);
 		readResults(treatments);
 	}
 	
@@ -184,10 +202,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	public Map<String, AjectiveReplacementForNoun> readAdjectiveReplacementsForNouns() {
 		Map<String, AjectiveReplacementForNoun> result = new HashMap<String, AjectiveReplacementForNoun>();
 
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder()
 				.iterator();
 		while (iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 			String modifier = sentenceObject.getModifier();
 			String tag = sentenceObject.getTag();
 
@@ -210,22 +228,28 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	// methods importing data from data holder to class variables
 	public List<String> readAdjNouns() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("unsupervisedClauseMarkup.getAdjectiveReplacementsForNouns");
+		
 		if (this.myDataHolder == null) {
 			return null;
 		}
 		
 		Set<String> myAdjNounSet = new HashSet<String>();
 
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 
 		while (iter.hasNext()) {
-			Sentence sentence = iter.next();
-			String modifier = sentence.getModifier();
-			String tag = sentence.getTag();
-			if (tag.matches("^\\[.*$")) {
-				modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
-				myAdjNounSet.add(modifier);
+			SentenceStructure sentenceObject = iter.next();
+			String modifier = sentenceObject.getModifier();
+			String tag = sentenceObject.getTag();
+			myLogger.trace("tag: "+tag);
+			if (tag != null) {
+				if (tag.matches("^\\[.*$")) {
+					modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
+					myAdjNounSet.add(modifier);
+				}
 			}
 		}
 
@@ -236,6 +260,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	}
 
 	public Map<String, String> readAdjNounSent() {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("unsupervisedClauseMarkup.readAdjNounSent");
+		
 		if (this.myDataHolder == null) {
 			return null;
 		}
@@ -243,16 +270,19 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		Map<String, String> myAdjNounSent = new HashMap<String, String>();
 
 		// collect sentences that need adj-nn disambiguation
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
 
 		while (iter.hasNext()) {
-			Sentence sentence = iter.next();
-			String modifier = sentence.getModifier();
-			String tag = sentence.getTag();
-			if ((!(modifier.equals(""))) && (tag.matches("^\\[.*$"))) {
-				modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
-				myAdjNounSent.put(tag, modifier);
+			SentenceStructure sentenceObject = iter.next();
+			String modifier = sentenceObject.getModifier();
+			String tag = sentenceObject.getTag();
+			myLogger.trace("tag: "+tag);
+			if ((modifier != null)&&(tag != null)) {
+				if ((!(modifier.equals(""))) && (tag.matches("^\\[.*$"))) {
+					modifier = modifier.replaceAll("\\[.*?\\]", "").trim();
+					myAdjNounSent.put(tag, modifier);
+				}
 			}
 		}
 
@@ -266,10 +296,10 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Set<String> tags = new HashSet<String>();
 		
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder().iterator();
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder().iterator();
 		
 		while (iter.hasNext()) {
-			Sentence sentence = iter.next();
+			SentenceStructure sentence = iter.next();
 			String thisTag = sentence.getTag();
 			if (thisTag != null) {
 				if (StringUtility.createMatcher("^\\[.*\\]$", thisTag).find()) {
@@ -337,7 +367,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 		
 		Set<String> modifiers = new HashSet<String>();
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder()
 				.iterator();
 		while (iter.hasNext()) {
 			String modifier = iter.next().getTag();
@@ -377,9 +407,9 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Set<String> result = new HashSet<String>();
 		
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder().iterator();
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder().iterator();
 		while (iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 			String sentence = sentenceObject.getSentence();
 			result.add(sentence);
 		}
@@ -394,15 +424,14 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		HashMap<Treatment, LinkedHashMap<String, String>> sentences = new  HashMap<Treatment, LinkedHashMap<String, String>>();
 		
-		List<Sentence> sentenceHolder = this.getDataHolder().getSentenceHolder();
+		List<SentenceStructure> sentenceHolder = this.getDataHolder().getSentenceHolder();
 		String previousTreatmentId = "-1";
 		for (int i = sentenceHolder.size()-1;i>=0;i--) {
-			Sentence sentenceObject = sentenceHolder.get(i);
-			String source = sentenceObject.getSource();
+			SentenceStructure sentenceObject = sentenceHolder.get(i);
+			String source = this.getSource(sentenceObject.getSource());
 			String modifier = sentenceObject.getModifier();
 			String tag = sentenceObject.getTag();
 			String sentence = sentenceObject.getSentence().trim();
-			String orginalSentence = sentenceObject.getOriginalSentence();
 			
 			if(sentence.length()!=0){
 				String treatmentId = getTreatmentId(source);
@@ -440,11 +469,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		String previousTag = null;
 		String previousTreatmentId = "-1";
 		
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder().iterator();
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder().iterator();
 		while (iter.hasNext()) {
-			Sentence sentenceObject = iter.next();
+			SentenceStructure sentenceObject = iter.next();
 			
-			String source = sentenceObject.getSource();
+			String source = this.getSource(sentenceObject.getSource());
 			String treatmentId = getTreatmentId(source);
 			if(selectedSources.isEmpty() || selectedSources.contains(source)) {
 				
@@ -479,7 +508,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		}
 		
 		Set<String> tags = new HashSet<String>();
-		Iterator<Sentence> iter = this.getDataHolder().getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder()
 				.iterator();
 		while (iter.hasNext()) {
 			String tag = iter.next().getTag();
@@ -570,24 +599,51 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		
 		Map<String, Set<String>> myWordToSources = new HashMap<String, Set<String>>();
 
-		Iterator<Sentence> iter = this.myDataHolder.getSentenceHolder()
+		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder()
 				.iterator();
-
-		TokenizerME myTokenizer = this.myUtility.getTokenizer();
+		
 		while (iter.hasNext()) {
-			Sentence sentenceElement = iter.next();
-			String source = sentenceElement.getSource();
-			String sentence = sentenceElement.getSentence();			
-			String[] words = myTokenizer.tokenize(sentence);
-			for (int i = 0; i < words.length; i++) {
-				String word = words[i];
-				if (!myWordToSources.containsKey(word))
+			SentenceStructure sentenceObject = iter.next();
+			String source = this.getSource(sentenceObject.getSource());
+			String sentence = sentenceObject.getSentence();			
+			List<Token> tokens = this.tokenizer.tokenize(sentence);
+			for(Token token : tokens) {
+				String word = token.getContent();
+				if(!myWordToSources.containsKey(word))
 					myWordToSources.put(word, new HashSet<String>());
 				myWordToSources.get(word).add(source);
 			}
 		}
 
 		return myWordToSources;
+	}
+	
+	// Miscellaneous
+	public void initParentTagProvider(ParentTagProvider parentTagProvider2) {
+		HashMap<String, String> parentTags = new HashMap<String, String>();
+		HashMap<String, String> grandParentTags = new HashMap<String, String>();
+			
+		Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolder()
+				.iterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceObject = iter.next();
+
+			String parentTag = "";
+			String grandParentTag = "";
+
+			String source = getSource(sentenceObject.getSource());
+			String tag = sentenceObject.getTag();
+			parentTags.put(source, parentTag);
+			grandParentTags.put(source, grandParentTag);
+
+			grandParentTag = parentTag;
+			if (tag != null && !tag.equals("ditto"))
+				parentTag = tag;
+			else if (tag == null)
+				parentTag = "";
+		}
+
+		this.parentTagProvider.init(parentTags, grandParentTags);
 	}
 	
 	
@@ -599,6 +655,11 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	protected String getTreatmentId(String sourceString) {
 		String[] sourceParts = sourceString.split("\\.");
 		return sourceParts[0];
+	}
+	
+	protected String getSource(String sourceString) {
+		String[] sourceParts = sourceString.split("\\.");
+		return sourceParts[0] + "." + sourceParts[2];
 	}
 
 }

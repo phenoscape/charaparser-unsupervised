@@ -3,7 +3,7 @@ package semanticMarkup.ling.learn;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-public class Sentence {
+public class SentenceStructure {
 	private int ID;
 	private String source;
 	private String sentence;
@@ -14,7 +14,7 @@ public class Sentence {
 	private String modifier;
 	private String type;
 
-	public Sentence(int id, String source, String sentence, String originalSentence, String lead, String status, String tag, String modifier, String type) {
+	public SentenceStructure(int id, String source, String sentence, String originalSentence, String lead, String status, String tag, String modifier, String type) {
 		// TODO Auto-generated constructor stub
 		this.ID = id;
 		this.source=source;
@@ -105,7 +105,7 @@ public class Sentence {
 			return false;
 		}
 		
-		Sentence mySentence = (Sentence) obj;
+		SentenceStructure mySentence = (SentenceStructure) obj;
 		
 		return ((this.ID == mySentence.ID)
 				&&(StringUtils.equals(this.source, mySentence.source))
