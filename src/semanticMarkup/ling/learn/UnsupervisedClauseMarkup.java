@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,7 +18,6 @@ import semanticMarkup.core.Treatment;
 import semanticMarkup.io.input.lib.db.ParentTagProvider;
 import semanticMarkup.know.IGlossary;
 import semanticMarkup.ling.Token;
-import semanticMarkup.ling.transform.ISentenceDetector;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {	
@@ -57,7 +55,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private IGlossary glossary;
 	private String markupMode;
 	private ParentTagProvider parentTagProvider;
-	private ISentenceDetector sentenceDetector;
+	private ITokenizer sentenceDetector;
 	private Set<String> selectedSources;
 	private ITokenizer tokenizer;
 	
@@ -72,7 +70,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			IGlossary glossary,
 			ParentTagProvider parentTagProvider,
 			Set<String> selectedSources,
-			ISentenceDetector sentenceDetector, 
+			ITokenizer sentenceDetector, 
 			ITokenizer tokenizer) {		
 		//this.chrDir = desDir.replaceAll("descriptions.*", "characters/");
 		

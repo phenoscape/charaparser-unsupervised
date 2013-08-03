@@ -7,19 +7,18 @@ import java.util.Collections;
 
 import org.junit.Test;
 
-import semanticMarkup.ling.transform.ISentenceDetector;
 import semanticMarkup.ling.transform.ITokenizer;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningSentenceDetector;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
 
 public class SentenceLeadLengthComparatorTest {
 
 	@Test
 	public void test() {
 		Configuration myConfiguration = new Configuration();
-		ISentenceDetector sentenceDetector = new UnsupervisedLearningSentenceDetector(
+		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
 				myConfiguration.getOpenNLPSentenceDetectorDir());
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		ITokenizer tokenizer = new OpenNLPTokenizer(myConfiguration.getOpenNLPTokenizerDir());
 		Utility myUtility = new Utility(myConfiguration, sentenceDetector, tokenizer);
 
 		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);

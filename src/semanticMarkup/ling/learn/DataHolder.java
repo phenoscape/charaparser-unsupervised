@@ -288,7 +288,7 @@ public class DataHolder {
 	
 	public List<String> getWordByPOS(String POSs) {
 		List<String> words = new ArrayList<String>();
-		int index = POSs.length();
+//		int index = POSs.length();
 		for (int i = 0;i<POSs.length();i++) {
 			String POS = POSs.substring(i,i+1);
 			Iterator<Entry<WordPOSKey, WordPOSValue>> iterator = this.wordPOSTable.entrySet().iterator();
@@ -1577,7 +1577,7 @@ public class DataHolder {
 		if (holderID == DataHolder.SINGULAR_PLURAL) {
 			myLogger.info("==SingularPlural Table==");
 			
-			Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+//			Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
 			
 			List<SingularPluralPair> singularPluralPairList = new LinkedList<SingularPluralPair>();
 			singularPluralPairList.addAll(singularPluralTable);
