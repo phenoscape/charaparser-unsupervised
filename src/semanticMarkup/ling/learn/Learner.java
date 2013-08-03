@@ -21,7 +21,7 @@ import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.core.Treatment;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
-import semanticMarkup.ling.Sentence;
+import semanticMarkup.ling.Token;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class Learner {	
@@ -170,7 +170,7 @@ public class Learner {
 				myLogger.debug("Text: " + text);
 
 				//do sentence segmentation
-				List<Sentence> sentences = this.myUtility.getLearnerUtility().segmentSentence(text);
+				List<Token> sentences = this.myUtility.getLearnerUtility().segmentSentence(text);
 
 				List<String> sentCopy = new LinkedList<String>();
 				List<Integer> validIndex = new LinkedList<Integer>();
@@ -1397,8 +1397,10 @@ public class Learner {
 			String unknownWordTag = unknownWordEntry.getValue();
 
 			if (unknownWordTag.equals("unknown")) {
-				boolean flag1 = posBySuffixCase1Helper(unknownWord);				
-				boolean flag2 = posBySuffixCase2Helper(unknownWord);								
+//				boolean flag1 = 
+				posBySuffixCase1Helper(unknownWord);				
+//				boolean flag2 = 
+				posBySuffixCase2Helper(unknownWord);								
 			}
 		}
 		
@@ -1712,6 +1714,7 @@ public class Learner {
 					do {
 						numNew = ruleBasedLearn(matched);
 						newDisc = newDisc + numNew;
+						myLogger.trace("Round: "+round);
 						round++;
 					} while (numNew > 0);
 				}
@@ -2028,7 +2031,7 @@ public class Learner {
 			myLogger.trace("Case 3");
 			myLogger.debug("Found [p?] pattern");
 			
-			int start = m3.start(1);
+//			int start = m3.start(1);
 			int end = m3.end(1);
 			
 			String secondMatchedWord = words.get(end-1);
@@ -2181,9 +2184,9 @@ public class Learner {
 			
 			if (t.size() > 0) {
 				String pos = t.get(0).getPOS();
-				String role = t.get(0).getRole();
-				int certiantyU = t.get(0).getCertaintyU();
-				int certiantyL = t.get(0).getCertaintyL();
+//				String role = t.get(0).getRole();
+//				int certiantyU = t.get(0).getCertaintyU();
+//				int certiantyL = t.get(0).getCertaintyL();
 
 				if (StringUtility.createMatcher("[psn]", pos).find()) {
 					// case 5.x
@@ -2228,7 +2231,7 @@ public class Learner {
 			}
 			GetNounsAfterPtnReturnValue tempReturnValue = this
 					.getNounsAfterPtn(thisSentence, end + 1);
-			List<String> moreNouns = tempReturnValue.getNouns();
+//			List<String> moreNouns = tempReturnValue.getNouns();
 			List<String> morePtn = tempReturnValue.getNounPtn();
 			String bWord = tempReturnValue.getBoundaryWord();
 
@@ -2578,7 +2581,7 @@ public class Learner {
 		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
 		myLogger.trace("[additionalBootStrapping]Start");
 
-		int flag = 0;
+//		int flag = 0;
 
 //		this.myDataHolder.printHolder(DataHolder.SENTENCE);
 		
@@ -3002,7 +3005,7 @@ public class Learner {
 		
 		KnownTagCollection knownTags = null;
 		Set<String> nouns = new HashSet<String>(); // nouns
-		Set<String> organs = new HashSet<String>(); // o
+		Set<String> organs = new HashSet<String>(); // organs
 		Set<String> modifiers = new HashSet<String>(); // modifiers
 		Set<String> boundaryWords = new HashSet<String>(); // boundary words
 		Set<String> boundaryMarks = new HashSet<String>(); // boundary marks
@@ -3015,7 +3018,7 @@ public class Learner {
 		nounSet .addAll(psWordSet);
 		// if the mode is "singletag", then get additional nouns from tags
 		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
-			Set<String> oSet = this.getOrgans();
+			organs = this.getOrgans();
 			nounSet.addAll(organs);
 		} else {
 			// do nothing
