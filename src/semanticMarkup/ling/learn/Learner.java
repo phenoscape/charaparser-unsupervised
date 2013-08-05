@@ -109,6 +109,7 @@ public class Learner {
 
 		// ???
 		this.posBySuffix();
+		this.resetCounts(myDataHolder);
 		this.markupByPattern();
 		this.markupIgnore();
 
@@ -1416,6 +1417,26 @@ public class Learner {
 		}
 		
 		myLogger.trace("Quite posBySuffix");
+	}
+	
+	/**
+	 * 
+	 * @param dh
+	 *            DataHolder handle to update the dataholder and return the
+	 *            updated dataholder
+	 * @return Number of records that have been changed
+	 */
+	public int resetCounts(DataHolder dh){
+		int count = 0;
+		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = dh.getWordPOSHolderIterator();
+		while (iter.hasNext()) {
+			Entry<WordPOSKey, WordPOSValue> wordPOSObject = iter.next();
+			wordPOSObject.getValue().setCertiantyU(0);
+			wordPOSObject.getValue().setCertiantyL(0);
+			count++;
+		}
+		
+		return count;
 	}
 
 	public boolean posBySuffixCase1Helper(String unknownWord) {

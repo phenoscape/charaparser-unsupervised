@@ -1669,6 +1669,13 @@ public class DataHolder {
 		
 		return tags;
 	}
-
+	
+	/** Iterator Utility 
+	 * @return **/
+	public Iterator<Entry<WordPOSKey, WordPOSValue>> getWordPOSHolderIterator(){
+		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
+		
+		return iter;
+	}
 
 }
