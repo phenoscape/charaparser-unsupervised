@@ -22,6 +22,11 @@ import org.apache.log4j.PropertyConfigurator;
 import semanticMarkup.core.Treatment;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
+import semanticMarkup.ling.learn.dataholder.DataHolder;
+import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
+import semanticMarkup.ling.learn.dataholder.SentenceStructure;
+import semanticMarkup.ling.learn.dataholder.WordPOSKey;
+import semanticMarkup.ling.learn.dataholder.WordPOSValue;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class Learner {	
@@ -117,10 +122,16 @@ public class Learner {
 		myLogger.info("Bootstrapping rules:");
 		this.discover("normal");
 		
-		myLogger.info("Additional bootstrappings:");
-		this.additionalBootstrapping();
+		//myLogger.info("Additional bootstrappings:");
+		//this.additionalBootstrapping();
 		
 		myLogger.trace("Quite Learn");
+		
+		myLogger.info(myDataHolder.toString());
+		myLogger.info(myDataHolder.getSentenceHolder().toString());
+		myLogger.info(this.myDataHolder.getHeuristicNounHolder().toString());
+		myLogger.info(myDataHolder.getSentenceHolder().get(0).toString());
+		
 		return myDataHolder;
 	}
 	

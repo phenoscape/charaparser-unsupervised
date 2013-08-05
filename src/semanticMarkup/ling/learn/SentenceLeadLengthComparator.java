@@ -2,6 +2,8 @@ package semanticMarkup.ling.learn;
 
 import java.util.Comparator;
 
+import semanticMarkup.ling.learn.dataholder.SentenceStructure;
+
 
 public class SentenceLeadLengthComparator implements Comparator<SentenceStructure> {
 

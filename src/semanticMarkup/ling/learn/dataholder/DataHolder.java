@@ -1,4 +1,4 @@
-package semanticMarkup.ling.learn;
+package semanticMarkup.ling.learn.dataholder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +17,13 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+
+import semanticMarkup.ling.learn.Configuration;
+import semanticMarkup.ling.learn.Constant;
+import semanticMarkup.ling.learn.POSInfo;
+import semanticMarkup.ling.learn.StringPair;
+import semanticMarkup.ling.learn.StringUtility;
+import semanticMarkup.ling.learn.Utility;
 
 public class DataHolder {
 	// all unique words in the input treatments

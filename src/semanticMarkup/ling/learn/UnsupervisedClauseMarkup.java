@@ -18,6 +18,8 @@ import semanticMarkup.core.Treatment;
 import semanticMarkup.io.input.lib.db.ParentTagProvider;
 import semanticMarkup.know.IGlossary;
 import semanticMarkup.ling.Token;
+import semanticMarkup.ling.learn.dataholder.DataHolder;
+import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {	

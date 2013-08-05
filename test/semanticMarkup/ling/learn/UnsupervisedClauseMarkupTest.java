@@ -15,6 +15,8 @@ import java.util.Set;
 
 import semanticMarkup.io.input.lib.db.ParentTagProvider;
 import semanticMarkup.ling.learn.UnsupervisedClauseMarkup;
+import semanticMarkup.ling.learn.dataholder.DataHolder;
+import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 
 import semanticMarkup.ling.transform.ITokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;

@@ -14,6 +14,9 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
+import semanticMarkup.ling.learn.dataholder.DataHolder;
+import semanticMarkup.ling.learn.dataholder.SentenceStructure;
+import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.transform.ITokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
