@@ -14,10 +14,10 @@ import opennlp.tools.util.InvalidFormatException;
 import semanticMarkup.ling.Token;
 import semanticMarkup.ling.transform.ITokenizer;
 
-public class UnsupervisedLearningTokenizer implements ITokenizer{
+public class OpenNLPTokenizer implements ITokenizer{
 	private TokenizerME myTokenizer;
 
-	public UnsupervisedLearningTokenizer(String OpenNLPTokenizerDir) {
+	public OpenNLPTokenizer(String OpenNLPTokenizerDir) {
 		// Get OpenNLP tokenizer
 				InputStream tokenModelIn;
 				try {

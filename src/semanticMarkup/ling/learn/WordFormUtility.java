@@ -1,6 +1,5 @@
 package semanticMarkup.ling.learn;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -142,7 +141,7 @@ public class WordFormUtility {
 		// otherwise, call WordNet
 		// Case 1
 		if (!this.myWN.contains(word)) {// word not in WN
-			boolean f = this.myWN.contains(word);
+//			boolean f = this.myWN.contains(word);
 			this.POSRecords.put(word, "");
 			String wordCopy = word;
 			word = word.replaceAll("ed$", "");

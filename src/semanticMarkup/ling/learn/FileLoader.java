@@ -103,7 +103,7 @@ public class FileLoader {
 	
 	public List<String> getUnknownWordList()
 	{
-		List<String> unknownList = new LinkedList();
+		List<String> unknownList = new LinkedList<String>();
 		
 		for (int i=0;i<count;i++) {
 			//System.out.println(i);

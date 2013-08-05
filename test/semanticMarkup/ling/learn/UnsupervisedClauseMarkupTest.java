@@ -13,15 +13,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import semanticMarkup.core.Treatment;
 import semanticMarkup.io.input.lib.db.ParentTagProvider;
 import semanticMarkup.ling.learn.UnsupervisedClauseMarkup;
-import semanticMarkup.ling.learn.FileLoader;
+import semanticMarkup.ling.learn.dataholder.DataHolder;
+import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 
-import semanticMarkup.ling.transform.ISentenceDetector;
 import semanticMarkup.ling.transform.ITokenizer;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningSentenceDetector;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
+
 
 public class UnsupervisedClauseMarkupTest {
 	UnsupervisedClauseMarkup tester;
@@ -148,10 +148,10 @@ public class UnsupervisedClauseMarkupTest {
 		Configuration myConfiguration = new Configuration();
 
 		ParentTagProvider parentTagProvider = new ParentTagProvider();
-		ISentenceDetector sentenceDetector = new UnsupervisedLearningSentenceDetector(
+		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
 				myConfiguration.getOpenNLPSentenceDetectorDir());
 		Set<String> selectedSources = new HashSet<String>();
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		ITokenizer tokenizer = new OpenNLPTokenizer(myConfiguration.getOpenNLPTokenizerDir());
 		UnsupervisedClauseMarkup myUnsupervisedClauseMarkup = new UnsupervisedClauseMarkup("plain", null, parentTagProvider, selectedSources, sentenceDetector, tokenizer);
 		
 		return myUnsupervisedClauseMarkup;

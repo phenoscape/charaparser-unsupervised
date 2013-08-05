@@ -10,17 +10,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
-import semanticMarkup.ling.Sentence;
-import semanticMarkup.ling.transform.ISentenceDetector;
+import semanticMarkup.ling.Token;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class LearnerUtility {
 
 	private Configuration myConfiguration;
-	private ISentenceDetector mySentenceDetector;
+	private ITokenizer mySentenceDetector;
 	private ITokenizer mytokenizer;
 	
-	public LearnerUtility(Configuration configuration, ISentenceDetector sentenceDetector, ITokenizer tokenizer) {
+	public LearnerUtility(Configuration configuration, ITokenizer sentenceDetector, ITokenizer tokenizer) {
 		this.myConfiguration = configuration;
 		this.mySentenceDetector = sentenceDetector;
 		this.mytokenizer = tokenizer;
@@ -30,7 +29,7 @@ public class LearnerUtility {
 		return this.mytokenizer;
 	}
 	
-	public ISentenceDetector getSentenceDetector(){
+	public ITokenizer getSentenceDetector(){
 		return this.mySentenceDetector;
 	}
 	
@@ -121,19 +120,19 @@ public class LearnerUtility {
 	 * @param text
 	 * @return List of Sentence
 	 */
-	List<Sentence> segmentSentence(String text) {
-		List<Sentence> sentences;
+	List<Token> segmentSentence(String text) {
+		List<Token> sentences;
 		
 		//hide abbreviations
 		text = this.hideAbbreviations(text);
 		
 		// do sentence segmentation
 		
-		sentences = this.mySentenceDetector.segment(text);
+		sentences = this.mySentenceDetector.tokenize(text);
 		
 		// restore Abbreviations
 		
-		for (Sentence sentence: sentences){
+		for (Token sentence: sentences){
 			String contentHideAbbreviations = sentence.getContent();
 			String contentRestoreAbbreviations = this.restoreAbbreviations(contentHideAbbreviations);
 			sentence.setContent(contentRestoreAbbreviations); 

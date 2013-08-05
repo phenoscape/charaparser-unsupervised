@@ -2,17 +2,14 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
-import java.util.HashSet;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import semanticMarkup.ling.Sentence;
-import semanticMarkup.ling.transform.ISentenceDetector;
+import semanticMarkup.ling.Token;
 import semanticMarkup.ling.transform.ITokenizer;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningSentenceDetector;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
+
 
 public class LearnerUtilityTest {
 	
@@ -21,9 +18,9 @@ public class LearnerUtilityTest {
 	@Before
 	public void initialize() {
 		Configuration myConfiguration = new Configuration();
-		ISentenceDetector sentenceDetector = new UnsupervisedLearningSentenceDetector(
+		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
 				myConfiguration.getOpenNLPSentenceDetectorDir());
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		ITokenizer tokenizer = new OpenNLPTokenizer(myConfiguration.getOpenNLPTokenizerDir());
 		this.tester = new LearnerUtility(myConfiguration, sentenceDetector, tokenizer);
 	}
 	
@@ -68,11 +65,11 @@ public class LearnerUtilityTest {
 	
 	@Test
 	public void testSegmentSentence(){
-		assertEquals("segmentSentence - handle abbreviations", new Sentence("This is jr. Gates."), tester.segmentSentence("This is jr. Gates. This is second sentence.").get(0));
-		assertEquals("segmentSentence - handle abbreviations", new Sentence("This is second sentence."), tester.segmentSentence("This is jr. Gates. This is second sentence.").get(1));
-		assertEquals("segmentSentence - handle abbreviations", new Sentence("The Energy DEPT. is holding a work shop now."), tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ").get(0));
-		assertEquals("segmentSentence - handle abbreviations", new Sentence("This is second sentence."), tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ").get(1));
-		assertEquals("segmentSentence - handle abbreviations", new Sentence("Mr. Gates from the Energy DEPT. is holding a work shop now."), tester.segmentSentence("Mr. Gates from the Energy DEPT. is holding a work shop now. This is second sentence. ").get(0));
+		assertEquals("segmentSentence - handle abbreviations", new Token("This is jr. Gates."), tester.segmentSentence("This is jr. Gates. This is second sentence.").get(0));
+		assertEquals("segmentSentence - handle abbreviations", new Token("This is second sentence."), tester.segmentSentence("This is jr. Gates. This is second sentence.").get(1));
+		assertEquals("segmentSentence - handle abbreviations", new Token("The Energy DEPT. is holding a work shop now."), tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ").get(0));
+		assertEquals("segmentSentence - handle abbreviations", new Token("This is second sentence."), tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ").get(1));
+		assertEquals("segmentSentence - handle abbreviations", new Token("Mr. Gates from the Energy DEPT. is holding a work shop now."), tester.segmentSentence("Mr. Gates from the Energy DEPT. is holding a work shop now. This is second sentence. ").get(0));
 		
 	}
 }

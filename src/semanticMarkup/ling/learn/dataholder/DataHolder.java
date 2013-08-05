@@ -1,4 +1,4 @@
-package semanticMarkup.ling.learn;
+package semanticMarkup.ling.learn.dataholder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +17,13 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+
+import semanticMarkup.ling.learn.Configuration;
+import semanticMarkup.ling.learn.Constant;
+import semanticMarkup.ling.learn.POSInfo;
+import semanticMarkup.ling.learn.StringPair;
+import semanticMarkup.ling.learn.StringUtility;
+import semanticMarkup.ling.learn.Utility;
 
 public class DataHolder {
 	// all unique words in the input treatments
@@ -288,7 +295,7 @@ public class DataHolder {
 	
 	public List<String> getWordByPOS(String POSs) {
 		List<String> words = new ArrayList<String>();
-		int index = POSs.length();
+//		int index = POSs.length();
 		for (int i = 0;i<POSs.length();i++) {
 			String POS = POSs.substring(i,i+1);
 			Iterator<Entry<WordPOSKey, WordPOSValue>> iterator = this.wordPOSTable.entrySet().iterator();
@@ -1415,6 +1422,27 @@ public class DataHolder {
 		}
 		
 	}
+	
+	/**
+	 * Add the terms into the heuristicNounTable with the type specified
+	 * 
+	 * @param terms
+	 *            set of terms
+	 * @param type
+	 *            type of the terms
+	 */
+	public int add2HeuristicNounTable(Set<String> terms, String type) {
+		int count = 0;
+
+		Iterator<String> iter = terms.iterator();
+		while (iter.hasNext()) {
+			String term = iter.next();
+			this.getHeuristicNounHolder().put(term, type);
+			count++;
+		}
+
+		return count;
+	}
 
 	public Map<Integer, IsAValue> add2IsAHolder (Map<Integer, IsAValue> isAHolder, List<String> args) {
 		int index = 0;
@@ -1556,7 +1584,7 @@ public class DataHolder {
 		if (holderID == DataHolder.SINGULAR_PLURAL) {
 			myLogger.info("==SingularPlural Table==");
 			
-			Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+//			Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
 			
 			List<SingularPluralPair> singularPluralPairList = new LinkedList<SingularPluralPair>();
 			singularPluralPairList.addAll(singularPluralTable);
@@ -1641,6 +1669,13 @@ public class DataHolder {
 		
 		return tags;
 	}
-
+	
+	/** Iterator Utility 
+	 * @return **/
+	public Iterator<Entry<WordPOSKey, WordPOSValue>> getWordPOSHolderIterator(){
+		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
+		
+		return iter;
+	}
 
 }

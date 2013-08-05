@@ -8,10 +8,10 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import semanticMarkup.ling.transform.ISentenceDetector;
 import semanticMarkup.ling.transform.ITokenizer;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningSentenceDetector;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
+
 
 public class WordFormUtilityTest {
 	
@@ -20,9 +20,9 @@ public class WordFormUtilityTest {
 	@Before
 	public void initialize(){
 		Configuration myConfiguration = new Configuration();
-		ISentenceDetector sentenceDetector = new UnsupervisedLearningSentenceDetector(
+		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
 				myConfiguration.getOpenNLPSentenceDetectorDir());
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(myConfiguration.getOpenNLPTokenizerDir());
+		ITokenizer tokenizer = new OpenNLPTokenizer(myConfiguration.getOpenNLPTokenizerDir());
 		Utility myUtility = new Utility(myConfiguration, sentenceDetector, tokenizer);
 		tester = new WordFormUtility(myUtility.getWordNet());
 	}
@@ -75,9 +75,6 @@ public class WordFormUtilityTest {
 		assertEquals ("getNumberHelp1 - case 2: x", "?", tester.getNumberHelper1("x"));
 		assertEquals ("getNumberHelp1 - case 3: null", null, tester.getNumberHelper1("a"));
 
-		
-		
-		
 		// Method getNumberHelper2
 		assertEquals ("getNumberHelp2 - end with i", "p", tester.getNumberHelper2("pappi"));
 		assertEquals ("getNumberHelp2 - end with ss", "s", tester.getNumberHelper2("wordss"));

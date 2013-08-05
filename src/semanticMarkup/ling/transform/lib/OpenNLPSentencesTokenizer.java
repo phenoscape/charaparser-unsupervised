@@ -4,20 +4,20 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
 import opennlp.tools.util.InvalidFormatException;
-import semanticMarkup.ling.Sentence;
-import semanticMarkup.ling.transform.ISentenceDetector;
+import semanticMarkup.ling.Token;
+import semanticMarkup.ling.transform.ITokenizer;
 
-public class UnsupervisedLearningSentenceDetector implements ISentenceDetector{
+
+public class OpenNLPSentencesTokenizer implements ITokenizer{
 	private SentenceDetectorME mySentenceDetector;
 	
-	public UnsupervisedLearningSentenceDetector(String openNLPSentenceDetectorDir) {
+	public  OpenNLPSentencesTokenizer (String openNLPSentenceDetectorDir) {
 		InputStream sentModelIn;
 
 		try {
@@ -38,13 +38,12 @@ public class UnsupervisedLearningSentenceDetector implements ISentenceDetector{
 	}
 
 	@Override
-	public List<Sentence> segment(String text) {
+	public List<Token> tokenize(String text) {
 		String[] sentenceArray = this.mySentenceDetector.sentDetect(text);
-		List<Sentence> sentences = new LinkedList<Sentence>();
+		List<Token> sentences = new LinkedList<Token>();
 		for (String sentence: sentenceArray) {
-			Sentence sentenceElement = new Sentence(sentence);
+			Token sentenceElement = new Token(sentence);
 			sentences.add(sentenceElement);
-			
 		}
 		
 		return sentences;

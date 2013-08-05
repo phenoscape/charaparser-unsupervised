@@ -13,10 +13,17 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import semanticMarkup.ling.transform.ISentenceDetector;
+import semanticMarkup.ling.learn.dataholder.DataHolder;
+import semanticMarkup.ling.learn.dataholder.DiscountedKey;
+import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
+import semanticMarkup.ling.learn.dataholder.SentenceStructure;
+import semanticMarkup.ling.learn.dataholder.SingularPluralPair;
+import semanticMarkup.ling.learn.dataholder.WordPOSKey;
+import semanticMarkup.ling.learn.dataholder.WordPOSValue;
 import semanticMarkup.ling.transform.ITokenizer;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningSentenceDetector;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
+
 
 public class DataHolderTest {
 	
@@ -69,7 +76,7 @@ public class DataHolderTest {
 
 	@Test
 	public void testChangePOS() {
-		DataHolder myTester = dataHolderFactory();
+		//DataHolder myTester = dataHolderFactory();
 
 		//assertEquals("changePOS", "", myTester.getDataHolder().changePOS("newWord", "oldPOS", "newPOS", "newRole", 3));
 	}
@@ -319,9 +326,9 @@ public class DataHolderTest {
 		DataHolder tester;
 
 		Configuration myConfiguration = new Configuration();
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(
+		ITokenizer tokenizer = new OpenNLPTokenizer(
 				myConfiguration.getOpenNLPTokenizerDir());
-		ISentenceDetector sentenceDetector = new UnsupervisedLearningSentenceDetector(
+		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
 				myConfiguration.getOpenNLPSentenceDetectorDir());
 		Utility myUtility = new Utility(myConfiguration, sentenceDetector,
 				tokenizer);

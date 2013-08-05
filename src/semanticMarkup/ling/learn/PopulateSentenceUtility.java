@@ -1,18 +1,8 @@
 package semanticMarkup.ling.learn;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
-
-import opennlp.tools.sentdetect.SentenceDetectorME;
-import opennlp.tools.tokenize.Tokenizer;
 
 public class PopulateSentenceUtility {
 

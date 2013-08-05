@@ -14,10 +14,12 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import semanticMarkup.ling.transform.ISentenceDetector;
+import semanticMarkup.ling.learn.dataholder.DataHolder;
+import semanticMarkup.ling.learn.dataholder.SentenceStructure;
+import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.transform.ITokenizer;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningSentenceDetector;
-import semanticMarkup.ling.transform.lib.UnsupervisedLearningTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
+import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
 
 public class LearnerTest {
 
@@ -1186,9 +1188,9 @@ public class LearnerTest {
 		Learner tester;
 
 		Configuration myConfiguration = new Configuration();
-		ITokenizer tokenizer = new UnsupervisedLearningTokenizer(
+		ITokenizer tokenizer = new OpenNLPTokenizer(
 				myConfiguration.getOpenNLPTokenizerDir());
-		ISentenceDetector sentenceDetector = new UnsupervisedLearningSentenceDetector(
+		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
 				myConfiguration.getOpenNLPSentenceDetectorDir());
 		Utility myUtility = new Utility(myConfiguration, sentenceDetector,
 				tokenizer);
