@@ -6,10 +6,8 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.ling.learn.dataholder.DataHolder;
-import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 
 public class AdditionalBootstrapping implements LearningModule {
-	private Utility myUtility;
 
 	public AdditionalBootstrapping() {
 		// TODO Auto-generated constructor stub
@@ -25,34 +23,6 @@ public class AdditionalBootstrapping implements LearningModule {
 		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
 		myLogger.trace("Enter additionalBootStrapping");
 
-		int flag = 0;
-
-		do {
-			myLogger.trace(String.format("Enter one do-while loop iteration"));
-			flag = 0;
-
-			// warmup markup
-			int cmReturn = wrapupMarkup();
-			myLogger.trace(String
-					.format("wrapupMarkup() returned %d", cmReturn));
-			flag += cmReturn;
-
-			// one lead word markup
-			//Set<String> tags = myDataHolder.getCurrentTags();
-			//int omReturn = oneLeadWordMarkup(myDataHolder, tags);
-			//myLogger.trace(String.format("oneLeadWordMarkup() returned %d",
-//					omReturn));
-//			flag += omReturn;
-
-			// doit markup
-//			int dmReturn = myUtility.getLearnerUtility().doItMarkup(myDataHolder);
-//			myLogger.trace(String.format("doItMarkup() returned %d", dmReturn));
-//			flag += dmReturn;
-
-			myLogger.trace(String.format("Quite this iteration with flag = %d",
-					flag));
-		} while (flag > 0);
-
 		return myDataHolder;
 	}
 
@@ -62,26 +32,7 @@ public class AdditionalBootstrapping implements LearningModule {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger
 				.getLogger("learn.additionalBootStrapping.oneLeadWordMarkup");
-		String tags = StringUtility.joinList("|", tagList);
-		int sign = 0;
-		myLogger.trace(String.format("Enter (%s)", tags));
-
-		for (int i = 0; i < myDataHolder.getSentenceHolder().size(); i++) {
-			SentenceStructure sentence = myDataHolder.getSentenceHolder().get(i);
-			String tag = sentence.getTag();
-			String lead = sentence.getLead();
-
-			if ((tag == null) && (lead.matches("% %"))) {
-				if (StringUtility.createMatcher(
-						String.format("\\b%s\\|", lead), tags).find()) {
-					// tagIt(i, lead);
-					myLogger.trace(String.format(
-							"updateDataHolder(%s, n, -, wordpos, 1)", lead));
-					sign += myDataHolder.updateDataHolder(lead, "n", "-",
-							"wordpos", 1);
-				}
-			}
-		}
+		int sign = 0;		
 
 		myLogger.trace("Return: " + sign);
 		return 0;
