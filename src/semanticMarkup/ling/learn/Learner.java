@@ -3009,7 +3009,7 @@ public class Learner {
 			String thisSentence = idAndSentence.getString();
 			
 			thisSentence = tagAllSentencesHelper(thisSentence);
-			thisSentence = annotateSentence(thisSentence, myKnownTags);
+//			thisSentence = annotateSentence(thisSentence, myKnownTags);
 			
 			SentenceStructure targetSentence = this.getDataHolder().getSentence(thisID);
 			targetSentence.setSentence(thisSentence);
@@ -3027,15 +3027,19 @@ public class Learner {
 		text = text.toLowerCase();
 		
 		// cup_shaped, 3_nerved, 3-5 (-7)_nerved
-		Matcher m2 = StringUtility.createMatcher("\\s*-\\s*([a-z])", text);
-		while (m2.find()) {
-			String group1 = m2.group(1);
-			text = m2.replaceFirst("_"+group1);
-			m2 = StringUtility.createMatcher("\\s*-\\s*([a-z])", text);
-		}
+//		Matcher m2 = StringUtility.createMatcher("\\s*-\\s*([a-z])", text);
+//		while (m2.find()) {
+//			String group1 = m2.group(1);
+//			text = m2.replaceFirst("_"+group1);
+//			m2 = StringUtility.createMatcher("\\s*-\\s*([a-z])", text);
+//		}
+		
+		//$b =~ s#\b(_[a-z]+)\b#(?\:\\b\\d+)$1#g; #_nerved => (?:\b\d+)_nerved
+//		$sent =~ s#\s*-\s*([a-z])#_$1#g; 
+		text = StringUtility.replaceAllBackreference(text, "\\s*-\\s*([a-z])", "_$1");
 		
 		// add space around nonword char
-text = StringUtility.addHeadTailSpace("\\W", text);
+		text = StringUtility.replaceAllBackreference(text, "(\\W)", " $1 ");
 		
 		// multiple spaces => 1 space
 		text = text.replaceAll("\\s+", " ");	
@@ -3048,11 +3052,62 @@ text = StringUtility.addHeadTailSpace("\\W", text);
 	
 	
 	
-	public String annotateSentence(String thisString,
-			KnownTagCollection myKnownTags) {
+	public String annotateSentence(String sentence,
+			KnownTagCollection knownTags, Set<String> NONS) {
+		
+		// get known tags
+		Set<String> boundaryMarks = new HashSet<String>();
+		boundaryMarks.addAll(knownTags.boundaryMarks);
+		Set<String> boundaryWords = new HashSet<String>();
+		boundaryWords.addAll(knownTags.boundaryWords);
+		Set<String> modifiers = new HashSet<String>();
+		modifiers.addAll(knownTags.modifiers);
+		Set<String> nouns = new HashSet<String>();
+		nouns.addAll(knownTags.nouns);
+		Set<String> organs = new HashSet<String>();
+		organs.addAll(knownTags.organs);
+		Set<String> properNouns = new HashSet<String>();
+		properNouns.addAll(knownTags.properNouns);
+		
+		// preprocessing 1
+		List<String> bDeleteList = new LinkedList<String>();
+		List<String> bAddList = new LinkedList<String>();
+		Iterator<String> bIter = boundaryWords.iterator();
+		while(bIter.hasNext()) {
+			String oldWord = bIter.next();
+			
+			if (oldWord.charAt(0)=='_') {
+				String newWord = "(?\\:\\b\\d+)"+oldWord;
+				bDeleteList.add(oldWord);
+				bAddList.add(newWord);
+			}
+		}
+		boundaryWords.removeAll(bDeleteList);
+		boundaryWords.addAll(bAddList);
+		
+		nouns = StringUtility.setSub(nouns, NONS);
+		organs = StringUtility.setSub(organs, NONS);
+		
+		// preprocessing 2
+		Set<String> tagSet = new HashSet<String>();
+		tagSet.addAll(Arrays.asList("Z|O|N|M|B".split("|")));
+		properNouns = StringUtility.setSub(properNouns, tagSet);
+		organs = StringUtility.setSub(organs, tagSet);
+		nouns = StringUtility.setSub(nouns, tagSet);
+		modifiers = StringUtility.setSub(modifiers, tagSet);
+		boundaryWords = StringUtility.setSub(boundaryWords, tagSet);
+		boundaryMarks = StringUtility.setSub(boundaryMarks, tagSet);
+		
+		
+		
+		
+//		myKnownTags.
+		
 		// TODO Auto-generated method stub
-		return null;
+		return sentence;
 	}
+	
+	
 
 
 
@@ -3089,11 +3144,11 @@ text = StringUtility.addHeadTailSpace("\\W", text);
 		nouns.addAll(nounSet);
 		myLogger.trace("Get nouns: "+nouns.toString());
 		
-		// get o
+		// get organs
 		if(StringUtils.equals(mode, "multitags")){
-			Set<String> oSet = this.getOrgans();
-			organs.addAll(oSet);
-			myLogger.trace("Get o: "+organs.toString());
+			Set<String> organSet = this.getOrgans();
+			organs.addAll(organSet);
+			myLogger.trace("Get organs: "+organs.toString());
 		}
 		
 		// get modifiers

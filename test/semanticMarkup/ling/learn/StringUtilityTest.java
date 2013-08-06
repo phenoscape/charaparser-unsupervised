@@ -4,7 +4,9 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 import org.junit.Test;
@@ -192,8 +194,28 @@ public class StringUtilityTest {
 	}
 	
 	@Test
-	public void testAddHeadTailSpace(){
-		assertEquals("addHeadTailSpace", "word1 ,    word2 .    word3 !    word4 . ", StringUtility.addHeadTailSpace("\\W", "word1, word2. word3! word4."));
+	public void testReplaceAllBackreference(){
+		assertEquals("addHeadTailSpace", "word1 ,    word2 .    word3 !    word4 . ", StringUtility.replaceAllBackreference("word1, word2. word3! word4.", "(\\W)", " $1 "));
+	}
+	
+	@Test
+	public void testSetSub(){
+		Set<String> a = new HashSet<String>();
+		a.add("word1");
+		a.add("word2");
+		a.add("word3");
+		
+		Set<String> b = new HashSet<String>();
+		b.add("word2");
+		b.add("word3");
+		b.add("word4");
+		
+		Set<String> c = new HashSet<String>();
+		c.add("word1");
+		
+		assertEquals("setSub", c, StringUtility.setSub(a, b));
+		assertEquals("setSub", a, StringUtility.setSub(a, null));
+		assertEquals("setSub", null, StringUtility.setSub(null, b));
 	}
 	
 }

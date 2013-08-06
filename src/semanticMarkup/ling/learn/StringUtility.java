@@ -1,7 +1,10 @@
 package semanticMarkup.ling.learn;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -262,22 +265,30 @@ public class StringUtility {
 
 	}
 	
-	public static String addHeadTailSpace(String regex, String text) {
-		Matcher m = StringUtility.createMatcher(String.format("(%s)", regex),
-				text);
-		if (m.find()) {
-			String group1 = m.group(1);
-			int end = m.end(1);
-			int reversedIndex = text.length() - end;
-
-			text = m.replaceFirst(String.format(" %s ", group1));
-			String head = text.substring(0, text.length() - reversedIndex);
-			String tail = text.substring(text.length() - reversedIndex,
-					text.length());
-
-			text = head + addHeadTailSpace(regex, tail);
-		}
+	public static String replaceAllBackreference(String text, String regex, String replacement) {
+		Matcher m = createMatcher(regex, text);
+		text = m.replaceAll(replacement);
+		
 		return text;
+	}
+	
+	public static Set<String> setSub(Set<String> a, Set<String> b) {
+		// c = a - b
+		if (a == null || b == null) {
+			return a;
+		}
+		
+		Set<String> c = new HashSet<String>();
+		
+		Iterator<String> iter = a.iterator();
+		while(iter.hasNext()) {
+			String element = iter.next();
+			if (!b.contains(element)) {
+				c.add(element);
+			}
+		}
+		
+		return c;
 	}
 	
 }
