@@ -1,5 +1,8 @@
 package semanticMarkup.ling.learn;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -3003,27 +3006,55 @@ public class Learner {
 		while (idAndSentenceListIter.hasNext()) {
 			StringAndInt idAndSentence = idAndSentenceListIter.next();
 			int thisID = idAndSentence.getInt();
-			String thisString = idAndSentence.getString();
+			String thisSentence = idAndSentence.getString();
 			
-			thisString = tagAllSentencesHelper(thisString);
-			thisString = annotateSentence(thisString, myKnownTags);
+			thisSentence = tagAllSentencesHelper(thisSentence);
+			thisSentence = annotateSentence(thisSentence, myKnownTags);
 			
 			SentenceStructure targetSentence = this.getDataHolder().getSentence(thisID);
-			targetSentence.setSentence(thisString);
+			targetSentence.setSentence(thisSentence);
 		}
 		
 	}
     
+	/**
+	 * Helper of tagAllSentencesHelper method
+	 * @param text
+	 * @return text after processing
+	 */
+	public String tagAllSentencesHelper(String text) {
+		text = text.replaceAll("<\\S+?>", "");
+		text = text.toLowerCase();
+		
+		// cup_shaped, 3_nerved, 3-5 (-7)_nerved
+		Matcher m2 = StringUtility.createMatcher("\\s*-\\s*([a-z])", text);
+		while (m2.find()) {
+			String group1 = m2.group(1);
+			text = m2.replaceFirst("_"+group1);
+			m2 = StringUtility.createMatcher("\\s*-\\s*([a-z])", text);
+		}
+		
+		// add space around nonword char
+text = StringUtility.addHeadTailSpace("\\W", text);
+		
+		// multiple spaces => 1 space
+		text = text.replaceAll("\\s+", " ");	
+		// trim
+		text = text.replaceAll("^\\s*", "");	
+		text = text.replaceAll("\\s*$", "");	
+		
+		return text;
+	}
+	
+	
+	
 	public String annotateSentence(String thisString,
 			KnownTagCollection myKnownTags) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public String tagAllSentencesHelper(String text) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 
 	/**
 	 * 
@@ -3396,6 +3427,14 @@ public class Learner {
 	
 	public Configuration getConfiguration(){
 		return this.myConfiguration;
+	}
+	
+	public static void main(String[] args){
+		assertEquals("tagAllSentenceHelper", 1, 12);
+		
+		
+		
+		
 	}
 	
 }

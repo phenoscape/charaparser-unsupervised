@@ -1184,6 +1184,12 @@ public class LearnerTest {
 						wordsBefore));
 	}
 	
+	@Test
+	public void testTagAllSentence(){
+		assertEquals("tagAllSentenceHelper", "word1 word2", tester.tagAllSentencesHelper("word1 <tag> word2"));
+		assertEquals("tagAllSentenceHelper", "3_nerved , cup_shaped , 3 - 5 ( - 7 ) _nerved", tester.tagAllSentencesHelper(" 	 3  - nerved, cup- shaped, 3-5 (-7) -nerved		 "));
+	}
+	
 	private Learner learnerFactory() {
 		Learner tester;
 

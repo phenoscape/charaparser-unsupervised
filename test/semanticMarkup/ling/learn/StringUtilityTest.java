@@ -191,4 +191,9 @@ public class StringUtilityTest {
 		assertEquals("match", true, StringUtility.isEntireMatched("^\\[.*$", "[abc]"));
 	}
 	
+	@Test
+	public void testAddHeadTailSpace(){
+		assertEquals("addHeadTailSpace", "word1 ,    word2 .    word3 !    word4 . ", StringUtility.addHeadTailSpace("\\W", "word1, word2. word3! word4."));
+	}
+	
 }

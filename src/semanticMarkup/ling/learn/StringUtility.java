@@ -262,4 +262,22 @@ public class StringUtility {
 
 	}
 	
+	public static String addHeadTailSpace(String regex, String text) {
+		Matcher m = StringUtility.createMatcher(String.format("(%s)", regex),
+				text);
+		if (m.find()) {
+			String group1 = m.group(1);
+			int end = m.end(1);
+			int reversedIndex = text.length() - end;
+
+			text = m.replaceFirst(String.format(" %s ", group1));
+			String head = text.substring(0, text.length() - reversedIndex);
+			String tail = text.substring(text.length() - reversedIndex,
+					text.length());
+
+			text = head + addHeadTailSpace(regex, tail);
+		}
+		return text;
+	}
+	
 }
