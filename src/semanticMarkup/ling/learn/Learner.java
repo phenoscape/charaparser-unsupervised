@@ -3054,7 +3054,6 @@ public class Learner {
 	
 	public String annotateSentence(String sentence,
 			KnownTagCollection knownTags, Set<String> NONS) {
-		
 		// get known tags
 		Set<String> boundaryMarks = new HashSet<String>();
 		boundaryMarks.addAll(knownTags.boundaryMarks);
@@ -3098,15 +3097,49 @@ public class Learner {
 		boundaryWords = StringUtility.setSubtraction(boundaryWords, tagSet);
 		boundaryMarks = StringUtility.setSubtraction(boundaryMarks, tagSet);
 		
+		// insert tags
+		sentence = annotateSentenceHelper(sentence, properNouns, "Z", true);
+		sentence = annotateSentenceHelper(sentence, organs, "O", true);
+		sentence = annotateSentenceHelper(sentence, nouns, "N", true);
+		sentence = annotateSentenceHelper(sentence, modifiers, "M", true);
+		sentence = annotateSentenceHelper(sentence, boundaryWords, "B", true);
+		sentence = annotateSentenceHelper(sentence, properNouns, "Z", true);
+		sentence = annotateSentenceHelper(sentence, boundaryMarks, "Z", false);
 		
+		if (StringUtility.createMatcher("", sentence).find()) {
+			sentence = StringUtility.replaceAllBackreference(sentence, "<(\\w)>\\s*</$1>", "");
+		}
 		
+		sentence = StringUtility.replaceAllBackreference(sentence, 
+				"(?:<[^<]+>)+("+Constant.FORBIDDEN+")(?:</[^<]+>)+", "$1");
 		
-//		myKnownTags.
-		
-		// TODO Auto-generated method stub
 		return sentence;
 	}
 	
+	
+	public String annotateSentenceHelper(String sentence, Set<String> words,
+			String tag, boolean isWithBoundaryWord) {
+		if (words.size() != 0) {
+
+			if (isWithBoundaryWord) {
+				sentence = StringUtility.replaceAllBackreference(
+						sentence,
+						String.format("\\b(%s)\\b",
+								LearnerUtility.Collection2Pattern(words)),
+						String.format("<%s>$1</%s>", tag));
+			} else {
+				sentence = StringUtility.replaceAllBackreference(
+						sentence,
+						String.format("(%s)",
+								LearnerUtility.Collection2Pattern(words)),
+						String.format("<%s>$1</%s>", tag));
+			}
+		}
+
+		return sentence;
+	}
+	
+
 	
 
 
