@@ -2982,7 +2982,12 @@ public class Learner {
 		myLogger.trace("[unknownWordBootstrapping]End");
 	}
 	
-	public Set<String> unknownWordBootstrappingGetUnknownWord() {
+	/**
+	 * Helper of unknownWordBootstrapping()
+	 * 
+	 * @return set of words
+	 */
+	public Set<String> unknownWordBootstrappingGetUnknownWord(String plMiddle) {
 		Set<String> words = new HashSet<String>();
 		Iterator<Entry<String, String>> iter = this.getDataHolder()
 				.getUnknownWordHolderIterator();
@@ -2992,7 +2997,7 @@ public class Learner {
 			String flag = entry.getValue();
 			if (word != null) {
 				if ((StringUtils.equals(flag, "unknown"))
-					&& 		((StringUtility.createMatcher("plMiddle", word).find()) 
+					&& 		((StringUtility.createMatcher(plMiddle, word).find()) 
 							|| (StringUtility.createMatcher("("+ Constant.PLENDINGS + "|ium)$", word).find()))
 				)
 					words.add(word);

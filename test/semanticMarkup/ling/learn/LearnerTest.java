@@ -1213,6 +1213,17 @@ public class LearnerTest {
 		assertEquals("annotateSentenceHelper2", "and</B>", tester.annotateSentenceHelper2("and</B>"));
 	}
 	
+	@Test
+	public void testUnknownWordBootstrapping(){
+		Learner myTester = learnerFactory();
+		
+		myTester.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word1 unknown".split(" ")));
+		
+		Set<String> expected = new HashSet<String>();
+//		expected.add("")
+		assertEquals("unknownWordBootstrappingGetUnknownWord", expected , myTester.unknownWordBootstrappingGetUnknownWord("(ee)"));
+	}
+	
 	private Learner learnerFactory() {
 		Learner tester;
 
@@ -1227,5 +1238,7 @@ public class LearnerTest {
 
 		return tester;
 	}
+	
+	
 
 }
