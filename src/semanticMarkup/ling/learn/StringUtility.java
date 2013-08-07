@@ -272,7 +272,7 @@ public class StringUtility {
 		return text;
 	}
 	
-	public static Set<String> setSub(Set<String> a, Set<String> b) {
+	public static Set<String> setSubtraction(Set<String> a, Set<String> b) {
 		// c = a - b
 		if (a == null || b == null) {
 			return a;
@@ -290,5 +290,5 @@ public class StringUtility {
 		
 		return c;
 	}
-	
+
 }

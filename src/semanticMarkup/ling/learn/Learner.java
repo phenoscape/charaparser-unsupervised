@@ -3085,18 +3085,18 @@ public class Learner {
 		boundaryWords.removeAll(bDeleteList);
 		boundaryWords.addAll(bAddList);
 		
-		nouns = StringUtility.setSub(nouns, NONS);
-		organs = StringUtility.setSub(organs, NONS);
+		nouns = StringUtility.setSubtraction(nouns, NONS);
+		organs = StringUtility.setSubtraction(organs, NONS);
 		
 		// preprocessing 2
 		Set<String> tagSet = new HashSet<String>();
 		tagSet.addAll(Arrays.asList("Z|O|N|M|B".split("|")));
-		properNouns = StringUtility.setSub(properNouns, tagSet);
-		organs = StringUtility.setSub(organs, tagSet);
-		nouns = StringUtility.setSub(nouns, tagSet);
-		modifiers = StringUtility.setSub(modifiers, tagSet);
-		boundaryWords = StringUtility.setSub(boundaryWords, tagSet);
-		boundaryMarks = StringUtility.setSub(boundaryMarks, tagSet);
+		properNouns = StringUtility.setSubtraction(properNouns, tagSet);
+		organs = StringUtility.setSubtraction(organs, tagSet);
+		nouns = StringUtility.setSubtraction(nouns, tagSet);
+		modifiers = StringUtility.setSubtraction(modifiers, tagSet);
+		boundaryWords = StringUtility.setSubtraction(boundaryWords, tagSet);
+		boundaryMarks = StringUtility.setSubtraction(boundaryMarks, tagSet);
 		
 		
 		

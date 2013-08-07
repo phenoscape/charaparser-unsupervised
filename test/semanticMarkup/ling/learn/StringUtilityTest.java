@@ -213,9 +213,9 @@ public class StringUtilityTest {
 		Set<String> c = new HashSet<String>();
 		c.add("word1");
 		
-		assertEquals("setSub", c, StringUtility.setSub(a, b));
-		assertEquals("setSub", a, StringUtility.setSub(a, null));
-		assertEquals("setSub", null, StringUtility.setSub(null, b));
+		assertEquals("setSub", c, StringUtility.setSubtraction(a, b));
+		assertEquals("setSub", a, StringUtility.setSubtraction(a, null));
+		assertEquals("setSub", null, StringUtility.setSubtraction(null, b));
 	}
 	
 }
