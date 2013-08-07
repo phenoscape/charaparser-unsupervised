@@ -33,6 +33,7 @@ import semanticMarkup.ling.learn.dataholder.WordPOSValue;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class Learner {	
+	private static final Set<String> NONS = null; //??
 	private Configuration myConfiguration;
 	private Utility myUtility;
 	private ITokenizer myTokenizer;
@@ -126,15 +127,18 @@ public class Learner {
 		myLogger.info("Bootstrapping rules:");
 		this.discover("normal");
 		
-		//myLogger.info("Additional bootstrappings:");
-		//this.additionalBootstrapping();
+		myLogger.info("Additional bootstrappings:");
+		this.additionalBootstrapping();
+		
+		myLogger.info("Unknownword bootstrappings:");
+		this.unknownWordBootstrapping();
 		
 		myLogger.trace("Quite Learn");
 		
-		myLogger.info(myDataHolder.toString());
-		myLogger.info(myDataHolder.getSentenceHolder().toString());
-		myLogger.info(this.myDataHolder.getHeuristicNounHolder().toString());
-		myLogger.info(myDataHolder.getSentenceHolder().get(0).toString());
+//		myLogger.info(myDataHolder.toString());
+//		myLogger.info(myDataHolder.getSentenceHolder().toString());
+//		myLogger.info(this.myDataHolder.getHeuristicNounHolder().toString());
+//		myLogger.info(myDataHolder.getSentenceHolder().get(0).toString());
 		
 		return myDataHolder;
 	}
@@ -2966,7 +2970,36 @@ public class Learner {
 		Logger myLogger = Logger.getLogger("learn.unknownWordBootstrapping");
 		myLogger.trace("[unknownWordBootstrapping]Start");
 		
+		String plMiddle = "(ee)";
+		tagAllSentences("singletag", "sentence");
+		int newInt = 0;
+		do {
+			
+		} while (newInt > 0);
+		
+		// pistillate_zone
+		
 		myLogger.trace("[unknownWordBootstrapping]End");
+	}
+	
+	public Set<String> unknownWordBootstrappingGetUnknownWord() {
+		Set<String> words = new HashSet<String>();
+		Iterator<Entry<String, String>> iter = this.getDataHolder()
+				.getUnknownWordHolderIterator();
+		while (iter.hasNext()) {
+			Entry<String, String> entry = iter.next();
+			String word = entry.getKey();
+			String flag = entry.getValue();
+			if (word != null) {
+				if ((StringUtils.equals(flag, "unknown"))
+					&& 		((StringUtility.createMatcher("plMiddle", word).find()) 
+							|| (StringUtility.createMatcher("("+ Constant.PLENDINGS + "|ium)$", word).find()))
+				)
+					words.add(word);
+			}
+		}
+
+		return words;
 	}
 	
 	/**
@@ -3009,7 +3042,7 @@ public class Learner {
 			String thisSentence = idAndSentence.getString();
 			
 			thisSentence = tagAllSentencesHelper(thisSentence);
-//			thisSentence = annotateSentence(thisSentence, myKnownTags);
+			thisSentence = annotateSentence(thisSentence, myKnownTags, NONS);
 			
 			SentenceStructure targetSentence = this.getDataHolder().getSentence(thisID);
 			targetSentence.setSentence(thisSentence);
@@ -3152,8 +3185,6 @@ public class Learner {
 				sentence = m.replaceFirst("");
 			}
 		}
-		
-		
 		
 		sentence = StringUtility.replaceAllBackreference(sentence, 
 				"(?:<[^<]+>)+("+Constant.FORBIDDEN+")(?:</[^<]+>)+", "$1");

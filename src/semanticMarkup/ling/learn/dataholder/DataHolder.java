@@ -315,6 +315,10 @@ public class DataHolder {
 		return iter;
 	}
 	
+	public Iterator<Entry<String, String>> getUnknownWordHolderIterator(){
+		return this.unknownWordTable.entrySet().iterator();
+	}
+	
 	/** Output Utility **/
 	public void printHolder(byte holderID) {
 		if (holderID == DataHolder.SENTENCE) {
