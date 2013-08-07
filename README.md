@@ -233,6 +233,9 @@ getAllWords			|	all
 doIt				|	firstseg
 getNounsAfterPtn	|	firstseg
 
+* Where boundary words (, ), [, ], {, and } are added?
+They are added into the word-POS holder in the addStopWords() method.
+
 ========
 Learner Module Method List
 ========
@@ -252,3 +255,4 @@ Learner Utility Method List
     Name            | Used by
 *   tagAllSentences | UnknownWordBootstrapping / AdjectiveSubjectBootstrapping 
 *   getKnownTags    | tagAllSentences / tagUnknowns
+

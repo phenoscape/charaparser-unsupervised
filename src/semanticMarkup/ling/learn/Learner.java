@@ -1267,8 +1267,8 @@ public class Learner {
 		
 		List<String> stops = new ArrayList<String>();
 		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
-		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
-				"]", "}", "\\d+" }));
+		stops.addAll(Arrays.asList(new String[] { "NUM", "\\(", "\\[", "\\{",
+				"\\)", "\\]", "\\}", "\\d+" }));
 
 		myLogger.trace("Stop Words: " + stops);
 		for (int i = 0; i < stops.size(); i++) {
@@ -3106,12 +3106,7 @@ public class Learner {
 		sentence = annotateSentenceHelper(sentence, properNouns, "Z", true);
 		sentence = annotateSentenceHelper(sentence, boundaryMarks, "Z", false);
 		
-		if (StringUtility.createMatcher("", sentence).find()) {
-			sentence = StringUtility.replaceAllBackreference(sentence, "<(\\w)>\\s*</$1>", "");
-		}
-		
-		sentence = StringUtility.replaceAllBackreference(sentence, 
-				"(?:<[^<]+>)+("+Constant.FORBIDDEN+")(?:</[^<]+>)+", "$1");
+		sentence = annotateSentenceHelper2(sentence);
 		
 		return sentence;
 	}
@@ -3126,23 +3121,45 @@ public class Learner {
 						sentence,
 						String.format("\\b(%s)\\b",
 								LearnerUtility.Collection2Pattern(words)),
-						String.format("<%s>$1</%s>", tag));
+						String.format("<%s>$1</%s>", tag, tag));
 			} else {
+//				String pattern = String.format("(%s)", LearnerUtility.Collection2Pattern(words));
+//				Matcher m1 = StringUtility.createMatcher("(\\]|\\}|\\(|\\)|\\{|\\[)", "word ]abc");
+//				boolean b1 = m1.find();
+////				Matcher m2 = StringUtility.createMatcher("(]|}|(|)|{|[)", "word (abc)");
+////				boolean b2 = m2.find();
 				sentence = StringUtility.replaceAllBackreference(
 						sentence,
 						String.format("(%s)",
 								LearnerUtility.Collection2Pattern(words)),
-						String.format("<%s>$1</%s>", tag));
+						String.format("<%s>$1</%s>", tag, tag));
 			}
 		}
 
 		return sentence;
 	}
 	
-
-	
-
-
+	public String annotateSentenceHelper2(String sentence){
+		if (StringUtility.createMatcher("", sentence).find()) {
+			sentence = StringUtility.replaceAllBackreference(sentence, "<(\\w)>\\s*</$1>", "");
+		}
+		
+		Matcher m = StringUtility.createMatcher("<(\\w)>\\s*</(\\w)>", sentence);
+		while (m.find()) {
+			String g1 = m.group(1);
+			String g2 = m.group(2);
+			if (StringUtils.equals(g1, g2)) {
+				sentence = m.replaceFirst("");
+			}
+		}
+		
+		
+		
+		sentence = StringUtility.replaceAllBackreference(sentence, 
+				"(?:<[^<]+>)+("+Constant.FORBIDDEN+")(?:</[^<]+>)+", "$1");
+		
+		return sentence;
+	}
 
 	/**
 	 * 

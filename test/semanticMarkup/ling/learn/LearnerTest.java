@@ -2,6 +2,7 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -1188,6 +1189,28 @@ public class LearnerTest {
 	public void testTagAllSentence(){
 		assertEquals("tagAllSentenceHelper", "word1 word2", tester.tagAllSentencesHelper("word1 <tag> word2"));
 		assertEquals("tagAllSentenceHelper", "3_nerved , cup_shaped , 3 - 5 ( - 7 ) _nerved", tester.tagAllSentencesHelper(" 	 3  - nerved, cup- shaped, 3-5 (-7) -nerved		 "));
+	}
+	
+
+	@Test
+	public void testAnnotateSentence(){
+		String input = "stems usually erect , sometimes prostrate to ascending ( underground stems sometimes woody caudices or rhizomes , sometimes fleshy ) .";
+		String expected1 = 
+				"stems usually erect , sometimes prostrate to ascending <B>(</B> underground stems sometimes woody caudices or rhizomes , sometimes fleshy <B>)</B> .";
+		String expected2 = 
+				"stems <B>usually</B> <B>erect</B> , sometimes prostrate to ascending <B>(</B> underground stems sometimes woody caudices or rhizomes , sometimes fleshy <B>)</B> .";
+		Set<String> boundaryWords = new HashSet<String>();
+		Set<String> boundaryMarks = new HashSet<String>();
+		boundaryMarks.addAll(Arrays.asList("\\( \\) \\[ \\] \\{ \\}".split(" ")));
+		boundaryWords.addAll(Arrays.asList("under up upward usually erect villous was weakly".split(" ")));
+		
+		assertEquals("annotateSentenceHelper1", expected1, tester.annotateSentenceHelper(input, boundaryMarks, "B", false));
+		assertEquals("annotateSentenceHelper1", expected2, tester.annotateSentenceHelper(expected1, boundaryWords, "B", true));
+		
+		assertEquals("annotateSentenceHelper2", " word ", tester.annotateSentenceHelper2("<B> 	 </B> word <B> 	 </B>"));
+		assertEquals("annotateSentenceHelper2", "<B> 	 </C> word ", tester.annotateSentenceHelper2("<B> 	 </C> word <B> 	 </B>"));
+		assertEquals("annotateSentenceHelper2", "and", tester.annotateSentenceHelper2("<B>and</B>"));
+		assertEquals("annotateSentenceHelper2", "and</B>", tester.annotateSentenceHelper2("and</B>"));
 	}
 	
 	private Learner learnerFactory() {
