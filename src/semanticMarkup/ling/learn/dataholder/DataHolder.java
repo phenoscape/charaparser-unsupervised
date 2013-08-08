@@ -546,26 +546,31 @@ public class DataHolder {
 	}
 	
 	/**
+	 * Get words with specified POS tags from word-POS holder
 	 * 
-	 * @param POSs
-	 * @return
+	 * @param POSTags
+	 *            the POS tags of the words searching for
+	 * @return set of words
 	 */
-	public List<String> getWordByPOS(String POSs) {
-		List<String> words = new ArrayList<String>();
-//		int index = POSs.length();
-		for (int i = 0;i<POSs.length();i++) {
-			String POS = POSs.substring(i,i+1);
-			Iterator<Entry<WordPOSKey, WordPOSValue>> iterator = this.wordPOSTable.entrySet().iterator();
-			while (iterator.hasNext()) {
-				Entry<WordPOSKey, WordPOSValue> entry = iterator.next();
-				WordPOSKey key = entry.getKey();
-				if (StringUtils.equals(key.getPOS(),POS)) {
-					words.add(key.getWord());
-				}
-				
+	public Set<String> getWordsByPOSs(Set<String> POSTags) {
+		Set<String> words = new HashSet<String>();
+
+		if (POSTags == null) {
+			return words;
+		}
+
+		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this
+				.getWordPOSHolderIterator();
+
+		while (iter.hasNext()) {
+			Entry<WordPOSKey, WordPOSValue> wordPOSEntry = iter.next();
+			String POS = wordPOSEntry.getKey().getPOS();
+			if (POSTags.contains(POS)) {
+				String word = wordPOSEntry.getKey().getWord();
+				words.add(word);
 			}
 		}
-		
+
 		return words;
 	}
 	

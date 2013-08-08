@@ -2516,14 +2516,21 @@ public class Learner {
 		sentence = sentence.replaceFirst("^"+lead, "");
 		myLogger.trace("Sentence after remove lead: "+sentence);
 		
-		List<String> nouns = this.myDataHolder.getWordByPOS("ps");
+		//List<String> nouns = this.myDataHolder.getWordByPOS("ps");
+		Set<String> POSTags = new HashSet<String>();
+		POSTags.add("p");
+		POSTags.add("s");
+		Set<String> nouns = this.myDataHolder.getWordsByPOSs(POSTags);
 		
 		if (nouns.size()==0) {
 			myLogger.trace("Return false");
 			return false;
 		}
 		
-		String pattern1 = StringUtility.joinList("|", nouns);
+//		String pattern1 = StringUtility.joinList("|", nouns);		
+		String pattern1 = StringUtils.join(nouns, "|");
+		
+		
 		pattern1 = "(.*?)\\b("+pattern1+")"+"\\b";
 		myLogger.trace("Pattern: " + pattern1);
 		
@@ -2978,6 +2985,8 @@ public class Learner {
 		} while (newInt > 0);
 		
 		// pistillate_zone
+		// get all nouns from wordPOS holder
+//		this.getDataHolder().g
 		
 		myLogger.trace("[unknownWordBootstrapping]End");
 	}
