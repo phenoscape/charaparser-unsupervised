@@ -2977,43 +2977,61 @@ public class Learner {
 		Logger myLogger = Logger.getLogger("learn.unknownWordBootstrapping");
 		myLogger.trace("[unknownWordBootstrapping]Start");
 		
-		String plMiddle = "(ee)";
+		unknownWordBootstrappingPreprocessing();
+		unknownWordBootstrappingMain();
+		unknownWordBootstrappingPostprocessing();
+		
+		myLogger.trace("[unknownWordBootstrapping]End");
+	}
+	
+	public void unknownWordBootstrappingPreprocessing() {
 		tagAllSentences("singletag", "sentence");
+	}
+	
+	public void unknownWordBootstrappingMain() {
+		String plMiddle = "(ee)";
+		
 		int newInt = 0;
 		do {
 			
 		} while (newInt > 0);
-		
+	}
+
+	public void unknownWordBootstrappingPostprocessing() {
 		// pistillate_zone
 		// get all nouns from wordPOS holder
 		Set<String> POSTags = new HashSet<String>();
 		POSTags.add("p");
 		POSTags.add("s");
-		Set<String> nouns = this.getDataHolder().getWordsFromWordPOSByPOSs(POSTags);
+		Set<String> nouns = this.getDataHolder().getWordsFromWordPOSByPOSs(
+				POSTags);
 		Set<String> boundaries = new HashSet<String>();
+
+		// get boudaries
 		
-		
-		if (boundaries.size()>0){
-			Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolderIterator();
-			
+		// if the boundaries is not empty
+		if (boundaries.size() > 0) {
+			Iterator<SentenceStructure> iter = this.getDataHolder()
+					.getSentenceHolderIterator();
 			while (iter.hasNext()) {
 				SentenceStructure sentenceItem = iter.next();
 				String tag = sentenceItem.getTag();
 				String sentence = sentenceItem.getSentence();
 				int sentenceID = sentenceItem.getID();
-				
-				if ((	(StringUtils.equals(tag, "ignore"))
-							||(tag == null))
-					&&(StringUtility.createMatcher("(^| )("+StringUtils.join(boundaries, "|")+") ", sentence).find())) {
-					KnownTagCollection tags = new KnownTagCollection(null, null, null, boundaries, null, null); 
+
+				if (((StringUtils.equals(tag, "ignore")) || (tag == null))
+						&& (StringUtility.createMatcher(
+								"(^| )(" + StringUtils.join(boundaries, "|")
+										+ ") ", sentence).find())) {
+					KnownTagCollection tags = new KnownTagCollection(null,
+							null, null, boundaries, null, null);
 					sentence = this.annotateSentence(sentence, tags, NONS);
-					SentenceStructure updatedSentence = this.getDataHolder().getSentence(sentenceID);
+					SentenceStructure updatedSentence = this.getDataHolder()
+							.getSentence(sentenceID);
 					updatedSentence.setSentence(sentence);
 				}
 			}
 		}
-		
-		myLogger.trace("[unknownWordBootstrapping]End");
 	}
 	
 	/**
