@@ -309,6 +309,12 @@ public class DataHolder {
 	
 	/** Iterator Utility 
 	 * @return **/
+	public Iterator<SentenceStructure> getSentenceHolderIterator(){
+		Iterator<SentenceStructure> iter = this.getSentenceHolder().iterator();
+		
+		return iter;
+	}
+	
 	public Iterator<Entry<WordPOSKey, WordPOSValue>> getWordPOSHolderIterator(){
 		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
 		
@@ -552,7 +558,7 @@ public class DataHolder {
 	 *            the POS tags of the words searching for
 	 * @return set of words
 	 */
-	public Set<String> getWordsByPOSs(Set<String> POSTags) {
+	public Set<String> getWordsFromWordPOSByPOSs(Set<String> POSTags) {
 		Set<String> words = new HashSet<String>();
 
 		if (POSTags == null) {
@@ -572,6 +578,61 @@ public class DataHolder {
 		}
 
 		return words;
+	}
+	
+	/**
+	 * Get words from UnknowWord holder
+	 * 
+	 * @param wordPattern
+	 *            pattern the word must match
+	 * @param isWordPatternChecked
+	 *            if the word pattern is used
+	 * @param flagPattern
+	 *            pattern the flag must match
+	 * @param isFlagPatternChecked
+	 *            if the flag pattern is used
+	 * @return set of words
+	 */
+	public Set<String> getWordsFromUnknownWordByPatterns(String wordPattern,
+			boolean isWordPatternChecked, String flagPattern,
+			boolean isFlagPatternChecked) {
+		Set<String> words = new HashSet<String>();
+
+		if ((!isWordPatternChecked) && (!isFlagPatternChecked)) {
+			return words;
+		}
+
+		Iterator<Entry<String, String>> iter = this
+				.getUnknownWordHolderIterator();
+		while (iter.hasNext()) {
+			Entry<String, String> item = iter.next();
+
+			String word = item.getKey();
+			String flag = item.getValue();
+			boolean case1 = getWordsFromUnknownWordByPatternsHelper(
+					wordPattern, isWordPatternChecked, word);
+			boolean case2 = getWordsFromUnknownWordByPatternsHelper(
+					flagPattern, isFlagPatternChecked, flag);
+
+			if (case1 && case2) {
+				words.add(word);
+			}
+		}
+
+		return words;
+	}
+
+	private boolean getWordsFromUnknownWordByPatternsHelper(String pattern,
+			boolean isPatternChecked, String text) {
+		boolean result = false;
+
+		if ((isPatternChecked) && (pattern != null)) {
+			if (StringUtility.createMatcher(pattern, text).matches()) {
+				result = true;
+			}
+		}
+
+		return result;
 	}
 	
 	/**

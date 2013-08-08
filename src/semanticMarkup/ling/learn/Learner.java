@@ -2520,7 +2520,7 @@ public class Learner {
 		Set<String> POSTags = new HashSet<String>();
 		POSTags.add("p");
 		POSTags.add("s");
-		Set<String> nouns = this.myDataHolder.getWordsByPOSs(POSTags);
+		Set<String> nouns = this.myDataHolder.getWordsFromWordPOSByPOSs(POSTags);
 		
 		if (nouns.size()==0) {
 			myLogger.trace("Return false");
@@ -2986,7 +2986,32 @@ public class Learner {
 		
 		// pistillate_zone
 		// get all nouns from wordPOS holder
-//		this.getDataHolder().g
+		Set<String> POSTags = new HashSet<String>();
+		POSTags.add("p");
+		POSTags.add("s");
+		Set<String> nouns = this.getDataHolder().getWordsFromWordPOSByPOSs(POSTags);
+		Set<String> boundaries = new HashSet<String>();
+		
+		
+		if (boundaries.size()>0){
+			Iterator<SentenceStructure> iter = this.getDataHolder().getSentenceHolderIterator();
+			
+			while (iter.hasNext()) {
+				SentenceStructure sentenceItem = iter.next();
+				String tag = sentenceItem.getTag();
+				String sentence = sentenceItem.getSentence();
+				int sentenceID = sentenceItem.getID();
+				
+				if ((	(StringUtils.equals(tag, "ignore"))
+							||(tag == null))
+					&&(StringUtility.createMatcher("(^| )("+StringUtils.join(boundaries, "|")+") ", sentence).find())) {
+					KnownTagCollection tags = new KnownTagCollection(null, null, null, boundaries, null, null); 
+					sentence = this.annotateSentence(sentence, tags, NONS);
+					SentenceStructure updatedSentence = this.getDataHolder().getSentence(sentenceID);
+					updatedSentence.setSentence(sentence);
+				}
+			}
+		}
 		
 		myLogger.trace("[unknownWordBootstrapping]End");
 	}
