@@ -3164,18 +3164,48 @@ public class Learner {
 	public String annotateSentence(String sentence,
 			KnownTagCollection knownTags, Set<String> NONS) {
 		// get known tags
-		Set<String> boundaryMarks = new HashSet<String>();
-		boundaryMarks.addAll(knownTags.boundaryMarks);
-		Set<String> boundaryWords = new HashSet<String>();
-		boundaryWords.addAll(knownTags.boundaryWords);
-		Set<String> modifiers = new HashSet<String>();
-		modifiers.addAll(knownTags.modifiers);
-		Set<String> nouns = new HashSet<String>();
-		nouns.addAll(knownTags.nouns);
-		Set<String> organs = new HashSet<String>();
-		organs.addAll(knownTags.organs);
-		Set<String> properNouns = new HashSet<String>();
-		properNouns.addAll(knownTags.properNouns);
+		Set<String> boundaryMarks;
+		Set<String> boundaryWords;
+		Set<String> modifiers;
+		Set<String> nouns;
+		Set<String> organs;
+		Set<String> properNouns;
+		
+		if (knownTags.boundaryMarks == null) {
+			boundaryMarks = new HashSet<String>();
+		} else {
+			boundaryMarks = knownTags.boundaryMarks;
+		}
+		
+		if (knownTags.boundaryWords == null) {
+			boundaryWords = new HashSet<String>();
+		} else {
+			boundaryWords = knownTags.boundaryWords;
+		}
+		
+		if (knownTags.modifiers == null) {
+			modifiers = new HashSet<String>();
+		} else {
+			modifiers = knownTags.modifiers;
+		}
+		
+		if (knownTags.nouns== null) {
+			nouns = new HashSet<String>();
+		} else {
+			nouns = knownTags.nouns;
+		}
+		
+		if (knownTags.organs == null) {
+			organs = new HashSet<String>();
+		} else {
+			organs = knownTags.organs;
+		}
+		
+		if (knownTags.properNouns == null) {
+			properNouns = new HashSet<String>();
+		} else {
+			properNouns = knownTags.properNouns;
+		}
 		
 		// preprocessing 1
 		List<String> bDeleteList = new LinkedList<String>();
@@ -3198,7 +3228,7 @@ public class Learner {
 		
 		// preprocessing 2
 		Set<String> tagSet = new HashSet<String>();
-		tagSet.addAll(Arrays.asList("Z|O|N|M|B".split("|")));
+		tagSet.addAll(Arrays.asList("Z O N M B".split(" ")));
 		properNouns = StringUtility.setSubtraction(properNouns, tagSet);
 		organs = StringUtility.setSubtraction(organs, tagSet);
 		nouns = StringUtility.setSubtraction(nouns, tagSet);

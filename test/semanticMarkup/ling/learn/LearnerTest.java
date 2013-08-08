@@ -1194,6 +1194,9 @@ public class LearnerTest {
 
 	@Test
 	public void testAnnotateSentence(){
+		// Test Case 1: See testUnknownWordBootstrapping - Postprocessing
+		
+		// Test Case 2:
 		String input = "stems usually erect , sometimes prostrate to ascending ( underground stems sometimes woody caudices or rhizomes , sometimes fleshy ) .";
 		String expected1 = 
 				"stems usually erect , sometimes prostrate to ascending <B>(</B> underground stems sometimes woody caudices or rhizomes , sometimes fleshy <B>)</B> .";
@@ -1244,6 +1247,13 @@ public class LearnerTest {
 
 		
 		myTester3.getDataHolder().getSentenceHolder().add(new SentenceStructure(0, "src", "word1 word_6 word2", "osent","lead","status","tag","modifer","type"));
+		myTester3.getDataHolder().getSentenceHolder().add(new SentenceStructure(1, "src", "word_6 word2", "osent","lead","status","tag","modifer","type"));
+		myTester3.getDataHolder().getSentenceHolder().add(new SentenceStructure(2, "src", "word1 word6 word2", "osent","lead","status","tag","modifer","type"));
+		
+		myTester3.unknownWordBootstrappingPostprocessing();
+		assertEquals("unknownWordBootstrapping - Postprocessing", "word1 <B>word_6</B> word2", myTester3.getDataHolder().getSentence(0).getSentence());
+		assertEquals("unknownWordBootstrapping - Postprocessing", "<B>word_6</B> word2", myTester3.getDataHolder().getSentence(1).getSentence());
+		assertEquals("unknownWordBootstrapping - Postprocessing", "word1 word6 word2", myTester3.getDataHolder().getSentence(2).getSentence());
 		
 		myTester3.unknownWordBootstrappingPostprocessing();
 		
