@@ -2993,7 +2993,7 @@ public class Learner {
 		
 		int newInt = 0;
 		do {
-			
+			this.unknownWordBootstrappingGetUnknownWord(plMiddle);
 		} while (newInt > 0);
 	}
 
@@ -3005,9 +3005,28 @@ public class Learner {
 		POSTags.add("s");
 		Set<String> nouns = this.getDataHolder().getWordsFromWordPOSByPOSs(
 				POSTags);
-		Set<String> boundaries = new HashSet<String>();
-
+		
 		// get boudaries
+		Set<String> boundaries = new HashSet<String>();
+		Set<String> words = this.getDataHolder()
+				.getWordsFromUnknownWordByPatterns("^.*_.*$", true,
+						"^unknown$", true);
+		Iterator<String> wordIter = words.iterator();
+		String pattern = "_(" + StringUtils.join(nouns, "|") + ")$";
+		while (wordIter.hasNext()) {
+			String word = wordIter.next();
+			Pattern p1 = Pattern.compile("^[a-zA-Z0-9_-]+$");
+			Matcher m1 = p1.matcher(word);
+			Pattern p2 = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+			Matcher m2 = p2.matcher(word);
+			if (m1.matches() && (!m2.matches())) {
+				if (!StringUtility.createMatcher(
+						"\\b(" + Constant.FORBIDDEN + ")\\b", word).find()) {
+					boundaries.add(word);
+				}
+				this.getDataHolder().updateDataHolder(word, "b", "", "wordpos", 1);
+			}
+		}
 		
 		// if the boundaries is not empty
 		if (boundaries.size() > 0) {
@@ -3019,7 +3038,7 @@ public class Learner {
 				String sentence = sentenceItem.getSentence();
 				int sentenceID = sentenceItem.getID();
 
-				if (((StringUtils.equals(tag, "ignore")) || (tag == null))
+				if ((!(StringUtils.equals(tag, "ignore")) || (tag == null))
 						&& (StringUtility.createMatcher(
 								"(^| )(" + StringUtils.join(boundaries, "|")
 										+ ") ", sentence).find())) {

@@ -50,8 +50,8 @@ public class Constant {
 	public static final String BOT1_ABBR = "diam|sq|Rottb";
 	public static final String BOT2_ABBR = "ca|fl|Fl|Fr|fr|var";
 	public static final String LATIN_ABBR = "et al";
- 
-
+	
+	
 	public Constant() {
 		// TODO Auto-generated constructor stub
 	}

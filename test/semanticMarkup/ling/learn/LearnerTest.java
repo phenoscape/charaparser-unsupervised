@@ -1215,13 +1215,38 @@ public class LearnerTest {
 	
 	@Test
 	public void testUnknownWordBootstrapping(){
-		Learner myTester = learnerFactory();
 		
-		myTester.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word1 unknown".split(" ")));
-		
+		// 1. Preprocessing
+		Learner myTester1 = learnerFactory();
+		myTester1.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word1 unknown".split(" ")));
 		Set<String> expected = new HashSet<String>();
 //		expected.add("")
-		assertEquals("unknownWordBootstrappingGetUnknownWord", expected , myTester.unknownWordBootstrappingGetUnknownWord("(ee)"));
+		assertEquals("unknownWordBootstrappingGetUnknownWord", expected , myTester1.unknownWordBootstrappingGetUnknownWord("(ee)"));
+		
+		
+		
+		// 3. Postprocessing
+		Learner myTester3 = learnerFactory();
+		
+		myTester3.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word1", "p", "role", "0", "0", "", ""}));
+		myTester3.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word2", "b", "role", "0", "0", "", ""}));
+		myTester3.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word3", "s", "role", "0", "0", "", ""}));
+		
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word1 word1".split(" ")));
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word2 unknown".split(" ")));
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("_wORd3 unknown".split(" ")));
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word?_4 unknown".split(" ")));
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("nor unknown".split(" ")));
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word_6 unknown".split(" ")));
+
+		
+		myTester3.getDataHolder().getSentenceHolder().add(new SentenceStructure(0, "src", "word1 word_6 word2", "osent","lead","status","tag","modifer","type"));
+		
+		myTester3.unknownWordBootstrappingPostprocessing();
+		
 	}
 	
 	private Learner learnerFactory() {
