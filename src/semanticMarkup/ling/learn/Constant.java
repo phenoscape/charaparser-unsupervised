@@ -35,6 +35,7 @@ public class Constant {
 	public static final String SENDINGS = "(on|is|ex|ix|um|us)\\b";
 	public static final String PENDINGS = "(a|ia|es|ices|i|ae)\\b";
 	
+	
 	// abbreviations may appear in original sentence 
 	//public static final String PEOPLE_ABBR = "jr|mr|mrs|ms|dr|prof|sr|sens?|reps?|gov|attys?|supt|det|rev";
 	public static final String PEOPLE_ABBR = "jr|mr|mrs|ms|dr|prof|sr|sens|reps|gov|attys|supt|det|rev";
@@ -49,8 +50,8 @@ public class Constant {
 	public static final String BOT1_ABBR = "diam|sq|Rottb";
 	public static final String BOT2_ABBR = "ca|fl|Fl|Fr|fr|var";
 	public static final String LATIN_ABBR = "et al";
- 
-
+	
+	
 	public Constant() {
 		// TODO Auto-generated constructor stub
 	}

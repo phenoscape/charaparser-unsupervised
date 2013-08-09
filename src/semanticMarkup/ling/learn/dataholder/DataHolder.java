@@ -58,25 +58,25 @@ public class DataHolder {
 
 	// Table termCategory
 	private Set<StringPair> termCategoryTable;
-	public static final byte TERM_CATEGORY = 10;
+	public static final byte TERM_CATEGORY = 7;
 	
 	// Table unknownword
 	private Map<String, String> unknownWordTable;
-	public static final byte UNKNOWNWORD = 7;
+	public static final byte UNKNOWNWORD = 8;
 
 	// Table wordpos
 	private Map<WordPOSKey, WordPOSValue> wordPOSTable;
-	public static final byte WORDPOS = 8;
+	public static final byte WORDPOS = 9;
 	
 	// Table wordrole
 	private Map<StringPair, String> wordRoleTable;
-	public static final byte WORDROLE = 9;
+	public static final byte WORDROLE = 10;
 
-	private Configuration myConfiguratio;
+	private Configuration myConfiguration;
 	private Utility myUtility;
 	
 	public DataHolder(Configuration myConfiguration, Utility myUtility) {
-		this.myConfiguratio = myConfiguration;
+		this.myConfiguration = myConfiguration;
 		this.myUtility = myUtility;
 		this.allWords = new HashMap<String, Integer>();
 		
@@ -95,139 +95,32 @@ public class DataHolder {
 		this.wordRoleTable = new HashMap<StringPair, String>();
 		
 	}
-	
-//	/**
-//	 * This method updates a new word in the unknownWord table
-//	 * 
-//	 * @param newWord
-//	 * @param sourceWord
-//	 * @return if any updates occurred, returns true; otherwise, returns false
-//	 */
-//	public boolean updateUnknownWord(String newWord, String flag) {
-//		boolean result = false;
-//		Iterator<Map.Entry<String, String>> iter = this.unknownWordTable
-//				.entrySet().iterator();
-//
-//		while (iter.hasNext()) {
-//			Map.Entry<String, String> unknownWord = iter.next();
-//			if (unknownWord.getKey().equals(newWord)) {
-//				unknownWord.setValue(flag);
-//				result = true;
-//			}
-//		}
-//
-//		return result;
-//	}
-	
-	
-	/** Operations**/
-	
-	/**
-	 * 
-	 * @param word
-	 * @param flag
-	 */
-	public void updateUnknownWord(String word, String flag){
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.updateUnkownWord");	
-		this.unknownWordTable.put(word, flag);
-		myLogger.trace(String.format("Added (%s, %s) into UnknownWord holder", word, flag));
-	}
-	
-	public void addSentence(String source, String sentence,
-			String originalSentence, String lead, String status, String tag,
-			String modifier, String type) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.addSentence");	
-		
-		SentenceStructure newSent = new SentenceStructure(this.sentenceCount, source, sentence, originalSentence, lead,
-				status, tag, modifier, type);
-		this.sentenceCount++;
-		this.sentenceTable.add(newSent);
-		myLogger.trace("Added Sentence: ");
-		myLogger.trace("\tSource: " + source);
-		myLogger.trace("\tSentence: " + sentence);
-		myLogger.trace("\tOriginal Sentence: " + originalSentence);
-		myLogger.trace("\tLead: " + lead);
-		myLogger.trace("\tStatus: " + status);
-		myLogger.trace("\tTag: " + tag);
-		myLogger.trace("\tModifier: " + modifier);
-		myLogger.trace("\tType: " + type);
-		
-		myLogger.trace("Quite\n");
-	}
-	
-	public SentenceStructure getSentence(int ID) {
-		Iterator<SentenceStructure> iter = this.sentenceTable.iterator();
-		
-		while(iter.hasNext()) {
-			SentenceStructure sentence = iter.next();
-			if (sentence.getID()==ID) {
-				return sentence;
-			}
-		}
-		
-		return null;
-	}
-    
-    public List<Entry<WordPOSKey,WordPOSValue>> getWordPOSEntries(String word) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.getWordPOSEntries");
-        
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolder()
-				.entrySet().iterator();
-		List<Entry<WordPOSKey, WordPOSValue>> result = new ArrayList<Entry<WordPOSKey, WordPOSValue>>();
-		while (iter.hasNext()) {
-			Map.Entry<WordPOSKey, WordPOSValue> wordPOSEntry = iter.next();
-			if (StringUtils.equals(wordPOSEntry.getKey().getWord(), word)) {
-				result.add(wordPOSEntry);
-			}
-		}
-		
-		myLogger.trace("Get WordPOS Entries of word: " + word);
-		myLogger.trace(StringUtils.join(result, ",\n"));		
-		
-		return result;
-    }
-    
-    public void updateWordPOS(String word, String POS, String role, int certaintyU, int certaintyL, String savedFlag, String savedID) {
-    	PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.addWordPOS");
-        
-        WordPOSKey key = new WordPOSKey(word, POS);
-		WordPOSValue value = new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID);
-		this.getWordPOSHolder().put(key, value);
-        
-		myLogger.trace(String.format(
-				"Added [Key: %s = Value: %s] into WordPOS holder",
-				key.toString(), value.toString()));
-    }    
 
-    @Override
+	@Override
 	public boolean equals(Object obj) {
-		if (obj==this){
+		if (obj == this) {
 			return true;
 		}
-		
-		if (obj==null||obj.getClass()!=this.getClass()){
+
+		if (obj == null || obj.getClass() != this.getClass()) {
 			return false;
 		}
-		
+
 		DataHolder myDataHolder = (DataHolder) obj;
-		
+
 		return ((this.discountedTable.equals(myDataHolder.discountedTable))
-				&& (this.heuristicNounTable.equals(myDataHolder.heuristicNounTable))
+				&& (this.heuristicNounTable
+						.equals(myDataHolder.heuristicNounTable))
 				&& (this.modifierTable.equals(myDataHolder.modifierTable))
 				&& (this.sentenceTable.equals(myDataHolder.sentenceTable))
-				&& (this.singularPluralTable.equals(myDataHolder.singularPluralTable))
+				&& (this.singularPluralTable
+						.equals(myDataHolder.singularPluralTable))
 				&& (this.unknownWordTable.equals(myDataHolder.unknownWordTable))
-				&& (this.wordPOSTable.equals(myDataHolder.wordPOSTable))
-				&& (this.allWords.equals(myDataHolder.allWords))
-				);
-	}	
+				&& (this.wordPOSTable.equals(myDataHolder.wordPOSTable)) && (this.allWords
+					.equals(myDataHolder.allWords)));
+	}
 	
-	/** Sentence Table Utility***************************************/
-
+	/** Get Holder Utility **/
 	public Map<DiscountedKey, String> getDiscountedHolder(){
 		return this.discountedTable;
 	}
@@ -264,15 +157,380 @@ public class DataHolder {
 		return this.wordRoleTable;
 	}
 	
+	/** Add To Utilities **/
 	
-	/** Heuristic Noun Table Utility*********************************/
-	public Map<String, String> getHeuristicNounTable(){
-		return this.heuristicNounTable;
+	public void add2Holder(byte holderID, List<String> args){
+
+		if (holderID == DataHolder.DISCOUNTED) {
+			this.discountedTable = this.add2DiscountedHolder(this.discountedTable, args);
+		}
+		
+		if (holderID == DataHolder.ISA) {
+			this.isATable = this.add2IsAHolder(this.isATable, args);
+		}
+		
+		if (holderID == DataHolder.MODIFIER) {
+			this.modifierTable = this.add2ModifierHolder(this.modifierTable, args);
+		}
+		
+		if (holderID == DataHolder.SENTENCE) {
+			this.sentenceTable = this.add2SentenceHolder(this.sentenceTable,args);
+		}
+		
+		if (holderID == DataHolder.SINGULAR_PLURAL) {
+			this.singularPluralTable = this.add2SingularPluralHolder(this.singularPluralTable, args);
+		}
+		
+		if (holderID == DataHolder.UNKNOWNWORD) {
+			this.unknownWordTable = this.add2UnknowWordHolder(this.unknownWordTable, args);
+		}
+		
+		if (holderID == DataHolder.WORDPOS) {
+			this.wordPOSTable = this.add2WordPOSHolder(this.wordPOSTable, args);
+		}
+		
+	}
+	
+	/**
+	 * Add the terms into the heuristicNounTable with the type specified
+	 * 
+	 * @param terms
+	 *            set of terms
+	 * @param type
+	 *            type of the terms
+	 */
+	public int add2HeuristicNounTable(Set<String> terms, String type) {
+		int count = 0;
+
+		Iterator<String> iter = terms.iterator();
+		while (iter.hasNext()) {
+			String term = iter.next();
+			this.getHeuristicNounHolder().put(term, type);
+			count++;
+		}
+
+		return count;
+	}
+
+	public Map<Integer, IsAValue> add2IsAHolder (Map<Integer, IsAValue> isAHolder, List<String> args) {
+		int index = 0;
+		
+		String instance = args.get(index++);
+		String cls = args.get(index++);
+		
+		isAHolder.put(isAHolder.size()+1, new IsAValue(instance, cls));
+		
+		return isAHolder;
+	}
+	
+	public Map<String, ModifierTableValue> add2ModifierHolder(Map<String, ModifierTableValue> modifierTable, List<String> args) {
+		int index = 0;
+		
+		String word = args.get(index++);
+		int count  = new Integer(args.get(index++));
+		boolean isTypeModifier = false;
+		String isTypeModifierString = args.get(index++);
+		if (StringUtils.equals(isTypeModifierString, "true")) {
+			isTypeModifier = true;
+		}
+
+		
+		modifierTable.put(word, new ModifierTableValue(count, isTypeModifier));
+		
+		return modifierTable;
+	}
+
+	public Map<String, String> add2UnknowWordHolder(Map<String, String> unknownWordHolder, List<String> args){
+		int index = 0;
+		
+		String word = args.get(index++);
+		String flag = args.get(index++);
+		unknownWordHolder.put(word, flag);
+		
+		return unknownWordHolder;
+	}
+	
+	public Map<WordPOSKey, WordPOSValue> add2WordPOSHolder(Map<WordPOSKey, WordPOSValue> wordPOSHolder, List<String> args){
+		int index = 0;
+		
+		String word = args.get(index++);
+		String POS = args.get(index++);
+		String role = args.get(index++);
+		int certaintyU = new Integer(args.get(index++));
+		int certaintyL = new Integer(args.get(index++));
+		String savedFlag = args.get(index++);
+		String savedID = args.get(index++);
+		wordPOSHolder.put(
+				new WordPOSKey(word, POS), 
+				new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID));
+		
+		return wordPOSHolder; 
+	}
+	
+	public Set<SingularPluralPair> add2SingularPluralHolder(Set<SingularPluralPair> singularPluralHolder, List<String> args){
+		int index = 0;
+		
+		String singular = args.get(index++);
+		String plural = args.get(index++);
+		singularPluralHolder.add(new SingularPluralPair(singular, plural));
+		
+		return singularPluralHolder; 
+	}
+	
+	public Map<DiscountedKey, String> add2DiscountedHolder(Map<DiscountedKey, String> discountedHolder, List<String> args){
+		int index = 0;
+		
+		String word = args.get(index++);
+		String POS = args.get(index++);
+		String newPOS = args.get(index++);
+		discountedHolder.put(new DiscountedKey(word, POS), newPOS);
+		
+		return discountedHolder; 
+	}
+
+	public List<SentenceStructure> add2SentenceHolder(List<SentenceStructure> sentenceTable,
+			List<String> args) {
+		int index = 0;
+		
+		String source=args.get(index++);
+		String sentence=args.get(index++);
+		String originalSentence=args.get(index++);
+		String lead=args.get(index++);
+		String status=args.get(index++);
+		String tag=args.get(index++);
+		String modifier=args.get(index++);
+		String type=args.get(index++);
+		
+		this.addSentence(source, sentence, originalSentence, lead, status, tag, modifier, type);
+		//sentenceTable.add(new Sentence(source, sentence, originalSentence, lead, status, tag, modifier, type));
+		return sentenceTable;
+
+	}
+	
+	/** Iterator Utility 
+	 * @return **/
+	public Iterator<SentenceStructure> getSentenceHolderIterator(){
+		Iterator<SentenceStructure> iter = this.getSentenceHolder().iterator();
+		
+		return iter;
+	}
+	
+	public Iterator<Entry<WordPOSKey, WordPOSValue>> getWordPOSHolderIterator(){
+		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
+		
+		return iter;
+	}
+	
+	public Iterator<Entry<String, String>> getUnknownWordHolderIterator(){
+		return this.unknownWordTable.entrySet().iterator();
+	}
+	
+	/** Output Utility **/
+	public void printHolder(byte holderID) {
+		if (holderID == DataHolder.SENTENCE) {
+			printHolder(holderID, 0, this.sentenceTable.size()-1);
+		}
+		
+		if (holderID == DataHolder.SINGULAR_PLURAL) {
+			printHolder(holderID, 0, this.singularPluralTable.size()-1);
+		}
+		
+		if (holderID == DataHolder.UNKNOWNWORD) {
+			printHolder(holderID, 0, this.unknownWordTable.size()-1);
+		}
+		
+		if (holderID == DataHolder.WORDPOS) {
+			printHolder(holderID, 0, this.wordPOSTable.size()-1);
+		}
+		
+	}
+	
+	public void printHolder(byte holderID, int startIndex, int endIndex){
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.printHolder");
+		
+		if (holderID == DataHolder.SENTENCE) {
+			for (int i = startIndex; i<=endIndex; i++) {
+				SentenceStructure sentence = this.sentenceTable.get(i);
+				myLogger.info("Index: "+i);
+				myLogger.info(sentence.toString());
+//				myLogger.info("Sentence ID: "+sentence.getID());
+//				myLogger.info("Source: "+sentence.getSource());
+//				myLogger.info("Sentence: "+sentence.getSentence());
+//				myLogger.info("Original Sentence: "+sentence.getSentence());
+//				myLogger.info("Lead: "+sentence.getLead());
+//				myLogger.info("Status: "+sentence.getStatus());
+//				myLogger.info("Tag: "+sentence.getTag());
+//				myLogger.info("Modifier: "+sentence.getModifier());
+//				myLogger.info("Type: "+sentence.getType());
+//				myLogger.info("\n");
+			}
+		}
+		
+		if (holderID == DataHolder.SINGULAR_PLURAL) {
+			myLogger.info("==SingularPlural Table==");
+			
+//			Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
+			
+			List<SingularPluralPair> singularPluralPairList = new LinkedList<SingularPluralPair>();
+			singularPluralPairList.addAll(singularPluralTable);
+			Collections.sort(singularPluralPairList);
+			
+			for (int i = 0; i<singularPluralPairList.size();i++) {
+				if ((i >= startIndex) && (i <=endIndex)) {
+					SingularPluralPair entry = singularPluralPairList.get(i);
+					
+					myLogger.info("Index: " + i);
+					myLogger.info("Singular: " + entry.getSingular());
+					myLogger.info("Plural: " + entry.getPlural());
+					myLogger.info("\n");
+				}
+			}
+			
+//			int index = 0;
+//			while (iter.hasNext()) {
+//				if ((index >= startIndex) && (index <=endIndex)) {
+//					SingularPluralPair entry = iter.next();
+//					
+//					myLogger.info("Index: " + index);
+//					myLogger.info("Singular: " + entry.getSingular());
+//					myLogger.info("Plural: " + entry.getPlural());
+//					myLogger.info("\n");
+//				}
+//				index++;
+//			}
+		}
+		
+		if (holderID == DataHolder.UNKNOWNWORD) {
+			int index = 0;
+			Iterator<Entry<String, String>> iter = this.unknownWordTable.entrySet().iterator();
+			
+			while (iter.hasNext()) {
+				if ((index >= startIndex) && (index <= endIndex)) {
+					Entry<String, String> entry = iter.next();
+					
+					myLogger.info("Index: " + index);
+					myLogger.info("Key: " + entry.getKey());
+					myLogger.info("Value: " + entry.getValue());
+					myLogger.info("\n");
+				}
+				index++;
+			}
+		}
+		
+		if (holderID == DataHolder.WORDPOS) {
+			int index = 0;
+			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();			
+			while (iter.hasNext()) {				
+				if ((index >= startIndex) && (index <= endIndex)) {
+					Entry<WordPOSKey, WordPOSValue> entry = iter.next();
+					
+					myLogger.info(entry.toString());
+					myLogger.info("\n");
+
+				}
+				index++;
+			}
+			
+		}
+		
+		myLogger.info("Total: "+(endIndex-startIndex+1)+"\n");
+	}
+
+	/** Class Methods**/
+	public SentenceStructure getSentence(int ID) {
+		Iterator<SentenceStructure> iter = this.sentenceTable.iterator();
+		
+		while(iter.hasNext()) {
+			SentenceStructure sentence = iter.next();
+			if (sentence.getID()==ID) {
+				return sentence;
+			}
+		}
+		
+		return null;
 	}
 	
 	
-	/** Singular Plural Table Utility********************************/
+	/********************************************/
+	/********************************************/
+	/********************************************/
 	
+	/** Unsupervised Learning Methods**/
+	
+	/**
+	 * 
+	 * @param word
+	 * @param flag
+	 */
+	public void updateUnknownWord(String word, String flag){
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.updateUnkownWord");	
+		this.unknownWordTable.put(word, flag);
+		myLogger.trace(String.format("Added (%s, %s) into UnknownWord holder", word, flag));
+	}
+	
+	public void addSentence(String source, String sentence,
+			String originalSentence, String lead, String status, String tag,
+			String modifier, String type) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.addSentence");	
+		
+		SentenceStructure newSent = new SentenceStructure(this.sentenceCount, source, sentence, originalSentence, lead,
+				status, tag, modifier, type);
+		this.sentenceCount++;
+		this.sentenceTable.add(newSent);
+		myLogger.trace("Added Sentence: ");
+		myLogger.trace("\tSource: " + source);
+		myLogger.trace("\tSentence: " + sentence);
+		myLogger.trace("\tOriginal Sentence: " + originalSentence);
+		myLogger.trace("\tLead: " + lead);
+		myLogger.trace("\tStatus: " + status);
+		myLogger.trace("\tTag: " + tag);
+		myLogger.trace("\tModifier: " + modifier);
+		myLogger.trace("\tType: " + type);
+		
+		myLogger.trace("Quite\n");
+	}
+
+    /**
+     * 
+     * @param word
+     * @return
+     */
+    public List<Entry<WordPOSKey,WordPOSValue>> getWordPOSEntries(String word) {
+		PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.getWordPOSEntries");
+        
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolder()
+				.entrySet().iterator();
+		List<Entry<WordPOSKey, WordPOSValue>> result = new ArrayList<Entry<WordPOSKey, WordPOSValue>>();
+		while (iter.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> wordPOSEntry = iter.next();
+			if (StringUtils.equals(wordPOSEntry.getKey().getWord(), word)) {
+				result.add(wordPOSEntry);
+			}
+		}
+		
+		myLogger.trace("Get WordPOS Entries of word: " + word);
+		myLogger.trace(StringUtils.join(result, ",\n"));		
+		
+		return result;
+    }
+    
+    public void updateWordPOS(String word, String POS, String role, int certaintyU, int certaintyL, String savedFlag, String savedID) {
+    	PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.addWordPOS");
+        
+        WordPOSKey key = new WordPOSKey(word, POS);
+		WordPOSValue value = new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID);
+		this.getWordPOSHolder().put(key, value);
+        
+		myLogger.trace(String.format(
+				"Added [Key: %s = Value: %s] into WordPOS holder",
+				key.toString(), value.toString()));
+    }    
+
 	/**
 	 * check if the word is in the singularPluralTable.
 	 * 
@@ -293,23 +551,88 @@ public class DataHolder {
 		return false;
 	}
 	
-	public List<String> getWordByPOS(String POSs) {
-		List<String> words = new ArrayList<String>();
-//		int index = POSs.length();
-		for (int i = 0;i<POSs.length();i++) {
-			String POS = POSs.substring(i,i+1);
-			Iterator<Entry<WordPOSKey, WordPOSValue>> iterator = this.wordPOSTable.entrySet().iterator();
-			while (iterator.hasNext()) {
-				Entry<WordPOSKey, WordPOSValue> entry = iterator.next();
-				WordPOSKey key = entry.getKey();
-				if (StringUtils.equals(key.getPOS(),POS)) {
-					words.add(key.getWord());
-				}
-				
+	/**
+	 * Get words with specified POS tags from word-POS holder
+	 * 
+	 * @param POSTags
+	 *            the POS tags of the words searching for
+	 * @return set of words
+	 */
+	public Set<String> getWordsFromWordPOSByPOSs(Set<String> POSTags) {
+		Set<String> words = new HashSet<String>();
+
+		if (POSTags == null) {
+			return words;
+		}
+
+		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this
+				.getWordPOSHolderIterator();
+
+		while (iter.hasNext()) {
+			Entry<WordPOSKey, WordPOSValue> wordPOSEntry = iter.next();
+			String POS = wordPOSEntry.getKey().getPOS();
+			if (POSTags.contains(POS)) {
+				String word = wordPOSEntry.getKey().getWord();
+				words.add(word);
 			}
 		}
-		
+
 		return words;
+	}
+	
+	/**
+	 * Get words from UnknowWord holder
+	 * 
+	 * @param wordPattern
+	 *            pattern the word must match
+	 * @param isWordPatternChecked
+	 *            if the word pattern is used
+	 * @param flagPattern
+	 *            pattern the flag must match
+	 * @param isFlagPatternChecked
+	 *            if the flag pattern is used
+	 * @return set of words
+	 */
+	public Set<String> getWordsFromUnknownWord(String wordPattern,
+			boolean isWordPatternChecked, String flagPattern,
+			boolean isFlagPatternChecked) {
+		Set<String> words = new HashSet<String>();
+
+		if ((!isWordPatternChecked) && (!isFlagPatternChecked)) {
+			return words;
+		}
+
+		Iterator<Entry<String, String>> iter = this
+				.getUnknownWordHolderIterator();
+		while (iter.hasNext()) {
+			Entry<String, String> item = iter.next();
+
+			String word = item.getKey();
+			String flag = item.getValue();
+			boolean case1 = getWordsFromUnknownWordByPatternsHelper(
+					wordPattern, isWordPatternChecked, word);
+			boolean case2 = getWordsFromUnknownWordByPatternsHelper(
+					flagPattern, isFlagPatternChecked, flag);
+
+			if (case1 && case2) {
+				words.add(word);
+			}
+		}
+
+		return words;
+	}
+
+	private boolean getWordsFromUnknownWordByPatternsHelper(String pattern,
+			boolean isPatternChecked, String text) {
+		boolean result = false;
+
+		if ((isPatternChecked) && (pattern != null)) {
+			if (StringUtility.createMatcher(pattern, text).matches()) {
+				result = true;
+			}
+		}
+
+		return result;
 	}
 	
 	/**
@@ -1210,8 +1533,8 @@ public class DataHolder {
 			this.getSentenceHolder().get(sentID).setModifier(modifier);			
 		}
 		else {
-			if (tag.length() > this.myConfiguratio.getMaxTagLength()) {
-				tag = tag.substring(0, this.myConfiguratio.getMaxTagLength());
+			if (tag.length() > this.myConfiguration.getMaxTagLength()) {
+				tag = tag.substring(0, this.myConfiguration.getMaxTagLength());
 			}
 			this.sentenceTable.get(sentID).setTag(tag);
 			this.sentenceTable.get(sentID).setModifier(modifier);	
@@ -1389,267 +1712,7 @@ public class DataHolder {
 
 	}
 	
-	/******** Utilities *************/
 	
-	public void add2Holder(byte holderID, List<String> args){
-
-		if (holderID == DataHolder.DISCOUNTED) {
-			this.discountedTable = this.add2DiscountedHolder(this.discountedTable, args);
-		}
-		
-		if (holderID == DataHolder.ISA) {
-			this.isATable = this.add2IsAHolder(this.isATable, args);
-		}
-		
-		if (holderID == DataHolder.MODIFIER) {
-			this.modifierTable = this.add2ModifierHolder(this.modifierTable, args);
-		}
-		
-		if (holderID == DataHolder.SENTENCE) {
-			this.sentenceTable = this.add2SentenceHolder(this.sentenceTable,args);
-		}
-		
-		if (holderID == DataHolder.SINGULAR_PLURAL) {
-			this.singularPluralTable = this.add2SingularPluralHolder(this.singularPluralTable, args);
-		}
-		
-		if (holderID == DataHolder.UNKNOWNWORD) {
-			this.unknownWordTable = this.add2UnknowWordHolder(this.unknownWordTable, args);
-		}
-		
-		if (holderID == DataHolder.WORDPOS) {
-			this.wordPOSTable = this.add2WordPOSHolder(this.wordPOSTable, args);
-		}
-		
-	}
-	
-	/**
-	 * Add the terms into the heuristicNounTable with the type specified
-	 * 
-	 * @param terms
-	 *            set of terms
-	 * @param type
-	 *            type of the terms
-	 */
-	public int add2HeuristicNounTable(Set<String> terms, String type) {
-		int count = 0;
-
-		Iterator<String> iter = terms.iterator();
-		while (iter.hasNext()) {
-			String term = iter.next();
-			this.getHeuristicNounHolder().put(term, type);
-			count++;
-		}
-
-		return count;
-	}
-
-	public Map<Integer, IsAValue> add2IsAHolder (Map<Integer, IsAValue> isAHolder, List<String> args) {
-		int index = 0;
-		
-		String instance = args.get(index++);
-		String cls = args.get(index++);
-		
-		isAHolder.put(isAHolder.size()+1, new IsAValue(instance, cls));
-		
-		return isAHolder;
-	}
-	
-	public Map<String, ModifierTableValue> add2ModifierHolder(Map<String, ModifierTableValue> modifierTable, List<String> args) {
-		int index = 0;
-		
-		String word = args.get(index++);
-		int count  = new Integer(args.get(index++));
-		boolean isTypeModifier = false;
-		String isTypeModifierString = args.get(index++);
-		if (StringUtils.equals(isTypeModifierString, "true")) {
-			isTypeModifier = true;
-		}
-
-		
-		modifierTable.put(word, new ModifierTableValue(count, isTypeModifier));
-		
-		return modifierTable;
-	}
-
-	public Map<String, String> add2UnknowWordHolder(Map<String, String> unknownWordHolder, List<String> args){
-		int index = 0;
-		
-		String word = args.get(index++);
-		String flag = args.get(index++);
-		unknownWordHolder.put(word, flag);
-		
-		return unknownWordHolder;
-	}
-	
-	public Map<WordPOSKey, WordPOSValue> add2WordPOSHolder(Map<WordPOSKey, WordPOSValue> wordPOSHolder, List<String> args){
-		int index = 0;
-		
-		String word = args.get(index++);
-		String POS = args.get(index++);
-		String role = args.get(index++);
-		int certaintyU = new Integer(args.get(index++));
-		int certaintyL = new Integer(args.get(index++));
-		String savedFlag = args.get(index++);
-		String savedID = args.get(index++);
-		wordPOSHolder.put(
-				new WordPOSKey(word, POS), 
-				new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID));
-		
-		return wordPOSHolder; 
-	}
-	
-	public Set<SingularPluralPair> add2SingularPluralHolder(Set<SingularPluralPair> singularPluralHolder, List<String> args){
-		int index = 0;
-		
-		String singular = args.get(index++);
-		String plural = args.get(index++);
-		singularPluralHolder.add(new SingularPluralPair(singular, plural));
-		
-		return singularPluralHolder; 
-	}
-	
-	public Map<DiscountedKey, String> add2DiscountedHolder(Map<DiscountedKey, String> discountedHolder, List<String> args){
-		int index = 0;
-		
-		String word = args.get(index++);
-		String POS = args.get(index++);
-		String newPOS = args.get(index++);
-		discountedHolder.put(new DiscountedKey(word, POS), newPOS);
-		
-		return discountedHolder; 
-	}
-
-	public List<SentenceStructure> add2SentenceHolder(List<SentenceStructure> sentenceTable,
-			List<String> args) {
-		int index = 0;
-		
-		String source=args.get(index++);
-		String sentence=args.get(index++);
-		String originalSentence=args.get(index++);
-		String lead=args.get(index++);
-		String status=args.get(index++);
-		String tag=args.get(index++);
-		String modifier=args.get(index++);
-		String type=args.get(index++);
-		
-		this.addSentence(source, sentence, originalSentence, lead, status, tag, modifier, type);
-		//sentenceTable.add(new Sentence(source, sentence, originalSentence, lead, status, tag, modifier, type));
-		return sentenceTable;
-
-	}
-	
-	// Holder Output
-	public void printHolder(byte holderID) {
-		if (holderID == DataHolder.SENTENCE) {
-			printHolder(holderID, 0, this.sentenceTable.size()-1);
-		}
-		
-		if (holderID == DataHolder.SINGULAR_PLURAL) {
-			printHolder(holderID, 0, this.singularPluralTable.size()-1);
-		}
-		
-		if (holderID == DataHolder.UNKNOWNWORD) {
-			printHolder(holderID, 0, this.unknownWordTable.size()-1);
-		}
-		
-		if (holderID == DataHolder.WORDPOS) {
-			printHolder(holderID, 0, this.wordPOSTable.size()-1);
-		}
-		
-	}
-	
-	public void printHolder(byte holderID, int startIndex, int endIndex){
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.printHolder");
-		
-		if (holderID == DataHolder.SENTENCE) {
-			for (int i = startIndex; i<=endIndex; i++) {
-				SentenceStructure sentence = this.sentenceTable.get(i);
-				myLogger.info("Index: "+i);
-				myLogger.info(sentence.toString());
-//				myLogger.info("Sentence ID: "+sentence.getID());
-//				myLogger.info("Source: "+sentence.getSource());
-//				myLogger.info("Sentence: "+sentence.getSentence());
-//				myLogger.info("Original Sentence: "+sentence.getSentence());
-//				myLogger.info("Lead: "+sentence.getLead());
-//				myLogger.info("Status: "+sentence.getStatus());
-//				myLogger.info("Tag: "+sentence.getTag());
-//				myLogger.info("Modifier: "+sentence.getModifier());
-//				myLogger.info("Type: "+sentence.getType());
-//				myLogger.info("\n");
-			}
-		}
-		
-		if (holderID == DataHolder.SINGULAR_PLURAL) {
-			myLogger.info("==SingularPlural Table==");
-			
-//			Iterator<SingularPluralPair> iter = this.singularPluralTable.iterator();
-			
-			List<SingularPluralPair> singularPluralPairList = new LinkedList<SingularPluralPair>();
-			singularPluralPairList.addAll(singularPluralTable);
-			Collections.sort(singularPluralPairList);
-			
-			for (int i = 0; i<singularPluralPairList.size();i++) {
-				if ((i >= startIndex) && (i <=endIndex)) {
-					SingularPluralPair entry = singularPluralPairList.get(i);
-					
-					myLogger.info("Index: " + i);
-					myLogger.info("Singular: " + entry.getSingular());
-					myLogger.info("Plural: " + entry.getPlural());
-					myLogger.info("\n");
-				}
-			}
-			
-//			int index = 0;
-//			while (iter.hasNext()) {
-//				if ((index >= startIndex) && (index <=endIndex)) {
-//					SingularPluralPair entry = iter.next();
-//					
-//					myLogger.info("Index: " + index);
-//					myLogger.info("Singular: " + entry.getSingular());
-//					myLogger.info("Plural: " + entry.getPlural());
-//					myLogger.info("\n");
-//				}
-//				index++;
-//			}
-		}
-		
-		if (holderID == DataHolder.UNKNOWNWORD) {
-			int index = 0;
-			Iterator<Entry<String, String>> iter = this.unknownWordTable.entrySet().iterator();
-			
-			while (iter.hasNext()) {
-				if ((index >= startIndex) && (index <= endIndex)) {
-					Entry<String, String> entry = iter.next();
-					
-					myLogger.info("Index: " + index);
-					myLogger.info("Key: " + entry.getKey());
-					myLogger.info("Value: " + entry.getValue());
-					myLogger.info("\n");
-				}
-				index++;
-			}
-		}
-		
-		if (holderID == DataHolder.WORDPOS) {
-			int index = 0;
-			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();			
-			while (iter.hasNext()) {				
-				if ((index >= startIndex) && (index <= endIndex)) {
-					Entry<WordPOSKey, WordPOSValue> entry = iter.next();
-					
-					myLogger.info(entry.toString());
-					myLogger.info("\n");
-
-				}
-				index++;
-			}
-			
-		}
-		
-		myLogger.info("Total: "+(endIndex-startIndex+1)+"\n");
-	}
 
 	/**
 	 * Get a list of all tags which is not "ignore".
@@ -1668,14 +1731,6 @@ public class DataHolder {
 		}
 		
 		return tags;
-	}
-	
-	/** Iterator Utility 
-	 * @return **/
-	public Iterator<Entry<WordPOSKey, WordPOSValue>> getWordPOSHolderIterator(){
-		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
-		
-		return iter;
 	}
 
 }

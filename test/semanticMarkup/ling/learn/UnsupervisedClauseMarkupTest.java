@@ -132,7 +132,7 @@ public class UnsupervisedClauseMarkupTest {
 		
 		DataHolder myDataHolder = myTester.getDataHolder();
 		Map<String, String> myHeuristicNouns = myDataHolder
-				.getHeuristicNounTable();
+				.getHeuristicNounHolder();
 		myHeuristicNouns.put("word1", "type1");
 		myHeuristicNouns.put("word2", "type2");
 

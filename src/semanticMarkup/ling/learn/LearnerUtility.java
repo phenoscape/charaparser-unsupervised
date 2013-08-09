@@ -2,7 +2,11 @@ package semanticMarkup.ling.learn;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -217,5 +221,52 @@ public class LearnerUtility {
 		return text;
 	}
 
+	/**
+	 * Convert a collection of words to a string of those words separated by "|"
+	 * 
+	 * @param c
+	 *            collection of words
+	 * @return string of pattern. If the collection is null or empty, return an
+	 *         empty string
+	 */
+	public static String Collection2Pattern(Collection<String> c) {
+		if (c == null) {
+			return "";
+		}
+
+		String pattern = "";
+
+		Iterator<String> iter = c.iterator();
+		while (iter.hasNext()) {
+			String element = iter.next();
+			pattern = pattern + element + "|";
+		}
+
+		if (!pattern.equals("")) {
+			pattern = pattern.substring(0, pattern.length() - 1);
+		}
+
+		return pattern;
+	}
+
+	/**
+	 * Convert a pattern with words separated by "|" to a set
+	 * 
+	 * @param pattern
+	 *            the pattern
+	 * @return a set. If the input is null or empty string, return a empty set
+	 */
+	public static Set<String> Pattern2Set(String pattern) {
+		Set<String> set = new HashSet<String>();
+
+		if (StringUtils.equals(pattern, null)
+				|| StringUtils.equals(pattern, "")) {
+			return (set);
+		}
+
+		set.addAll(Arrays.asList(pattern.split("|")));
+
+		return set;
+	}
 
 }

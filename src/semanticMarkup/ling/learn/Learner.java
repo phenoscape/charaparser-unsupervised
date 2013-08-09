@@ -1,5 +1,8 @@
 package semanticMarkup.ling.learn;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +33,7 @@ import semanticMarkup.ling.learn.dataholder.WordPOSValue;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class Learner {	
+	private static final Set<String> NONS = null; //??
 	private Configuration myConfiguration;
 	private Utility myUtility;
 	private ITokenizer myTokenizer;
@@ -123,15 +127,18 @@ public class Learner {
 		myLogger.info("Bootstrapping rules:");
 		this.discover("normal");
 		
-		//myLogger.info("Additional bootstrappings:");
-		//this.additionalBootstrapping();
+		myLogger.info("Additional bootstrappings:");
+		this.additionalBootstrapping();
+		
+		myLogger.info("Unknownword bootstrappings:");
+		this.unknownWordBootstrapping();
 		
 		myLogger.trace("Quite Learn");
 		
-		myLogger.info(myDataHolder.toString());
-		myLogger.info(myDataHolder.getSentenceHolder().toString());
-		myLogger.info(this.myDataHolder.getHeuristicNounHolder().toString());
-		myLogger.info(myDataHolder.getSentenceHolder().get(0).toString());
+//		myLogger.info(myDataHolder.toString());
+//		myLogger.info(myDataHolder.getSentenceHolder().toString());
+//		myLogger.info(this.myDataHolder.getHeuristicNounHolder().toString());
+//		myLogger.info(myDataHolder.getSentenceHolder().get(0).toString());
 		
 		return myDataHolder;
 	}
@@ -1264,8 +1271,8 @@ public class Learner {
 		
 		List<String> stops = new ArrayList<String>();
 		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
-		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
-				"]", "}", "\\d+" }));
+		stops.addAll(Arrays.asList(new String[] { "NUM", "\\(", "\\[", "\\{",
+				"\\)", "\\]", "\\}", "\\d+" }));
 
 		myLogger.trace("Stop Words: " + stops);
 		for (int i = 0; i < stops.size(); i++) {
@@ -2509,14 +2516,21 @@ public class Learner {
 		sentence = sentence.replaceFirst("^"+lead, "");
 		myLogger.trace("Sentence after remove lead: "+sentence);
 		
-		List<String> nouns = this.myDataHolder.getWordByPOS("ps");
+		//List<String> nouns = this.myDataHolder.getWordByPOS("ps");
+		Set<String> POSTags = new HashSet<String>();
+		POSTags.add("p");
+		POSTags.add("s");
+		Set<String> nouns = this.myDataHolder.getWordsFromWordPOSByPOSs(POSTags);
 		
 		if (nouns.size()==0) {
 			myLogger.trace("Return false");
 			return false;
 		}
 		
-		String pattern1 = StringUtility.joinList("|", nouns);
+//		String pattern1 = StringUtility.joinList("|", nouns);		
+		String pattern1 = StringUtils.join(nouns, "|");
+		
+		
 		pattern1 = "(.*?)\\b("+pattern1+")"+"\\b";
 		myLogger.trace("Pattern: " + pattern1);
 		
@@ -2963,7 +2977,105 @@ public class Learner {
 		Logger myLogger = Logger.getLogger("learn.unknownWordBootstrapping");
 		myLogger.trace("[unknownWordBootstrapping]Start");
 		
+		unknownWordBootstrappingPreprocessing();
+		unknownWordBootstrappingMain();
+		unknownWordBootstrappingPostprocessing();
+		
 		myLogger.trace("[unknownWordBootstrapping]End");
+	}
+	
+	public void unknownWordBootstrappingPreprocessing() {
+		tagAllSentences("singletag", "sentence");
+	}
+	
+	public void unknownWordBootstrappingMain() {
+		String plMiddle = "(ee)";
+		
+		int newInt = 0;
+		do {
+//			this.unknownWordBootstrappingGetUnknownWord(plMiddle);
+		} while (newInt > 0);
+	}
+
+	public void unknownWordBootstrappingPostprocessing() {
+		// pistillate_zone
+		// get all nouns from wordPOS holder
+		Set<String> POSTags = new HashSet<String>();
+		POSTags.add("p");
+		POSTags.add("s");
+		Set<String> nouns = this.getDataHolder().getWordsFromWordPOSByPOSs(
+				POSTags);
+		
+		// get boudaries
+		Set<String> boundaries = new HashSet<String>();
+		Set<String> words = this.getDataHolder()
+				.getWordsFromUnknownWord("^.*_.*$", true,
+						"^unknown$", true);
+		Iterator<String> wordIter = words.iterator();
+		String pattern = "_(" + StringUtils.join(nouns, "|") + ")$";
+		while (wordIter.hasNext()) {
+			String word = wordIter.next();
+			Pattern p1 = Pattern.compile("^[a-zA-Z0-9_-]+$");
+			Matcher m1 = p1.matcher(word);
+			Pattern p2 = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+			Matcher m2 = p2.matcher(word);
+			if (m1.matches() && (!m2.matches())) {
+				if (!StringUtility.createMatcher(
+						"\\b(" + Constant.FORBIDDEN + ")\\b", word).find()) {
+					boundaries.add(word);
+				}
+				this.getDataHolder().updateDataHolder(word, "b", "", "wordpos", 1);
+			}
+		}
+		
+		// if the boundaries is not empty
+		if (boundaries.size() > 0) {
+			Iterator<SentenceStructure> iter = this.getDataHolder()
+					.getSentenceHolderIterator();
+			while (iter.hasNext()) {
+				SentenceStructure sentenceItem = iter.next();
+				String tag = sentenceItem.getTag();
+				String sentence = sentenceItem.getSentence();
+				int sentenceID = sentenceItem.getID();
+
+				if ((!(StringUtils.equals(tag, "ignore")) || (tag == null))
+						&& (StringUtility.createMatcher(
+								"(^| )(" + StringUtils.join(boundaries, "|")
+										+ ") ", sentence).find())) {
+					KnownTagCollection tags = new KnownTagCollection(null,
+							null, null, boundaries, null, null);
+					sentence = this.annotateSentence(sentence, tags, NONS);
+					SentenceStructure updatedSentence = this.getDataHolder()
+							.getSentence(sentenceID);
+					updatedSentence.setSentence(sentence);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Helper of unknownWordBootstrapping()
+	 * 
+	 * @return set of words
+	 */
+	public Set<String> unknownWordBootstrappingGetUnknownWord(String plMiddle) {
+		Set<String> words = new HashSet<String>();
+		Iterator<Entry<String, String>> iter = this.getDataHolder()
+				.getUnknownWordHolderIterator();
+		while (iter.hasNext()) {
+			Entry<String, String> entry = iter.next();
+			String word = entry.getKey();
+			String flag = entry.getValue();
+			if (word != null) {
+				if ((StringUtils.equals(flag, "unknown"))
+					&& 		((StringUtility.createMatcher(plMiddle, word).find()) 
+							|| (StringUtility.createMatcher("("+ Constant.PLENDINGS + "|ium)$", word).find()))
+				)
+					words.add(word);
+			}
+		}
+
+		return words;
 	}
 	
 	/**
@@ -3003,26 +3115,196 @@ public class Learner {
 		while (idAndSentenceListIter.hasNext()) {
 			StringAndInt idAndSentence = idAndSentenceListIter.next();
 			int thisID = idAndSentence.getInt();
-			String thisString = idAndSentence.getString();
+			String thisSentence = idAndSentence.getString();
 			
-			thisString = tagAllSentencesHelper(thisString);
-			thisString = annotateSentence(thisString, myKnownTags);
+			thisSentence = tagAllSentencesHelper(thisSentence);
+			thisSentence = annotateSentence(thisSentence, myKnownTags, NONS);
 			
 			SentenceStructure targetSentence = this.getDataHolder().getSentence(thisID);
-			targetSentence.setSentence(thisString);
+			targetSentence.setSentence(thisSentence);
 		}
 		
 	}
     
-	public String annotateSentence(String thisString,
-			KnownTagCollection myKnownTags) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	/**
+	 * Helper of tagAllSentencesHelper method
+	 * @param text
+	 * @return text after processing
+	 */
 	public String tagAllSentencesHelper(String text) {
-		// TODO Auto-generated method stub
-		return null;
+		text = text.replaceAll("<\\S+?>", "");
+		text = text.toLowerCase();
+		
+		// cup_shaped, 3_nerved, 3-5 (-7)_nerved
+//		Matcher m2 = StringUtility.createMatcher("\\s*-\\s*([a-z])", text);
+//		while (m2.find()) {
+//			String group1 = m2.group(1);
+//			text = m2.replaceFirst("_"+group1);
+//			m2 = StringUtility.createMatcher("\\s*-\\s*([a-z])", text);
+//		}
+		
+		//$b =~ s#\b(_[a-z]+)\b#(?\:\\b\\d+)$1#g; #_nerved => (?:\b\d+)_nerved
+//		$sent =~ s#\s*-\s*([a-z])#_$1#g; 
+		text = StringUtility.replaceAllBackreference(text, "\\s*-\\s*([a-z])", "_$1");
+		
+		// add space around nonword char
+		text = StringUtility.replaceAllBackreference(text, "(\\W)", " $1 ");
+		
+		// multiple spaces => 1 space
+		text = text.replaceAll("\\s+", " ");	
+		// trim
+		text = text.replaceAll("^\\s*", "");	
+		text = text.replaceAll("\\s*$", "");	
+		
+		return text;
+	}
+	
+	
+	
+	public String annotateSentence(String sentence,
+			KnownTagCollection knownTags, Set<String> NONS) {
+		// get known tags
+		Set<String> boundaryMarks;
+		Set<String> boundaryWords;
+		Set<String> modifiers;
+		Set<String> nouns;
+		Set<String> organs;
+		Set<String> properNouns;
+		
+		if (knownTags.boundaryMarks == null) {
+			boundaryMarks = new HashSet<String>();
+		} else {
+			boundaryMarks = knownTags.boundaryMarks;
+		}
+		
+		if (knownTags.boundaryWords == null) {
+			boundaryWords = new HashSet<String>();
+		} else {
+			boundaryWords = knownTags.boundaryWords;
+		}
+		
+		if (knownTags.modifiers == null) {
+			modifiers = new HashSet<String>();
+		} else {
+			modifiers = knownTags.modifiers;
+		}
+		
+		if (knownTags.nouns== null) {
+			nouns = new HashSet<String>();
+		} else {
+			nouns = knownTags.nouns;
+		}
+		
+		if (knownTags.organs == null) {
+			organs = new HashSet<String>();
+		} else {
+			organs = knownTags.organs;
+		}
+		
+		if (knownTags.properNouns == null) {
+			properNouns = new HashSet<String>();
+		} else {
+			properNouns = knownTags.properNouns;
+		}
+		
+		// preprocessing 1
+		List<String> bDeleteList = new LinkedList<String>();
+		List<String> bAddList = new LinkedList<String>();
+		Iterator<String> bIter = boundaryWords.iterator();
+		while(bIter.hasNext()) {
+			String oldWord = bIter.next();
+			
+			if (oldWord.charAt(0)=='_') {
+				String newWord = "(?\\:\\b\\d+)"+oldWord;
+				bDeleteList.add(oldWord);
+				bAddList.add(newWord);
+			}
+		}
+		boundaryWords.removeAll(bDeleteList);
+		boundaryWords.addAll(bAddList);
+		
+		nouns = StringUtility.setSubtraction(nouns, NONS);
+		organs = StringUtility.setSubtraction(organs, NONS);
+		
+		// preprocessing 2
+		Set<String> tagSet = new HashSet<String>();
+		tagSet.addAll(Arrays.asList("Z O N M B".split(" ")));
+		properNouns = StringUtility.setSubtraction(properNouns, tagSet);
+		organs = StringUtility.setSubtraction(organs, tagSet);
+		nouns = StringUtility.setSubtraction(nouns, tagSet);
+		modifiers = StringUtility.setSubtraction(modifiers, tagSet);
+		boundaryWords = StringUtility.setSubtraction(boundaryWords, tagSet);
+		boundaryMarks = StringUtility.setSubtraction(boundaryMarks, tagSet);
+		
+		// insert tags
+		sentence = annotateSentenceHelper(sentence, properNouns, "Z", true);
+		sentence = annotateSentenceHelper(sentence, organs, "O", true);
+		sentence = annotateSentenceHelper(sentence, nouns, "N", true);
+		sentence = annotateSentenceHelper(sentence, modifiers, "M", true);
+		sentence = annotateSentenceHelper(sentence, boundaryWords, "B", true);
+		sentence = annotateSentenceHelper(sentence, properNouns, "Z", true);
+		sentence = annotateSentenceHelper(sentence, boundaryMarks, "Z", false);
+		
+		sentence = annotateSentenceHelper2(sentence);
+		
+		return sentence;
+	}
+	
+	
+	public String annotateSentenceHelper(String sentence, Set<String> words,
+			String tag, boolean isWithBoundaryWord) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.annotateSentence");
+		
+		if (words.size() != 0) {
+			if (isWithBoundaryWord) {
+				sentence = StringUtility.replaceAllBackreference(
+						sentence,
+						String.format("\\b(%s)\\b",
+								LearnerUtility.Collection2Pattern(words)),
+						String.format("<%s>$1</%s>", tag, tag));
+			} else {
+//				String pattern = String.format("(%s)", LearnerUtility.Collection2Pattern(words));
+//				Matcher m1 = StringUtility.createMatcher("(\\]|\\}|\\(|\\)|\\{|\\[)", "word ]abc");
+//				boolean b1 = m1.find();
+////				Matcher m2 = StringUtility.createMatcher("(]|}|(|)|{|[)", "word (abc)");
+////				boolean b2 = m2.find();
+				
+				String regex = String.format("(%s)",
+						LearnerUtility.Collection2Pattern(words));
+				String replacement = String.format("<%s>$1</%s>", tag, tag);
+				
+				myLogger.trace("Sentence: "+sentence);
+				myLogger.trace("Words: "+words);
+				myLogger.trace("Regex: "+regex);
+				myLogger.trace("Replacement: "+replacement);
+
+				sentence = StringUtility.replaceAllBackreference(sentence,
+						regex, replacement);
+			}
+		}
+
+		return sentence;
+	}
+	
+	public String annotateSentenceHelper2(String sentence){
+		if (StringUtility.createMatcher("", sentence).find()) {
+			sentence = StringUtility.replaceAllBackreference(sentence, "<(\\w)>\\s*</$1>", "");
+		}
+		
+		Matcher m = StringUtility.createMatcher("<(\\w)>\\s*</(\\w)>", sentence);
+		while (m.find()) {
+			String g1 = m.group(1);
+			String g2 = m.group(2);
+			if (StringUtils.equals(g1, g2)) {
+				sentence = m.replaceFirst("");
+			}
+		}
+		
+		sentence = StringUtility.replaceAllBackreference(sentence, 
+				"(?:<[^<]+>)+("+Constant.FORBIDDEN+")(?:</[^<]+>)+", "$1");
+		
+		return sentence;
 	}
 
 	/**
@@ -3058,11 +3340,11 @@ public class Learner {
 		nouns.addAll(nounSet);
 		myLogger.trace("Get nouns: "+nouns.toString());
 		
-		// get o
+		// get organs
 		if(StringUtils.equals(mode, "multitags")){
-			Set<String> oSet = this.getOrgans();
-			organs.addAll(oSet);
-			myLogger.trace("Get o: "+organs.toString());
+			Set<String> organSet = this.getOrgans();
+			organs.addAll(organSet);
+			myLogger.trace("Get organs: "+organs.toString());
 		}
 		
 		// get modifiers
@@ -3197,12 +3479,12 @@ public class Learner {
 				if (StringUtils.equals(POS, "b")) {
 					String pattern = "^[-\\\\\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]$";
 					if (StringUtility.createMatcher(pattern, word).find()) {
-						bMarks.add(word);
+						bMarks.add("\\"+word);
 					} else if ((!(StringUtility.createMatcher("\\w", word)
 							.find())) && (!StringUtils.equals(word, "\\/"))) {
 						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
 								word).find()) {
-							bMarks.add(word);
+							bMarks.add("\\"+word);
 						}
 					} else {
 						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
@@ -3396,6 +3678,14 @@ public class Learner {
 	
 	public Configuration getConfiguration(){
 		return this.myConfiguration;
+	}
+	
+	public static void main(String[] args){
+		assertEquals("tagAllSentenceHelper", 1, 12);
+		
+		
+		
+		
 	}
 	
 }

@@ -2,6 +2,7 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -1184,6 +1185,80 @@ public class LearnerTest {
 						wordsBefore));
 	}
 	
+	@Test
+	public void testTagAllSentence(){
+		assertEquals("tagAllSentenceHelper", "word1 word2", tester.tagAllSentencesHelper("word1 <tag> word2"));
+		assertEquals("tagAllSentenceHelper", "3_nerved , cup_shaped , 3 - 5 ( - 7 ) _nerved", tester.tagAllSentencesHelper(" 	 3  - nerved, cup- shaped, 3-5 (-7) -nerved		 "));
+	}
+	
+
+	@Test
+	public void testAnnotateSentence(){
+		// Test Case 1: See testUnknownWordBootstrapping - Postprocessing
+		
+		// Test Case 2:
+		String input = "stems usually erect , sometimes prostrate to ascending ( underground stems sometimes woody caudices or rhizomes , sometimes fleshy ) .";
+		String expected1 = 
+				"stems usually erect , sometimes prostrate to ascending <B>(</B> underground stems sometimes woody caudices or rhizomes , sometimes fleshy <B>)</B> .";
+		String expected2 = 
+				"stems <B>usually</B> <B>erect</B> , sometimes prostrate to ascending <B>(</B> underground stems sometimes woody caudices or rhizomes , sometimes fleshy <B>)</B> .";
+		Set<String> boundaryWords = new HashSet<String>();
+		Set<String> boundaryMarks = new HashSet<String>();
+		boundaryMarks.addAll(Arrays.asList("\\( \\) \\[ \\] \\{ \\}".split(" ")));
+		boundaryWords.addAll(Arrays.asList("under up upward usually erect villous was weakly".split(" ")));
+		
+		assertEquals("annotateSentenceHelper1", expected1, tester.annotateSentenceHelper(input, boundaryMarks, "B", false));
+		assertEquals("annotateSentenceHelper1", expected2, tester.annotateSentenceHelper(expected1, boundaryWords, "B", true));
+		
+		assertEquals("annotateSentenceHelper2", " word ", tester.annotateSentenceHelper2("<B> 	 </B> word <B> 	 </B>"));
+		assertEquals("annotateSentenceHelper2", "<B> 	 </C> word ", tester.annotateSentenceHelper2("<B> 	 </C> word <B> 	 </B>"));
+		assertEquals("annotateSentenceHelper2", "and", tester.annotateSentenceHelper2("<B>and</B>"));
+		assertEquals("annotateSentenceHelper2", "and</B>", tester.annotateSentenceHelper2("and</B>"));
+	}
+	
+	@Test
+	public void testUnknownWordBootstrapping(){
+		
+		// 1. Preprocessing
+		Learner myTester1 = learnerFactory();
+		myTester1.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word1 unknown".split(" ")));
+		Set<String> expected = new HashSet<String>();
+//		expected.add("")
+		assertEquals("unknownWordBootstrappingGetUnknownWord", expected , myTester1.unknownWordBootstrappingGetUnknownWord("(ee)"));
+		
+		
+		
+		// 3. Postprocessing
+		Learner myTester3 = learnerFactory();
+		
+		myTester3.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word1", "p", "role", "0", "0", "", ""}));
+		myTester3.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word2", "b", "role", "0", "0", "", ""}));
+		myTester3.getDataHolder().add2Holder(DataHolder.WORDPOS, 
+				Arrays.asList(new String[] {"word3", "s", "role", "0", "0", "", ""}));
+		
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word1 word1".split(" ")));
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word2 unknown".split(" ")));
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("_wORd3 unknown".split(" ")));
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word?_4 unknown".split(" ")));
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("nor unknown".split(" ")));
+		myTester3.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word_6 unknown".split(" ")));
+
+		
+		myTester3.getDataHolder().getSentenceHolder().add(new SentenceStructure(0, "src", "word1 word_6 word2", "osent","lead","status","tag","modifer","type"));
+		myTester3.getDataHolder().getSentenceHolder().add(new SentenceStructure(1, "src", "word_6 word2", "osent","lead","status","tag","modifer","type"));
+		myTester3.getDataHolder().getSentenceHolder().add(new SentenceStructure(2, "src", "word1 word6 word2", "osent","lead","status","tag","modifer","type"));
+		
+		myTester3.unknownWordBootstrappingPostprocessing();
+		assertEquals("unknownWordBootstrapping - Postprocessing", "word1 <B>word_6</B> word2", myTester3.getDataHolder().getSentence(0).getSentence());
+		assertEquals("unknownWordBootstrapping - Postprocessing", "<B>word_6</B> word2", myTester3.getDataHolder().getSentence(1).getSentence());
+		assertEquals("unknownWordBootstrapping - Postprocessing", "word1 word6 word2", myTester3.getDataHolder().getSentence(2).getSentence());
+		
+		myTester3.unknownWordBootstrappingPostprocessing();
+		
+	}
+	
 	private Learner learnerFactory() {
 		Learner tester;
 
@@ -1198,5 +1273,7 @@ public class LearnerTest {
 
 		return tester;
 	}
+	
+	
 
 }

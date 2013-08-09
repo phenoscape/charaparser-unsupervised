@@ -2,6 +2,11 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Set;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,7 +44,6 @@ public class LearnerUtilityTest {
 		assertEquals("getSentenceHead - case 2", "lepidotrichia", tester.getSentenceHead("lepidotrichia , of fin webs"));
 		assertEquals("getSentenceHead - case 2", "bases of", tester.getSentenceHead("bases of tooth whorls"));
 		
-		
 		assertEquals("getSentenceHead - case n", "word1 word2 word3", tester.getSentenceHead("word1 word2 word3"));
 	}
 
@@ -70,6 +74,32 @@ public class LearnerUtilityTest {
 		assertEquals("segmentSentence - handle abbreviations", new Token("The Energy DEPT. is holding a work shop now."), tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ").get(0));
 		assertEquals("segmentSentence - handle abbreviations", new Token("This is second sentence."), tester.segmentSentence("The Energy DEPT. is holding a work shop now. This is second sentence. ").get(1));
 		assertEquals("segmentSentence - handle abbreviations", new Token("Mr. Gates from the Energy DEPT. is holding a work shop now."), tester.segmentSentence("Mr. Gates from the Energy DEPT. is holding a work shop now. This is second sentence. ").get(0));
+		
+	}
+	
+	@Test
+	public void testCollection2Pattern(){
+		assertEquals("collection2Pattern - null", "", LearnerUtility.Collection2Pattern(null));
+		assertEquals("collection2Pattern - empty input", "", LearnerUtility.Collection2Pattern(new LinkedList<String>()));
+		
+		Set<String> input = new HashSet<String>();
+		input.add("word1");
+		input.add("word2");
+		input.add("word3");
+		assertEquals("collection2Pattern - set input", "word1|word2|word3", LearnerUtility.Collection2Pattern(input));
+	}
+	
+	@Test
+	public void testPattern2Set(){
+		assertEquals("pattern2Set - null input", new HashSet<String>(),
+				LearnerUtility.Pattern2Set(null));
+		assertEquals("pattern2Set - empty input", new HashSet<String>(),
+				LearnerUtility.Pattern2Set(""));
+		
+		Set<String> result = new HashSet<String>();
+		result.addAll(Arrays.asList("word1|word2|word3".split("|")));
+		assertEquals("pattern2Set - normal input", result,
+				LearnerUtility.Pattern2Set("word2|word3|word1"));
 		
 	}
 }
