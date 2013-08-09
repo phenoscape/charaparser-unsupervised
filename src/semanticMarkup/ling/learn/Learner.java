@@ -2993,7 +2993,7 @@ public class Learner {
 		
 		int newInt = 0;
 		do {
-			this.unknownWordBootstrappingGetUnknownWord(plMiddle);
+//			this.unknownWordBootstrappingGetUnknownWord(plMiddle);
 		} while (newInt > 0);
 	}
 
@@ -3009,7 +3009,7 @@ public class Learner {
 		// get boudaries
 		Set<String> boundaries = new HashSet<String>();
 		Set<String> words = this.getDataHolder()
-				.getWordsFromUnknownWordByPatterns("^.*_.*$", true,
+				.getWordsFromUnknownWord("^.*_.*$", true,
 						"^unknown$", true);
 		Iterator<String> wordIter = words.iterator();
 		String pattern = "_(" + StringUtils.join(nouns, "|") + ")$";
@@ -3253,8 +3253,10 @@ public class Learner {
 	
 	public String annotateSentenceHelper(String sentence, Set<String> words,
 			String tag, boolean isWithBoundaryWord) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.annotateSentence");
+		
 		if (words.size() != 0) {
-
 			if (isWithBoundaryWord) {
 				sentence = StringUtility.replaceAllBackreference(
 						sentence,
@@ -3267,11 +3269,18 @@ public class Learner {
 //				boolean b1 = m1.find();
 ////				Matcher m2 = StringUtility.createMatcher("(]|}|(|)|{|[)", "word (abc)");
 ////				boolean b2 = m2.find();
-				sentence = StringUtility.replaceAllBackreference(
-						sentence,
-						String.format("(%s)",
-								LearnerUtility.Collection2Pattern(words)),
-						String.format("<%s>$1</%s>", tag, tag));
+				
+				String regex = String.format("(%s)",
+						LearnerUtility.Collection2Pattern(words));
+				String replacement = String.format("<%s>$1</%s>", tag, tag);
+				
+				myLogger.trace("Sentence: "+sentence);
+				myLogger.trace("Words: "+words);
+				myLogger.trace("Regex: "+regex);
+				myLogger.trace("Replacement: "+replacement);
+
+				sentence = StringUtility.replaceAllBackreference(sentence,
+						regex, replacement);
 			}
 		}
 
@@ -3470,12 +3479,12 @@ public class Learner {
 				if (StringUtils.equals(POS, "b")) {
 					String pattern = "^[-\\\\\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]$";
 					if (StringUtility.createMatcher(pattern, word).find()) {
-						bMarks.add(word);
+						bMarks.add("\\"+word);
 					} else if ((!(StringUtility.createMatcher("\\w", word)
 							.find())) && (!StringUtils.equals(word, "\\/"))) {
 						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
 								word).find()) {
-							bMarks.add(word);
+							bMarks.add("\\"+word);
 						}
 					} else {
 						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",

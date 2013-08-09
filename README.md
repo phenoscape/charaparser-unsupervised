@@ -236,6 +236,9 @@ getNounsAfterPtn	|	firstseg
 * Where boundary words (, ), [, ], {, and } are added?
 They are added into the word-POS holder in the addStopWords() method.
 
+* What if the POS tag of a word is unknown?
+Mark it with "?" so every word has a POS tag.
+
 ========
 Learner Module Method List
 ========

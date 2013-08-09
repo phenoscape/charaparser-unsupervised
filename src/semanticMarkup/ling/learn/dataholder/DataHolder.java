@@ -593,7 +593,7 @@ public class DataHolder {
 	 *            if the flag pattern is used
 	 * @return set of words
 	 */
-	public Set<String> getWordsFromUnknownWordByPatterns(String wordPattern,
+	public Set<String> getWordsFromUnknownWord(String wordPattern,
 			boolean isWordPatternChecked, String flagPattern,
 			boolean isFlagPatternChecked) {
 		Set<String> words = new HashSet<String>();
