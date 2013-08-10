@@ -2,6 +2,7 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +16,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
@@ -1267,9 +1269,16 @@ public class LearnerTest {
 				myConfiguration.getOpenNLPTokenizerDir());
 		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
 				myConfiguration.getOpenNLPSentenceDetectorDir());
-		Utility myUtility = new Utility(myConfiguration, sentenceDetector,
-				tokenizer);
-		tester = new Learner(myConfiguration, tokenizer, myUtility);
+		WordNetPOSKnowledgeBase wordNetPOSKnowledgeBase = null;
+		try {
+			wordNetPOSKnowledgeBase = new WordNetPOSKnowledgeBase(myConfiguration.getWordNetDictDir(), false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		LearnerUtility myLearnerUtility = new LearnerUtility(sentenceDetector,
+				tokenizer, wordNetPOSKnowledgeBase);
+		tester = new Learner(myConfiguration, tokenizer, myLearnerUtility);
 
 		return tester;
 	}

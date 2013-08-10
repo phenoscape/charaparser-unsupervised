@@ -29,7 +29,7 @@ public class Utility {
 		this.myTokenizer = tokenizer;
 		
 		this.myWordFormUtility = new WordFormUtility(this.myWN);
-		this.myLearnerUtility = new LearnerUtility(configuration, this.mySentenceDetector, this.myTokenizer);
+//		this.myLearnerUtility = new LearnerUtility(configuration, this.mySentenceDetector, this.myTokenizer);
 	}
 	
 	/**

@@ -23,7 +23,7 @@ import semanticMarkup.ling.learn.Constant;
 import semanticMarkup.ling.learn.POSInfo;
 import semanticMarkup.ling.learn.StringPair;
 import semanticMarkup.ling.learn.StringUtility;
-import semanticMarkup.ling.learn.Utility;
+import semanticMarkup.ling.learn.WordFormUtility;
 
 public class DataHolder {
 	// all unique words in the input treatments
@@ -73,11 +73,11 @@ public class DataHolder {
 	public static final byte WORDROLE = 10;
 
 	private Configuration myConfiguration;
-	private Utility myUtility;
+	private WordFormUtility myWordFormUtility;
 	
-	public DataHolder(Configuration myConfiguration, Utility myUtility) {
+	public DataHolder(Configuration myConfiguration, WordFormUtility myWordFormUtility) {
 		this.myConfiguration = myConfiguration;
-		this.myUtility = myUtility;
+		this.myWordFormUtility = myWordFormUtility;
 		this.allWords = new HashMap<String, Integer>();
 		
 		this.discountedTable = new HashMap<DiscountedKey, String>();
@@ -732,7 +732,7 @@ public class DataHolder {
 				Matcher m = p.matcher(originalSentence);
 				if (m.find()) {
 					String plural = m.group(1).toLowerCase();
-					if (this.myUtility.getWordFormUtility().getNumber(plural)
+					if (this.myWordFormUtility.getNumber(plural)
 							.equals("p")) {
 						count++;
 					}
@@ -1012,7 +1012,7 @@ public class DataHolder {
 		// if it is a n word, check if it is singular or plural, and update the
 		// pos
 		if (pos.equals("n")) {
-			pos = this.myUtility.getWordFormUtility().getNumber(word);
+			pos = this.myWordFormUtility.getNumber(word);
 		}
 
 		result = result + markKnown(word, pos, role, table, increment);
@@ -1029,7 +1029,7 @@ public class DataHolder {
 			if (pos.equals("p")) {
 				myLogger.trace("Case 1");
 				String pl = word;
-				word = this.myUtility.getWordFormUtility().getSingular(word);
+				word = this.myWordFormUtility.getSingular(word);
 				myLogger.trace(String.format("Get singular form of %s: %s", pl,
 						word));
 
@@ -1043,7 +1043,7 @@ public class DataHolder {
 			}
 			else if (pos.equals("s")) {
 				myLogger.trace("Case 2");
-				List<String> words = this.myUtility.getWordFormUtility().getPlural(word);
+				List<String> words = this.myWordFormUtility.getPlural(word);
 				String sg = word;
 //				if (sg.equals("centrum")) {
 //					System.out.println("Return Size: "+words.size());

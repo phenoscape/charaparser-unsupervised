@@ -14,19 +14,22 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class LearnerUtility {
 
-	private Configuration myConfiguration;
 	private ITokenizer mySentenceDetector;
 	private ITokenizer mytokenizer;
+	private WordFormUtility myWordFormUtility;
+	private WordNetPOSKnowledgeBase myWordNetPOS;
 	
-	public LearnerUtility(Configuration configuration, ITokenizer sentenceDetector, ITokenizer tokenizer) {
-		this.myConfiguration = configuration;
+	public LearnerUtility(ITokenizer sentenceDetector, ITokenizer tokenizer, WordNetPOSKnowledgeBase wordNetPOS) {
 		this.mySentenceDetector = sentenceDetector;
 		this.mytokenizer = tokenizer;
+		this.myWordFormUtility = new WordFormUtility(wordNetPOS);
+		this.myWordNetPOS = wordNetPOS;
 	}
 	
 	public ITokenizer getTokenizer(){
@@ -35,6 +38,14 @@ public class LearnerUtility {
 	
 	public ITokenizer getSentenceDetector(){
 		return this.mySentenceDetector;
+	}
+	
+	public WordFormUtility getWordFormUtility(){
+		return this.myWordFormUtility;
+	}
+	
+	public WordNetPOSKnowledgeBase getWordNetPOSKnowledgeBase(){
+		return this.myWordNetPOS;
 	}
 	
 	// populate sentence utilities

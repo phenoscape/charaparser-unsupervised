@@ -2,11 +2,13 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.Test;
 
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.transform.ITokenizer;
@@ -21,10 +23,18 @@ public class SentenceLeadLengthComparatorTest {
 		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
 				myConfiguration.getOpenNLPSentenceDetectorDir());
 		ITokenizer tokenizer = new OpenNLPTokenizer(myConfiguration.getOpenNLPTokenizerDir());
-		Utility myUtility = new Utility(myConfiguration, sentenceDetector, tokenizer);
 
-		Learner myTester = new Learner(myConfiguration, tokenizer, myUtility);
-		DataHolder target = new DataHolder(myConfiguration, myUtility);
+		WordNetPOSKnowledgeBase wordNetPOSKnowledgeBase = null;
+		try {
+			wordNetPOSKnowledgeBase = new WordNetPOSKnowledgeBase(myConfiguration.getWordNetDictDir(), false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		LearnerUtility myLearnerUtility = new LearnerUtility(sentenceDetector, tokenizer, wordNetPOSKnowledgeBase);
+		Learner myTester = new Learner(myConfiguration, tokenizer, myLearnerUtility);
+		DataHolder target = new DataHolder(myConfiguration, myLearnerUtility.getWordFormUtility());
 		
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent nor", "osent","lead lead","status",null,"m","type"}));
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent and", "osent","lea","status","","m","type"}));

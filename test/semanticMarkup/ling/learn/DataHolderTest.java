@@ -2,6 +2,7 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.DiscountedKey;
 import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
@@ -326,13 +328,16 @@ public class DataHolderTest {
 		DataHolder tester;
 
 		Configuration myConfiguration = new Configuration();
-		ITokenizer tokenizer = new OpenNLPTokenizer(
-				myConfiguration.getOpenNLPTokenizerDir());
-		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
-				myConfiguration.getOpenNLPSentenceDetectorDir());
-		Utility myUtility = new Utility(myConfiguration, sentenceDetector,
-				tokenizer);
-		tester = new DataHolder(myConfiguration, myUtility);
+		WordNetPOSKnowledgeBase wordNetPOSKnowledgeBase = null;
+		try {
+			wordNetPOSKnowledgeBase = new WordNetPOSKnowledgeBase(myConfiguration.getWordNetDictDir(), false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		WordFormUtility wordFormUtility = new WordFormUtility(wordNetPOSKnowledgeBase);
+		tester = new DataHolder(myConfiguration, wordFormUtility);
 
 		return tester;
 	}

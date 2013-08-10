@@ -1,5 +1,6 @@
 package semanticMarkup.ling.learn;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,6 +18,7 @@ import org.apache.log4j.PropertyConfigurator;
 import semanticMarkup.core.Treatment;
 import semanticMarkup.io.input.lib.db.ParentTagProvider;
 import semanticMarkup.know.IGlossary;
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
@@ -28,12 +30,12 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	
 	// Configuration
 	private Configuration myConfiguration;
-		
-	// Utility
-	private Utility myUtility;
 
 	// Learner
 	private Learner myLearner;
+
+	// Utility
+	private LearnerUtility myLearnerUtility;
 
 	protected List<String> adjnouns;
 	protected Map<String, String> adjnounsent;
@@ -60,7 +62,6 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 	private ITokenizer sentenceDetector;
 	private Set<String> selectedSources;
 	private ITokenizer tokenizer;
-	
 
 
 	/**
@@ -87,10 +88,17 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 		this.tokenizer = tokenizer;
 		
 		this.myConfiguration = new Configuration();
-		this.myUtility = new Utility(myConfiguration, this.sentenceDetector, this.tokenizer);
-		this.myDataHolder = new DataHolder(myConfiguration, myUtility);
-		this.myLearner = new Learner(this.myConfiguration, this.tokenizer, this.myUtility);
 		
+		WordNetPOSKnowledgeBase wordNetPOSKnowledgeBase = null;
+		try {
+			wordNetPOSKnowledgeBase = new WordNetPOSKnowledgeBase(this.myConfiguration.getWordNetDictDir(), false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.myLearnerUtility = new LearnerUtility(this.sentenceDetector, this.tokenizer, wordNetPOSKnowledgeBase);
+		this.myDataHolder = new DataHolder(this.myConfiguration, this.myLearnerUtility.getWordFormUtility());
+		this.myLearner = new Learner(this.myConfiguration, this.tokenizer, this.myLearnerUtility);
 	}
 
 	// learn

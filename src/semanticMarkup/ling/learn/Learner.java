@@ -2,7 +2,6 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,36 +35,32 @@ import semanticMarkup.ling.transform.ITokenizer;
 public class Learner {	
 	private static final Set<String> NONS = null; //??
 	private Configuration myConfiguration;
-	private Utility myUtility;
 	private ITokenizer myTokenizer;
 	
 	// Data holder
 	private DataHolder myDataHolder;
 	
-	// Utilities
-	private WordFormUtility myWordFormUtility;
+	// Learner utility
+	private LearnerUtility myLearnerUtility;
 	
 	// Class variables
 	private int NUM_LEAD_WORDS; // Number of leading words
 	
-	// others
-	
 	// leading three words of sentences 
 	private Set<String> checkedWordSet;
 	
-	public Learner(Configuration configuration, ITokenizer tokenizer, Utility utility) {
+	public Learner(Configuration configuration, ITokenizer tokenizer, LearnerUtility learnerUtility) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learner");
 		
 		this.myConfiguration = configuration;
-		this.myUtility = utility;
 		this.myTokenizer = tokenizer;
 		
-		// Data holder
-		this.myDataHolder = new DataHolder(myConfiguration, myUtility);
-		
 		// Utilities
-		this.myWordFormUtility = new WordFormUtility(this.myUtility.getWordNet());
+		this.myLearnerUtility = learnerUtility;
+		
+		// Data holder
+		this.myDataHolder = new DataHolder(myConfiguration, myLearnerUtility.getWordFormUtility());
 		
 		// Class variables
 		NUM_LEAD_WORDS = 3; // Set the number of leading words be 3
@@ -190,7 +185,7 @@ public class Learner {
 			Treatment tm = treatments.get(i);
 			fileName = tm.getFileName();
 			text = tm.getDescription();
-			type = this.myUtility.getLearnerUtility().getType(fileName);
+			type = this.myLearnerUtility.getType(fileName);
 
 			if (text != null) {
 				// process this text
@@ -198,7 +193,7 @@ public class Learner {
 				myLogger.debug("Text: " + text);
 
 				//do sentence segmentation
-				List<Token> sentences = this.myUtility.getLearnerUtility().segmentSentence(text);
+				List<Token> sentences = this.myLearnerUtility.segmentSentence(text);
 
 				List<String> sentCopy = new LinkedList<String>();
 				List<Integer> validIndex = new LinkedList<Integer>();
@@ -216,7 +211,7 @@ public class Learner {
 					validIndex.add(j);
 
 					// restore marks in brackets
-					sentences.get(j).setContent(this.myUtility.getLearnerUtility().restoreMarksInBrackets(sentences.get(j).getContent()));
+					sentences.get(j).setContent(this.myLearnerUtility.restoreMarksInBrackets(sentences.get(j).getContent()));
 					// Make a copy of the sentence
 					sentCopy.add(sentences.get(j).getContent());
 
@@ -247,7 +242,7 @@ public class Learner {
 					}
 
 					// restore ".", "?", ";", ":", "."
-					oline = this.myUtility.getLearnerUtility().restoreMarksInBrackets(oline);
+					oline = this.myLearnerUtility.restoreMarksInBrackets(oline);
 					oline = oline.replaceAll("\'", " ");
 
 					List<String> nWords = this.getFirstNWords(line,
@@ -261,7 +256,7 @@ public class Learner {
 					lead = lead.replaceAll("\\s$", "");
 
 					String status = "";
-					if (myWordFormUtility.getNumber(nWords.get(0)).equals("p")) {
+					if (myLearnerUtility.getWordFormUtility().getNumber(nWords.get(0)).equals("p")) {
 						status = "start";
 					} else {
 						status = "normal";
@@ -347,7 +342,7 @@ public class Learner {
 		// sentence segmentation
 		// System.out.println("Before Hide: "+text);
 		
-		text = this.myUtility.getLearnerUtility().hideMarksInBrackets(text);
+		text = this.myLearnerUtility.hideMarksInBrackets(text);
 		// System.out.println("After Hide: "+text+"\n");
 
 		text = text.replaceAll("_", "-"); // _ to -
@@ -460,7 +455,7 @@ public class Learner {
 		}
 
 		// add space around nonword char
-		sentence = this.myUtility.getLearnerUtility().addSpace(sentence, "\\W");
+		sentence = this.myLearnerUtility.addSpace(sentence, "\\W");
 
 		// multiple spaces => 1 space
 		sentence = sentence.replaceAll("\\s+", " ");
@@ -557,19 +552,20 @@ public class Learner {
 
 						if (pos.equals("p")) {
 							String plural = word;
-							String singular = this.myWordFormUtility
-									.getSingular(plural);
+							String singular = this.myLearnerUtility
+									.getWordFormUtility().getSingular(plural);
 							if (singular != null) {
 								if (!singular.equals("")) {
-									this.myDataHolder.addSingularPluralPair(singular, plural);
+									this.myDataHolder.addSingularPluralPair(
+											singular, plural);
 								}
 							}
 						}
 
 						if (pos.equals("s")) {
 							String singular = word;
-							List<String> pluralList = this.myWordFormUtility
-									.getPlural(singular);
+							List<String> pluralList = this.myLearnerUtility
+									.getWordFormUtility().getPlural(singular);
 							Iterator<String> pluralIter = pluralList.iterator();
 							while (pluralIter.hasNext()) {
 								String plural = pluralIter.next();
@@ -611,7 +607,6 @@ public class Learner {
 	 * @param rnouns
 	 */
 	public void addNouns(Set<String> rnouns) {
-		// TODO Auto-generated method stub
 		Iterator<String> iter = rnouns.iterator();
 		while (iter.hasNext()) {
 			String noun = iter.next();
@@ -656,7 +651,7 @@ public class Learner {
 			}
 
 			// add words
-			List<String> tokens = this.myUtility.getLearnerUtility().tokenizeText(sentence, "all");
+			List<String> tokens = this.myLearnerUtility.tokenizeText(sentence, "all");
 			for (String token: tokens) {
 				if (StringUtility.isWord(token)) {
 					words.add(token);
@@ -681,7 +676,7 @@ public class Learner {
 		Iterator<String> wordsIterator = words.iterator();
 		while (wordsIterator.hasNext()) {
 			String word = wordsIterator.next();
-			String root = myWordFormUtility.getRoot(word);
+			String root = myLearnerUtility.getWordFormUtility().getRoot(word);
 			if (wordMap.containsKey(root)) {
 				Set<String> wordList = wordMap.get(root);
 				wordList.add(word);
@@ -756,7 +751,7 @@ public class Learner {
 					for (int j = i + 1; j < wordList.size(); j++) {
 						String word1 = wordList.get(i);
 						String word2 = wordList.get(j);
-						List<String> pair = myWordFormUtility.getSingularPluralPair(word1, word2);
+						List<String> pair = myLearnerUtility.getWordFormUtility().getSingularPluralPair(word1, word2);
 						if (pair.size() == 2) {
 							String singular = pair.get(0);
 							String plural = pair.get(1);
@@ -1520,7 +1515,7 @@ public class Learner {
 		boolean flag = false; // return value
 		boolean wordInWN = false; // if this word is in WordNet
 		boolean baseInWN = false;
-		WordNetPOSKnowledgeBase myWN = this.myUtility.getWordNet();
+		WordNetPOSKnowledgeBase myWN = this.myLearnerUtility.getWordNetPOSKnowledgeBase();
 
 		// check base
 		if (base.length() == 0) {
@@ -2085,7 +2080,7 @@ public class Learner {
 			String secondMatchedWord = words.get(end-1);
 			
 			// case 3.1
-			if (StringUtils.equals(this.myUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
+			if (StringUtils.equals(this.myLearnerUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
 				myLogger.trace("Case 3.1");
 				tag = secondMatchedWord;
 				sign = sign + this.myDataHolder.updateDataHolder(tag, "p", "-", "wordpos", 1);
@@ -2283,8 +2278,7 @@ public class Learner {
 			List<String> morePtn = tempReturnValue.getNounPtn();
 			String bWord = tempReturnValue.getBoundaryWord();
 
-			List<String> sentenceHeadWords = this.getUtility()
-					.getLearnerUtility()
+			List<String> sentenceHeadWords = this.getLearnerUtility()
 					.tokenizeText(thisSentence, "firstseg");
 			end += morePtn.size();
 			List<String> tempWords = StringUtility.stringArraySplice(
@@ -2323,14 +2317,14 @@ public class Learner {
 			myLogger.trace("Case 7");
 			String singularWord = words.get(0);
 			String questionedWord = words.get(1);
-			String wnPOS = this.myUtility.getWordFormUtility().checkWN(questionedWord, "pos");
+			String wnPOS = this.myLearnerUtility.getWordFormUtility().checkWN(questionedWord, "pos");
 			
 			if (StringUtility.createMatcher("p", wnPOS).find()){
 				myLogger.trace("Case 7.1");
 				tag = singularWord+" "+questionedWord;
 				myLogger.debug("\t:determine the tag: "+tag);
 				myLogger.debug("\t:updates on POSs");
-				String questionedPOS = this.getUtility().getWordFormUtility().getNumber(singularWord);
+				String questionedPOS = this.getLearnerUtility().getWordFormUtility().getNumber(singularWord);
 				sign += this.getDataHolder().updateDataHolder(questionedWord, questionedPOS, "-", "wordpos", 1);
 			}
 			else {
@@ -2378,12 +2372,12 @@ public class Learner {
 			
 			if (!isFollowedByNoun(thisSentence, thisLead)) {
 				myLogger.trace("Case 10.1");
-				String wnP1 = this.myUtility.getWordFormUtility().checkWN(word, "pos");
+				String wnP1 = this.myLearnerUtility.getWordFormUtility().checkWN(word, "pos");
 				myLogger.trace("wnP1: "+wnP1);
 				String wnP2 = "";
 						
 				if (!StringUtility.createMatcher("\\w", wnP1).find()) {
-					wnP2 = this.myUtility.getWordFormUtility().getNumber(word);	
+					wnP2 = this.myLearnerUtility.getWordFormUtility().getNumber(word);	
 				}
 				myLogger.trace("wnP2: "+wnP2);
 				
@@ -2445,7 +2439,7 @@ public class Learner {
 		List<String> nounPtn = new ArrayList<String>();
 		
 		List<String> tempWords = new ArrayList<String>();
-		tempWords.addAll(this.getUtility().getLearnerUtility().tokenizeText(sentence, "firstseg"));
+		tempWords.addAll(this.getLearnerUtility().tokenizeText(sentence, "firstseg"));
 		List<String> words = StringUtility.stringArraySplice(tempWords, startWordIndex, tempWords.size());
 		myLogger.trace("words: "+words);
 		String ptn = this.getPOSptn(words);
@@ -2475,7 +2469,7 @@ public class Learner {
 				for (int i=0;i<nWords.size();i++) {
 					String p = ptn.substring(i, i+1);
 					p = StringUtils.equals(p, "?") ? 
-							this.getUtility().getWordFormUtility().checkWN(nWords.get(i), "pos")
+							this.getLearnerUtility().getWordFormUtility().checkWN(nWords.get(i), "pos")
 							: p;
 					if (StringUtility.createMatcher("^[psn]+$", p).find()) {
 						nouns.add(nWords.get(i));
@@ -2777,7 +2771,7 @@ public class Learner {
 			
 			if (sentenceSet.size() > 1) {
 				String ptn = this.getPOSptn(sharedHead);
-				String wnPOS = this.myUtility.getWordFormUtility().checkWN(
+				String wnPOS = this.myLearnerUtility.getWordFormUtility().checkWN(
 						sharedHead.get(sharedHead.size() - 1), "pos");
 				
 				myLogger.trace("ptn: " + ptn);
@@ -3602,7 +3596,7 @@ public class Learner {
 			return nWords;
 		}
 		
-		List<String> tokens = this.getUtility().getLearnerUtility().tokenizeText(sentence, "firstseg");
+		List<String> tokens = this.getLearnerUtility().tokenizeText(sentence, "firstseg");
 		
 		
 		int minL = tokens.size() > n ? n : tokens.size();
@@ -3623,7 +3617,7 @@ public class Learner {
 	 */
 	public Map<String, Integer> getAllWords(String sentence,
 			Map<String, Integer> words) {
-		List<String> tokens = this.getUtility().getLearnerUtility().tokenizeText(sentence, "all");
+		List<String> tokens = this.getLearnerUtility().tokenizeText(sentence, "all");
 
 		for (String token: tokens) {
 			if (words.containsKey(token)) {
@@ -3675,8 +3669,8 @@ public class Learner {
 			+ bptn;
 	
 	// utility method
-	public Utility getUtility() {
-		return this.myUtility;
+	public LearnerUtility getLearnerUtility() {
+		return this.myLearnerUtility;
 	}
 	
 	public ITokenizer getTokenizer(){
