@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import semanticMarkup.core.Treatment;
+import semanticMarkup.know.IGlossary;
 
 /**
  * ITerminologyLearner learns the terminology of a list of treatments
@@ -17,7 +18,7 @@ public interface ITerminologyLearner {
 	 * Learns the terminology used in the treatments
 	 * @param treatments
 	 */
-	public void learn(List<Treatment> treatments, String glossaryTable);
+	public void learn(List<Treatment> treatments, IGlossary glossary);
 	
 	/**
 	 * Reads the results for the treatments, so that any other function returns the 'freshest' results

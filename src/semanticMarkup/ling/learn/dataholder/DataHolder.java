@@ -1732,5 +1732,34 @@ public class DataHolder {
 		
 		return tags;
 	}
+	
+	// add2Holder
+	public void addWords2WordPOSHolder(Set<String> words, String POS) {
+		Iterator<String> iter = words.iterator();
+		String word = iter.next();
+		this.add2WordPOSHolder(word, POS, "", 0, 0, null, null);
+	}
+	
+	public boolean add2WordPOSHolder(String word, String POS, String role, int certaintyU, int certaintyL, String savedFlag, String savedID) {
+		boolean isUpdated = false;
+		
+		WordPOSKey key = new WordPOSKey(word, POS);
+		WordPOSValue value = new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID);
+		if (this.wordPOSTable.containsKey(key)) {
+			if (this.wordPOSTable.get(key).equals(value)) {
+				isUpdated = false;
+			}
+			else {
+				this.wordPOSTable.put(key, value);
+				isUpdated = true;
+			}
+		}
+		else {
+			this.wordPOSTable.put(key, value);
+			isUpdated = true;
+		}
+		
+		return isUpdated;
+	}
 
 }

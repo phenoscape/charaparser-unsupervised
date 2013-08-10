@@ -1073,7 +1073,7 @@ public class LearnerTest {
 		targetWords.addAll(Arrays.asList("about along".split(" ")));
 		
 		Set<String> targetMarks = new HashSet<String>();
-		targetMarks.addAll(Arrays.asList(") \\ [ } . | * + ?".split(" ")));
+		targetMarks.addAll(Arrays.asList("\\) \\\\ \\[ \\} \\. \\| \\* \\+ \\?".split(" ")));
 		
 		List<Set<String>> target = new LinkedList<Set<String>>();
 		target.add(targetWords);
@@ -1210,7 +1210,7 @@ public class LearnerTest {
 		assertEquals("annotateSentenceHelper1", expected1, tester.annotateSentenceHelper(input, boundaryMarks, "B", false));
 		assertEquals("annotateSentenceHelper1", expected2, tester.annotateSentenceHelper(expected1, boundaryWords, "B", true));
 		
-		assertEquals("annotateSentenceHelper2", " word ", tester.annotateSentenceHelper2("<B> 	 </B> word <B> 	 </B>"));
+		assertEquals("annotateSentenceHelper2", " word ", tester.annotateSentenceHelper2("<B> 	 </B> word <N> 	 </N>"));
 		assertEquals("annotateSentenceHelper2", "<B> 	 </C> word ", tester.annotateSentenceHelper2("<B> 	 </C> word <B> 	 </B>"));
 		assertEquals("annotateSentenceHelper2", "and", tester.annotateSentenceHelper2("<B>and</B>"));
 		assertEquals("annotateSentenceHelper2", "and</B>", tester.annotateSentenceHelper2("and</B>"));

@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.core.Treatment;
+import semanticMarkup.know.IGlossary;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
@@ -80,12 +81,12 @@ public class Learner {
 		
 	}
 
-	public DataHolder Learn(List<Treatment> treatments, String glossaryTable, String markupMode) {
+	public DataHolder Learn(List<Treatment> treatments, IGlossary glossary, String markupMode) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learn");
 		myLogger.trace("Enter Learn");
 		myLogger.trace(String.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
-
+		
 		this.populateSentence(treatments);
 		this.populateUnknownWordsTable(this.myDataHolder.allWords);
 
@@ -143,7 +144,17 @@ public class Learner {
 		return myDataHolder;
 	}
 	
-
+	public void addGlossary(IGlossary glossary) {
+		if (glossary != null) {
+			String category = "struture";
+			Set<String> pWords = glossary.getWords(category);
+			Set<String> categories = new HashSet<String>();
+			categories.add(category);
+			Set<String> bWords = glossary.getWordsNotInCategories(categories);
+			this.getDataHolder().addWords2WordPOSHolder(pWords, "p");
+			this.getDataHolder().addWords2WordPOSHolder(bWords, "b");
+		}
+	}
 
 	private void addPredefinedWords() {
 		this.addStopWords();
@@ -3292,13 +3303,11 @@ public class Learner {
 			sentence = StringUtility.replaceAllBackreference(sentence, "<(\\w)>\\s*</$1>", "");
 		}
 		
-		Matcher m = StringUtility.createMatcher("<(\\w)>\\s*</(\\w)>", sentence);
+		Matcher m = StringUtility
+				.createMatcher("<(\\w)>\\s*</(\\1)>", sentence);
 		while (m.find()) {
-			String g1 = m.group(1);
-			String g2 = m.group(2);
-			if (StringUtils.equals(g1, g2)) {
-				sentence = m.replaceFirst("");
-			}
+			sentence = m.replaceFirst("");
+			m = StringUtility.createMatcher("<(\\w)>\\s*</(\\1)>", sentence);
 		}
 		
 		sentence = StringUtility.replaceAllBackreference(sentence, 
