@@ -2,12 +2,14 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.transform.ITokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
@@ -20,11 +22,16 @@ public class WordFormUtilityTest {
 	@Before
 	public void initialize(){
 		Configuration myConfiguration = new Configuration();
-		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
-				myConfiguration.getOpenNLPSentenceDetectorDir());
-		ITokenizer tokenizer = new OpenNLPTokenizer(myConfiguration.getOpenNLPTokenizerDir());
-		Utility myUtility = new Utility(myConfiguration, sentenceDetector, tokenizer);
-		tester = new WordFormUtility(myUtility.getWordNet());
+		
+		WordNetPOSKnowledgeBase wordNetPOSKnowledgeBase = null;
+		try {
+			wordNetPOSKnowledgeBase = new WordNetPOSKnowledgeBase(myConfiguration.getWordNetDictDir(), false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		tester = new WordFormUtility(wordNetPOSKnowledgeBase);
 	}
 
 	@Test
