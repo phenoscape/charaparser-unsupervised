@@ -44,7 +44,6 @@ public class Learner {
 	
 	// Utilities
 	private WordFormUtility myWordFormUtility;
-	private PopulateSentenceUtility myPopulateSentenceUtility;
 	
 	// Class variables
 	private int NUM_LEAD_WORDS; // Number of leading words
@@ -67,7 +66,6 @@ public class Learner {
 		
 		// Utilities
 		this.myWordFormUtility = new WordFormUtility(this.myUtility.getWordNet());
-		this.myPopulateSentenceUtility = new PopulateSentenceUtility();
 		
 		// Class variables
 		NUM_LEAD_WORDS = 3; // Set the number of leading words be 3
@@ -192,7 +190,7 @@ public class Learner {
 			Treatment tm = treatments.get(i);
 			fileName = tm.getFileName();
 			text = tm.getDescription();
-			type = this.myPopulateSentenceUtility.getType(fileName);
+			type = this.myUtility.getLearnerUtility().getType(fileName);
 
 			if (text != null) {
 				// process this text
@@ -218,7 +216,7 @@ public class Learner {
 					validIndex.add(j);
 
 					// restore marks in brackets
-					sentences.get(j).setContent(this.myPopulateSentenceUtility.restoreMarksInBrackets(sentences.get(j).getContent()));
+					sentences.get(j).setContent(this.myUtility.getLearnerUtility().restoreMarksInBrackets(sentences.get(j).getContent()));
 					// Make a copy of the sentence
 					sentCopy.add(sentences.get(j).getContent());
 
@@ -249,7 +247,7 @@ public class Learner {
 					}
 
 					// restore ".", "?", ";", ":", "."
-					oline = this.myPopulateSentenceUtility.restoreMarksInBrackets(oline);
+					oline = this.myUtility.getLearnerUtility().restoreMarksInBrackets(oline);
 					oline = oline.replaceAll("\'", " ");
 
 					List<String> nWords = this.getFirstNWords(line,
@@ -349,7 +347,7 @@ public class Learner {
 		// sentence segmentation
 		// System.out.println("Before Hide: "+text);
 		
-		text = this.myPopulateSentenceUtility.hideMarksInBrackets(text);
+		text = this.myUtility.getLearnerUtility().hideMarksInBrackets(text);
 		// System.out.println("After Hide: "+text+"\n");
 
 		text = text.replaceAll("_", "-"); // _ to -
@@ -462,7 +460,7 @@ public class Learner {
 		}
 
 		// add space around nonword char
-		sentence = this.myPopulateSentenceUtility.addSpace(sentence, "\\W");
+		sentence = this.myUtility.getLearnerUtility().addSpace(sentence, "\\W");
 
 		// multiple spaces => 1 space
 		sentence = sentence.replaceAll("\\s+", " ");

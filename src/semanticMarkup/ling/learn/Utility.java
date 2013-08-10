@@ -12,7 +12,6 @@ public class Utility {
 	private ITokenizer mySentenceDetector;
 	private ITokenizer myTokenizer;
 
-	private PopulateSentenceUtility myPopulateSentenceUtility = null;
 	private WordFormUtility myWordFormUtility = null;
 	private LearnerUtility myLearnerUtility = null;
 	
@@ -29,13 +28,8 @@ public class Utility {
 		this.mySentenceDetector = sentenceDetector;
 		this.myTokenizer = tokenizer;
 		
-		this.myPopulateSentenceUtility = new PopulateSentenceUtility();
 		this.myWordFormUtility = new WordFormUtility(this.myWN);
 		this.myLearnerUtility = new LearnerUtility(configuration, this.mySentenceDetector, this.myTokenizer);
-	}
-	
-	public  PopulateSentenceUtility getPopulateSentenceUtility(){
-		return this.myPopulateSentenceUtility;
 	}
 	
 	/**
