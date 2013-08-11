@@ -30,6 +30,7 @@ import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
+import semanticMarkup.ling.learn.knowledge.Initiation;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class Learner {	
@@ -48,6 +49,10 @@ public class Learner {
 	
 	// leading three words of sentences 
 	private Set<String> checkedWordSet;
+	
+	
+	// modules
+	Initiation initiationModule;
 	
 	public Learner(Configuration configuration, ITokenizer tokenizer, LearnerUtility learnerUtility) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
@@ -72,6 +77,8 @@ public class Learner {
 		myLogger.info("\tMax Tag Lengthr: "+myConfiguration.getMaxTagLength());
 		myLogger.info("\n");
 		
+		initiationModule = new Initiation(this.myLearnerUtility, this.NUM_LEAD_WORDS);
+		
 	}
 
 	public DataHolder Learn(List<Treatment> treatments, IGlossary glossary, String markupMode) {
@@ -80,8 +87,11 @@ public class Learner {
 		myLogger.trace("Enter Learn");
 		myLogger.trace(String.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
 		
-		this.populateSentence(treatments);
-		this.populateUnknownWordsTable(this.myDataHolder.allWords);
+//		this.populateSentence(treatments);
+//		this.populateUnknownWordsTable(this.myDataHolder.allWords);
+		
+		this.initiationModule.loadTreatments(treatments);
+		this.initiationModule.run(myDataHolder);
 
 		/*
 		Map<String, String> mygetHeuristicNounHolder() = myDataHolder.getgetHeuristicNounHolder()();

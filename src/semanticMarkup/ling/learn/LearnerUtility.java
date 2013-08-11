@@ -284,7 +284,7 @@ public class LearnerUtility {
 	 * @param text
 	 * @return List of Sentence
 	 */
-	List<Token> segmentSentence(String text) {
+	public List<Token> segmentSentence(String text) {
 		List<Token> sentences;
 		
 		//hide abbreviations
