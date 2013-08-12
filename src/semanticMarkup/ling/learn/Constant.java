@@ -1,5 +1,10 @@
 package semanticMarkup.ling.learn;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 public class Constant {
 	
 	public static final String NUMBER = "zero|one|ones|first|two|second|three|third|thirds|four|fourth|fourths|quarter|five|fifth|fifths|six|sixth|sixths|seven|seventh|sevenths|eight|eighths|eighth|nine|ninths|ninth|tenths|tenth";
@@ -50,10 +55,23 @@ public class Constant {
 	public static final String BOT1_ABBR = "diam|sq|Rottb";
 	public static final String BOT2_ABBR = "ca|fl|Fl|Fr|fr|var";
 	public static final String LATIN_ABBR = "et al";
+
+	private final String singularExceptionList = "medium";
+	public Set<String> singularExceptions;
+	public Set<String> forbiddenWords;
+	
+//	private static final Set<String> singularExceptions;
 	
 	
 	public Constant() {
 		// TODO Auto-generated constructor stub
+		Set<String> singularExceptionsTemp = new HashSet<String>();
+		singularExceptionsTemp.addAll(Arrays.asList(this.singularExceptionList.split("|")));
+		this.singularExceptions = Collections.unmodifiableSet(singularExceptionsTemp);
+		
+		Set<String> forbiddenWordsTemp = new HashSet<String>();
+		forbiddenWordsTemp.addAll(Arrays.asList(Constant.FORBIDDEN.split("|")));
+		this.forbiddenWords = Collections.unmodifiableSet(forbiddenWordsTemp);
 	}
 
 }

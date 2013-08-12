@@ -3070,36 +3070,7 @@ public class Learner {
 			}
 		}
 	}
-	
-	/**
-	 * Helper of unknownWordBootstrapping()
-	 * 
-	 * @return set of words
-	 */
-	public Set<String> unknownWordBootstrappingGetUnknownWord(String plMiddle) {
-		Set<String> words = new HashSet<String>();
-		Iterator<Entry<String, String>> iter = this.getDataHolder()
-				.getUnknownWordHolderIterator();
-		while (iter.hasNext()) {
-			Entry<String, String> entry = iter.next();
-			String word = entry.getKey();
-			String flag = entry.getValue();
-			if (word != null) {
-				if ((StringUtils.equals(flag, "unknown"))
-					&& 		((StringUtility.createMatcher(plMiddle, word).find()) 
-							|| (StringUtility.createMatcher("("+ Constant.PLENDINGS + "|ium)$", word).find()))
-				)
-					words.add(word);
-			}
-		}
-
-		return words;
-	}
-	
-
-
-
-	
+		
 	/**
 	 * Utilities
 	 * @return 

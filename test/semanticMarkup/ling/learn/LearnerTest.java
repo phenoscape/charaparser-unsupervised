@@ -1093,12 +1093,12 @@ public class LearnerTest {
 	@Test
 	public void testUnknownWordBootstrapping(){
 		
-		// 1. Preprocessing
-		Learner myTester1 = learnerFactory();
-		myTester1.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word1 unknown".split(" ")));
-		Set<String> expected = new HashSet<String>();
-//		expected.add("")
-		assertEquals("unknownWordBootstrappingGetUnknownWord", expected , myTester1.unknownWordBootstrappingGetUnknownWord("(ee)"));
+//		// 1. Preprocessing
+//		Learner myTester1 = learnerFactory();
+//		myTester1.getDataHolder().add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word1 unknown".split(" ")));
+//		Set<String> expected = new HashSet<String>();
+////		expected.add("")
+//		assertEquals("unknownWordBootstrappingGetUnknownWord", expected , myTester1.unknownWordBootstrappingGetUnknownWord("(ee)"));
 		
 		
 		

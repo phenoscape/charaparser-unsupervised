@@ -31,12 +31,18 @@ public class LearnerUtility {
 	private ITokenizer mytokenizer;
 	private WordFormUtility myWordFormUtility;
 	private WordNetPOSKnowledgeBase myWordNetPOS;
+	private Constant myConstant;
 	
 	public LearnerUtility(ITokenizer sentenceDetector, ITokenizer tokenizer, WordNetPOSKnowledgeBase wordNetPOS) {
+		this.myConstant = new Constant();
 		this.mySentenceDetector = sentenceDetector;
 		this.mytokenizer = tokenizer;
 		this.myWordFormUtility = new WordFormUtility(wordNetPOS);
 		this.myWordNetPOS = wordNetPOS;
+	}
+	
+	public Constant getConstant(){
+		return this.myConstant;
 	}
 	
 	public ITokenizer getTokenizer(){

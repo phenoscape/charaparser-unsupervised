@@ -84,6 +84,16 @@ public class UnknownWordBootstrappingTest {
 		
 	}
 	
+	@Test
+	public void testIsVerbEnding(){
+		DataHolder myDataHolder = dataholderFactory();
+		
+//		assertEquals("isVerbEnding - case 1 - true", true, unknownWordBootstrappingModule.isVerbEnding(myDataHolder, "achenes"));
+		assertEquals("isVerbEnding - case 1 - false", false, unknownWordBootstrappingModule.isVerbEnding(myDataHolder, "achenes"));
+//		assertEquals("isVerbEnding - case 2 - true", true, unknownWordBootstrappingModule.isVerbEnding(myDataHolder, ""));
+		assertEquals("isVerbEnding - case 2 - false", false, unknownWordBootstrappingModule.isVerbEnding(myDataHolder, "Armenia"));
+	}
+	
 	private DataHolder dataholderFactory() {
 		DataHolder tester;
 
@@ -101,5 +111,7 @@ public class UnknownWordBootstrappingTest {
 
 		return tester;
 	}
+	
+	
 
 }

@@ -241,6 +241,31 @@ public class StringUtility {
 	}
 
 	/**
+	 * Null-safe method to match a text against the pattern
+	 * 
+	 * @param pattern
+	 *            the pattern to match against
+	 * @param text
+	 *            the text to match
+	 * @return true if matches, false otherwise
+	 */
+	public static boolean isMatchedNullSafe(String pattern, String text) {
+		if (pattern == null || text == null) {
+			return false;
+		}
+		
+		Pattern p = Pattern.compile(pattern);
+		Matcher m = p.matcher(text);
+		if (m.find()) {
+			return true;
+		}
+		else {
+			return false;
+		}
+
+	}
+	
+	/**
 	 * Null-safe method to match a entire text against the pattern
 	 * 
 	 * @param pattern
@@ -249,7 +274,7 @@ public class StringUtility {
 	 *            the text to match
 	 * @return true if matches, false otherwise
 	 */
-	public static boolean isEntireMatched(String pattern, String text) {
+	public static boolean isEntireMatchedNullSafe(String pattern, String text) {
 		if (pattern == null || text == null) {
 			return false;
 		}
@@ -291,4 +316,14 @@ public class StringUtility {
 		return c;
 	}
 
+	/**
+	 * Remove the last char in a string
+	 * 
+	 * @param str
+	 *            the input string
+	 * @return string after remove of last char
+	 */
+	public static String chop(String str) {
+		return str.substring(0, str.length() - 1);
+	}
 }
