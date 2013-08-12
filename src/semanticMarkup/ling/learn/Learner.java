@@ -137,7 +137,7 @@ public class Learner {
 		myLogger.info("Unknownword bootstrappings:");
 		this.unknownWordBootstrapping();
 		
-		myLogger.trace("Quite Learn");
+		myLogger.info("Learning done!");
 		
 //		myLogger.info(myDataHolder.toString());
 //		myLogger.info(myDataHolder.getSentenceHolder().toString());
