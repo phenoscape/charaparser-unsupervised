@@ -29,6 +29,9 @@ public class DataHolder {
 	// all unique words in the input treatments
 	public Map<String, Integer> allWords;
 	
+	// words are singular nouns, boundary words, and modifiers
+	public Set<String> BMSWords;
+	
 	// Data holders
 	// Table heuristicnoun
 	private Map<String, String> heuristicNounTable;
@@ -78,7 +81,9 @@ public class DataHolder {
 	public DataHolder(Configuration myConfiguration, WordFormUtility myWordFormUtility) {
 		this.myConfiguration = myConfiguration;
 		this.myWordFormUtility = myWordFormUtility;
+		
 		this.allWords = new HashMap<String, Integer>();
+		this.BMSWords = new HashSet<String>();
 		
 		this.discountedTable = new HashMap<DiscountedKey, String>();
 		this.heuristicNounTable = new HashMap<String, String>();
