@@ -6,8 +6,9 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.ling.learn.dataholder.DataHolder;
+import semanticMarkup.ling.learn.knowledge.IModule;
 
-public class AdditionalBootstrapping implements LearningModule {
+public class AdditionalBootstrapping implements IModule {
 
 	public AdditionalBootstrapping() {
 		// TODO Auto-generated constructor stub
@@ -18,12 +19,10 @@ public class AdditionalBootstrapping implements LearningModule {
 	 * one lead word
 	 */
 	@Override
-	public DataHolder run(DataHolder myDataHolder) {
+	public void run(DataHolder myDataHolder) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
 		myLogger.trace("Enter additionalBootStrapping");
-
-		return myDataHolder;
 	}
 
 
