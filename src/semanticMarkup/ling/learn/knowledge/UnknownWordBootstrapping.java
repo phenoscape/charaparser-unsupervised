@@ -150,9 +150,9 @@ public class UnknownWordBootstrapping implements IModule {
 		
 		sWord = "(^|_)"+sWord+"ing";
 		
-		Set<String> words = dataholderHandler.getWordsFromUnknownWord("^.*"+sWord+"$", true, null, false);
-		
-		if (words.size()>0) {
+//		Set<String> words = dataholderHandler.getWordsFromUnknownWord("^.*"+sWord+"$", true, null, false);
+		if(dataholderHandler.isWordExistInUnknownWord(sWord+"$", true, null, false)) {
+//		if (words.size()>0) {
 			return true;
 		}
 		

@@ -598,9 +598,8 @@ public class DataHolder {
 	 *            if the flag pattern is used
 	 * @return set of words
 	 */
-	public Set<String> getWordsFromUnknownWord(String wordPattern,
-			boolean isWordPatternChecked, String flagPattern,
-			boolean isFlagPatternChecked) {
+	public Set<String> getWordsFromUnknownWord(String wordPattern, boolean isWordPatternChecked, 
+			String flagPattern, boolean isFlagPatternChecked) {
 		Set<String> words = new HashSet<String>();
 
 		if ((!isWordPatternChecked) && (!isFlagPatternChecked)) {
@@ -626,14 +625,49 @@ public class DataHolder {
 
 		return words;
 	}
+	
+	public boolean isWordExistInUnknownWord(String wordPattern,
+			boolean isWordPatternChecked, String flagPattern,
+			boolean isFlagPatternChecked) {
+		boolean isWordExist = false;
+		if ((!isWordPatternChecked) && (!isFlagPatternChecked)) {
+			isWordExist = false;
+			return isWordExist;
+		}
+
+		Iterator<Entry<String, String>> iter = this
+				.getUnknownWordHolderIterator();
+		while (iter.hasNext()) {
+			Entry<String, String> item = iter.next();
+
+			String word = item.getKey();
+			String flag = item.getValue();
+			boolean case1 = getWordsFromUnknownWordByPatternsHelper(
+					wordPattern, isWordPatternChecked, word);
+			boolean case2 = getWordsFromUnknownWordByPatternsHelper(
+					flagPattern, isFlagPatternChecked, flag);
+
+			if (case1 && case2) {
+				isWordExist = true;
+				return isWordExist;
+			}
+		}
+		
+		return isWordExist;
+	}
 
 	private boolean getWordsFromUnknownWordByPatternsHelper(String pattern,
 			boolean isPatternChecked, String text) {
 		boolean result = false;
 
-		if ((isPatternChecked) && (pattern != null)) {
-			if (StringUtility.createMatcher(pattern, text).matches()) {
-				result = true;
+		if (!isPatternChecked) {
+			result = true;
+		}
+		else {
+			if (pattern != null) {
+				if (StringUtility.isMatchedNullSafe(pattern, text)) {
+					result = true;
+				}
 			}
 		}
 
