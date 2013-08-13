@@ -91,19 +91,44 @@ public class UnknownWordBootstrapping implements IModule {
 			
 			// Part 2
 			if (organs.size() > 0) {
+				// find word <q> and make q a b
 				String organsPattern = StringUtils.join(organs, "|");
-				String pattern2 = "(^| )(" + organsPattern + ") [^<]";
-				Set<SentenceStructure> sentences = dataholderHandler
-						.getTaggedSentenceByPattern(pattern2);
+				String pattern21 = "(^| )(" + organsPattern + ") [^<]";
+				Set<SentenceStructure> sentences21 = dataholderHandler
+						.getTaggedSentenceByPattern(pattern21);
 
-				for (SentenceStructure sentenceItem : sentences) {
+				for (SentenceStructure sentenceItem : sentences21) {
 					String sentence = sentenceItem.getSentence();
 					if (sentence != null) {
-						Pattern p = Pattern.compile("(^|,<\\/b>)([\\w ]*?) ("
+						Pattern p21 = Pattern.compile("\\b(" + organsPattern
+								+ ") (\\w+)");
+						Matcher m21 = p21.matcher(sentence);
+						if (m21.find()) {
+							String tempWord = m21.group(2);
+							dataholderHandler.updateDataHolder(tempWord, "b",
+									"", "wordpos", 1);
+							if (!this.myLearnerUtility.getConstant().forbiddenWords
+									.contains(tempWord)) {
+								boundaries.add(tempWord);
+								myLogger.debug("find a [b] " + tempWord);
+							}
+						}
+					}
+				}
+
+				// then find <q> $word, and make q a modifier
+				String pattern22 = "[^<]+ (" + organsPattern + ") ";
+				Set<SentenceStructure> sentences22 = dataholderHandler
+						.getTaggedSentenceByPattern(pattern22);
+
+				for (SentenceStructure sentenceItem : sentences22) {
+					String sentence = sentenceItem.getSentence();
+					if (sentence != null) {
+						Pattern p22 = Pattern.compile("(^|,<\\/b>)([\\w ]*?) ("
 								+ organsPattern + ")\\b");
-						Matcher m = p.matcher(sentence);
-						if (m.find()) {
-							String tempWords = m.group(2);
+						Matcher m22 = p22.matcher(sentence);
+						if (m22.find()) {
+							String tempWords = m22.group(2);
 							if (!this.myLearnerUtility.getConstant().forbiddenWords
 									.contains(tempWords)) {
 								String[] tempWordsArray = tempWords
@@ -143,7 +168,6 @@ public class UnknownWordBootstrapping implements IModule {
 					
 				}
 			}
-			
 			
 		} while (newInt > 0);
 	}
