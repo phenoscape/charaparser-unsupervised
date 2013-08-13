@@ -675,6 +675,63 @@ public class DataHolder {
 	}
 	
 	/**
+	 * Check if any sentence matches given pattern exists in the data holder
+	 * 
+	 * @param dataholderHandler
+	 *            handler of dataholder
+	 * @param pattern
+	 *            pattern to match against
+	 * @return true if any sentence matches the given pattern exists; false
+	 *         otherwise
+	 */
+	public boolean isExistTaggedSentenceByPattern(String pattern) {
+		boolean isExist = false;
+		
+		Iterator<SentenceStructure> iter = getSentenceHolderIterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceItem = iter.next();
+			String tag = sentenceItem.getTag();
+			if ((!StringUtils.equals(tag, "ignore"))||(tag == null)) {
+				String sentence = sentenceItem.getSentence();
+				if (StringUtility.isMatchedNullSafe(pattern, sentence)) {
+					isExist = true;
+					return isExist;
+				}
+			}
+		}
+		
+		return isExist;
+	}
+	
+	/**
+	 * Get all sentences match a given pattern from the data holder
+	 * 
+	 * @param dataholderHandler
+	 *            handler of dataholder
+	 * @param pattern
+	 *            pattern to match against
+	 * @return sentences matche the given pattern exists; false
+	 *         otherwise
+	 */
+	public Set<SentenceStructure> getTaggedSentenceByPattern(String pattern) {
+		Set<SentenceStructure> sentences = new HashSet<SentenceStructure>();
+		
+		Iterator<SentenceStructure> iter = getSentenceHolderIterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceItem = iter.next();
+			String tag = sentenceItem.getTag();
+			if ((!StringUtils.equals(tag, "ignore"))||(tag == null)) {
+				String sentence = sentenceItem.getSentence();
+				if (StringUtility.isMatchedNullSafe(pattern, sentence)) {
+					sentences.add(sentenceItem);
+				}
+			}
+		}
+		
+		return sentences;
+	}
+	
+	/**
 	 * add the singular form and the plural form of a word into the
 	 * singularPluarlTable
 	 * 
