@@ -1,5 +1,7 @@
 package semanticMarkup.ling.learn.knowledge;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -62,9 +64,10 @@ public class UnknownWordBootstrapping implements IModule {
 			Set<String> modifiers = new HashSet<String>();
 			Set<String> allWords = new HashSet<String>();
 			
-			// Part 1
-			List<String> words = this.unknownWordBootstrappingGetUnknownWord(
-					dataholderHandler, plMiddle);
+			String wordPattern = "(("+ Constant.PLENDINGS + "|ium)$)|(ee)";
+			String flagPattern = "^unknown$";
+			Set<String> words = dataholderHandler.getWordsFromUnknownWord(wordPattern, true, flagPattern, true);
+			
 			for (String word: words){
 				if ((StringUtility.isMatchedNullSafe("ium$", word))
 						&& (!this.myLearnerUtility.getConstant().singularExceptions
@@ -72,18 +75,19 @@ public class UnknownWordBootstrapping implements IModule {
 					dataholderHandler.updateDataHolder(word, "s", "-", "wordpos", 1);
 					if (isValidWord(word)) {
 						organs.add(word);
-						myLogger.debug("find a [s]" + word);
+						myLogger.debug("find a [s] " + word);
 					}
 				}
 				else {
-					if ((dataholderHandler.isExistTaggedSentenceByPattern("(^| )"+word+" (<B>|" + Constant.FORBIDDEN + ")"))
-							&& (StringUtils.equals(this.myLearnerUtility.getWordFormUtility().getNumber(word), "p"))
-							&& (isVerbEnding(dataholderHandler, word))) {
+					boolean c1 = dataholderHandler.isExistTaggedSentenceByPattern("(^| )"+word+" (<B>|" + Constant.FORBIDDEN + ")");
+					boolean c2 = StringUtils.equals(this.myLearnerUtility.getWordFormUtility().getNumber(word), "p");
+					boolean c3 = isVerbEnding(dataholderHandler, word);
+					if (c1 && c2 && (!c3)) {
 						dataholderHandler.updateDataHolder(word, "p", "-",
 								"wordpos", 1);
 						if (isValidWord(word)) {
 							organs.add(word);
-							myLogger.debug("find a [p]" + word);
+							myLogger.debug("find a [p] " + word);
 						}
 					}
 				}
@@ -210,30 +214,6 @@ public class UnknownWordBootstrapping implements IModule {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Helper of unknownWordBootstrapping()
-	 * 
-	 * @return list of words
-	 */
-	public List<String> unknownWordBootstrappingGetUnknownWord(DataHolder dataholderHandler, String plMiddle) {
-		List<String> words = new LinkedList<String>();
-		Iterator<Entry<String, String>> iter = dataholderHandler.getUnknownWordHolderIterator();
-		while (iter.hasNext()) {
-			Entry<String, String> entry = iter.next();
-			String word = entry.getKey();
-			String flag = entry.getValue();
-			if (word != null) {
-				if ((StringUtils.equals(flag, "unknown"))
-					&& 		((StringUtility.createMatcher(plMiddle, word).find()) 
-							|| (StringUtility.createMatcher("("+ Constant.PLENDINGS + "|ium)$", word).find()))
-				)
-					words.add(word);
-			}
-		}
-
-		return words;
 	}
 
 	public void unknownWordBootstrappingPostprocessing(DataHolder dataholderHandler) {

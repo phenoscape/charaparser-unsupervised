@@ -2645,11 +2645,10 @@ public class Learner {
 		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
 		myLogger.trace("[additionalBootStrapping]Start");
 
-//		int flag = 0;
-
 //		this.myDataHolder.printHolder(DataHolder.SENTENCE);
 		
-		/*
+		int flag = 0;
+		
 		do {
 			myLogger.trace(String.format("Enter one do-while loop iteration"));
 			flag = 0;
@@ -2676,7 +2675,7 @@ public class Learner {
 			myLogger.trace(String.format("Quite this iteration with flag = %d",
 					flag));
 		} while (flag > 0);
-		*/
+		
 		myLogger.trace("[additionalBootStrapping]End");
 	}
 	

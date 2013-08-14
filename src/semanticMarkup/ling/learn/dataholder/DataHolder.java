@@ -625,6 +625,25 @@ public class DataHolder {
 
 		return words;
 	}
+
+	private boolean getWordsFromUnknownWordByPatternsHelper(String pattern,
+			boolean isPatternChecked, String text) {
+		boolean result = false;
+
+		if (!isPatternChecked) {
+			result = true;
+		}
+		else {
+			if (pattern != null) {
+				if (StringUtility.isMatchedNullSafe(pattern, text)) {
+					result = true;
+				}
+			}
+		}
+
+		return result;
+	}
+	
 	
 	public boolean isWordExistInUnknownWord(String wordPattern,
 			boolean isWordPatternChecked, String flagPattern,
@@ -656,24 +675,6 @@ public class DataHolder {
 		return isWordExist;
 	}
 
-	private boolean getWordsFromUnknownWordByPatternsHelper(String pattern,
-			boolean isPatternChecked, String text) {
-		boolean result = false;
-
-		if (!isPatternChecked) {
-			result = true;
-		}
-		else {
-			if (pattern != null) {
-				if (StringUtility.isMatchedNullSafe(pattern, text)) {
-					result = true;
-				}
-			}
-		}
-
-		return result;
-	}
-	
 	/**
 	 * Check if any sentence matches given pattern exists in the data holder
 	 * 
