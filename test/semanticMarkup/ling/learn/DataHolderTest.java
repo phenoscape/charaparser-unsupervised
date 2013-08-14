@@ -31,6 +31,24 @@ public class DataHolderTest {
 	
 	private DataHolder tester;
 	
+	private DataHolder dataHolderFactory() {
+		DataHolder tester;
+
+		Configuration myConfiguration = new Configuration();
+		WordNetPOSKnowledgeBase wordNetPOSKnowledgeBase = null;
+		try {
+			wordNetPOSKnowledgeBase = new WordNetPOSKnowledgeBase(myConfiguration.getWordNetDictDir(), false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		WordFormUtility wordFormUtility = new WordFormUtility(wordNetPOSKnowledgeBase);
+		tester = new DataHolder(myConfiguration, wordFormUtility);
+
+		return tester;
+	}
+	
 	@Before
 	public void initialize(){		
 		tester = dataHolderFactory();
@@ -323,23 +341,36 @@ public class DataHolderTest {
 		
 		assertEquals("updateDataHolderNN case 3 forbidden words - false", 1, tester.updateDataHolderNN(0, 2, input1));		
 	}
-
-	private DataHolder dataHolderFactory() {
-		DataHolder tester;
-
-		Configuration myConfiguration = new Configuration();
-		WordNetPOSKnowledgeBase wordNetPOSKnowledgeBase = null;
-		try {
-			wordNetPOSKnowledgeBase = new WordNetPOSKnowledgeBase(myConfiguration.getWordNetDictDir(), false);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
+	
+	@Test
+	public void testGetWordsFromUnknownWord(){
+		DataHolder myTester = this.dataHolderFactory();
 		
-		WordFormUtility wordFormUtility = new WordFormUtility(wordNetPOSKnowledgeBase);
-		tester = new DataHolder(myConfiguration, wordFormUtility);
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word3 unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("cheek unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("cross unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("deep unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("denticles unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word4 unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("endocranium unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word5 unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("lepidotrichia unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word1 unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word2 unknown".split(" ")));
+		
+		Set<String> target = new HashSet<String>();
+		target.add("cheek");
+		target.add("cross");
+		target.add("deep");
+		target.add("denticles");
+		target.add("endocranium");
+		target.add("lepidotrichia");
 
-		return tester;
+		String wordPattern = "(("+ Constant.PLENDINGS + "|ium)$)|(ee)";
+		String flagPattern = "^unknown$";
+		
+		assertEquals("getWordsFromUnknownWord", target, myTester.getWordsFromUnknownWord(wordPattern, true, flagPattern, true));
 	}
 
+	
 }
