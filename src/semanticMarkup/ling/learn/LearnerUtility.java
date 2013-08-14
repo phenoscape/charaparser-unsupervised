@@ -606,8 +606,7 @@ public class LearnerUtility {
 		sentence = annotateSentenceHelper(sentence, nouns, "N", true);
 		sentence = annotateSentenceHelper(sentence, modifiers, "M", true);
 		sentence = annotateSentenceHelper(sentence, boundaryWords, "B", true);
-		sentence = annotateSentenceHelper(sentence, properNouns, "Z", true);
-		sentence = annotateSentenceHelper(sentence, boundaryMarks, "Z", false);
+		sentence = annotateSentenceHelper(sentence, boundaryMarks, "B", false);
 		
 		sentence = annotateSentenceHelper2(sentence);
 		

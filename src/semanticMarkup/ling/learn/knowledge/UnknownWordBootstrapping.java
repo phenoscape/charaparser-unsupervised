@@ -114,6 +114,9 @@ public class UnknownWordBootstrapping implements IModule {
 							if (!this.myLearnerUtility.getConstant().forbiddenWords
 									.contains(tempWord)) {
 								boundaries.add(tempWord);
+								if (tempWord.equals("anterolaterally")) {
+									System.out.println();
+								}
 								myLogger.debug("find a [b] " + tempWord);
 							}
 						}

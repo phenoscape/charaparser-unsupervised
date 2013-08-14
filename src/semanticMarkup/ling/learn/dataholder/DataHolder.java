@@ -324,6 +324,63 @@ public class DataHolder {
 		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
 		
 		return iter;
+	} 
+	
+	public boolean updateWordPOS(String word, String POS, String role,
+			int certaintyU, int certaintyL, String savedFlag, String savedID) {
+
+		
+		WordPOSKey key = new WordPOSKey(word, POS);
+		WordPOSValue value = new WordPOSValue(role, certaintyU, certaintyL,
+				savedFlag, savedID);
+		boolean result = this.updateWordPOS(key, value);
+
+
+		return result;
+	}
+	
+	public boolean updateWordPOS(WordPOSKey key, WordPOSValue value) {
+    	PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.updateWordPOS");
+		
+		boolean result = true;
+		
+		if (this.wordPOSTable.containsKey(key)) {
+			if (this.wordPOSTable.get(key).equals(value)) {
+				result = false;
+				myLogger.trace(String.format(
+						"Updated [%s, %s] in WordPOS holder: No update",
+						key.toString(), value.toString()));
+			}
+			else {
+				this.wordPOSTable.put(key, value);
+				myLogger.trace(String.format(
+						"Updated [%s, %s] in WordPOS holder: Updated",
+						key.toString(), value.toString()));
+			}
+		}
+		else {
+			this.wordPOSTable.put(key, value);
+			myLogger.trace(String.format(
+					"Updated [%s, %s] in WordPOS holder: Added New",
+					key.toString(), value.toString()));
+		}
+		
+		return result;
+	}
+	
+	public boolean removeWordPOS(WordPOSKey key) {
+		boolean result = false;
+		
+		if (this.wordPOSTable.containsKey(key)) {
+			this.wordPOSTable.remove(key);
+			result = true;
+		}
+		else {
+			result = false;
+		}
+		
+		return result;
 	}
 	
 	public Iterator<Entry<String, String>> getUnknownWordHolderIterator(){
@@ -425,7 +482,7 @@ public class DataHolder {
 		
 		if (holderID == DataHolder.WORDPOS) {
 			int index = 0;
-			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();			
+			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();			
 			while (iter.hasNext()) {				
 				if ((index >= startIndex) && (index <= endIndex)) {
 					Entry<WordPOSKey, WordPOSValue> entry = iter.next();
@@ -507,9 +564,9 @@ public class DataHolder {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.getWordPOSEntries");
         
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolder()
-				.entrySet().iterator();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();
 		List<Entry<WordPOSKey, WordPOSValue>> result = new ArrayList<Entry<WordPOSKey, WordPOSValue>>();
+		
 		while (iter.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> wordPOSEntry = iter.next();
 			if (StringUtils.equals(wordPOSEntry.getKey().getWord(), word)) {
@@ -522,19 +579,7 @@ public class DataHolder {
 		
 		return result;
     }
-    
-    public void updateWordPOS(String word, String POS, String role, int certaintyU, int certaintyL, String savedFlag, String savedID) {
-    	PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.addWordPOS");
-        
-        WordPOSKey key = new WordPOSKey(word, POS);
-		WordPOSValue value = new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID);
-		this.getWordPOSHolder().put(key, value);
-        
-		myLogger.trace(String.format(
-				"Added [Key: %s = Value: %s] into WordPOS holder",
-				key.toString(), value.toString()));
-    }    
+
 
 	/**
 	 * check if the word is in the singularPluralTable.
@@ -897,7 +942,7 @@ public class DataHolder {
 				WordPOSValue value = this.wordPOSTable.get(key);
 				int cU = value.getCertaintyU();
 				if (cU <= 1 && mode.equals("all")) {
-					this.wordPOSTable.remove(key);
+					this.removeWordPOS(key);
 					this.updateUnknownWord(word, "unknown");
 					// delete from SingularPluralHolder
 					if (oldPOS.matches("^.*[sp].*$")) {
@@ -929,7 +974,7 @@ public class DataHolder {
 					WordPOSValue temp = this.wordPOSTable.get(key);
 					int certaintyU = temp.getCertaintyU();
 					temp.setCertiantyU(certaintyU-1);
-					this.wordPOSTable.put(key, temp);
+					this.updateWordPOS(key, temp);
 				}
 			}
 		}
@@ -1371,8 +1416,7 @@ public class DataHolder {
 		// if (targetWordPOS == null) {
 			myLogger.trace("Case 1");
 			certaintyU += increment;
-			this.getWordPOSHolder().put(new WordPOSKey(newWord, newPOS),
-					new WordPOSValue(newRole, certaintyU, 0, null, null));
+			this.updateWordPOS(new WordPOSKey(newWord, newPOS), new WordPOSValue(newRole, certaintyU, 0, null, null));
 			n = 1;
 			myLogger.trace(String.format("\t: new [%s] pos=%s, role =%s, certaintyU=%d", newWord, newPOS, newRole, certaintyU));
 		// case 2: the word already exists, update it
@@ -1434,8 +1478,7 @@ public class DataHolder {
 			}
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.getWordPOSHolder()
-				.entrySet().iterator();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.getWordPOSHolderIterator();
 		int certaintyL = 0;
 		while (iter2.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
@@ -1443,8 +1486,7 @@ public class DataHolder {
 				certaintyL += e.getValue().getCertaintyU();
 			}
 		}
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter3 = this.getWordPOSHolder()
-				.entrySet().iterator();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter3 = this.getWordPOSHolderIterator();
 		while (iter3.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter3.next();
 			if (e.getKey().getWord().equals(newWord)) {
@@ -1568,7 +1610,8 @@ public class DataHolder {
 			// find (newWord, newPOS)
 			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
 			if (!this.getWordPOSHolder().containsKey(newOldKey)) {
-				this.getWordPOSHolder().put(newNewKey, new WordPOSValue(newRole,
+//				this.getWordPOSHolder().put(newNewKey, );
+				this.updateWordPOS(newNewKey, new WordPOSValue(newRole,
 						certaintyU, 0, "", ""));
 			}
 			
@@ -1579,8 +1622,7 @@ public class DataHolder {
 		int sum_certaintyU = this.getSumCertaintyU(newWord);
 		
 		if (sum_certaintyU > 0) {
-			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.getWordPOSHolder()
-					.entrySet().iterator();
+			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.getWordPOSHolderIterator();
 			while (iter2.hasNext()) {
 				Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
 				if (e.getKey().getWord().equals(newWord)) {
@@ -1665,7 +1707,7 @@ public class DataHolder {
 	
 	public int getSumCertaintyU(String word) {
 		int sumCertaintyU = 0;
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();
 		while (iter.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter.next();
 			if (e.getKey().getWord().equals(word)) {
@@ -1782,7 +1824,7 @@ public class DataHolder {
 			return POSInfoList;
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();
 		while (iter.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter.next();
 			String w = e.getKey().getWord();
@@ -1847,12 +1889,14 @@ public class DataHolder {
 				isUpdated = false;
 			}
 			else {
-				this.wordPOSTable.put(key, value);
+//				this.wordPOSTable.put(key, value);
+				this.updateWordPOS(key, value);
 				isUpdated = true;
 			}
 		}
 		else {
-			this.wordPOSTable.put(key, value);
+//			this.wordPOSTable.put(key, value);
+			this.updateWordPOS(key, value);
 			isUpdated = true;
 		}
 		
