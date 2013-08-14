@@ -370,10 +370,16 @@ public class DataHolder {
 	}
 	
 	public boolean removeWordPOS(WordPOSKey key) {
+    	PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.updateWordPOS");
+		
 		boolean result = false;
 		
 		if (this.wordPOSTable.containsKey(key)) {
-			this.wordPOSTable.remove(key);
+			WordPOSValue oldValue = this.wordPOSTable.remove(key);
+			myLogger.trace(String.format(
+					"Updated [%s, %s] in WordPOS holder: Added New",
+					key.toString(), oldValue.toString()));
 			result = true;
 		}
 		else {
