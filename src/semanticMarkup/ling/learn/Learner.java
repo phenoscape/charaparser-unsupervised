@@ -231,6 +231,11 @@ public class Learner {
 					sentCopy.add(sentences.get(j).getContent());
 
 					// process the sentence
+					System.out.println(true);
+					System.out.println(StringUtility.isMatchedNullSafe("oral dermal tubercles exhibiting organ", (sentences.get(j).getContent())));
+					if (StringUtility.isMatchedNullSafe("oral dermal tubercles exhibi", (sentences.get(j).getContent()))) {
+						System.out.println();
+					}
 					sentences.get(j).setContent(this.handleSentence(sentences.get(j).getContent()));
 
 					// store all words

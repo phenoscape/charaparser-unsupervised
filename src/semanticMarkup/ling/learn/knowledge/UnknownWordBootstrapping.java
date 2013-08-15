@@ -64,11 +64,14 @@ public class UnknownWordBootstrapping implements IModule {
 			Set<String> modifiers = new HashSet<String>();
 			Set<String> allWords = new HashSet<String>();
 			
-			String wordPattern = "(("+ Constant.PLENDINGS + "|ium)$)|(ee)";
+			String wordPattern = "(("+ Constant.PLENDINGS + "|ium)$)|"+plMiddle;
 			String flagPattern = "^unknown$";
 			Set<String> words = dataholderHandler.getWordsFromUnknownWord(wordPattern, true, flagPattern, true);
 			
 			for (String word: words){
+				if (word.equals("teeth")) {
+					System.out.println();
+				}
 				if ((StringUtility.isMatchedNullSafe("ium$", word))
 						&& (!this.myLearnerUtility.getConstant().singularExceptions
 								.contains(word))) {
@@ -86,6 +89,7 @@ public class UnknownWordBootstrapping implements IModule {
 						dataholderHandler.updateDataHolder(word, "p", "-",
 								"wordpos", 1);
 						if (isValidWord(word)) {
+
 							organs.add(word);
 							myLogger.debug("find a [p] " + word);
 						}

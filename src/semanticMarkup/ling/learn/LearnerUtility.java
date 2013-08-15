@@ -478,32 +478,41 @@ public class LearnerUtility {
 			while (sentenceIter.hasNext()) {
 				SentenceStructure sentence = sentenceIter.next();
 				int thisID = sentence.getID();
-				String thisSentence = sentence.getSentence();
-				idAndSentenceList.add(new StringAndInt(thisSentence, thisID));
+				String thisOriginalSentence = sentence.getOriginalSentence();
+				idAndSentenceList.add(new StringAndInt(thisOriginalSentence, thisID));
 			}
 		}
 		else {
 			while (sentenceIter.hasNext()) {
 				SentenceStructure sentence = sentenceIter.next();
 				int thisID = sentence.getID();
-				String thisOriginalSentence = sentence.getOriginalSentence();
-				idAndSentenceList.add(new StringAndInt(thisOriginalSentence, thisID));
+				String thisSentence = sentence.getSentence();
+				idAndSentenceList.add(new StringAndInt(thisSentence, thisID));
 			}
 		}
 		
 		KnownTagCollection myKnownTags = this.getKnownTags(dataholderHandler, mode);
-		
+	
 		Iterator<StringAndInt> idAndSentenceListIter = idAndSentenceList.iterator();
 		while (idAndSentenceListIter.hasNext()) {
 			StringAndInt idAndSentence = idAndSentenceListIter.next();
 			int thisID = idAndSentence.getInt();
+			if (thisID == 127) {
+				System.out.println();
+			}
 			String thisSentence = idAndSentence.getString();
 			
 			thisSentence = tagAllSentencesHelper(thisSentence);
 			thisSentence = annotateSentence(thisSentence, myKnownTags, dataholderHandler.BMSWords);
 			
 			SentenceStructure targetSentence = dataholderHandler.getSentence(thisID);
+			
+			if (StringUtils.equals(mode, "original")) {
+				targetSentence.setOriginalSentence(thisSentence);
+			}
+			else {
 			targetSentence.setSentence(thisSentence);
+			}
 		}
 		
 	}
