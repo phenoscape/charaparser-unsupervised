@@ -144,15 +144,16 @@ public class LearnerUtilityTest {
 	}
 	
 	@Test
-	public void testCollection2Pattern(){
-		assertEquals("collection2Pattern - null", "", LearnerUtility.Collection2Pattern(null));
-		assertEquals("collection2Pattern - empty input", "", LearnerUtility.Collection2Pattern(new LinkedList<String>()));
+	public void testIterable2Pattern(){
+		assertEquals("Iterable2Pattern - null", "", tester.Iterable2Pattern(null));
+		assertEquals("Iterable2Pattern - empty input", "", tester.Iterable2Pattern(new LinkedList<String>()));
 		
 		Set<String> input = new HashSet<String>();
 		input.add("word1");
 		input.add("word2");
 		input.add("word3");
-		assertEquals("collection2Pattern - set input", "word1|word2|word3", LearnerUtility.Collection2Pattern(input));
+		input.add("(");
+		assertEquals("Iterable2Pattern - set input", "word1|word2|word3|\\(", tester.Iterable2Pattern(input));
 	}
 	
 	@Test
@@ -310,7 +311,7 @@ public class LearnerUtilityTest {
 				"stems <B>usually</B> <B>erect</B> , sometimes prostrate to ascending <B>(</B> underground stems sometimes woody caudices or rhizomes , sometimes fleshy <B>)</B> .";
 		Set<String> boundaryWords = new HashSet<String>();
 		Set<String> boundaryMarks = new HashSet<String>();
-		boundaryMarks.addAll(Arrays.asList("\\( \\) \\[ \\] \\{ \\}".split(" ")));
+		boundaryMarks.addAll(Arrays.asList("( ) [ ] { }".split(" ")));
 		boundaryWords.addAll(Arrays.asList("under up upward usually erect villous was weakly".split(" ")));
 		
 		assertEquals("annotateSentenceHelper1", expected1, tester.annotateSentenceHelper(input, boundaryMarks, "B", false));

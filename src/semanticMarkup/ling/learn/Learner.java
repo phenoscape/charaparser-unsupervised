@@ -1290,8 +1290,8 @@ public class Learner {
 		
 		List<String> stops = new ArrayList<String>();
 		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
-		stops.addAll(Arrays.asList(new String[] { "NUM", "\\(", "\\[", "\\{",
-				"\\)", "\\]", "\\}", "\\d+" }));
+		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{",
+				")", "]", "}", "d+" }));
 
 		myLogger.trace("Stop Words: " + stops);
 		for (int i = 0; i < stops.size(); i++) {

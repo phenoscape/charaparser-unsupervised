@@ -402,22 +402,40 @@ public class LearnerUtility {
 	 * @return string of pattern. If the collection is null or empty, return an
 	 *         empty string
 	 */
-	public static String Collection2Pattern(Collection<String> c) {
-		if (c == null) {
+	public String Iterable2Pattern(Iterable<String> words) {
+		if (words == null) {
 			return "";
 		}
 
-		String pattern = "";
-
-		Iterator<String> iter = c.iterator();
-		while (iter.hasNext()) {
-			String element = iter.next();
-			pattern = pattern + element + "|";
+		List<String> wordList = new LinkedList<String>();
+		for (String word: words) {
+			word = this.addDoubleBackslash(word);
+			wordList.add(word);
 		}
-
-		if (!pattern.equals("")) {
-			pattern = pattern.substring(0, pattern.length() - 1);
-		}
+		String pattern = StringUtils.join(wordList, "|");
+//		pattern = this.addDoubleBackslash(pattern);
+		
+		
+		
+		
+//		testRunner("\\\\", "abc\\abc");
+//		testRunner("\\(", "abc(abc");
+//		testRunner("\\)", "abc)abc");
+//		testRunner("\\[", "abc[abc");
+//		testRunner("\\]", "abc]abc");
+//		testRunner("\\{", "abc{abc");
+//		testRunner("\\}", "abc}abc");
+//		testRunner("\\.", "abc.abc");
+//		testRunner("\\|", "abc|abc");
+//		testRunner("\\+", "abc+abc");
+//		testRunner("\\*", "abc*abc");
+//		testRunner("\\?", "abc?abc");
+//		testRunner("\\d+", "01138");
+		
+//		[-\\\\\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]
+//				
+//				stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{",
+//						")", "]", "}", "d+" }));
 
 		return pattern;
 	}
@@ -624,7 +642,7 @@ public class LearnerUtility {
 				sentence = StringUtility.replaceAllBackreference(
 						sentence,
 						String.format("\\b(%s)\\b",
-								LearnerUtility.Collection2Pattern(words)),
+								this.Iterable2Pattern(words)),
 						String.format("<%s>$1</%s>", tag, tag));
 			} else {
 //				String pattern = String.format("(%s)", LearnerUtility.Collection2Pattern(words));
@@ -634,7 +652,7 @@ public class LearnerUtility {
 ////				boolean b2 = m2.find();
 				
 				String regex = String.format("(%s)",
-						LearnerUtility.Collection2Pattern(words));
+						this.Iterable2Pattern(words));
 				String replacement = String.format("<%s>$1</%s>", tag, tag);
 				
 				myLogger.trace("Sentence: "+sentence);
@@ -839,18 +857,17 @@ public class LearnerUtility {
 
 			if (word != null && POS != null) {
 				if (StringUtils.equals(POS, "b")) {
-					String pattern = "^[-\\\\\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]$";
-					if (StringUtility.createMatcher(pattern, word).find()) {
-						bMarks.add("\\"+word);
-					} else if ((!(StringUtility.createMatcher("\\w", word)
-							.find())) && (!StringUtils.equals(word, "\\/"))) {
+//					String pattern = "^[-\\\\\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]$";
+					String pattern = "^(-|\\\\|\\(|\\)|\\[|\\]|\\{|\\}|\\.|\\||\\+|\\*|\\?)$";
+					if (StringUtility.isMatchedNullSafe(pattern, word)) {
+						bMarks.add(word);
+					} else if ((!(StringUtility.isMatchedNullSafe("\\w", word))) && (!StringUtils.equals(word, "/"))) {
 						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
 								word).find()) {
-							bMarks.add("\\"+word);
+							bMarks.add(word);
 						}
 					} else {
-						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
-								word).find()) {
+						if (StringUtility.isMatchedNullSafe("^[a-zA-Z0-9_-]+$", word)) {
 							bWords.add(word);
 						}
 					}
@@ -889,4 +906,68 @@ public class LearnerUtility {
 		return pNouns;
 	}
 
+//	/**
+//	 * @param args
+//	 */
+//	public static void main(String[] args) {
+////		[-\\\\\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]
+////		
+////		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{",
+////				")", "]", "}", "d+" }));
+//		testRunner("z", "abczabc");
+//		testRunner("/", "abc/abc");
+//		testRunner("-", "abc-abc");
+//		testRunner("_", "abc_abc");
+//		testRunner(addDoubleBackslash("\\"), "abc\\abc");
+//		testRunner(addDoubleBackslash("("), "abc(abc");
+//		testRunner(addDoubleBackslash(")"), "abc)abc");
+//		testRunner(addDoubleBackslash("["), "abc[abc");
+//		testRunner(addDoubleBackslash("]"), "abc]abc");
+//		testRunner(addDoubleBackslash("{"), "abc{abc");
+//		testRunner(addDoubleBackslash("}"), "abc}abc");
+//		testRunner(addDoubleBackslash("."), "abc.abc");
+//		testRunner(addDoubleBackslash("|"), "abc|abc");
+//		testRunner(addDoubleBackslash("+"), "abc+abc");
+//		testRunner(addDoubleBackslash("*"), "abc*abc");
+//		testRunner(addDoubleBackslash("?"), "abc?abc");
+//		testRunner(addDoubleBackslash("d+"), "01138");
+////		testRunner("\\(", "abc(abc");
+////		testRunner("\\(", "abc(abc");
+////		testRunner("\\(", "abc(abc");
+//		
+//		String str = "(";
+//		str = str.replaceAll("(\\()", "\\\\$1");
+//		System.out.println(str);
+//		
+//		str = addDoubleBackslash(str);
+//
+//
+//	}
+	private String addDoubleBackslash(String word) {
+		word = word.replaceAll("^(\\\\|\\(|\\)|\\[|\\]|\\{|\\}|\\.|\\||\\+|\\*|\\?|d\\+)$", "\\\\$1");
+//		word = word.replaceAll("^(d\\+)$", "\\\\$1");
+		
+		return word;
+	}
+	
+//	private static String addDoubleBackslash(String word) {
+//		word = word.replaceAll("^(\\\\|\\(|\\)|\\[|\\]|\\{|\\}|\\.|\\||\\+|\\*|\\?|d\\+)$", "\\\\$1");
+////		word = word.replaceAll("^(d\\+)$", "\\\\$1");
+//		
+//		return word;
+//	}
+
+	private static boolean testRunner(String regex, String str) {
+		boolean isMatched = false;
+		
+		Pattern p = Pattern.compile(regex);
+		Matcher m = p.matcher(str);
+		
+		isMatched = m.find();
+		
+		System.out.println(isMatched);
+		
+		return isMatched;
+	}
+	
 }
