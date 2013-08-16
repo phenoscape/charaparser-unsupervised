@@ -23,11 +23,14 @@ import semanticMarkup.ling.learn.Constant;
 import semanticMarkup.ling.learn.POSInfo;
 import semanticMarkup.ling.learn.StringPair;
 import semanticMarkup.ling.learn.StringUtility;
-import semanticMarkup.ling.learn.Utility;
+import semanticMarkup.ling.learn.WordFormUtility;
 
 public class DataHolder {
 	// all unique words in the input treatments
 	public Map<String, Integer> allWords;
+	
+	// words are singular nouns, boundary words, and modifiers
+	public Set<String> BMSWords;
 	
 	// Data holders
 	// Table heuristicnoun
@@ -73,12 +76,14 @@ public class DataHolder {
 	public static final byte WORDROLE = 10;
 
 	private Configuration myConfiguration;
-	private Utility myUtility;
+	private WordFormUtility myWordFormUtility;
 	
-	public DataHolder(Configuration myConfiguration, Utility myUtility) {
+	public DataHolder(Configuration myConfiguration, WordFormUtility myWordFormUtility) {
 		this.myConfiguration = myConfiguration;
-		this.myUtility = myUtility;
+		this.myWordFormUtility = myWordFormUtility;
+		
 		this.allWords = new HashMap<String, Integer>();
+		this.BMSWords = new HashSet<String>();
 		
 		this.discountedTable = new HashMap<DiscountedKey, String>();
 		this.heuristicNounTable = new HashMap<String, String>();
@@ -319,6 +324,69 @@ public class DataHolder {
 		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
 		
 		return iter;
+	} 
+	
+	public boolean updateWordPOS(String word, String POS, String role,
+			int certaintyU, int certaintyL, String savedFlag, String savedID) {
+
+		
+		WordPOSKey key = new WordPOSKey(word, POS);
+		WordPOSValue value = new WordPOSValue(role, certaintyU, certaintyL,
+				savedFlag, savedID);
+		boolean result = this.updateWordPOS(key, value);
+
+
+		return result;
+	}
+	
+	public boolean updateWordPOS(WordPOSKey key, WordPOSValue value) {
+    	PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.updateWordPOS");
+		
+		boolean result = true;
+		
+		if (this.wordPOSTable.containsKey(key)) {
+			if (this.wordPOSTable.get(key).equals(value)) {
+				result = false;
+				myLogger.trace(String.format(
+						"Updated [%s, %s] in WordPOS holder: No update",
+						key.toString(), value.toString()));
+			}
+			else {
+				this.wordPOSTable.put(key, value);
+				myLogger.trace(String.format(
+						"Updated [%s, %s] in WordPOS holder: Updated",
+						key.toString(), value.toString()));
+			}
+		}
+		else {
+			this.wordPOSTable.put(key, value);
+			myLogger.trace(String.format(
+					"Updated [%s, %s] in WordPOS holder: Added New",
+					key.toString(), value.toString()));
+		}
+		
+		return result;
+	}
+	
+	public boolean removeWordPOS(WordPOSKey key) {
+    	PropertyConfigurator.configure( "conf/log4j.properties" );
+		Logger myLogger = Logger.getLogger("dataholder.updateWordPOS");
+		
+		boolean result = false;
+		
+		if (this.wordPOSTable.containsKey(key)) {
+			WordPOSValue oldValue = this.wordPOSTable.remove(key);
+			myLogger.trace(String.format(
+					"Updated [%s, %s] in WordPOS holder: Added New",
+					key.toString(), oldValue.toString()));
+			result = true;
+		}
+		else {
+			result = false;
+		}
+		
+		return result;
 	}
 	
 	public Iterator<Entry<String, String>> getUnknownWordHolderIterator(){
@@ -420,7 +488,7 @@ public class DataHolder {
 		
 		if (holderID == DataHolder.WORDPOS) {
 			int index = 0;
-			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();			
+			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();			
 			while (iter.hasNext()) {				
 				if ((index >= startIndex) && (index <= endIndex)) {
 					Entry<WordPOSKey, WordPOSValue> entry = iter.next();
@@ -502,9 +570,9 @@ public class DataHolder {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.getWordPOSEntries");
         
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolder()
-				.entrySet().iterator();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();
 		List<Entry<WordPOSKey, WordPOSValue>> result = new ArrayList<Entry<WordPOSKey, WordPOSValue>>();
+		
 		while (iter.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> wordPOSEntry = iter.next();
 			if (StringUtils.equals(wordPOSEntry.getKey().getWord(), word)) {
@@ -517,19 +585,7 @@ public class DataHolder {
 		
 		return result;
     }
-    
-    public void updateWordPOS(String word, String POS, String role, int certaintyU, int certaintyL, String savedFlag, String savedID) {
-    	PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("dataholder.addWordPOS");
-        
-        WordPOSKey key = new WordPOSKey(word, POS);
-		WordPOSValue value = new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID);
-		this.getWordPOSHolder().put(key, value);
-        
-		myLogger.trace(String.format(
-				"Added [Key: %s = Value: %s] into WordPOS holder",
-				key.toString(), value.toString()));
-    }    
+
 
 	/**
 	 * check if the word is in the singularPluralTable.
@@ -593,9 +649,8 @@ public class DataHolder {
 	 *            if the flag pattern is used
 	 * @return set of words
 	 */
-	public Set<String> getWordsFromUnknownWord(String wordPattern,
-			boolean isWordPatternChecked, String flagPattern,
-			boolean isFlagPatternChecked) {
+	public Set<String> getWordsFromUnknownWord(String wordPattern, boolean isWordPatternChecked, 
+			String flagPattern, boolean isFlagPatternChecked) {
 		Set<String> words = new HashSet<String>();
 
 		if ((!isWordPatternChecked) && (!isFlagPatternChecked)) {
@@ -626,13 +681,106 @@ public class DataHolder {
 			boolean isPatternChecked, String text) {
 		boolean result = false;
 
-		if ((isPatternChecked) && (pattern != null)) {
-			if (StringUtility.createMatcher(pattern, text).matches()) {
-				result = true;
+		if (!isPatternChecked) {
+			result = true;
+		}
+		else {
+			if (pattern != null) {
+				if (StringUtility.isMatchedNullSafe(pattern, text)) {
+					result = true;
+				}
 			}
 		}
 
 		return result;
+	}
+	
+	
+	public boolean isWordExistInUnknownWord(String wordPattern,
+			boolean isWordPatternChecked, String flagPattern,
+			boolean isFlagPatternChecked) {
+		boolean isWordExist = false;
+		if ((!isWordPatternChecked) && (!isFlagPatternChecked)) {
+			isWordExist = false;
+			return isWordExist;
+		}
+
+		Iterator<Entry<String, String>> iter = this
+				.getUnknownWordHolderIterator();
+		while (iter.hasNext()) {
+			Entry<String, String> item = iter.next();
+
+			String word = item.getKey();
+			String flag = item.getValue();
+			boolean case1 = getWordsFromUnknownWordByPatternsHelper(
+					wordPattern, isWordPatternChecked, word);
+			boolean case2 = getWordsFromUnknownWordByPatternsHelper(
+					flagPattern, isFlagPatternChecked, flag);
+
+			if (case1 && case2) {
+				isWordExist = true;
+				return isWordExist;
+			}
+		}
+		
+		return isWordExist;
+	}
+
+	/**
+	 * Check if any sentence matches given pattern exists in the data holder
+	 * 
+	 * @param dataholderHandler
+	 *            handler of dataholder
+	 * @param pattern
+	 *            pattern to match against
+	 * @return true if any sentence matches the given pattern exists; false
+	 *         otherwise
+	 */
+	public boolean isExistTaggedSentenceByPattern(String pattern) {
+		boolean isExist = false;
+		
+		Iterator<SentenceStructure> iter = getSentenceHolderIterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceItem = iter.next();
+			String tag = sentenceItem.getTag();
+			if ((!StringUtils.equals(tag, "ignore"))||(tag == null)) {
+				String sentence = sentenceItem.getSentence();
+				if (StringUtility.isMatchedNullSafe(pattern, sentence)) {
+					isExist = true;
+					return isExist;
+				}
+			}
+		}
+		
+		return isExist;
+	}
+	
+	/**
+	 * Get all sentences match a given pattern from the data holder
+	 * 
+	 * @param dataholderHandler
+	 *            handler of dataholder
+	 * @param pattern
+	 *            pattern to match against
+	 * @return sentences matche the given pattern exists; false
+	 *         otherwise
+	 */
+	public Set<SentenceStructure> getTaggedSentenceByPattern(String pattern) {
+		Set<SentenceStructure> sentences = new HashSet<SentenceStructure>();
+		
+		Iterator<SentenceStructure> iter = getSentenceHolderIterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceItem = iter.next();
+			String tag = sentenceItem.getTag();
+			if ((!StringUtils.equals(tag, "ignore"))||(tag == null)) {
+				String sentence = sentenceItem.getSentence();
+				if (StringUtility.isMatchedNullSafe(pattern, sentence)) {
+					sentences.add(sentenceItem);
+				}
+			}
+		}
+		
+		return sentences;
 	}
 	
 	/**
@@ -732,7 +880,7 @@ public class DataHolder {
 				Matcher m = p.matcher(originalSentence);
 				if (m.find()) {
 					String plural = m.group(1).toLowerCase();
-					if (this.myUtility.getWordFormUtility().getNumber(plural)
+					if (this.myWordFormUtility.getNumber(plural)
 							.equals("p")) {
 						count++;
 					}
@@ -800,7 +948,7 @@ public class DataHolder {
 				WordPOSValue value = this.wordPOSTable.get(key);
 				int cU = value.getCertaintyU();
 				if (cU <= 1 && mode.equals("all")) {
-					this.wordPOSTable.remove(key);
+					this.removeWordPOS(key);
 					this.updateUnknownWord(word, "unknown");
 					// delete from SingularPluralHolder
 					if (oldPOS.matches("^.*[sp].*$")) {
@@ -832,7 +980,7 @@ public class DataHolder {
 					WordPOSValue temp = this.wordPOSTable.get(key);
 					int certaintyU = temp.getCertaintyU();
 					temp.setCertiantyU(certaintyU-1);
-					this.wordPOSTable.put(key, temp);
+					this.updateWordPOS(key, temp);
 				}
 			}
 		}
@@ -1012,7 +1160,7 @@ public class DataHolder {
 		// if it is a n word, check if it is singular or plural, and update the
 		// pos
 		if (pos.equals("n")) {
-			pos = this.myUtility.getWordFormUtility().getNumber(word);
+			pos = this.myWordFormUtility.getNumber(word);
 		}
 
 		result = result + markKnown(word, pos, role, table, increment);
@@ -1029,7 +1177,7 @@ public class DataHolder {
 			if (pos.equals("p")) {
 				myLogger.trace("Case 1");
 				String pl = word;
-				word = this.myUtility.getWordFormUtility().getSingular(word);
+				word = this.myWordFormUtility.getSingular(word);
 				myLogger.trace(String.format("Get singular form of %s: %s", pl,
 						word));
 
@@ -1043,7 +1191,7 @@ public class DataHolder {
 			}
 			else if (pos.equals("s")) {
 				myLogger.trace("Case 2");
-				List<String> words = this.myUtility.getWordFormUtility().getPlural(word);
+				List<String> words = this.myWordFormUtility.getPlural(word);
 				String sg = word;
 //				if (sg.equals("centrum")) {
 //					System.out.println("Return Size: "+words.size());
@@ -1274,8 +1422,7 @@ public class DataHolder {
 		// if (targetWordPOS == null) {
 			myLogger.trace("Case 1");
 			certaintyU += increment;
-			this.getWordPOSHolder().put(new WordPOSKey(newWord, newPOS),
-					new WordPOSValue(newRole, certaintyU, 0, null, null));
+			this.updateWordPOS(new WordPOSKey(newWord, newPOS), new WordPOSValue(newRole, certaintyU, 0, null, null));
 			n = 1;
 			myLogger.trace(String.format("\t: new [%s] pos=%s, role =%s, certaintyU=%d", newWord, newPOS, newRole, certaintyU));
 		// case 2: the word already exists, update it
@@ -1337,8 +1484,7 @@ public class DataHolder {
 			}
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.getWordPOSHolder()
-				.entrySet().iterator();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.getWordPOSHolderIterator();
 		int certaintyL = 0;
 		while (iter2.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
@@ -1346,8 +1492,7 @@ public class DataHolder {
 				certaintyL += e.getValue().getCertaintyU();
 			}
 		}
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter3 = this.getWordPOSHolder()
-				.entrySet().iterator();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter3 = this.getWordPOSHolderIterator();
 		while (iter3.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter3.next();
 			if (e.getKey().getWord().equals(newWord)) {
@@ -1471,7 +1616,8 @@ public class DataHolder {
 			// find (newWord, newPOS)
 			WordPOSKey newNewKey = new WordPOSKey(newWord, newPOS);
 			if (!this.getWordPOSHolder().containsKey(newOldKey)) {
-				this.getWordPOSHolder().put(newNewKey, new WordPOSValue(newRole,
+//				this.getWordPOSHolder().put(newNewKey, );
+				this.updateWordPOS(newNewKey, new WordPOSValue(newRole,
 						certaintyU, 0, "", ""));
 			}
 			
@@ -1482,8 +1628,7 @@ public class DataHolder {
 		int sum_certaintyU = this.getSumCertaintyU(newWord);
 		
 		if (sum_certaintyU > 0) {
-			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.getWordPOSHolder()
-					.entrySet().iterator();
+			Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter2 = this.getWordPOSHolderIterator();
 			while (iter2.hasNext()) {
 				Map.Entry<WordPOSKey, WordPOSValue> e = iter2.next();
 				if (e.getKey().getWord().equals(newWord)) {
@@ -1568,7 +1713,7 @@ public class DataHolder {
 	
 	public int getSumCertaintyU(String word) {
 		int sumCertaintyU = 0;
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();
 		while (iter.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter.next();
 			if (e.getKey().getWord().equals(word)) {
@@ -1685,7 +1830,7 @@ public class DataHolder {
 			return POSInfoList;
 		}
 
-		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.wordPOSTable.entrySet().iterator();
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();
 		while (iter.hasNext()) {
 			Map.Entry<WordPOSKey, WordPOSValue> e = iter.next();
 			String w = e.getKey().getWord();
@@ -1731,6 +1876,37 @@ public class DataHolder {
 		}
 		
 		return tags;
+	}
+	
+	// add2Holder
+	public void addWords2WordPOSHolder(Set<String> words, String POS) {
+		Iterator<String> iter = words.iterator();
+		String word = iter.next();
+		this.add2WordPOSHolder(word, POS, "", 0, 0, null, null);
+	}
+	
+	public boolean add2WordPOSHolder(String word, String POS, String role, int certaintyU, int certaintyL, String savedFlag, String savedID) {
+		boolean isUpdated = false;
+		
+		WordPOSKey key = new WordPOSKey(word, POS);
+		WordPOSValue value = new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID);
+		if (this.wordPOSTable.containsKey(key)) {
+			if (this.wordPOSTable.get(key).equals(value)) {
+				isUpdated = false;
+			}
+			else {
+//				this.wordPOSTable.put(key, value);
+				this.updateWordPOS(key, value);
+				isUpdated = true;
+			}
+		}
+		else {
+//			this.wordPOSTable.put(key, value);
+			this.updateWordPOS(key, value);
+			isUpdated = true;
+		}
+		
+		return isUpdated;
 	}
 
 }

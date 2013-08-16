@@ -2,7 +2,6 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.core.Treatment;
+import semanticMarkup.know.IGlossary;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
@@ -30,46 +30,48 @@ import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
+import semanticMarkup.ling.learn.knowledge.Initiation;
+import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrapping;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class Learner {	
 	private static final Set<String> NONS = null; //??
 	private Configuration myConfiguration;
-	private Utility myUtility;
 	private ITokenizer myTokenizer;
 	
 	// Data holder
 	private DataHolder myDataHolder;
 	
-	// Utilities
-	private WordFormUtility myWordFormUtility;
-	private PopulateSentenceUtility myPopulateSentenceUtility;
+	// Learner utility
+	private LearnerUtility myLearnerUtility;
 	
 	// Class variables
 	private int NUM_LEAD_WORDS; // Number of leading words
 	
-	// others
-	
 	// leading three words of sentences 
 	private Set<String> checkedWordSet;
 	
-	public Learner(Configuration configuration, ITokenizer tokenizer, Utility utility) {
+	
+	// modules
+	Initiation initiationModule;
+	
+	UnknownWordBootstrapping unknownWordBootstrappingModule; 
+	
+	public Learner(Configuration configuration, ITokenizer tokenizer, LearnerUtility learnerUtility) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learner");
 		
 		this.myConfiguration = configuration;
-		this.myUtility = utility;
 		this.myTokenizer = tokenizer;
 		
-		// Data holder
-		this.myDataHolder = new DataHolder(myConfiguration, myUtility);
-		
 		// Utilities
-		this.myWordFormUtility = new WordFormUtility(this.myUtility.getWordNet());
-		this.myPopulateSentenceUtility = new PopulateSentenceUtility();
+		this.myLearnerUtility = learnerUtility;
+		
+		// Data holder
+		this.myDataHolder = new DataHolder(myConfiguration, myLearnerUtility.getWordFormUtility());
 		
 		// Class variables
-		NUM_LEAD_WORDS = 3; // Set the number of leading words be 3
+		NUM_LEAD_WORDS = this.myConfiguration.getNumLeadWords(); // Set the number of leading words be 3
 		
 		checkedWordSet = new HashSet<String>();
 		
@@ -78,16 +80,22 @@ public class Learner {
 		myLogger.info("\tMax Tag Lengthr: "+myConfiguration.getMaxTagLength());
 		myLogger.info("\n");
 		
+		initiationModule = new Initiation(this.myLearnerUtility, this.NUM_LEAD_WORDS);
+		unknownWordBootstrappingModule = new UnknownWordBootstrapping(this.myLearnerUtility);
+		
 	}
 
-	public DataHolder Learn(List<Treatment> treatments, String glossaryTable, String markupMode) {
+	public DataHolder Learn(List<Treatment> treatments, IGlossary glossary, String markupMode) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learn");
 		myLogger.trace("Enter Learn");
 		myLogger.trace(String.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
-
-		this.populateSentence(treatments);
-		this.populateUnknownWordsTable(this.myDataHolder.allWords);
+		
+//		this.populateSentence(treatments);
+//		this.populateUnknownWordsTable(this.myDataHolder.allWords);
+		
+		this.initiationModule.loadTreatments(treatments);
+		this.initiationModule.run(myDataHolder);
 
 		/*
 		Map<String, String> mygetHeuristicNounHolder() = myDataHolder.getgetHeuristicNounHolder()();
@@ -131,9 +139,10 @@ public class Learner {
 		this.additionalBootstrapping();
 		
 		myLogger.info("Unknownword bootstrappings:");
-		this.unknownWordBootstrapping();
+//		this.unknownWordBootstrapping();
+		this.unknownWordBootstrappingModule.run(myDataHolder);
 		
-		myLogger.trace("Quite Learn");
+		myLogger.info("Learning done!");
 		
 //		myLogger.info(myDataHolder.toString());
 //		myLogger.info(myDataHolder.getSentenceHolder().toString());
@@ -143,7 +152,17 @@ public class Learner {
 		return myDataHolder;
 	}
 	
-
+	public void addGlossary(IGlossary glossary) {
+		if (glossary != null) {
+			String category = "struture";
+			Set<String> pWords = glossary.getWords(category);
+			Set<String> categories = new HashSet<String>();
+			categories.add(category);
+			Set<String> bWords = glossary.getWordsNotInCategories(categories);
+			this.getDataHolder().addWords2WordPOSHolder(pWords, "p");
+			this.getDataHolder().addWords2WordPOSHolder(bWords, "b");
+		}
+	}
 
 	private void addPredefinedWords() {
 		this.addStopWords();
@@ -161,345 +180,6 @@ public class Learner {
 		return this.myDataHolder;
 	}
 
-	/**
-	 * 
-	 * @param treatments
-	 * @return number of sentences
-	 */
-	public int populateSentence(List<Treatment> treatments) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.populateSentence");
-		myLogger.info("Enter");
-		myLogger.info("Reading sentences...");
-
-		String fileName;
-		int type;
-		String text;
-		int SENTID = 0;
-
-		for (int i = 0; i < treatments.size(); i++) {
-			Treatment tm = treatments.get(i);
-			fileName = tm.getFileName();
-			text = tm.getDescription();
-			type = this.myPopulateSentenceUtility.getType(fileName);
-
-			if (text != null) {
-				// process this text
-				text = this.handleText(text);
-				myLogger.debug("Text: " + text);
-
-				//do sentence segmentation
-				List<Token> sentences = this.myUtility.getLearnerUtility().segmentSentence(text);
-
-				List<String> sentCopy = new LinkedList<String>();
-				List<Integer> validIndex = new LinkedList<Integer>();
-				
-				// for each sentence, do some operations
-				for (int j = 0; j < sentences.size(); j++) {
-					myLogger.debug("Sentence " + j + ": " + sentences.get(j).getContent());
-					
-					// if(!/\w+/){next;}
-					if (!sentences.get(j).getContent().matches("^.*\\w+.*$")) {
-						continue;
-					}
-
-					// This is a valid sentence, save the index
-					validIndex.add(j);
-
-					// restore marks in brackets
-					sentences.get(j).setContent(this.myPopulateSentenceUtility.restoreMarksInBrackets(sentences.get(j).getContent()));
-					// Make a copy of the sentence
-					sentCopy.add(sentences.get(j).getContent());
-
-					// process the sentence
-					sentences.get(j).setContent(this.handleSentence(sentences.get(j).getContent()));
-
-					// store all words
-					this.myDataHolder.allWords = this.getAllWords(sentences.get(j).getContent(), this.myDataHolder.allWords);
-				}
-
-				for (int j = 0; j < validIndex.size(); j++) {
-					String line = sentences.get(validIndex.get(j)).getContent();
-					String oline = sentCopy.get(j);
-
-					// handle line first
-					// remove all ' to avoid escape problems
-					// $line =~ s#'# #g;
-					line.replaceAll("\'", " ");
-
-					// then handle oline
-					Matcher matcher = Pattern.compile(
-							"(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)").matcher(
-							oline);
-					if (matcher.lookingAt()) {
-						oline = oline.replaceAll(
-								"(\\d)\\s*\\[\\s*DOT\\s*\\]\\s*(\\d)",
-								matcher.group(1) + matcher.group(2));
-					}
-
-					// restore ".", "?", ";", ":", "."
-					oline = this.myPopulateSentenceUtility.restoreMarksInBrackets(oline);
-					oline = oline.replaceAll("\'", " ");
-
-					List<String> nWords = this.getFirstNWords(line,
-							this.NUM_LEAD_WORDS);
-					String lead = "";
-					Iterator<String> iter = nWords.iterator();
-					while (iter.hasNext()) {
-						String w = iter.next();
-						lead = lead + w + " ";
-					}
-					lead = lead.replaceAll("\\s$", "");
-
-					String status = "";
-					if (myWordFormUtility.getNumber(nWords.get(0)).equals("p")) {
-						status = "start";
-					} else {
-						status = "normal";
-					}
-
-					lead = StringUtility.removeAll(lead, "\\s+$");
-					lead = StringUtility.removeAll(lead, "^\\s*");
-					lead = lead.replaceAll("\\s+", " ");
-
-					String source = fileName + "-" + Integer.toString(j);
-					if (oline.length() >= 2000) { // EOL
-						oline = line;
-					}
-					String typeStr = null;
-					switch (type) {
-					case 1:
-						typeStr = "character";
-						break;
-					case 2:
-						typeStr = "description";
-						break;
-					}
-
-					this.myDataHolder.addSentence(source, line, oline, lead,
-							status, null, null, typeStr);
-
-					SENTID++;
-				}
-			}
-		}
-
-		myLogger.info("Total sentences = " + SENTID);
-		myLogger.info("Quite");
-
-		return SENTID;
-	}
-	
-	/**
-	 * A helper of method pupulateSentence to handle text process
-	 * 
-	 * @param t
-	 * @return text after process
-	 */
-	public String handleText(String t) {
-
-		if (t == null || t == "") {
-			return t;
-		}
-
-		String text = t;
-
-		//
-		text = text.replaceAll("[\"']", "");
-
-		// plano - to
-		text = text.replaceAll("\\s*-\\s*to\\s+", " to ");
-
-		//
-		text = text.replaceAll("[-_]+shaped", "-shaped");
-
-		// unhide <i>
-		text = text.replaceAll("&lt;i&gt;", "<i>");
-
-		// unhide </i>, these will be used by characterHeuristics to
-		// collect taxon names
-		text = text.replaceAll("&lt;/i&gt;", "</i>");
-
-		// remove 2a. (key marks)
-		text = text.replaceAll("^\\s*\\d+[a-z].\\s*", "");
-
-		// this is not used any more, see perl code - Dongye
-		// store text at this point in original
-		// String original = text;
-
-		// remove HTML entities
-		text = text.replaceAll("&[;#\\w\\d]+;", " ");
-
-		//
-		text = text.replaceAll(" & ", " and ");
-
-		// replace '.', '?', ';', ':', '!' within brackets by some
-		// special markers, to avoid split within brackets during
-		// sentence segmentation
-		// System.out.println("Before Hide: "+text);
-		
-		text = this.myPopulateSentenceUtility.hideMarksInBrackets(text);
-		// System.out.println("After Hide: "+text+"\n");
-
-		text = text.replaceAll("_", "-"); // _ to -
-		text = text.replaceAll("", ""); //
-
-		// absent ; => absent;
-		while (true) {
-			Matcher matcher1 = Pattern.compile("(^.*?)\\s+([:;\\.].*$)")
-					.matcher(text);
-			if (matcher1.lookingAt()) {
-				text = matcher1.group(1) + matcher1.group(2);
-			} else {
-				break;
-			}
-		}
-
-		// absent;blade => absent; blade
-		while (true) {
-			Matcher matcher2 = Pattern.compile("(^.*?\\w)([:;\\.])(\\w.*$)")
-					.matcher(text);
-			if (matcher2.lookingAt()) {
-				// text = text.replaceAll("^.*\\w[:;\\.]\\w.*",
-				// matcher2.group(1)
-				// + matcher2.group(2) + " " + matcher2.group(3));
-				text = matcher2.group(1) + matcher2.group(2) + " "
-						+ matcher2.group(3);
-			} else {
-				break;
-			}
-		}
-
-		// 1 . 5 => 1.5
-		while (true) {
-			Matcher matcher3 = Pattern.compile("(^.*?\\d\\s*\\.)\\s+(\\d.*$)")
-					.matcher(text);
-			if (matcher3.lookingAt()) {
-				text = matcher3.group(1) + matcher3.group(2);
-			} else {
-				break;
-			}
-		}
-
-		// ###NOT necessary at all, done before in "absent ; => absent;"###
-		// diam . =>diam.
-		// Matcher matcher4 =
-		// Pattern.compile("(\\sdiam)\\s+(\\.)").matcher(text);
-		// if (matcher4.lookingAt()) {
-		// text = text.replaceAll("\\sdiam\\s+\\.", matcher4.group(1)
-		// + matcher4.group(2));
-		// }
-
-		// ca . =>ca.
-		// Matcher matcher5 = Pattern.compile("(\\sca)\\s+(\\.)").matcher(text);
-		// if (matcher5.lookingAt()) {
-		// text = text.replaceAll("\\sca\\s+\\.",
-		// matcher5.group(1) + matcher5.group(2));
-		// }
-
-		//
-		while (true) {
-			Matcher matcher6 = Pattern.compile(
-					"(^.*\\d\\s+(cm|mm|dm|m)\\s*)\\.(\\s+[^A-Z].*$)").matcher(
-					text);
-			if (matcher6.lookingAt()) {
-				text = matcher6.group(1) + "[DOT]" + matcher6.group(3);
-			} else {
-				break;
-			}
-		}
-
-		return text;
-	}
-
-	/**
-	 * remove bracketed text from sentence (keep those in originalsent). Tthis
-	 * step will not be able to remove nested brackets, such as (petioles
-	 * (2-)4-8 cm). Nested brackets will be removed after threedsent step in
-	 * POSTagger4StanfordParser.java
-	 * 
-	 * @param s
-	 *            sentence to be handled
-	 * @return sentence after being processed
-	 */
-	public String handleSentence(String s) {
-		if (s == null || s == "") {
-			return s;
-		}
-
-		String sentence = s;
-
-		// remove (.a.)
-		sentence = sentence.replaceAll("\\([^()]*?[a-zA-Z][^()]*?\\)", " ");
-
-		// remove [.a.]
-		sentence = sentence.replaceAll("\\[[^\\]\\[]*?[a-zA-Z][^\\]\\[]*?\\]",
-				" ");
-
-		// remove {.a.}
-		sentence = sentence.replaceAll("\\{[^{}]*?[a-zA-Z][^{}]*?\\}", " ");
-
-		// to fix basi- and hypobranchial
-		while (true) {
-			Matcher matcher = Pattern.compile("(^.*?)\\s*[-]+\\s*([a-z].*$)")
-					.matcher(sentence);
-			if (matcher.lookingAt()) {
-				sentence = matcher.group(1) + "_ " + matcher.group(2);
-			} else {
-				break;
-			}
-		}
-
-		// add space around nonword char
-		sentence = this.myPopulateSentenceUtility.addSpace(sentence, "\\W");
-
-		// multiple spaces => 1 space
-		sentence = sentence.replaceAll("\\s+", " ");
-
-		// trim: remove leading and ending spaces
-		sentence = sentence.replaceAll("^\\s*", "");
-		sentence = sentence.replaceAll("\\s*$", "");
-
-		// all to lower case
-		sentence = sentence.toLowerCase();
-
-		return sentence;
-	}
-	
-	/**
-	 * Insert all words in WORDS into getUnknownWordHolder(). Insert those formed by
-	 * non words characters into getWordPOSHolder()
-	 * 
-	 * @param WORDS
-	 * @return
-	 */
-	public int populateUnknownWordsTable(Map<String, Integer> WORDS) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.pupluateUnknownWords");
-
-		myLogger.trace("Enter");
-		int count = 0;
-
-		Iterator<String> iter = WORDS.keySet().iterator();
-
-		while (iter.hasNext()) {
-			String word = iter.next();
-			if ((!word.matches("^.*\\w.*$")) || (word.matches("^.*ous$"))) {
-				this.myDataHolder.addUnknown(word, word);
-				this.myDataHolder.updateDataHolder(word, "b", "", "wordpos", 1);
-			} else {
-				this.myDataHolder.addUnknown(word, "unknown");
-			}
-			count++;
-		}
-
-		myLogger.info("Total words = " + count);
-		
-		myLogger.trace("Return: "+count);
-		myLogger.trace("Quite\n");
-		return count;
-	}
-	
 	/**
 	 * 
 	 */
@@ -548,19 +228,20 @@ public class Learner {
 
 						if (pos.equals("p")) {
 							String plural = word;
-							String singular = this.myWordFormUtility
-									.getSingular(plural);
+							String singular = this.myLearnerUtility
+									.getWordFormUtility().getSingular(plural);
 							if (singular != null) {
 								if (!singular.equals("")) {
-									this.myDataHolder.addSingularPluralPair(singular, plural);
+									this.myDataHolder.addSingularPluralPair(
+											singular, plural);
 								}
 							}
 						}
 
 						if (pos.equals("s")) {
 							String singular = word;
-							List<String> pluralList = this.myWordFormUtility
-									.getPlural(singular);
+							List<String> pluralList = this.myLearnerUtility
+									.getWordFormUtility().getPlural(singular);
 							Iterator<String> pluralIter = pluralList.iterator();
 							while (pluralIter.hasNext()) {
 								String plural = pluralIter.next();
@@ -602,7 +283,6 @@ public class Learner {
 	 * @param rnouns
 	 */
 	public void addNouns(Set<String> rnouns) {
-		// TODO Auto-generated method stub
 		Iterator<String> iter = rnouns.iterator();
 		while (iter.hasNext()) {
 			String noun = iter.next();
@@ -647,7 +327,7 @@ public class Learner {
 			}
 
 			// add words
-			List<String> tokens = this.myUtility.getLearnerUtility().tokenizeText(sentence, "all");
+			List<String> tokens = this.myLearnerUtility.tokenizeText(sentence, "all");
 			for (String token: tokens) {
 				if (StringUtility.isWord(token)) {
 					words.add(token);
@@ -672,7 +352,7 @@ public class Learner {
 		Iterator<String> wordsIterator = words.iterator();
 		while (wordsIterator.hasNext()) {
 			String word = wordsIterator.next();
-			String root = myWordFormUtility.getRoot(word);
+			String root = myLearnerUtility.getWordFormUtility().getRoot(word);
 			if (wordMap.containsKey(root)) {
 				Set<String> wordList = wordMap.get(root);
 				wordList.add(word);
@@ -747,7 +427,7 @@ public class Learner {
 					for (int j = i + 1; j < wordList.size(); j++) {
 						String word1 = wordList.get(i);
 						String word2 = wordList.get(j);
-						List<String> pair = myWordFormUtility.getSingularPluralPair(word1, word2);
+						List<String> pair = myLearnerUtility.getWordFormUtility().getSingularPluralPair(word1, word2);
 						if (pair.size() == 2) {
 							String singular = pair.get(0);
 							String plural = pair.get(1);
@@ -1271,8 +951,8 @@ public class Learner {
 		
 		List<String> stops = new ArrayList<String>();
 		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
-		stops.addAll(Arrays.asList(new String[] { "NUM", "\\(", "\\[", "\\{",
-				"\\)", "\\]", "\\}", "\\d+" }));
+		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{",
+				")", "]", "}", "d+" }));
 
 		myLogger.trace("Stop Words: " + stops);
 		for (int i = 0; i < stops.size(); i++) {
@@ -1384,7 +1064,7 @@ public class Learner {
 			// System.out.println("Add ProperNoun: " + word);
 		}
 	}
-	
+
 	// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// suffix: -fid(adj), -form (adj), -ish(adj), -less(adj), -like (adj)),
 	// -merous(adj), -most(adj), -shaped(adj), -ous(adj)
@@ -1511,7 +1191,7 @@ public class Learner {
 		boolean flag = false; // return value
 		boolean wordInWN = false; // if this word is in WordNet
 		boolean baseInWN = false;
-		WordNetPOSKnowledgeBase myWN = this.myUtility.getWordNet();
+		WordNetPOSKnowledgeBase myWN = this.myLearnerUtility.getWordNetPOSKnowledgeBase();
 
 		// check base
 		if (base.length() == 0) {
@@ -2076,7 +1756,7 @@ public class Learner {
 			String secondMatchedWord = words.get(end-1);
 			
 			// case 3.1
-			if (StringUtils.equals(this.myUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
+			if (StringUtils.equals(this.myLearnerUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
 				myLogger.trace("Case 3.1");
 				tag = secondMatchedWord;
 				sign = sign + this.myDataHolder.updateDataHolder(tag, "p", "-", "wordpos", 1);
@@ -2274,8 +1954,7 @@ public class Learner {
 			List<String> morePtn = tempReturnValue.getNounPtn();
 			String bWord = tempReturnValue.getBoundaryWord();
 
-			List<String> sentenceHeadWords = this.getUtility()
-					.getLearnerUtility()
+			List<String> sentenceHeadWords = this.getLearnerUtility()
 					.tokenizeText(thisSentence, "firstseg");
 			end += morePtn.size();
 			List<String> tempWords = StringUtility.stringArraySplice(
@@ -2314,14 +1993,14 @@ public class Learner {
 			myLogger.trace("Case 7");
 			String singularWord = words.get(0);
 			String questionedWord = words.get(1);
-			String wnPOS = this.myUtility.getWordFormUtility().checkWN(questionedWord, "pos");
+			String wnPOS = this.myLearnerUtility.getWordFormUtility().checkWN(questionedWord, "pos");
 			
 			if (StringUtility.createMatcher("p", wnPOS).find()){
 				myLogger.trace("Case 7.1");
 				tag = singularWord+" "+questionedWord;
 				myLogger.debug("\t:determine the tag: "+tag);
 				myLogger.debug("\t:updates on POSs");
-				String questionedPOS = this.getUtility().getWordFormUtility().getNumber(singularWord);
+				String questionedPOS = this.getLearnerUtility().getWordFormUtility().getNumber(singularWord);
 				sign += this.getDataHolder().updateDataHolder(questionedWord, questionedPOS, "-", "wordpos", 1);
 			}
 			else {
@@ -2369,12 +2048,12 @@ public class Learner {
 			
 			if (!isFollowedByNoun(thisSentence, thisLead)) {
 				myLogger.trace("Case 10.1");
-				String wnP1 = this.myUtility.getWordFormUtility().checkWN(word, "pos");
+				String wnP1 = this.myLearnerUtility.getWordFormUtility().checkWN(word, "pos");
 				myLogger.trace("wnP1: "+wnP1);
 				String wnP2 = "";
 						
 				if (!StringUtility.createMatcher("\\w", wnP1).find()) {
-					wnP2 = this.myUtility.getWordFormUtility().getNumber(word);	
+					wnP2 = this.myLearnerUtility.getWordFormUtility().getNumber(word);	
 				}
 				myLogger.trace("wnP2: "+wnP2);
 				
@@ -2436,7 +2115,7 @@ public class Learner {
 		List<String> nounPtn = new ArrayList<String>();
 		
 		List<String> tempWords = new ArrayList<String>();
-		tempWords.addAll(this.getUtility().getLearnerUtility().tokenizeText(sentence, "firstseg"));
+		tempWords.addAll(this.getLearnerUtility().tokenizeText(sentence, "firstseg"));
 		List<String> words = StringUtility.stringArraySplice(tempWords, startWordIndex, tempWords.size());
 		myLogger.trace("words: "+words);
 		String ptn = this.getPOSptn(words);
@@ -2466,7 +2145,7 @@ public class Learner {
 				for (int i=0;i<nWords.size();i++) {
 					String p = ptn.substring(i, i+1);
 					p = StringUtils.equals(p, "?") ? 
-							this.getUtility().getWordFormUtility().checkWN(nWords.get(i), "pos")
+							this.getLearnerUtility().getWordFormUtility().checkWN(nWords.get(i), "pos")
 							: p;
 					if (StringUtility.createMatcher("^[psn]+$", p).find()) {
 						nouns.add(nWords.get(i));
@@ -2627,11 +2306,10 @@ public class Learner {
 		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
 		myLogger.trace("[additionalBootStrapping]Start");
 
-//		int flag = 0;
-
 //		this.myDataHolder.printHolder(DataHolder.SENTENCE);
 		
-		/*
+		int flag = 0;
+		
 		do {
 			myLogger.trace(String.format("Enter one do-while loop iteration"));
 			flag = 0;
@@ -2658,7 +2336,7 @@ public class Learner {
 			myLogger.trace(String.format("Quite this iteration with flag = %d",
 					flag));
 		} while (flag > 0);
-		*/
+		
 		myLogger.trace("[additionalBootStrapping]End");
 	}
 	
@@ -2768,7 +2446,7 @@ public class Learner {
 			
 			if (sentenceSet.size() > 1) {
 				String ptn = this.getPOSptn(sharedHead);
-				String wnPOS = this.myUtility.getWordFormUtility().checkWN(
+				String wnPOS = this.myLearnerUtility.getWordFormUtility().checkWN(
 						sharedHead.get(sharedHead.size() - 1), "pos");
 				
 				myLogger.trace("ptn: " + ptn);
@@ -2985,7 +2663,7 @@ public class Learner {
 	}
 	
 	public void unknownWordBootstrappingPreprocessing() {
-		tagAllSentences("singletag", "sentence");
+		this.myLearnerUtility.tagAllSentences(this.myDataHolder, "singletag", "sentence");
 	}
 	
 	public void unknownWordBootstrappingMain() {
@@ -3044,7 +2722,7 @@ public class Learner {
 										+ ") ", sentence).find())) {
 					KnownTagCollection tags = new KnownTagCollection(null,
 							null, null, boundaries, null, null);
-					sentence = this.annotateSentence(sentence, tags, NONS);
+					sentence = this.myLearnerUtility.annotateSentence(sentence, tags, this.myDataHolder.BMSWords);
 					SentenceStructure updatedSentence = this.getDataHolder()
 							.getSentence(sentenceID);
 					updatedSentence.setSentence(sentence);
@@ -3052,481 +2730,7 @@ public class Learner {
 			}
 		}
 	}
-	
-	/**
-	 * Helper of unknownWordBootstrapping()
-	 * 
-	 * @return set of words
-	 */
-	public Set<String> unknownWordBootstrappingGetUnknownWord(String plMiddle) {
-		Set<String> words = new HashSet<String>();
-		Iterator<Entry<String, String>> iter = this.getDataHolder()
-				.getUnknownWordHolderIterator();
-		while (iter.hasNext()) {
-			Entry<String, String> entry = iter.next();
-			String word = entry.getKey();
-			String flag = entry.getValue();
-			if (word != null) {
-				if ((StringUtils.equals(flag, "unknown"))
-					&& 		((StringUtility.createMatcher(plMiddle, word).find()) 
-							|| (StringUtility.createMatcher("("+ Constant.PLENDINGS + "|ium)$", word).find()))
-				)
-					words.add(word);
-			}
-		}
-
-		return words;
-	}
-	
-	/**
-	 * tag words with all o n m b tags that are applicable to the words
-	 * 
-	 * @param mode
-	 *            "singletag" or "multitags"
-	 * @param type
-	 *            "sentence" or "orginal"
-	 */
-	public void tagAllSentences (String mode, String type) {
-		List<StringAndInt> idAndSentenceList = new LinkedList<StringAndInt>();
 		
-		Iterator<SentenceStructure> sentenceIter = 
-				this.getDataHolder().getSentenceHolder().iterator();
-		
-		if (StringUtils.equals(mode, "original")) {
-			while (sentenceIter.hasNext()) {
-				SentenceStructure sentence = sentenceIter.next();
-				int thisID = sentence.getID();
-				String thisSentence = sentence.getSentence();
-				idAndSentenceList.add(new StringAndInt(thisSentence, thisID));
-			}
-		}
-		else {
-			while (sentenceIter.hasNext()) {
-				SentenceStructure sentence = sentenceIter.next();
-				int thisID = sentence.getID();
-				String thisOriginalSentence = sentence.getOriginalSentence();
-				idAndSentenceList.add(new StringAndInt(thisOriginalSentence, thisID));
-			}
-		}
-		
-		KnownTagCollection myKnownTags = this.getKnownTags(mode);
-		
-		Iterator<StringAndInt> idAndSentenceListIter = idAndSentenceList.iterator();
-		while (idAndSentenceListIter.hasNext()) {
-			StringAndInt idAndSentence = idAndSentenceListIter.next();
-			int thisID = idAndSentence.getInt();
-			String thisSentence = idAndSentence.getString();
-			
-			thisSentence = tagAllSentencesHelper(thisSentence);
-			thisSentence = annotateSentence(thisSentence, myKnownTags, NONS);
-			
-			SentenceStructure targetSentence = this.getDataHolder().getSentence(thisID);
-			targetSentence.setSentence(thisSentence);
-		}
-		
-	}
-    
-	/**
-	 * Helper of tagAllSentencesHelper method
-	 * @param text
-	 * @return text after processing
-	 */
-	public String tagAllSentencesHelper(String text) {
-		text = text.replaceAll("<\\S+?>", "");
-		text = text.toLowerCase();
-		
-		// cup_shaped, 3_nerved, 3-5 (-7)_nerved
-//		Matcher m2 = StringUtility.createMatcher("\\s*-\\s*([a-z])", text);
-//		while (m2.find()) {
-//			String group1 = m2.group(1);
-//			text = m2.replaceFirst("_"+group1);
-//			m2 = StringUtility.createMatcher("\\s*-\\s*([a-z])", text);
-//		}
-		
-		//$b =~ s#\b(_[a-z]+)\b#(?\:\\b\\d+)$1#g; #_nerved => (?:\b\d+)_nerved
-//		$sent =~ s#\s*-\s*([a-z])#_$1#g; 
-		text = StringUtility.replaceAllBackreference(text, "\\s*-\\s*([a-z])", "_$1");
-		
-		// add space around nonword char
-		text = StringUtility.replaceAllBackreference(text, "(\\W)", " $1 ");
-		
-		// multiple spaces => 1 space
-		text = text.replaceAll("\\s+", " ");	
-		// trim
-		text = text.replaceAll("^\\s*", "");	
-		text = text.replaceAll("\\s*$", "");	
-		
-		return text;
-	}
-	
-	
-	
-	public String annotateSentence(String sentence,
-			KnownTagCollection knownTags, Set<String> NONS) {
-		// get known tags
-		Set<String> boundaryMarks;
-		Set<String> boundaryWords;
-		Set<String> modifiers;
-		Set<String> nouns;
-		Set<String> organs;
-		Set<String> properNouns;
-		
-		if (knownTags.boundaryMarks == null) {
-			boundaryMarks = new HashSet<String>();
-		} else {
-			boundaryMarks = knownTags.boundaryMarks;
-		}
-		
-		if (knownTags.boundaryWords == null) {
-			boundaryWords = new HashSet<String>();
-		} else {
-			boundaryWords = knownTags.boundaryWords;
-		}
-		
-		if (knownTags.modifiers == null) {
-			modifiers = new HashSet<String>();
-		} else {
-			modifiers = knownTags.modifiers;
-		}
-		
-		if (knownTags.nouns== null) {
-			nouns = new HashSet<String>();
-		} else {
-			nouns = knownTags.nouns;
-		}
-		
-		if (knownTags.organs == null) {
-			organs = new HashSet<String>();
-		} else {
-			organs = knownTags.organs;
-		}
-		
-		if (knownTags.properNouns == null) {
-			properNouns = new HashSet<String>();
-		} else {
-			properNouns = knownTags.properNouns;
-		}
-		
-		// preprocessing 1
-		List<String> bDeleteList = new LinkedList<String>();
-		List<String> bAddList = new LinkedList<String>();
-		Iterator<String> bIter = boundaryWords.iterator();
-		while(bIter.hasNext()) {
-			String oldWord = bIter.next();
-			
-			if (oldWord.charAt(0)=='_') {
-				String newWord = "(?\\:\\b\\d+)"+oldWord;
-				bDeleteList.add(oldWord);
-				bAddList.add(newWord);
-			}
-		}
-		boundaryWords.removeAll(bDeleteList);
-		boundaryWords.addAll(bAddList);
-		
-		nouns = StringUtility.setSubtraction(nouns, NONS);
-		organs = StringUtility.setSubtraction(organs, NONS);
-		
-		// preprocessing 2
-		Set<String> tagSet = new HashSet<String>();
-		tagSet.addAll(Arrays.asList("Z O N M B".split(" ")));
-		properNouns = StringUtility.setSubtraction(properNouns, tagSet);
-		organs = StringUtility.setSubtraction(organs, tagSet);
-		nouns = StringUtility.setSubtraction(nouns, tagSet);
-		modifiers = StringUtility.setSubtraction(modifiers, tagSet);
-		boundaryWords = StringUtility.setSubtraction(boundaryWords, tagSet);
-		boundaryMarks = StringUtility.setSubtraction(boundaryMarks, tagSet);
-		
-		// insert tags
-		sentence = annotateSentenceHelper(sentence, properNouns, "Z", true);
-		sentence = annotateSentenceHelper(sentence, organs, "O", true);
-		sentence = annotateSentenceHelper(sentence, nouns, "N", true);
-		sentence = annotateSentenceHelper(sentence, modifiers, "M", true);
-		sentence = annotateSentenceHelper(sentence, boundaryWords, "B", true);
-		sentence = annotateSentenceHelper(sentence, properNouns, "Z", true);
-		sentence = annotateSentenceHelper(sentence, boundaryMarks, "Z", false);
-		
-		sentence = annotateSentenceHelper2(sentence);
-		
-		return sentence;
-	}
-	
-	
-	public String annotateSentenceHelper(String sentence, Set<String> words,
-			String tag, boolean isWithBoundaryWord) {
-		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.annotateSentence");
-		
-		if (words.size() != 0) {
-			if (isWithBoundaryWord) {
-				sentence = StringUtility.replaceAllBackreference(
-						sentence,
-						String.format("\\b(%s)\\b",
-								LearnerUtility.Collection2Pattern(words)),
-						String.format("<%s>$1</%s>", tag, tag));
-			} else {
-//				String pattern = String.format("(%s)", LearnerUtility.Collection2Pattern(words));
-//				Matcher m1 = StringUtility.createMatcher("(\\]|\\}|\\(|\\)|\\{|\\[)", "word ]abc");
-//				boolean b1 = m1.find();
-////				Matcher m2 = StringUtility.createMatcher("(]|}|(|)|{|[)", "word (abc)");
-////				boolean b2 = m2.find();
-				
-				String regex = String.format("(%s)",
-						LearnerUtility.Collection2Pattern(words));
-				String replacement = String.format("<%s>$1</%s>", tag, tag);
-				
-				myLogger.trace("Sentence: "+sentence);
-				myLogger.trace("Words: "+words);
-				myLogger.trace("Regex: "+regex);
-				myLogger.trace("Replacement: "+replacement);
-
-				sentence = StringUtility.replaceAllBackreference(sentence,
-						regex, replacement);
-			}
-		}
-
-		return sentence;
-	}
-	
-	public String annotateSentenceHelper2(String sentence){
-		if (StringUtility.createMatcher("", sentence).find()) {
-			sentence = StringUtility.replaceAllBackreference(sentence, "<(\\w)>\\s*</$1>", "");
-		}
-		
-		Matcher m = StringUtility.createMatcher("<(\\w)>\\s*</(\\w)>", sentence);
-		while (m.find()) {
-			String g1 = m.group(1);
-			String g2 = m.group(2);
-			if (StringUtils.equals(g1, g2)) {
-				sentence = m.replaceFirst("");
-			}
-		}
-		
-		sentence = StringUtility.replaceAllBackreference(sentence, 
-				"(?:<[^<]+>)+("+Constant.FORBIDDEN+")(?:</[^<]+>)+", "$1");
-		
-		return sentence;
-	}
-
-	/**
-	 * 
-	 * @param mode
-	 *            can be either "singletag" or "multitags"
-	 */
-    public KnownTagCollection getKnownTags(String mode) {
-    	PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.getKnownTags");
-		myLogger.trace("Enter (mode: "+mode+")");
-		
-		KnownTagCollection knownTags = null;
-		Set<String> nouns = new HashSet<String>(); // nouns
-		Set<String> organs = new HashSet<String>(); // organs
-		Set<String> modifiers = new HashSet<String>(); // modifiers
-		Set<String> boundaryWords = new HashSet<String>(); // boundary words
-		Set<String> boundaryMarks = new HashSet<String>(); // boundary marks
-		Set<String> properNouns = new HashSet<String>(); // proper nouns
-		
-		// get nouns
-		Set<String> nounSet = new HashSet<String>();
-		Set<String> psWordSet = new HashSet<String>(); // set of nouns
-		psWordSet = this.getPSWords();
-		nounSet .addAll(psWordSet);
-		// if the mode is "singletag", then get additional nouns from tags
-		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
-			organs = this.getOrgans();
-			nounSet.addAll(organs);
-		} else {
-			// do nothing
-		}
-		nouns.addAll(nounSet);
-		myLogger.trace("Get nouns: "+nouns.toString());
-		
-		// get organs
-		if(StringUtils.equals(mode, "multitags")){
-			Set<String> organSet = this.getOrgans();
-			organs.addAll(organSet);
-			myLogger.trace("Get organs: "+organs.toString());
-		}
-		
-		// get modifiers
-		Set<String> modifierSet = new HashSet<String>();
-		modifierSet = this.getModifiers();
-		if(StringUtils.equals(mode, "singletag")){
-			Iterator<String> mIter = modifierSet.iterator();
-			while (mIter.hasNext()) {
-				String m = mIter.next();
-				if (!psWordSet.contains(m)) {
-					modifiers.add(m);
-				}
-			}
-		}else{
-			modifiers.addAll(modifierSet);
-		}
-		
-		// get boundary words and marks
-		List<Set<String>> result = this.getBoundaries();
-		boundaryWords = result.get(0);
-		boundaryMarks = result.get(1);
-		
-		// get proper nouns
-		properNouns = this.getProperNouns();
-		
-		// put all known tags into one KnownTagCollection object
-		knownTags = new KnownTagCollection(nouns, organs, modifiers, boundaryWords, boundaryMarks, properNouns);
-		
-		return knownTags;
-	}
-    
-	/**
-	 * A helper of method getKnownTags(). Get a set of all nouns from the
-	 * word-POS collection.
-	 * 
-	 * @return a set of nouns
-	 */
-	public Set<String> getPSWords() {
-		Set<String> psSet = new HashSet<String>(); // set of p and s
-		// get a set of all nouns from the word-POS collection
-		Iterator<Entry<WordPOSKey, WordPOSValue>> iterWordPOS = this.myDataHolder
-				.getWordPOSHolder().entrySet().iterator();
-		while (iterWordPOS.hasNext()) {
-			Entry<WordPOSKey, WordPOSValue> entry = iterWordPOS.next();
-			String POS = entry.getKey().getPOS();
-			if ((StringUtils.equals(POS, "s"))
-					|| (StringUtils.equals(POS, "p"))) {
-				String word = entry.getKey().getWord();
-				if (word != null) {
-					if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", word)
-							.find()) {
-						psSet.add(word);
-					}
-				}
-			}
-		}
-
-		return psSet;
-	}
-	
-	/**
-	 * A helper of method getKnownTags(). Get a set of o from tags in sentence
-	 * collections
-	 * 
-	 * @return a set of o
-	 */
-	public Set<String> getOrgans() {
-		Set<String> oSet = new HashSet<String>(); // set of o
-		
-		Iterator<SentenceStructure> iterSentence = this.myDataHolder
-				.getSentenceHolder().iterator();
-		while (iterSentence.hasNext()) {
-			SentenceStructure sentence = iterSentence.next();
-			String tag = sentence.getTag();
-
-			if (tag != null) {
-				if ((!StringUtils.equals(tag, "ignore"))
-						&& (!StringUtility.createMatcher(".* .*", tag).find()) 
-						&& (!StringUtility.createMatcher(".*\\[.*", tag).find())) {
-					if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", tag).find()) {
-						oSet.add(tag);
-					}
-				}
-			}
-		}
-		
-		return oSet;
-	}
-	
-	/**
-	 * Get modifier words from modifier collection.
-	 * 
-	 * @return a set fo modifer words
-	 */
-	public Set<String> getModifiers() {
-		Set<String> mSet = new HashSet<String>(); // set of o
-		
-		Iterator<Entry<String, ModifierTableValue>> iter = this.myDataHolder
-				.getModifierHolder().entrySet().iterator();
-		while (iter.hasNext()) {
-			Entry<String, ModifierTableValue> entry = iter.next();
-			String word = entry.getKey();
-			if (word != null) {
-				if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", word)
-						.find()) {
-					mSet.add(word);
-				}
-			}
-		}
-		
-		return mSet;
-	}
-	
-	/**
-	 * Get boundary words and marks.
-	 * 
-	 * @return a list of two elements. The first element is a set of boundary
-	 *         words, and second element is a set of boundary marks.
-	 */
-    public List<Set<String>> getBoundaries (){
-    	Set<String> bWords = new HashSet<String>();
-    	Set<String> bMarks = new HashSet<String>();
-    	List<Set<String>> result = new LinkedList<Set<String>>();
-    	
-    	Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.getWordPOSHolder().entrySet().iterator();
-    	while (iter.hasNext()) {
-    		Entry<WordPOSKey, WordPOSValue> entry = iter.next();
-    		String word = entry.getKey().getWord();
-    		String POS = entry.getKey().getPOS();
-
-			if (word != null && POS != null) {
-				if (StringUtils.equals(POS, "b")) {
-					String pattern = "^[-\\\\\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]$";
-					if (StringUtility.createMatcher(pattern, word).find()) {
-						bMarks.add("\\"+word);
-					} else if ((!(StringUtility.createMatcher("\\w", word)
-							.find())) && (!StringUtils.equals(word, "\\/"))) {
-						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
-								word).find()) {
-							bMarks.add("\\"+word);
-						}
-					} else {
-						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
-								word).find()) {
-							bWords.add(word);
-						}
-					}
-				}
-			}
-		}
-
-    	result.add(bWords);
-    	result.add(bMarks);
-    	
-    	return result;
-    }
-    
-	/**
-	 * Get the proper nouns from the word-POS collection
-	 * 
-	 * @return a set of the porper nouns
-	 */
-	public Set<String> getProperNouns() {
-		Set<String> pNouns = new HashSet<String>();
-		
-		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.myDataHolder.getWordPOSHolder().entrySet().iterator();
-		
-		while (iter.hasNext()) {
-			Entry<WordPOSKey, WordPOSValue> entry = iter.next();
-			String word = entry.getKey().getWord();
-			String POS = entry.getKey().getPOS();
-			
-			if (StringUtils.equals(POS, "z")) {
-				if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", word).find()) {
-					pNouns.add(word);
-				}
-			}
-		}
-		
-		return pNouns;
-	}
-	
 	/**
 	 * Utilities
 	 * @return 
@@ -3578,57 +2782,8 @@ public class Learner {
 		}
 	}
 	
-	/**
-	 * returns the first n words of the sentence
-	 * 
-	 * @param sent
-	 *            the sentence
-	 * @param n
-	 *            number of words to be returned
-	 * @return the first n words of the sentence. If the number of words in the
-	 *         sentence is less than n, return all of them.
-	 */
-	public List<String> getFirstNWords(String sentence, int n) {
-		List<String> nWords = new ArrayList<String>();
-
-		if (sentence == null || sentence == "") {
-			return nWords;
-		}
+	void adjectivesVerification(DataHolder dataholderHandler) {
 		
-		List<String> tokens = this.getUtility().getLearnerUtility().tokenizeText(sentence, "firstseg");
-		
-		
-		int minL = tokens.size() > n ? n : tokens.size();
-		for (int i = 0; i < minL; i++) {
-			nWords.add(tokens.get(i));
-		}
-
-		return nWords;
-	}
-	
-	/**
-	 * Put all words in this sentence into the words map
-	 * 
-	 * @param sent
-	 * @param words
-	 *            a map mapping all words already known to their counts
-	 * @return a new map of all words, including words in sent
-	 */
-	public Map<String, Integer> getAllWords(String sentence,
-			Map<String, Integer> words) {
-		List<String> tokens = this.getUtility().getLearnerUtility().tokenizeText(sentence, "all");
-
-		for (String token: tokens) {
-			if (words.containsKey(token)) {
-				int count = words.get(token);
-				count = count + 1;
-				words.put(token, count);
-			} else {
-				words.put(token, 1);
-			}
-		}
-
-		return words;
 	}
 	
 	// some unused variables in perl
@@ -3668,8 +2823,8 @@ public class Learner {
 			+ bptn;
 	
 	// utility method
-	public Utility getUtility() {
-		return this.myUtility;
+	public LearnerUtility getLearnerUtility() {
+		return this.myLearnerUtility;
 	}
 	
 	public ITokenizer getTokenizer(){

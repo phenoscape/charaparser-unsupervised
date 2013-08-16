@@ -2,15 +2,22 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
+import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.transform.ITokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
@@ -26,7 +33,105 @@ public class LearnerUtilityTest {
 		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
 				myConfiguration.getOpenNLPSentenceDetectorDir());
 		ITokenizer tokenizer = new OpenNLPTokenizer(myConfiguration.getOpenNLPTokenizerDir());
-		this.tester = new LearnerUtility(myConfiguration, sentenceDetector, tokenizer);
+		
+		WordNetPOSKnowledgeBase wordNetPOSKnowledgeBase = null;
+		try {
+			wordNetPOSKnowledgeBase = new WordNetPOSKnowledgeBase(myConfiguration.getWordNetDictDir(), false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		this.tester = new LearnerUtility(sentenceDetector, tokenizer, wordNetPOSKnowledgeBase);
+	}
+	
+	// populate sentence utilities
+	@Test
+	public void testGetType() {
+		assertEquals("PopulateSent Helper - getType: character", 1,
+				tester.getType("Brazeau_2009.xml_states737.txt"));
+		assertEquals("PopulateSent Helper - getType: description", 2,
+				tester.getType("Brazeau_2009.xml_states737_state739.txt"));
+		assertEquals("PopulateSent Helper - getType: otherwise", 0,
+				tester.getType("saf_saiflkds)dsljf_fls.txt"));
+	}
+
+	@Test
+	public void testHideMarksInBrackets() {
+		assertEquals("Result", null, tester.hideMarksInBrackets(null));
+		assertEquals("Result", "", tester.hideMarksInBrackets(""));
+		assertEquals("Result", "before (word[DOT]  word) after",
+				tester.hideMarksInBrackets("before (word. word) after"));
+		assertEquals("Result", "before (word[QST]  word) after",
+				tester.hideMarksInBrackets("before (word? word) after"));
+		assertEquals("Result", "before (word[SQL]  word) after",
+				tester.hideMarksInBrackets("before (word; word) after"));
+		assertEquals("Result", "before (word[QLN]  word) after",
+				tester.hideMarksInBrackets("before (word: word) after"));
+		assertEquals("Result", "before (word[EXM]  word) after",
+				tester.hideMarksInBrackets("before (word! word) after"));
+	}
+
+	@Test
+	public void testRestoreMarksInBrackets() {
+		assertEquals("Result", null, tester.restoreMarksInBrackets(null));
+		assertEquals("Result", "", tester.restoreMarksInBrackets(""));
+		assertEquals("Result", "before (word.  word) after",
+				tester.restoreMarksInBrackets("before (word[DOT]  word) after"));
+		assertEquals("Result", "before (word?  word) after",
+				tester.restoreMarksInBrackets("before (word[QST]  word) after"));
+		assertEquals("Result", "before (word;  word) after",
+				tester.restoreMarksInBrackets("before (word[SQL]  word) after"));
+		assertEquals("Result", "before (word:  word) after",
+				tester.restoreMarksInBrackets("before (word[QLN]  word) after"));
+		assertEquals("Result", "before (word!  word) after",
+				tester.restoreMarksInBrackets("before (word[EXM]  word) after"));
+	}
+	
+    
+	@Test
+	public void testGetFirstNWords() {
+		List<String> nWords = new ArrayList<String>();
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords(null, -1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("", -1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords(null, 1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("", 1));
+		nWords.add("word1");
+		nWords.add("word2");
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("word1 word2 word3 word4", 2));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("word1 word2", 3));
+	}
+	
+	@Test
+	public void testGetAllWords() {
+		Map<String, Integer> wordsBefore = new HashMap<String, Integer>();
+		wordsBefore.put("word1", 1);
+		wordsBefore.put("word2", 2);
+		Map<String, Integer> wordsAfter = new HashMap<String, Integer>();
+		wordsAfter.put("word1", 2);
+		wordsAfter.put("word2", 4);
+		wordsAfter.put("word3", 2);
+		wordsAfter.put("word4", 1);
+		wordsAfter.put("word5", 1);
+		assertEquals("PopulateSent Helper - getAllWords", wordsAfter,
+				tester.getAllWords("word1 word2 word3 word2 word3 word4 word5",
+						wordsBefore));
+	}
+
+	@Test
+	public void testAddSpace() {
+		// null
+		assertEquals("Result", null, tester.addSpace(null, null));
+		// ""
+		assertEquals("Result", "", tester.addSpace("", ""));
+		assertEquals("Result", "word , word ; word : word ! word ? word . ",
+				tester.addSpace("word,word;word:word!word?word.", "\\W"));
 	}
 	
 	@Test
@@ -78,15 +183,16 @@ public class LearnerUtilityTest {
 	}
 	
 	@Test
-	public void testCollection2Pattern(){
-		assertEquals("collection2Pattern - null", "", LearnerUtility.Collection2Pattern(null));
-		assertEquals("collection2Pattern - empty input", "", LearnerUtility.Collection2Pattern(new LinkedList<String>()));
+	public void testIterable2Pattern(){
+		assertEquals("Iterable2Pattern - null", "", tester.Iterable2Pattern(null));
+		assertEquals("Iterable2Pattern - empty input", "", tester.Iterable2Pattern(new LinkedList<String>()));
 		
 		Set<String> input = new HashSet<String>();
 		input.add("word1");
 		input.add("word2");
 		input.add("word3");
-		assertEquals("collection2Pattern - set input", "word1|word2|word3", LearnerUtility.Collection2Pattern(input));
+		input.add("(");
+		assertEquals("Iterable2Pattern - set input", "word1|word2|word3|\\(", tester.Iterable2Pattern(input));
 	}
 	
 	@Test
@@ -102,4 +208,158 @@ public class LearnerUtilityTest {
 				LearnerUtility.Pattern2Set("word2|word3|word1"));
 		
 	}
+	
+	 @Test
+	    public void testGetPSWord(){
+			Learner myTester = learnerFactory();
+			
+	    	myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"acrodin", "s", "role", "0", "0", null, null}));
+	    	myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"areas", "p", "role", "0", "0", null, null}));
+	    	myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"(", "p", "role", "0", "0", null, null}));
+	    	
+	    	
+	    	Set<String> target = new HashSet<String>();
+	    	target.add("acrodin");
+	    	target.add("areas");
+	    	
+	    	assertEquals("getPSWords", target, myTester.getLearnerUtility().getPSWords(myTester.getDataHolder()));
+	    }
+	    
+	    @Test
+	    public void testGetO() {
+			Learner myTester = learnerFactory();
+
+	    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","ignore","m","type"}));
+	    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status",null,"m","type"}));
+	    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","taga tagb","m","type"}));
+	    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","taga[tagb]","m","type"}));
+	    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag1","m","type"}));
+	    	myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent", "osent","lead","status","tag2","m","type"}));
+	    	
+	    	Set<String> target = new HashSet<String>();
+	    	target.add("tag1");
+	    	target.add("tag2");
+	    	
+	    	assertEquals("getOs", target, myTester.getLearnerUtility().getOrgans(myTester.getDataHolder()));
+	    }
+	    
+	    @Test
+	    public void testGetModifiers(){
+			Learner myTester = learnerFactory();
+			
+			myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"basal", "1", "false"}));
+			myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"endoskeletal", "1", "false"}));
+			myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {"\\", "1", "false"}));
+			myTester.getDataHolder().add2Holder(DataHolder.MODIFIER, Arrays.asList(new String[] {null, "1", "false"}));
+	    	
+	    	Set<String> target = new HashSet<String>();
+	    	target.add("basal");
+	    	target.add("endoskeletal");
+	    	
+	    	assertEquals("getModifiers", target, myTester.getLearnerUtility().getModifiers(myTester.getDataHolder()));
+	    }
+	    
+	    @Test
+	    public void testGetBoundaries(){
+			Learner myTester = learnerFactory();
+
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"\\", "b", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {")", "b", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"[", "b", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"}", "b", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {".", "b", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"|", "b", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"+", "b", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"*", "b", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"?", "b", "role", "0", "0", null, null}));
+			
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {",", "b", "role", "0", "0", null, null}));
+			
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"about", "b", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"along", "b", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"acrodin", "s", "role", "0", "0", null, null}));
+			
+			Set<String> targetWords = new HashSet<String>();
+			targetWords.addAll(Arrays.asList("about along".split(" ")));
+			
+			Set<String> targetMarks = new HashSet<String>();
+			targetMarks.addAll(Arrays.asList(") \\ [ } . | * + ?".split(" ")));
+			
+			List<Set<String>> target = new LinkedList<Set<String>>();
+			target.add(targetWords);
+			target.add(targetMarks);
+			
+			assertEquals("getBoundaries", target, myTester.getLearnerUtility().getBoundaries(myTester.getDataHolder()));
+	    }
+	    
+	    @Test
+	    public void testGetProperNouns(){
+			Learner myTester = learnerFactory();
+			
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"propernoun1", "z", "*", "0", "0", "", null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"acrodin", "s", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"propernoun2", "z", "role", "0", "0", null, null}));
+			myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"(", "z", "role", "0", "0", null, null}));
+			
+			
+			Set<String> target = new HashSet<String>();
+			target.add("propernoun1");
+			target.add("propernoun2");
+			
+			assertEquals("getProperNouns", target, myTester.getLearnerUtility().getProperNouns(myTester.getDataHolder()));
+	    }
+	    
+	private Learner learnerFactory(){
+		Learner myTester;
+
+		Configuration myConfiguration = new Configuration();
+		ITokenizer tokenizer = new OpenNLPTokenizer(
+				myConfiguration.getOpenNLPTokenizerDir());
+		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
+				myConfiguration.getOpenNLPSentenceDetectorDir());
+		WordNetPOSKnowledgeBase wordNetPOSKnowledgeBase = null;
+		try {
+			wordNetPOSKnowledgeBase = new WordNetPOSKnowledgeBase(myConfiguration.getWordNetDictDir(), false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		LearnerUtility myLearnerUtility = new LearnerUtility(sentenceDetector,
+				tokenizer, wordNetPOSKnowledgeBase);
+		myTester = new Learner(myConfiguration, tokenizer, myLearnerUtility);
+
+		return myTester;
+	}
+	
+	@Test
+	public void testTagAllSentence(){
+		assertEquals("tagAllSentenceHelper", "word1 word2", tester.tagAllSentencesHelper("word1 <tag> word2"));
+		assertEquals("tagAllSentenceHelper", "3_nerved , cup_shaped , 3 - 5 ( - 7 ) _nerved", tester.tagAllSentencesHelper(" 	 3  - nerved, cup- shaped, 3-5 (-7) -nerved		 "));
+	}
+	
+
+	@Test
+	public void testAnnotateSentence(){
+		// Test Case 1: See testUnknownWordBootstrapping - Postprocessing
+		
+		// Test Case 2:
+		String input = "stems usually erect , sometimes prostrate to ascending ( underground stems sometimes woody caudices or rhizomes , sometimes fleshy ) .";
+		String expected1 = 
+				"stems usually erect , sometimes prostrate to ascending <B>(</B> underground stems sometimes woody caudices or rhizomes , sometimes fleshy <B>)</B> .";
+		String expected2 = 
+				"stems <B>usually</B> <B>erect</B> , sometimes prostrate to ascending <B>(</B> underground stems sometimes woody caudices or rhizomes , sometimes fleshy <B>)</B> .";
+		Set<String> boundaryWords = new HashSet<String>();
+		Set<String> boundaryMarks = new HashSet<String>();
+		boundaryMarks.addAll(Arrays.asList("( ) [ ] { }".split(" ")));
+		boundaryWords.addAll(Arrays.asList("under up upward usually erect villous was weakly".split(" ")));
+		
+		assertEquals("annotateSentenceHelper1", expected1, tester.annotateSentenceHelper(input, boundaryMarks, "B", false));
+		assertEquals("annotateSentenceHelper1", expected2, tester.annotateSentenceHelper(expected1, boundaryWords, "B", true));
+		
+		assertEquals("annotateSentenceHelper2", " word ", tester.annotateSentenceHelper2("<B> 	 </B> word <N> 	 </N>"));
+		assertEquals("annotateSentenceHelper2", "<B> 	 </C> word ", tester.annotateSentenceHelper2("<B> 	 </C> word <B> 	 </B>"));
+		assertEquals("annotateSentenceHelper2", "and", tester.annotateSentenceHelper2("<B>and</B>"));
+		assertEquals("annotateSentenceHelper2", "and</B>", tester.annotateSentenceHelper2("and</B>"));
+	}
+	
 }

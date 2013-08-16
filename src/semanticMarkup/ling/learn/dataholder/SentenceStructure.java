@@ -140,7 +140,7 @@ public class SentenceStructure {
 				+ "Sentence ID: " + this.getID() + "\n"
 				+ "\tSource: " + this.getSource() + "\n"
 				+ "\tSentence: " + this.getSentence() + "\n" 
-				+ "\tOriginal Sentence: " + this.getSentence() + "\n"
+				+ "\tOriginal Sentence: " + this.getOriginalSentence() + "\n"
 				+ "\tLead: " + this.getLead() + "\n"
 				+ "\tStatus: " + this.getStatus() + "\n" 
 				+ "\tTag: " + this.getTag() + "\n" 

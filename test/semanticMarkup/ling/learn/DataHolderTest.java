@@ -2,6 +2,7 @@ package semanticMarkup.ling.learn;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
+import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.DiscountedKey;
 import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
@@ -28,6 +30,24 @@ import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
 public class DataHolderTest {
 	
 	private DataHolder tester;
+	
+	private DataHolder dataHolderFactory() {
+		DataHolder tester;
+
+		Configuration myConfiguration = new Configuration();
+		WordNetPOSKnowledgeBase wordNetPOSKnowledgeBase = null;
+		try {
+			wordNetPOSKnowledgeBase = new WordNetPOSKnowledgeBase(myConfiguration.getWordNetDictDir(), false);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		WordFormUtility wordFormUtility = new WordFormUtility(wordNetPOSKnowledgeBase);
+		tester = new DataHolder(myConfiguration, wordFormUtility);
+
+		return tester;
+	}
 	
 	@Before
 	public void initialize(){		
@@ -321,20 +341,36 @@ public class DataHolderTest {
 		
 		assertEquals("updateDataHolderNN case 3 forbidden words - false", 1, tester.updateDataHolderNN(0, 2, input1));		
 	}
+	
+	@Test
+	public void testGetWordsFromUnknownWord(){
+		DataHolder myTester = this.dataHolderFactory();
+		
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word3 unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("cheek unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("cross unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("deep unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("denticles unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word4 unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("endocranium unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word5 unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("lepidotrichia unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word1 unknown".split(" ")));
+		myTester.add2Holder(DataHolder.UNKNOWNWORD, Arrays.asList("word2 unknown".split(" ")));
+		
+		Set<String> target = new HashSet<String>();
+		target.add("cheek");
+		target.add("cross");
+		target.add("deep");
+		target.add("denticles");
+		target.add("endocranium");
+		target.add("lepidotrichia");
 
-	private DataHolder dataHolderFactory() {
-		DataHolder tester;
-
-		Configuration myConfiguration = new Configuration();
-		ITokenizer tokenizer = new OpenNLPTokenizer(
-				myConfiguration.getOpenNLPTokenizerDir());
-		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
-				myConfiguration.getOpenNLPSentenceDetectorDir());
-		Utility myUtility = new Utility(myConfiguration, sentenceDetector,
-				tokenizer);
-		tester = new DataHolder(myConfiguration, myUtility);
-
-		return tester;
+		String wordPattern = "(("+ Constant.PLENDINGS + "|ium)$)|(ee)";
+		String flagPattern = "^unknown$";
+		
+		assertEquals("getWordsFromUnknownWord", target, myTester.getWordsFromUnknownWord(wordPattern, true, flagPattern, true));
 	}
 
+	
 }
