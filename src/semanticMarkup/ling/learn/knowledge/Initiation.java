@@ -89,13 +89,7 @@ public class Initiation implements IModule {
 					sentences.get(j).setContent(this.myLearnerUtility.restoreMarksInBrackets(sentences.get(j).getContent()));
 					// Make a copy of the sentence
 					sentCopy.add(sentences.get(j).getContent());
-					// process the sentence
-//					System.out.println(true);
-					
-					if (StringUtility.isMatchedNullSafe("ral dermal tubercles exhibi", (sentences.get(j).getContent()))) {
-						System.out.println();
-					}
-					System.out.println(StringUtility.isMatchedNullSafe("oral dermal tubercles exhibiting organ", (sentences.get(j).getContent())));
+
 					// process the sentence
 					sentences.get(j).setContent(this.handleSentence(sentences.get(j).getContent()));
 

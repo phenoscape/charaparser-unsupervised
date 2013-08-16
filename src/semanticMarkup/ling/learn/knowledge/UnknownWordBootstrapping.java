@@ -140,8 +140,11 @@ public class UnknownWordBootstrapping implements IModule {
 						Matcher m22 = p22.matcher(sentence);
 						if (m22.find()) {
 							String tempWords = m22.group(2);
-							if (!this.myLearnerUtility.getConstant().forbiddenWords
-									.contains(tempWords)) {
+//							if (!this.myLearnerUtility.getConstant().forbiddenWords
+//									.contains(tempWords)) {
+							if (!
+									(StringUtility.isMatchedNullSafe("\\b("+Constant.FORBIDDEN+")\\b", tempWords))
+									) {
 								String[] tempWordsArray = tempWords
 										.split("\\s+");
 								if (tempWordsArray.length <= 2) {
