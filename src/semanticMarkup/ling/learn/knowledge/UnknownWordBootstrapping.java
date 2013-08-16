@@ -1,13 +1,8 @@
 package semanticMarkup.ling.learn.knowledge;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -142,20 +137,17 @@ public class UnknownWordBootstrapping implements IModule {
 							String tempWords = m22.group(2);
 //							if (!this.myLearnerUtility.getConstant().forbiddenWords
 //									.contains(tempWords)) {
-							if (!
-									(StringUtility.isMatchedNullSafe("\\b("+Constant.FORBIDDEN+")\\b", tempWords))
-									) {
-								String[] tempWordsArray = tempWords
-										.split("\\s+");
+							if (!(StringUtility.isMatchedNullSafe(
+									"\\b("+ Constant.FORBIDDEN + ")\\b", 
+									tempWords))) {
+								String[] tempWordsArray = tempWords.split("\\s+");
 								if (tempWordsArray.length <= 2) {
 									for (String tempWord : tempWordsArray) {
 										dataholderHandler.updateDataHolder(
-												tempWord, "m", "", "modifiers",
-												1);
+												tempWord, "m", "", "modifiers", 1);
 										if (this.isValidWord(tempWord)) {
 											modifiers.add(tempWord);
-											myLogger.debug("find a [m] "
-													+ tempWord);
+											myLogger.debug("find a [m] " + tempWord);
 										}
 									}
 								}
@@ -179,7 +171,6 @@ public class UnknownWordBootstrapping implements IModule {
 					KnownTagCollection myKnownTags = new KnownTagCollection(null, organs, null, boundaries, null, null);
 					sentence = this.myLearnerUtility.annotateSentence(sentence, myKnownTags, dataholderHandler.BMSWords);
 					sentenceItem.setSentence(sentence);
-					
 				}
 			}
 			
