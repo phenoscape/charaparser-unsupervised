@@ -114,6 +114,14 @@ If the lead of any sentence has only one word, and the words was taken as the ta
 
 * unknown word bootstrapping module
 learning based on "m o b" pattern
+** tag all sentences based on what we have already known. (for example, if a word "(" is known as a boundary word, mark it in any sentence as "<B>(<\B>")
+** learn plural, singular, boundary, modifier based on some patterns
+*** if a word looks like a plural, and followed by a boundary word, then take it as a plural, and put it in dataholder
+*** if any word follows the word learned in the previous step, take it as a boundary, and put it in dateholder
+*** if any word precedss the word learned in the first step, take it as a modifier, and put it in dateholder
+*** update the tagging of relevant sentences in Sentence collection in dataholder based on what are learned in previous steps
+** get all nouns from WordPOS collection. From UnknownWord collection, for all those words that contain a underscore "_", if it is not among the nouns, then take it as a boundary, and put it into the dataholder. Then update sentences in Sentnece collection based on the newly learned boundaries.
+
 
 
 * Manage Data Holder
