@@ -76,7 +76,7 @@ public class UnknownWordBootstrapping implements IModule {
 					}
 				}
 				else {
-					boolean c1 = dataholderHandler.isExistTaggedSentenceByPattern("(^| )"+word+" (<B>|" + Constant.FORBIDDEN + ")");
+					boolean c1 = dataholderHandler.isExistSentence(true, "(^| )"+word+" (<B>|" + Constant.FORBIDDEN + ")");
 					boolean c2 = StringUtils.equals(this.myLearnerUtility.getWordFormUtility().getNumber(word), "p");
 					boolean c3 = isVerbEnding(dataholderHandler, word);
 					if (c1 && c2 && (!c3)) {

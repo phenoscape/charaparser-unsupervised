@@ -729,21 +729,29 @@ public class DataHolder {
 	/**
 	 * Check if any sentence matches given pattern exists in the data holder
 	 * 
-	 * @param dataholderHandler
-	 *            handler of dataholder
+	 * @param isTagged
+	 *            if the sentence has to be tagged or not
 	 * @param pattern
 	 *            pattern to match against
 	 * @return true if any sentence matches the given pattern exists; false
 	 *         otherwise
 	 */
-	public boolean isExistTaggedSentenceByPattern(String pattern) {
+	public boolean isExistSentence(boolean isTagged, String pattern) {
 		boolean isExist = false;
 		
 		Iterator<SentenceStructure> iter = getSentenceHolderIterator();
 		while (iter.hasNext()) {
 			SentenceStructure sentenceItem = iter.next();
 			String tag = sentenceItem.getTag();
-			if ((!StringUtils.equals(tag, "ignore"))||(tag == null)) {
+			boolean isTagGood = false;
+			if (isTagged) {
+				if ((!StringUtils.equals(tag, "ignore")) || (tag == null)) {
+					isTagGood = true;
+				}
+			} else {
+				isTagGood = true;
+			}
+			if (isTagGood) {
 				String sentence = sentenceItem.getSentence();
 				if (StringUtility.isMatchedNullSafe(pattern, sentence)) {
 					isExist = true;
@@ -782,6 +790,70 @@ public class DataHolder {
 		
 		return sentences;
 	}
+
+	/**
+	 * Delete any wordPOS entries in WordPOS collection that meets the
+	 * requirements
+	 * 
+	 * @param isWordChecked
+	 *            if the word is checked
+	 * @param word
+	 *            the word to check
+	 * @param isPOSChecked
+	 *            if the POS tag is checked
+	 * @param POS
+	 *            the POS to check
+	 * @return true if any deletion has been made, false otherwise
+	 */
+	public boolean deleteWordPOS(boolean isWordChecked, String word,
+			boolean isPOSChecked, String POS) {
+		boolean isDeleted = false;
+		int numDeleted = 0;
+
+		if ((!isWordChecked) && (!isPOSChecked)) {
+			isDeleted = true;
+		} else {
+			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this
+					.getWordPOSHolderIterator();
+			while (iter.hasNext()) {
+				Entry<WordPOSKey, WordPOSValue> wordPOS = iter.next();
+				boolean isWordPass = false;
+				boolean isPOSPass = false;
+
+				if (isWordChecked) {
+					if (StringUtils.equals(word, wordPOS.getKey().getWord())) {
+						isWordPass = true;
+					}
+				} else {
+					isWordPass = true;
+				}
+
+				if (isPOSPass) {
+					if (StringUtils.equals(POS, wordPOS.getKey().getPOS())) {
+						isPOSPass = true;
+					}
+				} else {
+					isPOSPass = true;
+				}
+
+				if (isWordPass && isPOSPass) {
+					numDeleted++;
+				}
+			}
+
+			if (numDeleted > 0) {
+				isDeleted = true;
+			}
+		}
+
+		return isDeleted;
+	}
+	
+	public boolean tagSentence(){
+		boolean isTagged = false;
+		return isTagged;
+	}
+	
 	
 	/**
 	 * add the singular form and the plural form of a word into the

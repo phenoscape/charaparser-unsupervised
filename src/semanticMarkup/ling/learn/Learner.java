@@ -2790,8 +2790,58 @@ public class Learner {
 		}
 	}
 	
-	void adjectivesVerification(DataHolder dataholderHandler) {
+	/**
+	 * correct markups that used an adj as an s, e.g lateral, adult, juvenile
+	 */
+	public void adjectivesVerification(DataHolder dataholderHandler) {
+//		String $ptn = "^<N>([a-z]+)</N> ([^N,;.]+ <N>[a-z]+</N>)";
+		String pattern = "^<N>([a-z]+)</N> ([^N,;.]+ <N>[a-z]+</N>)";
 		
+		
+	}
+	
+	/**
+	 * Check if a word is (part of) the tag of any sentence
+	 * 
+	 * @param dataholderHandler
+	 *            DataHolder handler
+	 * @param raw
+	 *            word to check
+	 * @return true if it is, false otherwise
+	 */
+	public boolean isSentenceTag(DataHolder dataholderHandler, String raw) {
+		boolean result = false;
+		result = dataholderHandler.isExistSentence(false, String.format("^%s.*$", raw));
+		
+		return result;
+	}
+
+	/**
+	 * change the POS tag of a word from noun to modifier
+	 * 
+	 * @param dataholderHandler
+	 *            dataholder handler
+	 * 
+	 * @param word
+	 *            the word to change
+	 * @return true if any updates has been made, false otherwise
+	 */
+	public boolean noun2Modifier(DataHolder dataholderHandler, String word) {
+		boolean isUpdated = false;
+		
+		ArrayList<String> deletedPOSs = new ArrayList<String>();
+		deletedPOSs.add("s");
+		deletedPOSs.add("p");
+		deletedPOSs.add("n");
+		
+		for (String POS: deletedPOSs) {
+			dataholderHandler.deleteWordPOS(true, word, true, POS);
+		}
+		dataholderHandler.updateDataHolder(word, "m", "", "modifiers", 1);
+		
+		dataholderHandler.tagSentence();
+		
+		return isUpdated;
 	}
 	
 	// some unused variables in perl
