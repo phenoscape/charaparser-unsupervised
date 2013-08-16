@@ -10,12 +10,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
-import semanticMarkup.ling.learn.Constant;
-import semanticMarkup.ling.learn.KnownTagCollection;
-import semanticMarkup.ling.learn.LearnerUtility;
-import semanticMarkup.ling.learn.StringUtility;
+import semanticMarkup.ling.learn.auxiliary.KnownTagCollection;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
+import semanticMarkup.ling.learn.utility.LearnerUtility;
+import semanticMarkup.ling.learn.utility.StringUtility;
 
 public class UnknownWordBootstrapping implements IModule {
 	private LearnerUtility myLearnerUtility;

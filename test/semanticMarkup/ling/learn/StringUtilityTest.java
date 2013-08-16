@@ -11,6 +11,9 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import semanticMarkup.ling.learn.knowledge.Constant;
+import semanticMarkup.ling.learn.utility.StringUtility;
+
 public class StringUtilityTest {
 
 	@Test

@@ -1,4 +1,4 @@
-package semanticMarkup.ling.learn;
+package semanticMarkup.ling.learn.knowledge;
 
 import java.util.Arrays;
 import java.util.Collections;

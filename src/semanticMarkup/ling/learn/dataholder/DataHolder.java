@@ -19,11 +19,11 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.ling.learn.Configuration;
-import semanticMarkup.ling.learn.Constant;
-import semanticMarkup.ling.learn.POSInfo;
-import semanticMarkup.ling.learn.StringPair;
-import semanticMarkup.ling.learn.StringUtility;
-import semanticMarkup.ling.learn.WordFormUtility;
+import semanticMarkup.ling.learn.auxiliary.POSInfo;
+import semanticMarkup.ling.learn.auxiliary.StringPair;
+import semanticMarkup.ling.learn.knowledge.Constant;
+import semanticMarkup.ling.learn.utility.StringUtility;
+import semanticMarkup.ling.learn.utility.WordFormUtility;
 
 public class DataHolder {
 	// all unique words in the input treatments

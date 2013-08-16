@@ -25,13 +25,21 @@ import semanticMarkup.core.Treatment;
 import semanticMarkup.know.IGlossary;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
+import semanticMarkup.ling.learn.auxiliary.GetNounsAfterPtnReturnValue;
+import semanticMarkup.ling.learn.auxiliary.KnownTagCollection;
+import semanticMarkup.ling.learn.auxiliary.POSInfo;
+import semanticMarkup.ling.learn.auxiliary.SentenceLeadLengthComparator;
+import semanticMarkup.ling.learn.auxiliary.StringAndInt;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
+import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.learn.knowledge.Initiation;
 import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrapping;
+import semanticMarkup.ling.learn.utility.LearnerUtility;
+import semanticMarkup.ling.learn.utility.StringUtility;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class Learner {	

@@ -1,4 +1,4 @@
-package semanticMarkup.ling.learn;
+package semanticMarkup.ling.learn.auxiliary;
 
 import java.io.BufferedReader;
 import java.io.File;

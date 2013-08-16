@@ -18,6 +18,7 @@ import org.junit.Test;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
+import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.transform.ITokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;

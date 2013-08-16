@@ -1,4 +1,4 @@
-package semanticMarkup.ling.learn;
+package semanticMarkup.ling.learn.utility;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import semanticMarkup.ling.learn.knowledge.Constant;
 
 public class StringUtility {
 

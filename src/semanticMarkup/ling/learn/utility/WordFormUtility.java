@@ -1,4 +1,4 @@
-package semanticMarkup.ling.learn;
+package semanticMarkup.ling.learn.utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import semanticMarkup.know.Stemmer;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
+import semanticMarkup.ling.learn.knowledge.Constant;
 
 public class WordFormUtility {
 	private WordNetPOSKnowledgeBase myWN;
@@ -696,7 +697,7 @@ public class WordFormUtility {
 	}
 	
 
-	List<String> getSingularPluralPair(String word1, String word2) {
+	public List<String> getSingularPluralPair(String word1, String word2) {
 		List<String> pair = new ArrayList<String>();
 		String singular = "";
 		String plural = "";

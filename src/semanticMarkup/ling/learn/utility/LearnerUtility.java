@@ -1,4 +1,4 @@
-package semanticMarkup.ling.learn;
+package semanticMarkup.ling.learn.utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,11 +19,14 @@ import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
+import semanticMarkup.ling.learn.auxiliary.KnownTagCollection;
+import semanticMarkup.ling.learn.auxiliary.StringAndInt;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
+import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class LearnerUtility {
