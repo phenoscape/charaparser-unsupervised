@@ -2782,6 +2782,10 @@ public class Learner {
 		}
 	}
 	
+	void adjectivesVerification(DataHolder dataholderHandler) {
+		
+	}
+	
 	// some unused variables in perl
 	// directory of /descriptions folder
 	private String desDir = "";
