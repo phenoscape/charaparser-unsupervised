@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
@@ -159,6 +160,61 @@ public class LearnerUtility {
 		return hide;
 
 	}
+	
+	
+	/**
+	 * Put all words in this sentence into the words map
+	 * 
+	 * @param sent
+	 * @param words
+	 *            a map mapping all words already known to their counts
+	 * @return a new map of all words, including words in sent
+	 */
+	public Map<String, Integer> getAllWords(String sentence,
+			Map<String, Integer> words) {
+		List<String> tokens = this.tokenizeText(sentence, "all");
+
+		for (String token: tokens) {
+			if (words.containsKey(token)) {
+				int count = words.get(token);
+				count = count + 1;
+				words.put(token, count);
+			} else {
+				words.put(token, 1);
+			}
+		}
+
+		return words;
+	}
+	
+	/**
+	 * returns the first n words of the sentence
+	 * 
+	 * @param sent
+	 *            the sentence
+	 * @param n
+	 *            number of words to be returned
+	 * @return the first n words of the sentence. If the number of words in the
+	 *         sentence is less than n, return all of them.
+	 */
+	public List<String> getFirstNWords(String sentence, int n) {
+		List<String> nWords = new ArrayList<String>();
+
+		if (sentence == null || sentence == "") {
+			return nWords;
+		}
+		
+		List<String> tokens = this.tokenizeText(sentence, "firstseg");
+		
+		
+		int minL = tokens.size() > n ? n : tokens.size();
+		for (int i = 0; i < minL; i++) {
+			nWords.add(tokens.get(i));
+		}
+
+		return nWords;
+	}
+	
 
 	/**
 	 * Restore '.', '?', ';', ':', '!' within brackets

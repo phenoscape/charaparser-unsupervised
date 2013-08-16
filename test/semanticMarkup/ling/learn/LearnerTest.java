@@ -57,92 +57,9 @@ public class LearnerTest {
 //		// assertEquals ("learner", results, tester.Learn(tms));
 //	}
 
-	@Test
-	public void testHandleText() {
-		// handleTest (Fully finished - Dongye 01/08)
-		// null
-		assertEquals("Result", null, tester.handleText(null));
-		// ""
-		assertEquals("Result", "", tester.handleText(""));
-		// remove " and '
-		assertEquals("Result", "words word", tester.handleText("word's wo\"rd"));
-		// plano - to
-		assertEquals("Result", "word to word",
-				tester.handleText("word -to word"));
-		//
-		assertEquals("Result", "word -shaped",
-				tester.handleText("word ______shaped"));
-		// unhide <i>
-		assertEquals("Result", "word <i> word.",
-				tester.handleText("word &lt;i&gt; word."));
-		// unhide </i>
-		assertEquals("Result", "word </i> word.",
-				tester.handleText("word &lt;/i&gt; word."));
-		// remove 2a. (key marks)
-		assertEquals("Result", "word", tester.handleText("7b. word"));
-		// remove HTML entities
-		assertEquals("Result", "word   word",
-				tester.handleText("word &amp; word"));
-		// " & " => " and "
-		assertEquals("Result", "word and word.",
-				tester.handleText("word & word."));
-		// "_" => "-"
-		assertEquals("Result", "word-word.", tester.handleText("word_word."));
-		// absent ; => absent;
-		assertEquals("Result", "word; word; word.",
-				tester.handleText("word ;word ;word."));
-		// absent;blade => absent; blade
-		assertEquals("Result", "word; word; word.",
-				tester.handleText("word;word;word."));
-		assertEquals("Result", "word: word. word.",
-				tester.handleText("word:word.word."));
-		// 1 . 5 => 1.5
-		assertEquals("Result", "word 1.5 word 384739.84 word.",
-				tester.handleText("word 1 . 5 word 384739 . 84 word."));
-		// #diam . =>diam.
-		assertEquals("Result", "word diam. word diam. word.",
-				tester.handleText("word diam . word diam . word."));
-		// ca . =>ca.
-		assertEquals("Result", "word ca. word ca. word.",
-				tester.handleText("word ca . word ca . word."));
-		// cm|mm|dm|m
-		assertEquals("Result", "word 12 cm[DOT] word 376 mm[DOT] word.",
-				tester.handleText("word 12 cm . word 376 mm. word."));
 
-	}
 
-	@Test
-	public void testHandleSentence() {
-		// handleString
-		// null
-		assertEquals("Result", null, tester.handleSentence(null));
-		// ""
-		assertEquals("Result", "", tester.handleSentence(""));
-		// remove (.a.)
-		assertEquals("Result", "word word word word .",
-				tester.handleSentence("word (.a.) word (a) word ( a ) word."));
-		// remove [.a.]
-		assertEquals("Result", "word word word word .",
-				tester.handleSentence("word [.a.] word [a] word [ a ] word."));
-		// remove {.a.}
-		assertEquals("Result", "word word word word .",
-				tester.handleSentence("word {.a.} word {a} word { a } word."));
-		// to fix basi- and hypobranchial
-		assertEquals(
-				"Result",
-				"word cup_ shaped word cup_ shaped word cup_ shaped word .",
-				tester.handleSentence("word cup --- shaped word cup-shaped word cup ---------        shaped word."));
 
-		// multiple spaces => 1 space
-		assertEquals("Result", "word word word .",
-				tester.handleSentence("word  word	 word."));
-		// remove multipe spaces at the beginning
-		assertEquals("Result", "word word .",
-				tester.handleSentence("  	word word."));
-		// remove multipe spaces at the rear
-		assertEquals("Result", "word word .",
-				tester.handleSentence("word word.    "));
-	}
 
 //	@Test
 //	public void testPopulateUnknownWordsTable() {
@@ -1052,43 +969,6 @@ public class LearnerTest {
 		myTester.oneLeadWordMarkup(myTester.getDataHolder().getCurrentTags());
 		assertEquals("oneLeadMarkup", "tagx", myTester.getDataHolder().getSentence(3).getTag());		
     }
-    
-	@Test
-	public void testGetFirstNWords() {
-		List<String> nWords = new ArrayList<String>();
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
-				tester.getFirstNWords(null, -1));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
-				tester.getFirstNWords("", -1));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
-				tester.getFirstNWords(null, 1));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
-				tester.getFirstNWords("", 1));
-		nWords.add("word1");
-		nWords.add("word2");
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
-				tester.getFirstNWords("word1 word2 word3 word4", 2));
-		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
-				tester.getFirstNWords("word1 word2", 3));
-	}
-	
-	@Test
-	public void testGetAllWords() {
-		Map<String, Integer> wordsBefore = new HashMap<String, Integer>();
-		wordsBefore.put("word1", 1);
-		wordsBefore.put("word2", 2);
-		Map<String, Integer> wordsAfter = new HashMap<String, Integer>();
-		wordsAfter.put("word1", 2);
-		wordsAfter.put("word2", 4);
-		wordsAfter.put("word3", 2);
-		wordsAfter.put("word4", 1);
-		wordsAfter.put("word5", 1);
-		assertEquals("PopulateSent Helper - getAllWords", wordsAfter,
-				tester.getAllWords("word1 word2 word3 word2 word3 word4 word5",
-						wordsBefore));
-	}
-	
-	
 	
 	@Test
 	public void testUnknownWordBootstrapping(){

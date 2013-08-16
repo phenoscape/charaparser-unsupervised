@@ -71,7 +71,7 @@ public class Learner {
 		this.myDataHolder = new DataHolder(myConfiguration, myLearnerUtility.getWordFormUtility());
 		
 		// Class variables
-		NUM_LEAD_WORDS = 3; // Set the number of leading words be 3
+		NUM_LEAD_WORDS = this.myConfiguration.getNumLeadWords(); // Set the number of leading words be 3
 		
 		checkedWordSet = new HashSet<String>();
 		
@@ -1064,7 +1064,7 @@ public class Learner {
 			// System.out.println("Add ProperNoun: " + word);
 		}
 	}
-	
+
 	// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// suffix: -fid(adj), -form (adj), -ish(adj), -less(adj), -like (adj)),
 	// -merous(adj), -most(adj), -shaped(adj), -ous(adj)

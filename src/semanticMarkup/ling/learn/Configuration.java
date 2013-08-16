@@ -8,12 +8,14 @@ public class Configuration {
 	private String openNLPSentenceDetectorDir = null;
 	private String openNLPTokenizerDir = null;
 	
-	private int maxTagLength = 0;
+	private int maxTagLength;
+	private int numLeadWords; 
 	
 	private static final String defaultWordNetDictDir = "res/WordNet/WordNet-3.0/dict";
 	private static final String defaultOpenNLPModelDir = "res";
 	private static final String defaultLearningMode = "plain";
 	private static final int defaultTagLength = 150;
+	private static final int defaultNumLeadWords = 3;
 
 	public Configuration() {
 		//this.learningMode = learningMode;
@@ -33,6 +35,14 @@ public class Configuration {
 		}
 		else {
 			this.maxTagLength = Configuration.defaultTagLength;
+		}
+		
+		String numLeadWords = System.getProperty("charaparser.numleadwords");
+		if (numLeadWords != null) {
+			this.numLeadWords = Integer.parseInt(numLeadWords);
+		}
+		else {
+			this.numLeadWords = Configuration.defaultNumLeadWords;
 		}
 		
 		
@@ -79,6 +89,10 @@ public class Configuration {
 	
 	public int getMaxTagLength(){
 		return this.maxTagLength;
+	}
+	
+	public int getNumLeadWords(){
+		return this.numLeadWords;
 	}
 	
 	public void setOpenNLPSentenceDetectorDir(String openNLPSentenceDetectorDir){

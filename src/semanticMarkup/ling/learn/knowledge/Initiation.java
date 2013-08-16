@@ -94,7 +94,7 @@ public class Initiation implements IModule {
 					sentences.get(j).setContent(this.handleSentence(sentences.get(j).getContent()));
 
 					// store all words
-					myDataHolder.allWords = this.getAllWords(sentences.get(j).getContent(), myDataHolder.allWords);
+					myDataHolder.allWords = this.myLearnerUtility.getAllWords(sentences.get(j).getContent(), myDataHolder.allWords);
 				}
 
 				for (int j = 0; j < validIndex.size(); j++) {
@@ -120,7 +120,7 @@ public class Initiation implements IModule {
 					oline = this.myLearnerUtility.restoreMarksInBrackets(oline);
 					oline = oline.replaceAll("\'", " ");
 
-					List<String> nWords = this.getFirstNWords(line,
+					List<String> nWords = this.myLearnerUtility.getFirstNWords(line,
 							this.numLeadWords);
 					String lead = "";
 					Iterator<String> iter = nWords.iterator();
@@ -377,59 +377,6 @@ public class Initiation implements IModule {
 		myLogger.trace("Return: "+count);
 		myLogger.trace("Quite\n");
 		return count;
-	}
-	
-	/**
-	 * Put all words in this sentence into the words map
-	 * 
-	 * @param sent
-	 * @param words
-	 *            a map mapping all words already known to their counts
-	 * @return a new map of all words, including words in sent
-	 */
-	public Map<String, Integer> getAllWords(String sentence,
-			Map<String, Integer> words) {
-		List<String> tokens = this.getLearnerUtility().tokenizeText(sentence, "all");
-
-		for (String token: tokens) {
-			if (words.containsKey(token)) {
-				int count = words.get(token);
-				count = count + 1;
-				words.put(token, count);
-			} else {
-				words.put(token, 1);
-			}
-		}
-
-		return words;
-	}
-
-	/**
-	 * returns the first n words of the sentence
-	 * 
-	 * @param sent
-	 *            the sentence
-	 * @param n
-	 *            number of words to be returned
-	 * @return the first n words of the sentence. If the number of words in the
-	 *         sentence is less than n, return all of them.
-	 */
-	public List<String> getFirstNWords(String sentence, int n) {
-		List<String> nWords = new ArrayList<String>();
-
-		if (sentence == null || sentence == "") {
-			return nWords;
-		}
-		
-		List<String> tokens = this.getLearnerUtility().tokenizeText(sentence, "firstseg");
-		
-		
-		int minL = tokens.size() > n ? n : tokens.size();
-		for (int i = 0; i < minL; i++) {
-			nWords.add(tokens.get(i));
-		}
-
-		return nWords;
 	}
 	
 	public LearnerUtility getLearnerUtility(){

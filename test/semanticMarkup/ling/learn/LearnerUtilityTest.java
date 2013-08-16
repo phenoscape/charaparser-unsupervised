@@ -3,10 +3,13 @@ package semanticMarkup.ling.learn;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Before;
@@ -83,6 +86,42 @@ public class LearnerUtilityTest {
 				tester.restoreMarksInBrackets("before (word[QLN]  word) after"));
 		assertEquals("Result", "before (word!  word) after",
 				tester.restoreMarksInBrackets("before (word[EXM]  word) after"));
+	}
+	
+    
+	@Test
+	public void testGetFirstNWords() {
+		List<String> nWords = new ArrayList<String>();
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords(null, -1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("", -1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords(null, 1));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("", 1));
+		nWords.add("word1");
+		nWords.add("word2");
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("word1 word2 word3 word4", 2));
+		assertEquals("PopulateSent Helper - getFirstNWords: none", nWords,
+				tester.getFirstNWords("word1 word2", 3));
+	}
+	
+	@Test
+	public void testGetAllWords() {
+		Map<String, Integer> wordsBefore = new HashMap<String, Integer>();
+		wordsBefore.put("word1", 1);
+		wordsBefore.put("word2", 2);
+		Map<String, Integer> wordsAfter = new HashMap<String, Integer>();
+		wordsAfter.put("word1", 2);
+		wordsAfter.put("word2", 4);
+		wordsAfter.put("word3", 2);
+		wordsAfter.put("word4", 1);
+		wordsAfter.put("word5", 1);
+		assertEquals("PopulateSent Helper - getAllWords", wordsAfter,
+				tester.getAllWords("word1 word2 word3 word2 word3 word4 word5",
+						wordsBefore));
 	}
 
 	@Test
@@ -244,7 +283,7 @@ public class LearnerUtilityTest {
 			targetWords.addAll(Arrays.asList("about along".split(" ")));
 			
 			Set<String> targetMarks = new HashSet<String>();
-			targetMarks.addAll(Arrays.asList("\\) \\\\ \\[ \\} \\. \\| \\* \\+ \\?".split(" ")));
+			targetMarks.addAll(Arrays.asList(") \\ [ } . | * + ?".split(" ")));
 			
 			List<Set<String>> target = new LinkedList<Set<String>>();
 			target.add(targetWords);
