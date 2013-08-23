@@ -688,8 +688,14 @@ public class LearnerUtility {
 		
 		// insert tags
 		sentence = annotateSentenceHelper(sentence, properNouns, "Z", true);
+		System.out.println(sentence);
 		sentence = annotateSentenceHelper(sentence, organs, "O", true);
+		System.out.println(sentence);
+		if (sentence.equals("<O>extent</O> of dermal cranial covering")) {
+			System.out.println();
+		}
 		sentence = annotateSentenceHelper(sentence, nouns, "N", true);
+		System.out.println(sentence);
 		sentence = annotateSentenceHelper(sentence, modifiers, "M", true);
 		sentence = annotateSentenceHelper(sentence, boundaryWords, "B", true);
 		sentence = annotateSentenceHelper(sentence, boundaryMarks, "B", false);
@@ -776,11 +782,10 @@ public class LearnerUtility {
 		Set<String> nounSet = new HashSet<String>();
 		Set<String> psWordSet = new HashSet<String>(); // set of nouns
 		psWordSet = this.getPSWords(dataholderHandler);
-		nounSet .addAll(psWordSet);
+		nounSet.addAll(psWordSet);
 		// if the mode is "singletag", then get additional nouns from tags
 		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
-			organs = this.getOrgans(dataholderHandler);
-			nounSet.addAll(organs);
+			nounSet.addAll(this.getOrgans(dataholderHandler));
 		} else {
 			// do nothing
 		}
@@ -859,7 +864,7 @@ public class LearnerUtility {
 	 * @return a set of o
 	 */
 	public Set<String> getOrgans(DataHolder dataholderHandler) {
-		Set<String> oSet = new HashSet<String>(); // set of o
+		Set<String> oSet = new HashSet<String>(); // set of organs
 		
 		Iterator<SentenceStructure> iterSentence = dataholderHandler
 				.getSentenceHolder().iterator();

@@ -166,6 +166,9 @@ public class UnknownWordBootstrapping implements IModule {
 				String pattern3 = "(^| )(" + allWordsPattern + ") ";
 				Set<SentenceStructure> sentences = dataholderHandler.getTaggedSentenceByPattern(pattern3);
 				for (SentenceStructure sentenceItem: sentences) {
+					if (sentenceItem.getID()==133) {
+						System.out.println();
+					}
 					String sentence = sentenceItem.getSentence();
 					KnownTagCollection myKnownTags = new KnownTagCollection(null, organs, null, boundaries, null, null);
 					sentence = this.myLearnerUtility.annotateSentence(sentence, myKnownTags, dataholderHandler.BMSWords);

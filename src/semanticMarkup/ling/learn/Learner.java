@@ -150,6 +150,9 @@ public class Learner {
 //		this.unknownWordBootstrapping();
 		this.unknownWordBootstrappingModule.run(myDataHolder);
 		
+		myLogger.info("Adjectives Verification:");
+		this.adjectivesVerification(myDataHolder);
+		
 		myLogger.info("Learning done!");
 		
 //		myLogger.info(myDataHolder.toString());
@@ -2800,6 +2803,18 @@ public class Learner {
 		while (iter.hasNext()) {
 			SentenceStructure sentenceItem = iter.next();
 			String sentence = sentenceItem.getSentence();
+			System.out.println(sentence);
+			Set<Integer> ids = new HashSet<Integer>();
+			ids.add(133);
+			ids.add(163);
+			ids.add(236);
+			ids.add(269);
+			
+			if (ids.contains(sentenceItem.getID())) {
+				System.out.println();
+			}
+			
+			
 			if (sentence != null) {
 				Pattern p = Pattern.compile(pattern);
 				Matcher m = p.matcher(sentence);
