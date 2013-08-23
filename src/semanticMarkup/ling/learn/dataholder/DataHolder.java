@@ -849,8 +849,18 @@ public class DataHolder {
 		return isDeleted;
 	}
 	
-	public boolean tagSentence(){
+	public boolean updateSentenceTag(String tagPattern, String netTag){
 		boolean isTagged = false;
+		
+		Iterator<SentenceStructure> iter = this.getSentenceHolderIterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceItem = iter.next();
+			String tag = sentenceItem.getTag();
+			if (StringUtility.isMatchedNullSafe(tagPattern, tag)) {
+				sentenceItem.setTag(null);
+				isTagged = true;
+			}
+		}
 		return isTagged;
 	}
 	

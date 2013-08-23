@@ -2794,10 +2794,41 @@ public class Learner {
 	 * correct markups that used an adj as an s, e.g lateral, adult, juvenile
 	 */
 	public void adjectivesVerification(DataHolder dataholderHandler) {
-//		String $ptn = "^<N>([a-z]+)</N> ([^N,;.]+ <N>[a-z]+</N>)";
 		String pattern = "^<N>([a-z]+)</N> ([^N,;.]+ <N>[a-z]+</N>)";
-		
-		
+		Iterator<SentenceStructure> iter = dataholderHandler
+				.getSentenceHolderIterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceItem = iter.next();
+			String sentence = sentenceItem.getSentence();
+			if (sentence != null) {
+				Pattern p = Pattern.compile(pattern);
+				Matcher m = p.matcher(sentence);
+				if (m.find()) {
+					String part1 = m.group(1);
+					String part2 = m.group(2);
+
+					boolean condition1 = this.isSentenceTag(dataholderHandler,
+							part2);
+					boolean condition2 = StringUtils.equals(this
+							.getLearnerUtility().getWordFormUtility()
+							.getNumber(part1), "p");
+
+					if (condition1 && condition2) {
+						String wrongWord = part1;
+						if (StringUtility.isMatchedNullSafe(wrongWord, "\\w")) {
+							this.noun2Modifier(dataholderHandler, wrongWord);
+							Set<String> words = dataholderHandler
+									.getWordsFromUnknownWord(null, false,
+											String.format("^%s$", wrongWord),
+											true);
+							for (String word : words) {
+								this.noun2Modifier(dataholderHandler, word);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	/**
@@ -2839,7 +2870,8 @@ public class Learner {
 		}
 		dataholderHandler.updateDataHolder(word, "m", "", "modifiers", 1);
 		
-		dataholderHandler.tagSentence();
+		String oldPattern = String.format("(^%s$|^.* %s$)", word, word);
+		dataholderHandler.updateSentenceTag(oldPattern, null);
 		
 		return isUpdated;
 	}
