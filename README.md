@@ -122,6 +122,11 @@ learning based on "m o b" pattern
 *** update the tagging of relevant sentences in Sentence collection in dataholder based on what are learned in previous steps
 ** get all nouns from WordPOS collection. From UnknownWord collection, for all those words that contain a underscore "_", if it is not among the nouns, then take it as a boundary, and put it into the dataholder. Then update sentences in Sentnece collection based on the newly learned boundaries.
 
+* Adjectives Verification
+Some adj may be recognized as nouns (s, p, or n). Correct them by deleting the nouns tags and tag them as modifiers in WordPOS holder. Also in UnknownWord holder any words having the adj as its flag need to be retagged as well.
+
+Finally update the tags of Sentence holder
+
 
 
 * Manage Data Holder
