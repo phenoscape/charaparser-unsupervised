@@ -127,6 +127,10 @@ Some adj may be recognized as nouns (s, p, or n). Correct them by deleting the n
 
 Finally update the tags of Sentence holder
 
+* Separate modifier and tag
+#break tag into modifier and tag (one word).
+#Make tags starting with stopword "unknown" or remove some/all etc from tag.
+#Contains NULL for unknown tags/modifiers.
 
 
 * Manage Data Holder
@@ -177,6 +181,8 @@ Apart the updates on the holders themselves, in this step the count of how many 
 ** getPOSptn
 given a list of words, chech each of them in the WordPOS holder, find its POS tag, and returns a string with letters representing the POS tags. If the POS tag is not known for a word, use "?" to represent it.
 
+** tag sentence with modifier and tag (tagSentWMT)
+leading -ly words in modifers are removed
 
 Data Holder
 
