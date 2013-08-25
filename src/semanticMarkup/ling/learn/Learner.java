@@ -2797,13 +2797,16 @@ public class Learner {
 	 * correct markups that used an adj as an s, e.g lateral, adult, juvenile
 	 */
 	public void adjectivesVerification(DataHolder dataholderHandler) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.adjectivesVerification");
+		
 		String pattern = "^<N>([a-z]+)</N> ([^N,;.]+ <N>[a-z]+</N>)";
 		Iterator<SentenceStructure> iter = dataholderHandler
 				.getSentenceHolderIterator();
 		while (iter.hasNext()) {
 			SentenceStructure sentenceItem = iter.next();
 			String sentence = sentenceItem.getSentence();
-			System.out.println(sentence);
+//			System.out.println(sentence);
 			Set<Integer> ids = new HashSet<Integer>();
 			ids.add(133);
 			ids.add(163);
@@ -2821,7 +2824,10 @@ public class Learner {
 				if (m.find()) {
 					String part1 = m.group(1);
 					String part2 = m.group(2);
-
+					myLogger.trace(String.format("Sentence %s\n" +
+							"\tSentence: %s\n" +
+							"\tPart1: %s\n" +
+							"\tPart2: %s", sentenceItem.getID(), sentenceItem.getSentence(), part1, part2));
 					boolean condition1 = this.isSentenceTag(dataholderHandler,
 							part2);
 					boolean condition2 = StringUtils.equals(this
@@ -2830,6 +2836,7 @@ public class Learner {
 
 					if (condition1 && condition2) {
 						String wrongWord = part1;
+						myLogger.trace("\tWrong: "+ wrongWord);
 						if (StringUtility.isMatchedNullSafe(wrongWord, "\\w")) {
 							this.noun2Modifier(dataholderHandler, wrongWord);
 							Set<String> words = dataholderHandler

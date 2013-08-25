@@ -688,14 +688,14 @@ public class LearnerUtility {
 		
 		// insert tags
 		sentence = annotateSentenceHelper(sentence, properNouns, "Z", true);
-		System.out.println(sentence);
+//		System.out.println(sentence);
 		sentence = annotateSentenceHelper(sentence, organs, "O", true);
-		System.out.println(sentence);
-		if (sentence.equals("<O>extent</O> of dermal cranial covering")) {
-			System.out.println();
-		}
+//		System.out.println(sentence);
+//		if (sentence.equals("<O>extent</O> of dermal cranial covering")) {
+//			System.out.println();
+//		}
 		sentence = annotateSentenceHelper(sentence, nouns, "N", true);
-		System.out.println(sentence);
+//		System.out.println(sentence);
 		sentence = annotateSentenceHelper(sentence, modifiers, "M", true);
 		sentence = annotateSentenceHelper(sentence, boundaryWords, "B", true);
 		sentence = annotateSentenceHelper(sentence, boundaryMarks, "B", false);
