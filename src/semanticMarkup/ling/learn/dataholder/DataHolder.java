@@ -871,7 +871,7 @@ public class DataHolder {
 	 *            pattern of tag of the sentences searching for
 	 * @return list of sentences
 	 */
-	public List<SentenceStructure> getSentencesByTag(String tagPattern) {
+	public List<SentenceStructure> getSentencesByTagPattern(String tagPattern) {
 		List<SentenceStructure> sentences = new LinkedList<SentenceStructure>();
 		Iterator<SentenceStructure> iter = this.getSentenceHolderIterator();
 		while (iter.hasNext()) {
