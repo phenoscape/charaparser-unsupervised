@@ -2901,6 +2901,39 @@ public class Learner {
 	
 	public void separateModifierTag(DataHolder dataholderHandler) {
 		List<SentenceStructure> sentences = dataholderHandler.getSentencesByTagPattern("^.* .*$");
+		
+		for (SentenceStructure sentenceItem : sentences) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			
+			// case 1
+			String tagBackup = "" + tag;
+			if (StringUtility.isMatchedNullSafe("\\w+", tagBackup)) {
+				if (!StringUtility.isMatchedNullSafe(
+						String.format("\\b(%s)\\b", Constant.STOP), tagBackup)) {
+					// case 1.1
+					List<String> words = new LinkedList<String>();
+					words.addAll(Arrays.asList(tagBackup.split("\\s+")));
+					tag = words.get(words.size()-1);
+					
+					String modifier = "";
+					if (words.size() > 1) {
+						modifier = StringUtils.join(
+								StringUtility.stringArraySplice(words, 0,
+										words.size() - 1), " ");
+					}
+					
+					if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
+						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "separatemodifiertag");
+					}
+					else {
+						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, null, tag, "separatemodifiertag");
+					}
+				}
+				
+			}
+		}
 	}
 	
 	// some unused variables in perl
