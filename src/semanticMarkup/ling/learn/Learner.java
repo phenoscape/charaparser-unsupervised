@@ -2898,6 +2898,11 @@ public class Learner {
 		return isUpdated;
 	}
 	
+	
+	public void separateModifierTag(DataHolder dataholderHandler) {
+		List<SentenceStructure> sentences = dataholderHandler.getSentencesByTagPattern("^.* .*$");
+	}
+	
 	// some unused variables in perl
 	// directory of /descriptions folder
 	private String desDir = "";
