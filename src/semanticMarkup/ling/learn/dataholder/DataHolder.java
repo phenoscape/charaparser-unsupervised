@@ -864,6 +864,27 @@ public class DataHolder {
 		return isTagged;
 	}
 	
+	/**
+	 * get all sentences which match the pattern passed in
+	 * 
+	 * @param tagPattern
+	 *            pattern of tag of the sentences searching for
+	 * @return list of sentences
+	 */
+	public List<SentenceStructure> getSentenceByTag(String tagPattern) {
+		List<SentenceStructure> sentences = new LinkedList<SentenceStructure>();
+		Iterator<SentenceStructure> iter = this.getSentenceHolderIterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceItem = iter.next();
+			String tag = sentenceItem.getTag();
+			if (StringUtility.isMatchedNullSafe(tagPattern, tag)) {
+				sentences.add(sentenceItem);
+			}
+		}
+		
+		return sentences;
+	}
+	
 	
 	/**
 	 * add the singular form and the plural form of a word into the
