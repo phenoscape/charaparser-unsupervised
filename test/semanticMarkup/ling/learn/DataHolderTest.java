@@ -268,6 +268,7 @@ public class DataHolderTest {
 	@Test 
 	public void testTagSentWithMTPreProcessing(){
 		DataHolder myTester = dataHolderFactory();
+		assertEquals("tagSentWithMTPreProcessing - null", null, myTester.tagSentWithMTPreProcessing(null));
 		assertEquals("RemoveLyEndingBoundary - remove <>", "word1  word3", myTester.tagSentWithMTPreProcessing("word1 <word2> word3"));
 		assertEquals("RemoveLyEndingBoundary remove beginning stop words", "word", myTester.tagSentWithMTPreProcessing("after <word2> after above word"));
 		assertEquals("RemoveLyEndingBoundary remove ending -ly words", "word1", myTester.tagSentWithMTPreProcessing("word1 <word2> word3ly word4ly"));

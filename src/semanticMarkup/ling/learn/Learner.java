@@ -152,6 +152,7 @@ public class Learner {
 		
 		myLogger.info("Adjectives Verification:");
 		this.adjectivesVerification(myDataHolder);
+		this.separateModifierTag(myDataHolder);
 		
 		myLogger.info("Learning done!");
 		
@@ -2913,9 +2914,11 @@ public class Learner {
 			// case 1
 			String tagBackup = "" + tag;
 			if (StringUtility.isMatchedNullSafe("\\w+", tagBackup)) {
+				
+				myLogger.trace("Case 1");
 				if (!StringUtility.isMatchedNullSafe(
 						String.format("\\b(%s)\\b", Constant.STOP), tagBackup)) {
-					// case 1.1
+					
 					List<String> words = new LinkedList<String>();
 					words.addAll(Arrays.asList(tagBackup.split("\\s+")));
 					tag = words.get(words.size()-1);
@@ -2928,9 +2931,17 @@ public class Learner {
 					}
 					
 					if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
+						// case 1.1
+						myLogger.trace("Case 1.1");
 						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "separatemodifiertag");
 					}
 					else {
+						// case 1.2
+						myLogger.trace("Case 1.2");
+						myLogger.trace(sentenceID);
+//						if (sentenceID == 9) {
+//							System.out.println();
+//						}
 						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, null, tag, "separatemodifiertag");
 					}
 				}
@@ -2942,9 +2953,11 @@ public class Learner {
 				// case 2: in some species, abaxially with =>NULL
 				myLogger.trace("Case 2");
 				if ((StringUtility.isMatchedNullSafe("^in", tagBackup))&&(StringUtility.isMatchedNullSafe("\\b(with|without)\\b", tagBackup))) {
+					myLogger.trace("Case 2.1");
 					dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", null, "separtemodifiertag");
 				}
 				else {
+					myLogger.trace("Case 2.2");
 					String tagWithStopWordsReplaced = ""+tagBackup;
 					if (tagWithStopWordsReplaced != null) {
 						Pattern p = Pattern.compile("@ ([^@]+)$");
@@ -2960,9 +2973,11 @@ public class Learner {
 							}
 							
 							if (StringUtility.isMatchedNullSafe("\\w", tag)) {
+								myLogger.trace("Case 2.2.1");
 								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "separatemodifiertag");
 							}
 							else {
+								myLogger.trace("Case 2.2.2");
 								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", null, "separatemodifiertag");
 							}
 						}

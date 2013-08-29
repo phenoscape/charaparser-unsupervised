@@ -1214,6 +1214,9 @@ public class DataHolder {
 	 * @return the new modifer
 	 */
 	public String tagSentWithMTRemoveLyEndingBoundary(String modifier) {
+		if (modifier == null) {
+			return null;
+		}
 		
 		Pattern p = Pattern.compile("^(\\w+ly)\\s*(.*)$");
 		Matcher m = p.matcher(modifier);
@@ -1766,14 +1769,16 @@ public class DataHolder {
 		
 		myLogger.trace("Enter tagSentenceWithMT");
 		
-		//modifier preprocessing
-		modifier = this.tagSentWithMTPreProcessing(modifier);
-		tag = this.tagSentWithMTPreProcessing(tag);
+		if (modifier != null) {
+			// modifier preprocessing
+			modifier = this.tagSentWithMTPreProcessing(modifier);
+			// Remove any -ly ending word which is a "b" in the WordPOS, from
+			// the modifier
+			modifier = this.tagSentWithMTRemoveLyEndingBoundary(modifier);
+			modifier = StringUtility.removeAll(modifier, "(^\\s*|\\s*$)");
+		}
 		
-		//Remove any -ly ending word which is a "b" in the WordPOS, from the modifier
-		modifier = this.tagSentWithMTRemoveLyEndingBoundary(modifier);
-
-		modifier = StringUtility.removeAll(modifier, "(^\\s*|\\s*$)");
+		tag = this.tagSentWithMTPreProcessing(tag);
 		tag = StringUtility.removeAll(tag, "(^\\s*|\\s*$)");
 
 		if (tag == null) {
@@ -1797,7 +1802,11 @@ public class DataHolder {
 		myLogger.trace("Quite tagSentenceWithMT");
 	}
 	
-	public String tagSentWithMTPreProcessing(String text) {		
+	public String tagSentWithMTPreProcessing(String text) {	
+		if (text == null) {
+			return null;
+		}
+		
 		text = text.replaceAll("<\\S+?>", "");
 
 		text = StringUtility.removeAllRecursive(text, "^(" + Constant.STOP
