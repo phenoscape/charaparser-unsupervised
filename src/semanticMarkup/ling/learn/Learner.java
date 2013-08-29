@@ -2900,6 +2900,9 @@ public class Learner {
 	
 	
 	public void separateModifierTag(DataHolder dataholderHandler) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.separateModifierTag");
+		
 		List<SentenceStructure> sentences = dataholderHandler.getSentencesByTagPattern("^.* .*$");
 		
 		for (SentenceStructure sentenceItem : sentences) {
@@ -2932,6 +2935,39 @@ public class Learner {
 					}
 				}
 				
+			}
+			// case 2
+			else {
+				// treat them case by case
+				// case 2: in some species, abaxially with =>NULL
+				myLogger.trace("Case 2");
+				if ((StringUtility.isMatchedNullSafe("^in", tagBackup))&&(StringUtility.isMatchedNullSafe("\\b(with|without)\\b", tagBackup))) {
+					dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", null, "separtemodifiertag");
+				}
+				else {
+					String tagWithStopWordsReplaced = ""+tagBackup;
+					if (tagWithStopWordsReplaced != null) {
+						Pattern p = Pattern.compile("@ ([^@]+)$");
+						Matcher m = p.matcher(tagWithStopWordsReplaced);
+						if (m.find()) {
+							String tg = m.group(1);
+							ArrayList<String> tagWords = new ArrayList<String>();
+							tagWords.addAll(Arrays.asList(tg.split("\\s+")));
+							tag = tagWords.get(tagWords.size()-1);
+							String modifier = "";
+							if (tagWords.size()>1) {
+								modifier = StringUtils.join(StringUtility.stringArraySplice(tagWords, 0, tagWords.size()), " ");
+							}
+							
+							if (StringUtility.isMatchedNullSafe("\\w", tag)) {
+								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "separatemodifiertag");
+							}
+							else {
+								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", null, "separatemodifiertag");
+							}
+						}
+					}
+				}
 			}
 		}
 	}
