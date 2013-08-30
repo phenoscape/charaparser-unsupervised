@@ -66,7 +66,7 @@ public class UnknownWordBootstrapping implements IModule {
 				if (word.equals("teeth")) {
 					System.out.println();
 				}
-				if ((StringUtility.isMatchedNullSafe("ium$", word))
+				if ((StringUtility.isMatchedNullSafe(word, "ium$"))
 						&& (!this.myLearnerUtility.getConstant().singularExceptions
 								.contains(word))) {
 					dataholderHandler.updateDataHolder(word, "s", "-", "wordpos", 1);
@@ -136,17 +136,19 @@ public class UnknownWordBootstrapping implements IModule {
 							String tempWords = m22.group(2);
 //							if (!this.myLearnerUtility.getConstant().forbiddenWords
 //									.contains(tempWords)) {
-							if (!(StringUtility.isMatchedNullSafe(
-									"\\b("+ Constant.FORBIDDEN + ")\\b", 
-									tempWords))) {
-								String[] tempWordsArray = tempWords.split("\\s+");
+							if (!(StringUtility.isMatchedNullSafe(tempWords,
+									"\\b(" + Constant.FORBIDDEN + ")\\b"))) {
+								String[] tempWordsArray = tempWords
+										.split("\\s+");
 								if (tempWordsArray.length <= 2) {
 									for (String tempWord : tempWordsArray) {
 										dataholderHandler.updateDataHolder(
-												tempWord, "m", "", "modifiers", 1);
+												tempWord, "m", "", "modifiers",
+												1);
 										if (this.isValidWord(tempWord)) {
 											modifiers.add(tempWord);
-											myLogger.debug("find a [m] " + tempWord);
+											myLogger.debug("find a [m] "
+													+ tempWord);
 										}
 									}
 								}
@@ -194,7 +196,7 @@ public class UnknownWordBootstrapping implements IModule {
 				pWord);
 
 		// case 1
-		if (StringUtility.isMatchedNullSafe("e$", sWord)) {
+		if (StringUtility.isMatchedNullSafe(sWord, "e$")) {
 			sWord = StringUtility.chop(sWord);
 		}
 		// case 2

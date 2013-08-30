@@ -1,5 +1,11 @@
 package semanticMarkup.ling.learn.dataholder;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -686,7 +692,8 @@ public class DataHolder {
 		}
 		else {
 			if (pattern != null) {
-				if (StringUtility.isMatchedNullSafe(pattern, text)) {
+//				if (StringUtility.isMatchedNullSafe(pattern, text)) {
+				if (StringUtility.isMatchedNullSafe(text, pattern)) {
 					result = true;
 				}
 			}
@@ -753,7 +760,7 @@ public class DataHolder {
 			}
 			if (isTagGood) {
 				String sentence = sentenceItem.getSentence();
-				if (StringUtility.isMatchedNullSafe(pattern, sentence)) {
+				if (StringUtility.isMatchedNullSafe(sentence, pattern)) {
 					isExist = true;
 					return isExist;
 				}
@@ -782,7 +789,7 @@ public class DataHolder {
 			String tag = sentenceItem.getTag();
 			if ((!StringUtils.equals(tag, "ignore"))||(tag == null)) {
 				String sentence = sentenceItem.getSentence();
-				if (StringUtility.isMatchedNullSafe(pattern, sentence)) {
+				if (StringUtility.isMatchedNullSafe(sentence, pattern)) {
 					sentences.add(sentenceItem);
 				}
 			}
@@ -856,7 +863,7 @@ public class DataHolder {
 		while (iter.hasNext()) {
 			SentenceStructure sentenceItem = iter.next();
 			String tag = sentenceItem.getTag();
-			if (StringUtility.isMatchedNullSafe(tagPattern, tag)) {
+			if (StringUtility.isMatchedNullSafe(tag, tagPattern)) {
 				sentenceItem.setTag(null);
 				isTagged = true;
 			}
@@ -877,7 +884,7 @@ public class DataHolder {
 		while (iter.hasNext()) {
 			SentenceStructure sentenceItem = iter.next();
 			String tag = sentenceItem.getTag();
-			if (StringUtility.isMatchedNullSafe(tagPattern, tag)) {
+			if (StringUtility.isMatchedNullSafe(tag, tagPattern)) {
 				sentences.add(sentenceItem);
 			}
 		}
@@ -1767,7 +1774,8 @@ public class DataHolder {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.tagSentenceWithWT");
 		
-		myLogger.trace("Enter tagSentenceWithMT");
+		myLogger.trace(String.format("Enter (%d, %s, %s, %s, %s)", sentID,
+				sentence, modifier, tag, label));
 		
 		if (modifier != null) {
 			// modifier preprocessing
@@ -2019,6 +2027,44 @@ public class DataHolder {
 		}
 		
 		return isUpdated;
+	}
+	
+	public void write2File(String fileName) {
+		PrintWriter writer = null;
+		try {
+			writer = new PrintWriter("Sentence.csv", "UTF-8");
+
+			for (SentenceStructure sentenceItem : this.sentenceTable) {
+				writer.println(String.format("%d, %s, %s\n",
+						sentenceItem.getID(), sentenceItem.getSentence(),
+						sentenceItem.getTag()));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		try {
+			writer = new PrintWriter("WordPOS.csv", "UTF-8");
+
+			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();
+			while (iter.hasNext()) {
+				Entry<WordPOSKey, WordPOSValue> wordPOSItem = iter.next();
+				writer.println(String.format("%s, %s\n",
+						wordPOSItem.getKey().getWord(), wordPOSItem.getKey().getPOS()));			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 }

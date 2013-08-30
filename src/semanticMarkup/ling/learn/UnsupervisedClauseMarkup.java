@@ -223,7 +223,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			String tag = sentenceObject.getTag();
 
 			if ((!StringUtils.equals(modifier, ""))
-					&& (StringUtility.isEntireMatchedNullSafe("^\\[.*$", tag))) {
+					&& (StringUtility.isEntireMatchedNullSafe(tag, "^\\[.*$"))) {
 				String source = sentenceObject.getSource();
 				modifier = modifier.replaceAll("\\[|\\]|>|<|(|)", "");
 				tag = tag.replaceAll("\\[|\\]|>|<|(|)", "");

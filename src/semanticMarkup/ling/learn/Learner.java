@@ -132,7 +132,7 @@ public class Learner {
 		this.resetCounts(myDataHolder);
 		this.markupByPattern();
 		this.markupIgnore();
-
+		
 		// learning rules with high certainty
 		// At the every beginning, only those sentence whose first word is a p,
 		// could have a tag of "start", see populateSentece - getFirstNWords section -Dongye
@@ -145,6 +145,8 @@ public class Learner {
 		
 		myLogger.info("Additional bootstrappings:");
 		this.additionalBootstrapping();
+		myDataHolder.write2File("");
+
 		
 		myLogger.info("Unknownword bootstrappings:");
 //		this.unknownWordBootstrapping();
@@ -152,6 +154,7 @@ public class Learner {
 		
 		myLogger.info("Adjectives Verification:");
 		this.adjectivesVerification(myDataHolder);
+		
 		this.separateModifierTag(myDataHolder);
 		
 		myLogger.info("Learning done!");
@@ -2451,7 +2454,14 @@ public class Learner {
 				SentenceStructure thisSentence = this.myDataHolder.getSentenceHolder().get(index);
 				String thisLead = thisSentence.getLead();
 				String tag = thisSentence.getTag();
-				if ((tag==null)&&hasHead(sharedHead, Arrays.asList(thisLead.split(" ")))) {
+				String pTemp = "^"+match + " [\\S]+$";
+				myLogger.trace(thisLead);
+				myLogger.trace(pTemp);
+				if (pTemp.equals("^imbricated branchiostegal [\\S]+$")) {
+					System.out.println();
+				}
+//				if ((tag==null) && StringUtility.isMatchedNullSafe(pTemp, thisLead)) {
+				if ((tag==null) && StringUtility.isMatchedNullSafe(thisLead, pTemp)) {
 					sentenceSet.add(thisSentence);
 				}
 			}
@@ -2529,6 +2539,10 @@ public class Learner {
 							this.tagSentence(ID, match);
 							this.tagSentence(ID1, match);
 
+							if (sharedHead.get(sharedHead.size() - 1).equals("tissue")) {
+								System.out.println();
+							}
+							
 							int update1 = this.myDataHolder.updateDataHolder(
 									sharedHead.get(sharedHead.size() - 1), "n", "-", "wordpos", 1);
 							sign += update1;
@@ -2838,6 +2852,7 @@ public class Learner {
 					if (condition1 && condition2) {
 						String wrongWord = part1;
 						myLogger.trace("\tWrong: "+ wrongWord);
+//						if (StringUtility.isMatchedNullSafe(wrongWord, "\\w")) {
 						if (StringUtility.isMatchedNullSafe(wrongWord, "\\w")) {
 							this.noun2Modifier(dataholderHandler, wrongWord);
 							Set<String> words = dataholderHandler
@@ -2910,15 +2925,18 @@ public class Learner {
 			int sentenceID = sentenceItem.getID();
 			String sentence = sentenceItem.getSentence();
 			String tag = sentenceItem.getTag();
+			myLogger.trace("ID: " + sentenceID);
+			myLogger.trace("Sentence: " + sentence);
+			myLogger.trace("Tag: " + tag);
 			
 			// case 1
 			String tagBackup = "" + tag;
-			if (StringUtility.isMatchedNullSafe("\\w+", tagBackup)) {
-				
+//			if (StringUtility.isMatchedNullSafe("\\w+", tagBackup)) {
+			if (StringUtility.isMatchedNullSafe(tagBackup, "\\w+")) {	
 				myLogger.trace("Case 1");
-				if (!StringUtility.isMatchedNullSafe(
-						String.format("\\b(%s)\\b", Constant.STOP), tagBackup)) {
-					
+				if (!StringUtility.isMatchedNullSafe(tagBackup,
+						String.format("\\b(%s)\\b", Constant.STOP))) {
+	
 					List<String> words = new LinkedList<String>();
 					words.addAll(Arrays.asList(tagBackup.split("\\s+")));
 					tag = words.get(words.size()-1);
@@ -2930,6 +2948,9 @@ public class Learner {
 										words.size() - 1), " ");
 					}
 					
+					if (sentenceID == 22) {
+						System.out.println();
+					}
 					if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
 						// case 1.1
 						myLogger.trace("Case 1.1");
@@ -2939,9 +2960,6 @@ public class Learner {
 						// case 1.2
 						myLogger.trace("Case 1.2");
 						myLogger.trace(sentenceID);
-//						if (sentenceID == 9) {
-//							System.out.println();
-//						}
 						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, null, tag, "separatemodifiertag");
 					}
 				}
@@ -2952,7 +2970,7 @@ public class Learner {
 				// treat them case by case
 				// case 2: in some species, abaxially with =>NULL
 				myLogger.trace("Case 2");
-				if ((StringUtility.isMatchedNullSafe("^in", tagBackup))&&(StringUtility.isMatchedNullSafe("\\b(with|without)\\b", tagBackup))) {
+				if ((StringUtility.isMatchedNullSafe(tagBackup, "^in"))&&(StringUtility.isMatchedNullSafe(tagBackup, "\\b(with|without)\\b"))) {
 					myLogger.trace("Case 2.1");
 					dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", null, "separtemodifiertag");
 				}
@@ -2972,7 +2990,7 @@ public class Learner {
 								modifier = StringUtils.join(StringUtility.stringArraySplice(tagWords, 0, tagWords.size()), " ");
 							}
 							
-							if (StringUtility.isMatchedNullSafe("\\w", tag)) {
+							if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
 								myLogger.trace("Case 2.2.1");
 								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "separatemodifiertag");
 							}

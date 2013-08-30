@@ -251,7 +251,7 @@ public class StringUtility {
 	 *            the text to match
 	 * @return true if matches, false otherwise
 	 */
-	public static boolean isMatchedNullSafe(String pattern, String text) {
+	public static boolean isMatchedNullSafe(String text, String pattern) {
 		if (pattern == null || text == null) {
 			return false;
 		}
@@ -276,7 +276,7 @@ public class StringUtility {
 	 *            the text to match
 	 * @return true if matches, false otherwise
 	 */
-	public static boolean isEntireMatchedNullSafe(String pattern, String text) {
+	public static boolean isEntireMatchedNullSafe(String text, String pattern) {
 		if (pattern == null || text == null) {
 			return false;
 		}

@@ -932,15 +932,15 @@ public class LearnerUtility {
 				if (StringUtils.equals(POS, "b")) {
 //					String pattern = "^[-\\\\\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]$";
 					String pattern = "^(-|\\\\|\\(|\\)|\\[|\\]|\\{|\\}|\\.|\\||\\+|\\*|\\?)$";
-					if (StringUtility.isMatchedNullSafe(pattern, word)) {
+					if (StringUtility.isMatchedNullSafe(word, pattern)) {
 						bMarks.add(word);
-					} else if ((!(StringUtility.isMatchedNullSafe("\\w", word))) && (!StringUtils.equals(word, "/"))) {
+					} else if ((!(StringUtility.isMatchedNullSafe(word, "\\w"))) && (!StringUtils.equals(word, "/"))) {
 						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
 								word).find()) {
 							bMarks.add(word);
 						}
 					} else {
-						if (StringUtility.isMatchedNullSafe("^[a-zA-Z0-9_-]+$", word)) {
+						if (StringUtility.isMatchedNullSafe(word, "^[a-zA-Z0-9_-]+$")) {
 							bWords.add(word);
 						}
 					}
