@@ -2033,13 +2033,14 @@ public class DataHolder {
 		return isUpdated;
 	}
 	
-	public void write2File(String fileName) {
+	public void write2File(String fileNamePrefix) {
 		PrintWriter writer = null;
 		try {
-			writer = new PrintWriter("Sentence.csv", "UTF-8");
+			writer = new PrintWriter(fileNamePrefix
+					+ "_Sentence.csv", "UTF-8");
 
 			for (SentenceStructure sentenceItem : this.sentenceTable) {
-				writer.println(String.format("%d, %s, %s\n",
+				writer.println(String.format("%d, %s, %s",
 						sentenceItem.getID(), sentenceItem.getSentence(),
 						sentenceItem.getTag()));
 			}
@@ -2053,13 +2054,16 @@ public class DataHolder {
 		}
 
 		try {
-			writer = new PrintWriter("WordPOS.csv", "UTF-8");
+			writer = new PrintWriter(fileNamePrefix
+					+ "_WordPOS.csv", "UTF-8");
 
-			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();
+			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this
+					.getWordPOSHolderIterator();
 			while (iter.hasNext()) {
 				Entry<WordPOSKey, WordPOSValue> wordPOSItem = iter.next();
-				writer.println(String.format("%s, %s\n",
-						wordPOSItem.getKey().getWord(), wordPOSItem.getKey().getPOS()));			}
+				writer.println(String.format("%s, %s", wordPOSItem.getKey()
+						.getWord(), wordPOSItem.getKey().getPOS()));
+			}
 			writer.close();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -2068,7 +2072,7 @@ public class DataHolder {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 	}
 
 }

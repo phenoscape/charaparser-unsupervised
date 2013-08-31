@@ -145,8 +145,6 @@ public class Learner {
 //		myDataHolder.write2File("");here!!!
 		myLogger.info("Additional bootstrappings:");
 		this.additionalBootstrapping();
-		myDataHolder.write2File("");
-
 		
 		myLogger.info("Unknownword bootstrappings:");
 //		this.unknownWordBootstrapping();
@@ -156,6 +154,7 @@ public class Learner {
 		this.adjectivesVerification(myDataHolder);
 		
 		this.separateModifierTag(myDataHolder);
+		myDataHolder.write2File("");
 		
 		myLogger.info("Learning done!");
 		
