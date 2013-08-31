@@ -142,7 +142,7 @@ public class Learner {
 		// bootstrapping rules
 		myLogger.info("Bootstrapping rules:");
 		this.discover("normal");
-		
+//		myDataHolder.write2File("");here!!!
 		myLogger.info("Additional bootstrappings:");
 		this.additionalBootstrapping();
 		myDataHolder.write2File("");
@@ -492,9 +492,9 @@ public class Learner {
 		
 		String pachecked = "and|or|to";
 
-		if (text.matches("(\\w+?)\\s+(present|absent)")) {
-			System.out.println(text);
-		}
+//		if (text.matches("(\\w+?)\\s+(present|absent)")) {
+//			System.out.println(text);
+//		}
 
 		Matcher matcher = Pattern.compile("^.*?(\\w+?)\\s+(present|absent).*$")
 				.matcher(text);
@@ -2457,12 +2457,12 @@ public class Learner {
 				String pTemp = "^"+match + " [\\S]+$";
 				myLogger.trace(thisLead);
 				myLogger.trace(pTemp);
-				if (pTemp.equals("^imbricated branchiostegal [\\S]+$")) {
-					System.out.println();
-				}
+				
 //				if ((tag==null) && StringUtility.isMatchedNullSafe(pTemp, thisLead)) {
 				if ((tag==null) && StringUtility.isMatchedNullSafe(thisLead, pTemp)) {
-					sentenceSet.add(thisSentence);
+					if (!StringUtils.equals(thisLead, lead)) {
+						sentenceSet.add(thisSentence);
+					}
 				}
 			}
 			
@@ -2539,9 +2539,9 @@ public class Learner {
 							this.tagSentence(ID, match);
 							this.tagSentence(ID1, match);
 
-							if (sharedHead.get(sharedHead.size() - 1).equals("tissue")) {
-								System.out.println();
-							}
+//							if (sharedHead.get(sharedHead.size() - 1).equals("tissue")) {
+//								System.out.println();
+//							}
 							
 							int update1 = this.myDataHolder.updateDataHolder(
 									sharedHead.get(sharedHead.size() - 1), "n", "-", "wordpos", 1);

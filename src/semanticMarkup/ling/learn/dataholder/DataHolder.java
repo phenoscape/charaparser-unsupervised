@@ -351,6 +351,10 @@ public class DataHolder {
 		
 		boolean result = true;
 		
+//		if (key.getWord().equals("shoulder")) {
+//			System.out.println();
+//		}
+		
 		if (this.wordPOSTable.containsKey(key)) {
 			if (this.wordPOSTable.get(key).equals(value)) {
 				result = false;
