@@ -36,7 +36,7 @@ public class DataHolder {
 	public Map<String, Integer> allWords;
 	
 	// words are singular nouns, boundary words, and modifiers
-	public Set<String> BMSWords;
+	private Set<String> BMSWords;
 	
 	// Data holders
 	// Table heuristicnoun
@@ -324,6 +324,17 @@ public class DataHolder {
 		Iterator<SentenceStructure> iter = this.getSentenceHolder().iterator();
 		
 		return iter;
+	}
+	
+	public Set<String> getSentenceTags() {
+		Set<String> tags = new HashSet<String>();
+		Iterator<SentenceStructure> iter = this.getSentenceHolderIterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceItem = iter.next();
+			tags.add(sentenceItem.getTag());
+		}
+		
+		return tags;
 	}
 	
 	public Iterator<Entry<WordPOSKey, WordPOSValue>> getWordPOSHolderIterator(){
@@ -1979,6 +1990,10 @@ public class DataHolder {
 		myLogger.trace("Reture: "+POSInfoList);
 		return POSInfoList;
 
+	}
+	
+	public Set<String> getBMSWords() {
+		return this.BMSWords;
 	}
 	
 	
