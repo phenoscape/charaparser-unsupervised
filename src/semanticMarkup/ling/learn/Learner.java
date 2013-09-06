@@ -3082,7 +3082,19 @@ public class Learner {
 
 	public boolean isIsAndOrSentence(int sentenceID, String sentence,
 			String lead, String ptn1, String ptn2) {
-		// TODO Auto-generated method stub
+		Set<String> token = new HashSet<String>();
+		token.addAll(Arrays.asList("and or nor".split(" ")));
+		token.add("\\");
+		token.add("and / or");
+		
+		int limit = 80;
+		
+		List<String> words = new ArrayList<String>();
+		words.addAll(Arrays.asList(sentence.split(" ")));
+		
+		String sentencePtn = this.getLearnerUtility().getSentencePtn(
+				myDataHolder, token, limit, words);
+		
 		return false;
 	}
 
