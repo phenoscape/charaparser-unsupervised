@@ -319,7 +319,15 @@ public class DataHolder {
 	}
 	
 	/** Iterator Utility 
+	 * @return 
 	 * @return **/
+	
+	public Iterator<Entry<String, ModifierTableValue>> getModifierHolderIterator() {
+		Iterator<Entry<String, ModifierTableValue>> iter = this.getModifierHolder().entrySet().iterator();
+		
+		return iter;
+	}
+	
 	public Iterator<SentenceStructure> getSentenceHolderIterator(){
 		Iterator<SentenceStructure> iter = this.getSentenceHolder().iterator();
 		
@@ -1994,6 +2002,22 @@ public class DataHolder {
 	
 	public Set<String> getBMSWords() {
 		return this.BMSWords;
+	}
+	
+	public Set<String> getTypeModifierPattern() {
+		Set<String> words = new HashSet<String>();
+		
+		Iterator<Entry<String, ModifierTableValue>> modifierIter = this.getModifierHolderIterator();
+		
+		while (modifierIter.hasNext()) {
+			Entry<String, ModifierTableValue> modifierItem = modifierIter.next();
+			if (modifierItem.getValue().getIsTypeModifier()) {
+				String word = modifierItem.getKey();
+				words.add(word);
+			}
+		}
+		
+		return words;
 	}
 	
 	
