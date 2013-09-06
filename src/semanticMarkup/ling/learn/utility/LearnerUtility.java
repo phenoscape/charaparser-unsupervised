@@ -562,7 +562,7 @@ public class LearnerUtility {
 			String thisSentence = idAndSentence.getString();
 			
 			thisSentence = tagAllSentencesHelper(thisSentence);
-			thisSentence = annotateSentence(thisSentence, myKnownTags, dataholderHandler.BMSWords);
+			thisSentence = annotateSentence(thisSentence, myKnownTags, dataholderHandler.getBMSWords());
 			
 			SentenceStructure targetSentence = dataholderHandler.getSentence(thisID);
 			
