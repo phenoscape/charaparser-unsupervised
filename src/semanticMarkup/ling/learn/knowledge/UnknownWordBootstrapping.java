@@ -204,7 +204,7 @@ public class UnknownWordBootstrapping implements IModule {
 			if (sWord == null) {
 				;
 			} else {
-				Matcher m2 = StringUtility.createMatcher("([^aeiou])$", sWord);
+				Matcher m2 = StringUtility.createMatcher(sWord, "([^aeiou])$");
 				if (m2.find()) {
 					sWord = sWord + m2.group(1) + "?";
 				}
@@ -243,8 +243,8 @@ public class UnknownWordBootstrapping implements IModule {
 			Pattern p2 = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 			Matcher m2 = p2.matcher(word);
 			if (m1.matches() && (!m2.matches())) {
-				if (!StringUtility.createMatcher(
-						"\\b(" + Constant.FORBIDDEN + ")\\b", word).find()) {
+				if (!StringUtility.createMatcher(word,
+						"\\b(" + Constant.FORBIDDEN + ")\\b").find()) {
 					boundaries.add(word);
 				}
 				dataholderHandler.updateDataHolder(word, "b", "", "wordpos", 1);
@@ -262,9 +262,9 @@ public class UnknownWordBootstrapping implements IModule {
 				int sentenceID = sentenceItem.getID();
 
 				if ((!(StringUtils.equals(tag, "ignore")) || (tag == null))
-						&& (StringUtility.createMatcher(
-								"(^| )(" + StringUtils.join(boundaries, "|")
-										+ ") ", sentence).find())) {
+						&& (StringUtility.createMatcher(sentence, "(^| )("
+								+ StringUtils.join(boundaries, "|") + ") ")
+								.find())) {
 					KnownTagCollection tags = new KnownTagCollection(null,
 							null, null, boundaries, null, null);
 					sentence = this.myLearnerUtility.annotateSentence(sentence, tags, dataholderHandler.getBMSWords());

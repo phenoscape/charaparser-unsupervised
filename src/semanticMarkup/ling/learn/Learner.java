@@ -1866,7 +1866,7 @@ public class Learner {
 			bWord = returnedValue.getBoundaryWord();
 			List<POSInfo> t;
 			
-			if (StringUtility.createMatcher("pp", ptn).find()) {
+			if (StringUtility.createMatcher(ptn, "pp").find()) {
 				myLogger.trace("Case 5.1");
 				
 				String morePtnStr = StringUtility.joinList("", morePtn);
@@ -1921,7 +1921,7 @@ public class Learner {
 //				int certiantyU = t.get(0).getCertaintyU();
 //				int certiantyL = t.get(0).getCertaintyL();
 
-				if (StringUtility.createMatcher("[psn]", pos).find()) {
+				if (StringUtility.createMatcher(pos, "[psn]").find()) {
 					// case 5.x
 					myLogger.debug("Case 5.x: relax this condition");
 					List<String> tWords = new LinkedList<String>();
@@ -1975,7 +1975,7 @@ public class Learner {
 					sentenceHeadWords, 0, end + 1);
 			tag = StringUtility.joinList(" ", tempWords);
 			myLogger.debug("\t:updates on POSs");
-			if (StringUtility.createMatcher("\\w", bWord).find()) {
+			if (StringUtility.createMatcher(bWord, "\\w").find()) {
 				sign += this.getDataHolder().updateDataHolder(bWord, "b", "",
 					"wordpos", 1);
 			}
@@ -2009,7 +2009,7 @@ public class Learner {
 			String questionedWord = words.get(1);
 			String wnPOS = this.myLearnerUtility.getWordFormUtility().checkWN(questionedWord, "pos");
 			
-			if (StringUtility.createMatcher("p", wnPOS).find()){
+			if (StringUtility.createMatcher(wnPOS, "p").find()){
 				myLogger.trace("Case 7.1");
 				tag = singularWord+" "+questionedWord;
 				myLogger.debug("\t:determine the tag: "+tag);
@@ -2028,7 +2028,7 @@ public class Learner {
 		}
 		
 		// case 8: "^bs$"
-		else if (StringUtility.createMatcher("^bs$", ptn).find()) {
+		else if (StringUtility.createMatcher(ptn, "^bs$").find()) {
 			myLogger.trace("Case 8");
 			tag = StringUtility.joinList(" ", words);
 			sign += this.getDataHolder().updateDataHolder(words.get(0), "b", "", "wordpos", 1);
@@ -2036,7 +2036,7 @@ public class Learner {
 		}
 		
 		// case 9: ^bp$
-		else if (StringUtility.createMatcher("^bp$", ptn).find()) {
+		else if (StringUtility.createMatcher(ptn, "^bp$").find()) {
 			myLogger.trace("Case 9");
 			tag = StringUtility.joinList(" ", words);
 			sign += this.getDataHolder().updateDataHolder(words.get(0), "b", "", "wordpos", 1);
@@ -2066,17 +2066,17 @@ public class Learner {
 				myLogger.trace("wnP1: "+wnP1);
 				String wnP2 = "";
 						
-				if (!StringUtility.createMatcher("\\w", wnP1).find()) {
+				if (!StringUtility.createMatcher(wnP1, "\\w").find()) {
 					wnP2 = this.myLearnerUtility.getWordFormUtility().getNumber(word);	
 				}
 				myLogger.trace("wnP2: "+wnP2);
 				
-				if (StringUtility.createMatcher("[ar]", wnP1).find()) {
+				if (StringUtility.createMatcher(wnP1, "[ar]").find()) {
 					wnP1 = "";
 				}
 				
-				if ((StringUtility.createMatcher("[psn]", wnP1).find())
-						|| (StringUtility.createMatcher("[ps]", wnP2).find())) {
+				if ((StringUtility.createMatcher(wnP1, "[psn]").find())
+						|| (StringUtility.createMatcher(wnP2, "[ps]").find())) {
 					myLogger.trace("Case 10.1.1");	
                     myLogger.debug("\t:determine the tag: "+tag);
                     myLogger.debug("\t:updates on POSs");
@@ -2110,7 +2110,7 @@ public class Learner {
 	}
 
 	public int doItCase7Helper(String regex, String ptn) {
-		Matcher m = StringUtility.createMatcher(regex, ptn);
+		Matcher m = StringUtility.createMatcher(ptn, regex);
 		if (m.find()) {
 			int start = m.start();
 			return start + 1;
@@ -2136,8 +2136,8 @@ public class Learner {
 		myLogger.trace("ptn: " + ptn);
 		
 		if (ptn!=null) {
-			Matcher m1 = StringUtility.createMatcher("^([psn]+)", ptn);
-			Matcher m2 = StringUtility.createMatcher("^(\\?+)", ptn);
+			Matcher m1 = StringUtility.createMatcher(ptn, "^([psn]+)");
+			Matcher m2 = StringUtility.createMatcher(ptn, "^(\\?+)");
 			boolean case1 = false;
 			boolean case2 = false;
 			int end = -1;
@@ -2161,7 +2161,7 @@ public class Learner {
 					p = StringUtils.equals(p, "?") ? 
 							this.getLearnerUtility().getWordFormUtility().checkWN(nWords.get(i), "pos")
 							: p;
-					if (StringUtility.createMatcher("^[psn]+$", p).find()) {
+					if (StringUtility.createMatcher(p, "^[psn]+$").find()) {
 						nouns.add(nWords.get(i));
 						nounPtn.add(p);
 					}
@@ -2380,7 +2380,7 @@ public class Learner {
 			String tag = sentence.getTag();
 			String lead = sentence.getLead();
 
-			if ((tag == null) && (!(StringUtility.createMatcher(".* .*", lead).find()))) {
+			if ((tag == null) && (!(StringUtility.createMatcher(lead, ".* .*").find()))) {
 				if (tags.contains(lead)) {
 					this.tagSentence(ID, lead);
 					myLogger.trace(String.format(
@@ -2422,7 +2422,7 @@ public class Learner {
 			String lead = sentence.getLead();
 
 			if ((tag == null)
-					&& (StringUtility.createMatcher(".* .*", lead).find())) {
+					&& (StringUtility.createMatcher(lead, ".* .*").find())) {
 				sentenceList.add(sentence);
 			}
 		}
@@ -2473,9 +2473,9 @@ public class Learner {
 				myLogger.trace("ptn: " + ptn);
 				myLogger.trace("wnPOS: " + wnPOS);
 
-				if ((StringUtility.createMatcher("[nsp]$", ptn).find())
-						|| ((StringUtility.createMatcher("\\?$", ptn).find()) && (StringUtility
-								.createMatcher("n", wnPOS).find()))) {
+				if ((StringUtility.createMatcher(ptn, "[nsp]$").find())
+						|| ((StringUtility.createMatcher(ptn, "\\?$").find()) && (StringUtility
+								.createMatcher(wnPOS, "n").find()))) {
 
 					Iterator<SentenceStructure> iter2 = sentenceSet.iterator();
 					while (iter2.hasNext()) {
@@ -2493,8 +2493,8 @@ public class Learner {
 						if (case1) {
 							List<String> checkWord = new ArrayList<String>();
 							checkWord.add(words2.get(sharedHead.size()));
-							case2 = StringUtility.createMatcher("[psn]",
-									this.getPOSptn(checkWord)).find();
+							case2 = StringUtility.createMatcher(
+									this.getPOSptn(checkWord), "[psn]").find();
 						}
 
 						if (case1 && case2) {
@@ -2642,7 +2642,7 @@ public class Learner {
 				sign = doItSign;
                 
                 // case 3
-				if (StringUtility.createMatcher("\\w", doItTag).find()) {
+				if (StringUtility.createMatcher(doItTag, "\\w").find()) {
 					myLogger.trace(String.format("sent #%d: case 3", ID));
 					this.tagSentence(ID, doItTag);
 				}
@@ -2664,13 +2664,13 @@ public class Learner {
 	
 	public boolean doItMarkupCase1Helper(String sentence) {
 		boolean flag = false;
-		flag = StringUtility.createMatcher("^.{0,40} (nor|or|and|\\/)", sentence).find();
+		flag = StringUtility.createMatcher(sentence, "^.{0,40} (nor|or|and|\\/)").find();
 		return flag;
 	}
 	
 	public boolean doItMarkupCase2Helper(String lead) {
 		boolean flag = false;
-		flag = StringUtility.createMatcher("\\b("+Constant.STOP+")\\b", lead).find();
+		flag = StringUtility.createMatcher(lead, "\\b("+Constant.STOP+")\\b").find();
 		
 		return flag;
 	}
@@ -2723,8 +2723,8 @@ public class Learner {
 			Pattern p2 = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 			Matcher m2 = p2.matcher(word);
 			if (m1.matches() && (!m2.matches())) {
-				if (!StringUtility.createMatcher(
-						"\\b(" + Constant.FORBIDDEN + ")\\b", word).find()) {
+				if (!StringUtility.createMatcher(word,
+						"\\b(" + Constant.FORBIDDEN + ")\\b").find()) {
 					boundaries.add(word);
 				}
 				this.getDataHolder().updateDataHolder(word, "b", "", "wordpos", 1);
@@ -2742,9 +2742,9 @@ public class Learner {
 				int sentenceID = sentenceItem.getID();
 
 				if ((!(StringUtils.equals(tag, "ignore")) || (tag == null))
-						&& (StringUtility.createMatcher(
-								"(^| )(" + StringUtils.join(boundaries, "|")
-										+ ") ", sentence).find())) {
+						&& (StringUtility.createMatcher(sentence, "(^| )("
+								+ StringUtils.join(boundaries, "|") + ") ")
+								.find())) {
 					KnownTagCollection tags = new KnownTagCollection(null,
 							null, null, boundaries, null, null);
 					sentence = this.myLearnerUtility.annotateSentence(sentence, tags, this.myDataHolder.getBMSWords());
@@ -2776,13 +2776,13 @@ public class Learner {
 		myLogger.trace(String.format("Enter (%d, %s)", sentenceID, tag));
 		
 		// case 1
-		if (!StringUtility.createMatcher("\\w+", tag).find()) {
+		if (!StringUtility.createMatcher(tag, "\\w+").find()) {
 			myLogger.trace("\t:tag is not a word. Return");
 			return false;
 		} else {
 			// case 2
-			if (StringUtility.createMatcher("^(" + Constant.STOP + ")\\b", tag)
-					.find()) {
+			if (StringUtility
+					.createMatcher(tag, "^(" + Constant.STOP + ")\\b").find()) {
 				myLogger.trace(String
 						.format("\t:tag %s starts with a stop word, ignore tagging requrest",
 								tag));
