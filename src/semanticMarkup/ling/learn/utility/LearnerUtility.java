@@ -1,4 +1,4 @@
-package semanticMarkup.ling.learn;
+package semanticMarkup.ling.learn.utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,11 +19,14 @@ import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
+import semanticMarkup.ling.learn.auxiliary.KnownTagCollection;
+import semanticMarkup.ling.learn.auxiliary.StringAndInt;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
+import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class LearnerUtility {
@@ -559,7 +562,7 @@ public class LearnerUtility {
 			String thisSentence = idAndSentence.getString();
 			
 			thisSentence = tagAllSentencesHelper(thisSentence);
-			thisSentence = annotateSentence(thisSentence, myKnownTags, dataholderHandler.BMSWords);
+			thisSentence = annotateSentence(thisSentence, myKnownTags, dataholderHandler.getBMSWords());
 			
 			SentenceStructure targetSentence = dataholderHandler.getSentence(thisID);
 			
@@ -685,8 +688,14 @@ public class LearnerUtility {
 		
 		// insert tags
 		sentence = annotateSentenceHelper(sentence, properNouns, "Z", true);
+//		System.out.println(sentence);
 		sentence = annotateSentenceHelper(sentence, organs, "O", true);
+//		System.out.println(sentence);
+//		if (sentence.equals("<O>extent</O> of dermal cranial covering")) {
+//			System.out.println();
+//		}
 		sentence = annotateSentenceHelper(sentence, nouns, "N", true);
+//		System.out.println(sentence);
 		sentence = annotateSentenceHelper(sentence, modifiers, "M", true);
 		sentence = annotateSentenceHelper(sentence, boundaryWords, "B", true);
 		sentence = annotateSentenceHelper(sentence, boundaryMarks, "B", false);
@@ -773,11 +782,10 @@ public class LearnerUtility {
 		Set<String> nounSet = new HashSet<String>();
 		Set<String> psWordSet = new HashSet<String>(); // set of nouns
 		psWordSet = this.getPSWords(dataholderHandler);
-		nounSet .addAll(psWordSet);
+		nounSet.addAll(psWordSet);
 		// if the mode is "singletag", then get additional nouns from tags
 		if (StringUtils.equalsIgnoreCase(mode, "singletag")) {
-			organs = this.getOrgans(dataholderHandler);
-			nounSet.addAll(organs);
+			nounSet.addAll(this.getOrgans(dataholderHandler));
 		} else {
 			// do nothing
 		}
@@ -856,7 +864,7 @@ public class LearnerUtility {
 	 * @return a set of o
 	 */
 	public Set<String> getOrgans(DataHolder dataholderHandler) {
-		Set<String> oSet = new HashSet<String>(); // set of o
+		Set<String> oSet = new HashSet<String>(); // set of organs
 		
 		Iterator<SentenceStructure> iterSentence = dataholderHandler
 				.getSentenceHolder().iterator();
@@ -924,15 +932,15 @@ public class LearnerUtility {
 				if (StringUtils.equals(POS, "b")) {
 //					String pattern = "^[-\\\\\\(\\)\\[\\]\\{\\}\\.\\|\\+\\*\\?]$";
 					String pattern = "^(-|\\\\|\\(|\\)|\\[|\\]|\\{|\\}|\\.|\\||\\+|\\*|\\?)$";
-					if (StringUtility.isMatchedNullSafe(pattern, word)) {
+					if (StringUtility.isMatchedNullSafe(word, pattern)) {
 						bMarks.add(word);
-					} else if ((!(StringUtility.isMatchedNullSafe("\\w", word))) && (!StringUtils.equals(word, "/"))) {
+					} else if ((!(StringUtility.isMatchedNullSafe(word, "\\w"))) && (!StringUtils.equals(word, "/"))) {
 						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
 								word).find()) {
 							bMarks.add(word);
 						}
 					} else {
-						if (StringUtility.isMatchedNullSafe("^[a-zA-Z0-9_-]+$", word)) {
+						if (StringUtility.isMatchedNullSafe(word, "^[a-zA-Z0-9_-]+$")) {
 							bWords.add(word);
 						}
 					}
@@ -1033,6 +1041,12 @@ public class LearnerUtility {
 		System.out.println(isMatched);
 		
 		return isMatched;
+	}
+	
+	public String getSentencePtn(DataHolder dataholderHandler) {
+		String ptn = "";
+		
+		return ptn;
 	}
 	
 }

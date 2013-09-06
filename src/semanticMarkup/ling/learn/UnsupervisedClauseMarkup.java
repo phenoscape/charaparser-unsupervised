@@ -20,8 +20,13 @@ import semanticMarkup.io.input.lib.db.ParentTagProvider;
 import semanticMarkup.know.IGlossary;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
+import semanticMarkup.ling.learn.auxiliary.AjectiveReplacementForNoun;
+import semanticMarkup.ling.learn.auxiliary.StringPair;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
+import semanticMarkup.ling.learn.knowledge.Constant;
+import semanticMarkup.ling.learn.utility.LearnerUtility;
+import semanticMarkup.ling.learn.utility.StringUtility;
 import semanticMarkup.ling.transform.ITokenizer;
 
 public class UnsupervisedClauseMarkup implements ITerminologyLearner {	
@@ -218,7 +223,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			String tag = sentenceObject.getTag();
 
 			if ((!StringUtils.equals(modifier, ""))
-					&& (StringUtility.isEntireMatchedNullSafe("^\\[.*$", tag))) {
+					&& (StringUtility.isEntireMatchedNullSafe(tag, "^\\[.*$"))) {
 				String source = sentenceObject.getSource();
 				modifier = modifier.replaceAll("\\[|\\]|>|<|(|)", "");
 				tag = tag.replaceAll("\\[|\\]|>|<|(|)", "");

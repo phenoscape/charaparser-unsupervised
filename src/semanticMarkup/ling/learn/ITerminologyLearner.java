@@ -7,6 +7,7 @@ import java.util.Set;
 
 import semanticMarkup.core.Treatment;
 import semanticMarkup.know.IGlossary;
+import semanticMarkup.ling.learn.auxiliary.AjectiveReplacementForNoun;
 
 /**
  * ITerminologyLearner learns the terminology of a list of treatments

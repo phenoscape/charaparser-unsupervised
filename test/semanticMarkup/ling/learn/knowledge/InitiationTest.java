@@ -10,7 +10,7 @@ import org.junit.Test;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.learn.Configuration;
 import semanticMarkup.ling.learn.Learner;
-import semanticMarkup.ling.learn.LearnerUtility;
+import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.transform.ITokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;

@@ -1,5 +1,11 @@
 package semanticMarkup.ling.learn.dataholder;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,18 +25,18 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.ling.learn.Configuration;
-import semanticMarkup.ling.learn.Constant;
-import semanticMarkup.ling.learn.POSInfo;
-import semanticMarkup.ling.learn.StringPair;
-import semanticMarkup.ling.learn.StringUtility;
-import semanticMarkup.ling.learn.WordFormUtility;
+import semanticMarkup.ling.learn.auxiliary.POSInfo;
+import semanticMarkup.ling.learn.auxiliary.StringPair;
+import semanticMarkup.ling.learn.knowledge.Constant;
+import semanticMarkup.ling.learn.utility.StringUtility;
+import semanticMarkup.ling.learn.utility.WordFormUtility;
 
 public class DataHolder {
 	// all unique words in the input treatments
 	public Map<String, Integer> allWords;
 	
 	// words are singular nouns, boundary words, and modifiers
-	public Set<String> BMSWords;
+	private Set<String> BMSWords;
 	
 	// Data holders
 	// Table heuristicnoun
@@ -313,11 +319,30 @@ public class DataHolder {
 	}
 	
 	/** Iterator Utility 
+	 * @return 
 	 * @return **/
+	
+	public Iterator<Entry<String, ModifierTableValue>> getModifierHolderIterator() {
+		Iterator<Entry<String, ModifierTableValue>> iter = this.getModifierHolder().entrySet().iterator();
+		
+		return iter;
+	}
+	
 	public Iterator<SentenceStructure> getSentenceHolderIterator(){
 		Iterator<SentenceStructure> iter = this.getSentenceHolder().iterator();
 		
 		return iter;
+	}
+	
+	public Set<String> getSentenceTags() {
+		Set<String> tags = new HashSet<String>();
+		Iterator<SentenceStructure> iter = this.getSentenceHolderIterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceItem = iter.next();
+			tags.add(sentenceItem.getTag());
+		}
+		
+		return tags;
 	}
 	
 	public Iterator<Entry<WordPOSKey, WordPOSValue>> getWordPOSHolderIterator(){
@@ -344,6 +369,10 @@ public class DataHolder {
 		Logger myLogger = Logger.getLogger("dataholder.updateWordPOS");
 		
 		boolean result = true;
+		
+//		if (key.getWord().equals("shoulder")) {
+//			System.out.println();
+//		}
 		
 		if (this.wordPOSTable.containsKey(key)) {
 			if (this.wordPOSTable.get(key).equals(value)) {
@@ -686,7 +715,8 @@ public class DataHolder {
 		}
 		else {
 			if (pattern != null) {
-				if (StringUtility.isMatchedNullSafe(pattern, text)) {
+//				if (StringUtility.isMatchedNullSafe(pattern, text)) {
+				if (StringUtility.isMatchedNullSafe(text, pattern)) {
 					result = true;
 				}
 			}
@@ -729,23 +759,31 @@ public class DataHolder {
 	/**
 	 * Check if any sentence matches given pattern exists in the data holder
 	 * 
-	 * @param dataholderHandler
-	 *            handler of dataholder
+	 * @param isTagged
+	 *            if the sentence has to be tagged or not
 	 * @param pattern
 	 *            pattern to match against
 	 * @return true if any sentence matches the given pattern exists; false
 	 *         otherwise
 	 */
-	public boolean isExistTaggedSentenceByPattern(String pattern) {
+	public boolean isExistSentence(boolean isTagged, String pattern) {
 		boolean isExist = false;
 		
 		Iterator<SentenceStructure> iter = getSentenceHolderIterator();
 		while (iter.hasNext()) {
 			SentenceStructure sentenceItem = iter.next();
 			String tag = sentenceItem.getTag();
-			if ((!StringUtils.equals(tag, "ignore"))||(tag == null)) {
+			boolean isTagGood = false;
+			if (isTagged) {
+				if ((!StringUtils.equals(tag, "ignore")) || (tag == null)) {
+					isTagGood = true;
+				}
+			} else {
+				isTagGood = true;
+			}
+			if (isTagGood) {
 				String sentence = sentenceItem.getSentence();
-				if (StringUtility.isMatchedNullSafe(pattern, sentence)) {
+				if (StringUtility.isMatchedNullSafe(sentence, pattern)) {
 					isExist = true;
 					return isExist;
 				}
@@ -774,7 +812,7 @@ public class DataHolder {
 			String tag = sentenceItem.getTag();
 			if ((!StringUtils.equals(tag, "ignore"))||(tag == null)) {
 				String sentence = sentenceItem.getSentence();
-				if (StringUtility.isMatchedNullSafe(pattern, sentence)) {
+				if (StringUtility.isMatchedNullSafe(sentence, pattern)) {
 					sentences.add(sentenceItem);
 				}
 			}
@@ -782,6 +820,101 @@ public class DataHolder {
 		
 		return sentences;
 	}
+
+	/**
+	 * Delete any wordPOS entries in WordPOS collection that meets the
+	 * requirements
+	 * 
+	 * @param isWordChecked
+	 *            if the word is checked
+	 * @param word
+	 *            the word to check
+	 * @param isPOSChecked
+	 *            if the POS tag is checked
+	 * @param POS
+	 *            the POS to check
+	 * @return true if any deletion has been made, false otherwise
+	 */
+	public boolean deleteWordPOS(boolean isWordChecked, String word,
+			boolean isPOSChecked, String POS) {
+		boolean isDeleted = false;
+		int numDeleted = 0;
+
+		if ((!isWordChecked) && (!isPOSChecked)) {
+			isDeleted = true;
+		} else {
+			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this
+					.getWordPOSHolderIterator();
+			while (iter.hasNext()) {
+				Entry<WordPOSKey, WordPOSValue> wordPOS = iter.next();
+				boolean isWordPass = false;
+				boolean isPOSPass = false;
+
+				if (isWordChecked) {
+					if (StringUtils.equals(word, wordPOS.getKey().getWord())) {
+						isWordPass = true;
+					}
+				} else {
+					isWordPass = true;
+				}
+
+				if (isPOSPass) {
+					if (StringUtils.equals(POS, wordPOS.getKey().getPOS())) {
+						isPOSPass = true;
+					}
+				} else {
+					isPOSPass = true;
+				}
+
+				if (isWordPass && isPOSPass) {
+					numDeleted++;
+				}
+			}
+
+			if (numDeleted > 0) {
+				isDeleted = true;
+			}
+		}
+
+		return isDeleted;
+	}
+	
+	public boolean updateSentenceTag(String tagPattern, String netTag){
+		boolean isTagged = false;
+		
+		Iterator<SentenceStructure> iter = this.getSentenceHolderIterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceItem = iter.next();
+			String tag = sentenceItem.getTag();
+			if (StringUtility.isMatchedNullSafe(tag, tagPattern)) {
+				sentenceItem.setTag(null);
+				isTagged = true;
+			}
+		}
+		return isTagged;
+	}
+	
+	/**
+	 * get all sentences which match the pattern passed in
+	 * 
+	 * @param tagPattern
+	 *            pattern of tag of the sentences searching for
+	 * @return list of sentences
+	 */
+	public List<SentenceStructure> getSentencesByTagPattern(String tagPattern) {
+		List<SentenceStructure> sentences = new LinkedList<SentenceStructure>();
+		Iterator<SentenceStructure> iter = this.getSentenceHolderIterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceItem = iter.next();
+			String tag = sentenceItem.getTag();
+			if (StringUtility.isMatchedNullSafe(tag, tagPattern)) {
+				sentences.add(sentenceItem);
+			}
+		}
+		
+		return sentences;
+	}
+	
 	
 	/**
 	 * add the singular form and the plural form of a word into the
@@ -1111,6 +1244,9 @@ public class DataHolder {
 	 * @return the new modifer
 	 */
 	public String tagSentWithMTRemoveLyEndingBoundary(String modifier) {
+		if (modifier == null) {
+			return null;
+		}
 		
 		Pattern p = Pattern.compile("^(\\w+ly)\\s*(.*)$");
 		Matcher m = p.matcher(modifier);
@@ -1661,16 +1797,19 @@ public class DataHolder {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("dataholder.updateDataHolder.tagSentenceWithWT");
 		
-		myLogger.trace("Enter tagSentenceWithMT");
+		myLogger.trace(String.format("Enter (%d, %s, %s, %s, %s)", sentID,
+				sentence, modifier, tag, label));
 		
-		//modifier preprocessing
-		modifier = this.tagSentWithMTPreProcessing(modifier);
+		if (modifier != null) {
+			// modifier preprocessing
+			modifier = this.tagSentWithMTPreProcessing(modifier);
+			// Remove any -ly ending word which is a "b" in the WordPOS, from
+			// the modifier
+			modifier = this.tagSentWithMTRemoveLyEndingBoundary(modifier);
+			modifier = StringUtility.removeAll(modifier, "(^\\s*|\\s*$)");
+		}
+		
 		tag = this.tagSentWithMTPreProcessing(tag);
-		
-		//Remove any -ly ending word which is a "b" in the WordPOS, from the modifier
-		modifier = this.tagSentWithMTRemoveLyEndingBoundary(modifier);
-
-		modifier = StringUtility.removeAll(modifier, "(^\\s*|\\s*$)");
 		tag = StringUtility.removeAll(tag, "(^\\s*|\\s*$)");
 
 		if (tag == null) {
@@ -1694,7 +1833,11 @@ public class DataHolder {
 		myLogger.trace("Quite tagSentenceWithMT");
 	}
 	
-	public String tagSentWithMTPreProcessing(String text) {		
+	public String tagSentWithMTPreProcessing(String text) {	
+		if (text == null) {
+			return null;
+		}
+		
 		text = text.replaceAll("<\\S+?>", "");
 
 		text = StringUtility.removeAllRecursive(text, "^(" + Constant.STOP
@@ -1857,6 +2000,26 @@ public class DataHolder {
 
 	}
 	
+	public Set<String> getBMSWords() {
+		return this.BMSWords;
+	}
+	
+	public Set<String> getTypeModifierPattern() {
+		Set<String> words = new HashSet<String>();
+		
+		Iterator<Entry<String, ModifierTableValue>> modifierIter = this.getModifierHolderIterator();
+		
+		while (modifierIter.hasNext()) {
+			Entry<String, ModifierTableValue> modifierItem = modifierIter.next();
+			if (modifierItem.getValue().getIsTypeModifier()) {
+				String word = modifierItem.getKey();
+				words.add(word);
+			}
+		}
+		
+		return words;
+	}
+	
 	
 
 	/**
@@ -1907,6 +2070,48 @@ public class DataHolder {
 		}
 		
 		return isUpdated;
+	}
+	
+	public void write2File(String fileNamePrefix) {
+		PrintWriter writer = null;
+		try {
+			writer = new PrintWriter(fileNamePrefix
+					+ "_Sentence.csv", "UTF-8");
+
+			for (SentenceStructure sentenceItem : this.sentenceTable) {
+				writer.println(String.format("%d, %s, %s",
+						sentenceItem.getID(), sentenceItem.getSentence(),
+						sentenceItem.getTag()));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		try {
+			writer = new PrintWriter(fileNamePrefix
+					+ "_WordPOS.csv", "UTF-8");
+
+			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this
+					.getWordPOSHolderIterator();
+			while (iter.hasNext()) {
+				Entry<WordPOSKey, WordPOSValue> wordPOSItem = iter.next();
+				writer.println(String.format("%s, %s", wordPOSItem.getKey()
+						.getWord(), wordPOSItem.getKey().getPOS()));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 }

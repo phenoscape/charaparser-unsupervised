@@ -10,12 +10,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
-import semanticMarkup.ling.learn.Constant;
-import semanticMarkup.ling.learn.KnownTagCollection;
-import semanticMarkup.ling.learn.LearnerUtility;
-import semanticMarkup.ling.learn.StringUtility;
+import semanticMarkup.ling.learn.auxiliary.KnownTagCollection;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
+import semanticMarkup.ling.learn.utility.LearnerUtility;
+import semanticMarkup.ling.learn.utility.StringUtility;
 
 public class UnknownWordBootstrapping implements IModule {
 	private LearnerUtility myLearnerUtility;
@@ -67,7 +66,7 @@ public class UnknownWordBootstrapping implements IModule {
 				if (word.equals("teeth")) {
 					System.out.println();
 				}
-				if ((StringUtility.isMatchedNullSafe("ium$", word))
+				if ((StringUtility.isMatchedNullSafe(word, "ium$"))
 						&& (!this.myLearnerUtility.getConstant().singularExceptions
 								.contains(word))) {
 					dataholderHandler.updateDataHolder(word, "s", "-", "wordpos", 1);
@@ -77,7 +76,7 @@ public class UnknownWordBootstrapping implements IModule {
 					}
 				}
 				else {
-					boolean c1 = dataholderHandler.isExistTaggedSentenceByPattern("(^| )"+word+" (<B>|" + Constant.FORBIDDEN + ")");
+					boolean c1 = dataholderHandler.isExistSentence(true, "(^| )"+word+" (<B>|" + Constant.FORBIDDEN + ")");
 					boolean c2 = StringUtils.equals(this.myLearnerUtility.getWordFormUtility().getNumber(word), "p");
 					boolean c3 = isVerbEnding(dataholderHandler, word);
 					if (c1 && c2 && (!c3)) {
@@ -137,17 +136,19 @@ public class UnknownWordBootstrapping implements IModule {
 							String tempWords = m22.group(2);
 //							if (!this.myLearnerUtility.getConstant().forbiddenWords
 //									.contains(tempWords)) {
-							if (!(StringUtility.isMatchedNullSafe(
-									"\\b("+ Constant.FORBIDDEN + ")\\b", 
-									tempWords))) {
-								String[] tempWordsArray = tempWords.split("\\s+");
+							if (!(StringUtility.isMatchedNullSafe(tempWords,
+									"\\b(" + Constant.FORBIDDEN + ")\\b"))) {
+								String[] tempWordsArray = tempWords
+										.split("\\s+");
 								if (tempWordsArray.length <= 2) {
 									for (String tempWord : tempWordsArray) {
 										dataholderHandler.updateDataHolder(
-												tempWord, "m", "", "modifiers", 1);
+												tempWord, "m", "", "modifiers",
+												1);
 										if (this.isValidWord(tempWord)) {
 											modifiers.add(tempWord);
-											myLogger.debug("find a [m] " + tempWord);
+											myLogger.debug("find a [m] "
+													+ tempWord);
 										}
 									}
 								}
@@ -167,9 +168,12 @@ public class UnknownWordBootstrapping implements IModule {
 				String pattern3 = "(^| )(" + allWordsPattern + ") ";
 				Set<SentenceStructure> sentences = dataholderHandler.getTaggedSentenceByPattern(pattern3);
 				for (SentenceStructure sentenceItem: sentences) {
+					if (sentenceItem.getID()==133) {
+						System.out.println();
+					}
 					String sentence = sentenceItem.getSentence();
 					KnownTagCollection myKnownTags = new KnownTagCollection(null, organs, null, boundaries, null, null);
-					sentence = this.myLearnerUtility.annotateSentence(sentence, myKnownTags, dataholderHandler.BMSWords);
+					sentence = this.myLearnerUtility.annotateSentence(sentence, myKnownTags, dataholderHandler.getBMSWords());
 					sentenceItem.setSentence(sentence);
 				}
 			}
@@ -192,7 +196,7 @@ public class UnknownWordBootstrapping implements IModule {
 				pWord);
 
 		// case 1
-		if (StringUtility.isMatchedNullSafe("e$", sWord)) {
+		if (StringUtility.isMatchedNullSafe(sWord, "e$")) {
 			sWord = StringUtility.chop(sWord);
 		}
 		// case 2
@@ -263,7 +267,7 @@ public class UnknownWordBootstrapping implements IModule {
 										+ ") ", sentence).find())) {
 					KnownTagCollection tags = new KnownTagCollection(null,
 							null, null, boundaries, null, null);
-					sentence = this.myLearnerUtility.annotateSentence(sentence, tags, dataholderHandler.BMSWords);
+					sentence = this.myLearnerUtility.annotateSentence(sentence, tags, dataholderHandler.getBMSWords());
 					SentenceStructure updatedSentence = dataholderHandler.getSentence(sentenceID);
 					updatedSentence.setSentence(sentence);
 				}

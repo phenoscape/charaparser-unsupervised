@@ -15,6 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
+import semanticMarkup.ling.learn.auxiliary.POSInfo;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.DiscountedKey;
 import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
@@ -22,6 +23,8 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.SingularPluralPair;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
+import semanticMarkup.ling.learn.knowledge.Constant;
+import semanticMarkup.ling.learn.utility.WordFormUtility;
 import semanticMarkup.ling.transform.ITokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
@@ -265,6 +268,7 @@ public class DataHolderTest {
 	@Test 
 	public void testTagSentWithMTPreProcessing(){
 		DataHolder myTester = dataHolderFactory();
+		assertEquals("tagSentWithMTPreProcessing - null", null, myTester.tagSentWithMTPreProcessing(null));
 		assertEquals("RemoveLyEndingBoundary - remove <>", "word1  word3", myTester.tagSentWithMTPreProcessing("word1 <word2> word3"));
 		assertEquals("RemoveLyEndingBoundary remove beginning stop words", "word", myTester.tagSentWithMTPreProcessing("after <word2> after above word"));
 		assertEquals("RemoveLyEndingBoundary remove ending -ly words", "word1", myTester.tagSentWithMTPreProcessing("word1 <word2> word3ly word4ly"));

@@ -1,4 +1,4 @@
-package semanticMarkup.ling.learn;
+package semanticMarkup.ling.learn.auxiliary;
 
 public class POS {
 	public static final byte NOUN 					= 1;

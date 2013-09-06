@@ -1,4 +1,4 @@
-package semanticMarkup.ling.learn;
+package semanticMarkup.ling.learn.utility;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import semanticMarkup.ling.learn.knowledge.Constant;
 
 public class StringUtility {
 
@@ -249,7 +251,7 @@ public class StringUtility {
 	 *            the text to match
 	 * @return true if matches, false otherwise
 	 */
-	public static boolean isMatchedNullSafe(String pattern, String text) {
+	public static boolean isMatchedNullSafe(String text, String pattern) {
 		if (pattern == null || text == null) {
 			return false;
 		}
@@ -274,7 +276,7 @@ public class StringUtility {
 	 *            the text to match
 	 * @return true if matches, false otherwise
 	 */
-	public static boolean isEntireMatchedNullSafe(String pattern, String text) {
+	public static boolean isEntireMatchedNullSafe(String text, String pattern) {
 		if (pattern == null || text == null) {
 			return false;
 		}

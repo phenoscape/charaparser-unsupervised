@@ -114,6 +114,23 @@ If the lead of any sentence has only one word, and the words was taken as the ta
 
 * unknown word bootstrapping module
 learning based on "m o b" pattern
+** tag all sentences based on what we have already known. (for example, if a word "(" is known as a boundary word, mark it in any sentence as "<B>(<\B>")
+** learn plural, singular, boundary, modifier based on some patterns
+*** if a word looks like a plural, and followed by a boundary word, then take it as a plural, and put it in dataholder
+*** if any word follows the word learned in the previous step, take it as a boundary, and put it in dateholder
+*** if any word precedss the word learned in the first step, take it as a modifier, and put it in dateholder
+*** update the tagging of relevant sentences in Sentence collection in dataholder based on what are learned in previous steps
+** get all nouns from WordPOS collection. From UnknownWord collection, for all those words that contain a underscore "_", if it is not among the nouns, then take it as a boundary, and put it into the dataholder. Then update sentences in Sentnece collection based on the newly learned boundaries.
+
+* Adjectives Verification
+Some adj may be recognized as nouns (s, p, or n). Correct them by deleting the nouns tags and tag them as modifiers in WordPOS holder. Also in UnknownWord holder any words having the adj as its flag need to be retagged as well.
+
+Finally update the tags of Sentence holder
+
+* Separate modifier and tag
+#break tag into modifier and tag (one word).
+#Make tags starting with stopword "unknown" or remove some/all etc from tag.
+#Contains NULL for unknown tags/modifiers.
 
 
 * Manage Data Holder
@@ -164,6 +181,8 @@ Apart the updates on the holders themselves, in this step the count of how many 
 ** getPOSptn
 given a list of words, chech each of them in the WordPOS holder, find its POS tag, and returns a string with letters representing the POS tags. If the POS tag is not known for a word, use "?" to represent it.
 
+** tag sentence with modifier and tag (tagSentWMT)
+leading -ly words in modifers are removed
 
 Data Holder
 

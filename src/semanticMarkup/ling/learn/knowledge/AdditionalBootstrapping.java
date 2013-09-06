@@ -1,4 +1,4 @@
-package semanticMarkup.ling.learn;
+package semanticMarkup.ling.learn.knowledge;
 
 import java.util.List;
 
@@ -6,7 +6,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.ling.learn.dataholder.DataHolder;
-import semanticMarkup.ling.learn.knowledge.IModule;
 
 public class AdditionalBootstrapping implements IModule {
 

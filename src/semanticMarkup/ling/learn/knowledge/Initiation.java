@@ -13,9 +13,9 @@ import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.core.Treatment;
 import semanticMarkup.ling.Token;
-import semanticMarkup.ling.learn.LearnerUtility;
-import semanticMarkup.ling.learn.StringUtility;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
+import semanticMarkup.ling.learn.utility.LearnerUtility;
+import semanticMarkup.ling.learn.utility.StringUtility;
 
 public class Initiation implements IModule {
 	
