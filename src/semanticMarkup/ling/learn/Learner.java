@@ -3059,6 +3059,32 @@ public class Learner {
 		}
 		
 	}
+	
+	public void setAndOr(DataHolder dataholderHandler) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.separateModifierTag");		
+		myLogger.debug("Tag and/or sentences andor");
+		
+		String ptn1="^(?:[mbq,]{0,10}[onp]+(?:,|(?=&)))+&(?:[mbq,]{0,10}[onp]+)"; // n,n,n&n
+		String ptn2="^(?:[mbq,]{0,10}(?:,|(?=&)))+&(?:[mbq,]{0,10})[onp]+"; // m,m,&mn
+		
+		Iterator<SentenceStructure> sentenceIter = dataholderHandler.getSentenceHolderIterator();
+		while (sentenceIter.hasNext()) {
+			SentenceStructure sentenceItem = sentenceIter.next();
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			String lead = sentenceItem.getLead();
+			if (isIsAndOrSentence(sentenceID, sentence, lead, ptn1, ptn2)) {
+				sentenceItem.setTag("andor");
+			}
+		}
+	}
+
+	public boolean isIsAndOrSentence(int sentenceID, String sentence,
+			String lead, String ptn1, String ptn2) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 	// some unused variables in perl
 	// directory of /descriptions folder

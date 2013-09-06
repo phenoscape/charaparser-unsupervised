@@ -173,7 +173,7 @@ public class UnknownWordBootstrapping implements IModule {
 					}
 					String sentence = sentenceItem.getSentence();
 					KnownTagCollection myKnownTags = new KnownTagCollection(null, organs, null, boundaries, null, null);
-					sentence = this.myLearnerUtility.annotateSentence(sentence, myKnownTags, dataholderHandler.BMSWords);
+					sentence = this.myLearnerUtility.annotateSentence(sentence, myKnownTags, dataholderHandler.getBMSWords());
 					sentenceItem.setSentence(sentence);
 				}
 			}
@@ -267,7 +267,7 @@ public class UnknownWordBootstrapping implements IModule {
 										+ ") ", sentence).find())) {
 					KnownTagCollection tags = new KnownTagCollection(null,
 							null, null, boundaries, null, null);
-					sentence = this.myLearnerUtility.annotateSentence(sentence, tags, dataholderHandler.BMSWords);
+					sentence = this.myLearnerUtility.annotateSentence(sentence, tags, dataholderHandler.getBMSWords());
 					SentenceStructure updatedSentence = dataholderHandler.getSentence(sentenceID);
 					updatedSentence.setSentence(sentence);
 				}

@@ -1043,4 +1043,10 @@ public class LearnerUtility {
 		return isMatched;
 	}
 	
+	public String getSentencePtn(DataHolder dataholderHandler) {
+		String ptn = "";
+		
+		return ptn;
+	}
+	
 }
