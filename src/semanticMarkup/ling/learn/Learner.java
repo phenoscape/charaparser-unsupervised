@@ -3095,6 +3095,42 @@ public class Learner {
 		String sentencePtn = this.getLearnerUtility().getSentencePtn(
 				myDataHolder, token, limit, words);
 		
+		if (sentencePtn == null) {
+			return false;
+		}
+		
+		sentencePtn = sentencePtn.toLowerCase();
+		// ignore the distinction between type modifiers and modifiers
+		sentencePtn = sentencePtn.replaceAll("t", "m");
+		
+		Pattern p1 = Pattern.compile(ptn1);
+		Matcher m1 = p1.matcher(sentencePtn);
+		
+		Pattern p2 = Pattern.compile(ptn1);
+		Matcher m2 = p2.matcher(sentencePtn);
+		
+		int end = -1;
+		boolean case1 = false;
+		boolean case2 = false;
+		
+		if (m1.find()) {
+			end = m1.end();
+			case1 = true;
+		}
+		
+		if (m2.find()) {
+			end = m2.end();
+		}
+		
+		if (case1 || case2) {
+			String matchedWords = StringUtils.join(words.subList(0, end), " ");
+			if (this.getLearnerUtility().getConstant().prepositionWords.contains(matchedWords)) {
+				return false;
+			}
+			
+			return true;
+		}
+		
 		return false;
 	}
 
