@@ -59,6 +59,7 @@ public class Constant {
 	private final String singularExceptionList = "medium";
 	public Set<String> singularExceptions;
 	public Set<String> forbiddenWords;
+	public Set<String> prepositionWords;
 	
 //	private static final Set<String> singularExceptions;
 	
@@ -72,6 +73,10 @@ public class Constant {
 		Set<String> forbiddenWordsTemp = new HashSet<String>();
 		forbiddenWordsTemp.addAll(Arrays.asList(Constant.FORBIDDEN.split("|")));
 		this.forbiddenWords = Collections.unmodifiableSet(forbiddenWordsTemp);
+		
+		Set<String> prepositionWordsTemp = new HashSet<String>();
+		prepositionWordsTemp.addAll(Arrays.asList(Constant.PREPOSITION.split("|")));
+		this.prepositionWords = Collections.unmodifiableSet(prepositionWordsTemp);
 	}
 
 }
