@@ -355,6 +355,18 @@ public class LearnerTest {
 				descriptorMap));
 		assertEquals("isMatched", true, descriptorMap.get("term1"));
 	}
+	
+	@Test
+	public void testIsIsAndOrSentence(){
+		List<String> words = new ArrayList<String>();
+		words.addAll(Arrays.asList("posterior and <M>dorsal</M> to foramen <B>for</B> nerve <N>ii</N>".split(" ")));
+		String sentencePtn = "q&mqqbqn";
+		String ptn1="^(?:[mbq,]{0,10}[onp]+(?:,|(?=&)))+&(?:[mbq,]{0,10}[onp]+)"; // n,n,n&n
+		String ptn2="^(?:[mbq,]{0,10}(?:,|(?=&)))+&(?:[mbq,]{0,10})[onp]+"; // m,m,&mn
+		
+		assertEquals("isIsAndOrSentence case 1", false,
+				tester.isIsAndOrSentenceHelper(words, sentencePtn, ptn1, ptn2));
+	}
 
 //	@Test
 //	public void testAddStopWords() {

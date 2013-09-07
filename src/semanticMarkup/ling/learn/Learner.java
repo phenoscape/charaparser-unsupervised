@@ -3099,6 +3099,13 @@ public class Learner {
 			return false;
 		}
 		
+		boolean result = isIsAndOrSentenceHelper(words, sentencePtn, ptn1, ptn2);
+		
+		return result;
+	}
+	
+	public boolean isIsAndOrSentenceHelper(List<String> words, String sentencePtn, String ptn1,
+			String ptn2) {
 		sentencePtn = sentencePtn.toLowerCase();
 		// ignore the distinction between type modifiers and modifiers
 		sentencePtn = sentencePtn.replaceAll("t", "m");
@@ -3133,6 +3140,10 @@ public class Learner {
 		
 		return false;
 	}
+
+
+
+
 
 	// some unused variables in perl
 	// directory of /descriptions folder
