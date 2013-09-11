@@ -55,6 +55,12 @@ public class Constant {
 	public static final String BOT1_ABBR = "diam|sq|Rottb";
 	public static final String BOT2_ABBR = "ca|fl|Fl|Fr|fr|var";
 	public static final String LATIN_ABBR = "et al";
+	
+	public static final String mptn = "((?:[mbq][,&]*)*(?:m|b|q(?=[pon])))";// grouped #may contain q but not the last m, unless it is followed by a p
+	public static final String nptn = "((?:[nop][,&]*)*[nop])"; // grouped #must present, no q allowed
+	public static final String bptn = "([,;:\\.]*\\$|,*[bm]|(?<=[pon]),*q)"; // grouped #when following a p, a b could be a q
+	public static final String SEGANDORPTN = "(?:"+mptn+"?"+nptn+")"; // ((?:[mq],?)*&?(?:m|q(?=p))?)((?:[np],?)*&?[np])
+	public static final String ANDORPTN = "^(?:"+SEGANDORPTN+"[,&]+)*"+SEGANDORPTN+bptn;
 
 	private final String singularExceptionList = "medium";
 	public Set<String> singularExceptions;

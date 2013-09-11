@@ -154,6 +154,23 @@ public class Learner {
 		this.adjectivesVerification(myDataHolder);
 		
 		this.separateModifierTag(myDataHolder);
+		
+		this.resolveNMB(myDataHolder);
+		
+		this.setAndOr(myDataHolder);
+		
+		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
+//			print STDOUT "::::::::::::::::::::::::Bootstrapping on adjective subjects: \n";
+//			adjectivesubjectbootstrapping()
+		}
+		else {
+			int v = 0;
+			do {
+				v = 0;
+				this.handleAndOr(myDataHolder);
+			} while (v > 0);
+		}
+		
 		myDataHolder.write2File("");
 		
 		myLogger.info("Learning done!");
@@ -165,7 +182,7 @@ public class Learner {
 		
 		return myDataHolder;
 	}
-	
+
 	public void addGlossary(IGlossary glossary) {
 		if (glossary != null) {
 			String category = "struture";
@@ -3146,6 +3163,30 @@ public class Learner {
 		}
 		myLogger.trace("Case 3");
 		return false;
+	}
+	
+	public void handleAndOr(DataHolder dataholderHandler) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.handleAndOr");
+		
+		myLogger.info("to match pattern $ANDORPTN");
+		
+		List<SentenceStructure> sentenceItems = dataholderHandler.getSentencesByTagPattern("^andor$");
+		
+		int sign = 0;
+		for (SentenceStructure sentenceItem : sentenceItems) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			int result = this.andOrTag(sentenceID, sentence, Constant.SEGANDORPTN, Constant.ANDORPTN);
+			sign = sign + result;
+		}
+		
+	}
+
+	public int andOrTag(int sentenceID, String sentence, String segandorptn2,
+			String andorptn2) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 
