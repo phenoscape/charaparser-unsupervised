@@ -3082,6 +3082,7 @@ public class Learner {
 
 	public boolean isIsAndOrSentence(int sentenceID, String sentence,
 			String lead, String ptn1, String ptn2) {
+		
 		Set<String> token = new HashSet<String>();
 		token.addAll(Arrays.asList("and or nor".split(" ")));
 		token.add("\\");
@@ -3106,6 +3107,9 @@ public class Learner {
 	
 	public boolean isIsAndOrSentenceHelper(List<String> words, String sentencePtn, String ptn1,
 			String ptn2) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.isIsAndOrSentence");		
+		
 		sentencePtn = sentencePtn.toLowerCase();
 		// ignore the distinction between type modifiers and modifiers
 		sentencePtn = sentencePtn.replaceAll("t", "m");
@@ -3113,7 +3117,7 @@ public class Learner {
 		Pattern p1 = Pattern.compile(ptn1);
 		Matcher m1 = p1.matcher(sentencePtn);
 		
-		Pattern p2 = Pattern.compile(ptn1);
+		Pattern p2 = Pattern.compile(ptn2);
 		Matcher m2 = p2.matcher(sentencePtn);
 		
 		int end = -1;
@@ -3127,17 +3131,20 @@ public class Learner {
 		
 		if (m2.find()) {
 			end = m2.end();
+			case2 = true;
 		}
 		
 		if (case1 || case2) {
 			String matchedWords = StringUtils.join(words.subList(0, end), " ");
-			if (this.getLearnerUtility().getConstant().prepositionWords.contains(matchedWords)) {
+			String regex = String.format("\\b(%s)\\b", Constant.PREPOSITION);
+			if (StringUtility.isMatchedNullSafe(matchedWords, regex)) {
+				myLogger.trace("Case 1");
 				return false;
 			}
-			
+			myLogger.trace("Case 2");
 			return true;
 		}
-		
+		myLogger.trace("Case 3");
 		return false;
 	}
 
