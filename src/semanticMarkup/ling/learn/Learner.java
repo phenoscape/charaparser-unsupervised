@@ -3215,6 +3215,7 @@ public class Learner {
 		}
 		else if (m2.find()) {
 			myLogger.trace("Case 2");
+			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "ditto", "andor");
 		}
 		else {
 			myLogger.trace("Case 3");
