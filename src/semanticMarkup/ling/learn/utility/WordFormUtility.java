@@ -237,7 +237,7 @@ public class WordFormUtility {
 	 */
 	public String getNumber(String word) {
 		//remove non-word characters, such as <>
-		Matcher m = StringUtility.createMatcher("\\W", word);
+		Matcher m = StringUtility.createMatcher(word, "\\W");
 		word = m.replaceAll("");
 		
 		String number = checkWN(word, "number");

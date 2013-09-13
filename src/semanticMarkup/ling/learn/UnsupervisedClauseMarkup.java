@@ -315,7 +315,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			SentenceStructure sentence = iter.next();
 			String thisTag = sentence.getTag();
 			if (thisTag != null) {
-				if (StringUtility.createMatcher("^\\[.*\\]$", thisTag).find()) {
+				if (StringUtility.createMatcher(thisTag, "^\\[.*\\]$").find()) {
 					String thisModifier = sentence.getModifier();
 					String modifier = thisModifier
 							.replaceAll("\\[^\\[*\\]", "");

@@ -236,7 +236,7 @@ public class StringUtility {
 	 *            the input char sequence
 	 * @return the matcher
 	 */
-	public static Matcher createMatcher(String regex, CharSequence input) {
+	public static Matcher createMatcher(CharSequence input, String regex) {
 		Pattern p = Pattern.compile(regex);
 		Matcher m = p.matcher(input);
 		return m;
@@ -293,7 +293,7 @@ public class StringUtility {
 	}
 	
 	public static String replaceAllBackreference(String text, String regex, String replacement) {
-		Matcher m = createMatcher(regex, text);
+		Matcher m = createMatcher(text, regex);
 		text = m.replaceAll(replacement);
 		
 		return text;

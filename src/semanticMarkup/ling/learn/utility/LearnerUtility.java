@@ -743,15 +743,15 @@ public class LearnerUtility {
 	}
 	
 	public String annotateSentenceHelper2(String sentence){
-		if (StringUtility.createMatcher("", sentence).find()) {
+		if (StringUtility.createMatcher(sentence, "").find()) {
 			sentence = StringUtility.replaceAllBackreference(sentence, "<(\\w)>\\s*</$1>", "");
 		}
 		
 		Matcher m = StringUtility
-				.createMatcher("<(\\w)>\\s*</(\\1)>", sentence);
+				.createMatcher(sentence, "<(\\w)>\\s*</(\\1)>");
 		while (m.find()) {
 			sentence = m.replaceFirst("");
-			m = StringUtility.createMatcher("<(\\w)>\\s*</(\\1)>", sentence);
+			m = StringUtility.createMatcher(sentence, "<(\\w)>\\s*</(\\1)>");
 		}
 		
 		sentence = StringUtility.replaceAllBackreference(sentence, 
@@ -846,7 +846,7 @@ public class LearnerUtility {
 					|| (StringUtils.equals(POS, "p"))) {
 				String word = entry.getKey().getWord();
 				if (word != null) {
-					if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", word)
+					if (StringUtility.createMatcher(word, "^[a-zA-Z0-9_-]+$")
 							.find()) {
 						psSet.add(word);
 					}
@@ -874,9 +874,9 @@ public class LearnerUtility {
 
 			if (tag != null) {
 				if ((!StringUtils.equals(tag, "ignore"))
-						&& (!StringUtility.createMatcher(".* .*", tag).find()) 
-						&& (!StringUtility.createMatcher(".*\\[.*", tag).find())) {
-					if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", tag).find()) {
+						&& (!StringUtility.createMatcher(tag, ".* .*").find()) 
+						&& (!StringUtility.createMatcher(tag, ".*\\[.*").find())) {
+					if (StringUtility.createMatcher(tag, "^[a-zA-Z0-9_-]+$").find()) {
 						oSet.add(tag);
 					}
 				}
@@ -900,7 +900,7 @@ public class LearnerUtility {
 			Entry<String, ModifierTableValue> entry = iter.next();
 			String word = entry.getKey();
 			if (word != null) {
-				if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", word)
+				if (StringUtility.createMatcher(word, "^[a-zA-Z0-9_-]+$")
 						.find()) {
 					mSet.add(word);
 				}
@@ -935,8 +935,7 @@ public class LearnerUtility {
 					if (StringUtility.isMatchedNullSafe(word, pattern)) {
 						bMarks.add(word);
 					} else if ((!(StringUtility.isMatchedNullSafe(word, "\\w"))) && (!StringUtils.equals(word, "/"))) {
-						if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$",
-								word).find()) {
+						if (StringUtility.createMatcher(word, "^[a-zA-Z0-9_-]+$").find()) {
 							bMarks.add(word);
 						}
 					} else {
@@ -970,7 +969,7 @@ public class LearnerUtility {
 			String POS = entry.getKey().getPOS();
 			
 			if (StringUtils.equals(POS, "z")) {
-				if (StringUtility.createMatcher("^[a-zA-Z0-9_-]+$", word).find()) {
+				if (StringUtility.createMatcher(word, "^[a-zA-Z0-9_-]+$").find()) {
 					pNouns.add(word);
 				}
 			}
@@ -1043,8 +1042,51 @@ public class LearnerUtility {
 		return isMatched;
 	}
 	
-	public String getSentencePtn(DataHolder dataholderHandler) {
+	public String getSentencePtn(DataHolder dataholderHandler, Set<String> token, int limit, List<String> words) {
+		Set<String> typeModifierPtns = dataholderHandler.getTypeModifierPattern();
 		String ptn = "";
+		
+		int counter = 0;
+		Iterator<String> wordIter = words.iterator();
+		while (wordIter.hasNext()) {
+			if (counter > limit - 1) {
+				break;
+			}
+			counter++;
+			String word = wordIter.next();
+			if (token.contains(word)) {
+				ptn = ptn + "&";
+			}
+			else {
+				if (word == null) {
+					ptn = ptn + "q";
+				}
+				else {
+					Matcher m1 = StringUtility.createMatcher(word, "([,:;\\.])");
+					Matcher m2 = StringUtility.createMatcher(word, "<(\\w)>");
+					if (m1.find()) {
+						String g1 = m1.group(1);
+						ptn = ptn + g1;
+					}
+					else if (m2.find()){
+						String g1 = m2.group(1);
+						String tag = g1;
+						if (StringUtils.equals(tag, "M") && typeModifierPtns.contains(word)) {
+							ptn = ptn + "t";
+						}
+						else {
+							ptn = ptn + tag.toLowerCase();
+						}
+					}
+					else if (StringUtils.equals(this.getWordFormUtility().getNumber(word), "p")) {
+						ptn = ptn + "p";
+					}
+					else {
+						ptn = ptn + "q";
+					}
+				}
+			}
+		}
 		
 		return ptn;
 	}

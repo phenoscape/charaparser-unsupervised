@@ -124,6 +124,24 @@ public class LearnerUtilityTest {
 				tester.getAllWords("word1 word2 word3 word2 word3 word4 word5",
 						wordsBefore));
 	}
+	
+	@Test
+	public void testGetSentencePtns(){
+		Learner myTester = learnerFactory();
+		
+		Set<String> token = new HashSet<String>();
+		token.addAll(Arrays.asList("and or nor".split(" ")));
+		token.add("\\");
+		token.add("and / or");
+		
+		List<String> words = new ArrayList<String>();
+		words.addAll(Arrays
+				.asList("distinct crown and <N>base</N> demarcated <B>by</B> <B>a</B> <N>constriction</N> <B>(</B> neck"
+						.split(" ")));
+		String target = "qq&nqbbnbq";
+		
+		assertEquals("getSentencePtns", target, myTester.getLearnerUtility().getSentencePtn(myTester.getDataHolder(), token, 80, words));
+	}
 
 	@Test
 	public void testAddSpace() {
