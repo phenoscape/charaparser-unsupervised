@@ -1056,7 +1056,6 @@ public class LearnerUtility {
 			}
 			counter++;
 			String word = wordIter.next();
-//			if (token.contains(word)) {
 			
 			if (StringUtility.isEntireMatchedNullSafe(word, regex))	{
 				ptn = ptn + "&";

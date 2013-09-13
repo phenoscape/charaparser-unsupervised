@@ -127,8 +127,7 @@ public class LearnerUtilityTest {
 	
 	@Test
 	public void testGetSentencePtns(){
-		Learner myTester = learnerFactory();
-		
+		Learner myTester = learnerFactory();		
 		Set<String> token = new HashSet<String>();
 		token.addAll(Arrays.asList("and or nor".split(" ")));
 		token.add("/");
