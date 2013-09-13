@@ -20,8 +20,24 @@ public class MarkupByPOS implements IModule {
 	
 
 	@Override
-	public void run(DataHolder myDataHolder) {
-		// TODO Auto-generated method stub
+	public void run(DataHolder dataholderHandler) {
+		
+		
+		
+		
+		int sign = 0;
+		do {
+			sign = 0;
+			this.tagUnknownSentences(dataholderHandler, "singletag");	
+			
+			
+			for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+				if (sentenceItem.getTag() == null) {
+//					String ptn = this.myLearnerUtility.getSentencePtn(dataholderHandler, token, limit, words);
+				}
+			}
+			
+		} while (false);
 		
 	}
 	
