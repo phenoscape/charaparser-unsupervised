@@ -879,19 +879,29 @@ public class DataHolder {
 		return isDeleted;
 	}
 	
-	public boolean updateSentenceTag(String tagPattern, String netTag){
+	public boolean updateSentenceTag(String tagPattern, String newTag){
 		boolean isTagged = false;
 		
-		Iterator<SentenceStructure> iter = this.getSentenceHolderIterator();
+		Iterator<SentenceStructure> iter = this.getSentenceHolderIterator();	
+
 		while (iter.hasNext()) {
 			SentenceStructure sentenceItem = iter.next();
 			String tag = sentenceItem.getTag();
-			if (StringUtility.isMatchedNullSafe(tag, tagPattern)) {
-				sentenceItem.setTag(null);
+			if (updateSentenceTagHelper(tag, tagPattern)) {
+				sentenceItem.setTag(newTag);
 				isTagged = true;
 			}
 		}
+
 		return isTagged;
+	}
+	
+	private boolean updateSentenceTagHelper (String tag, String tagPattern) {
+		if (tag == null && tagPattern == null) {
+			return true;
+		}
+		
+		return StringUtility.isMatchedNullSafe(tag, tagPattern);
 	}
 	
 	/**

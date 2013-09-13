@@ -171,6 +171,9 @@ public class Learner {
 			} while (v > 0);
 		}
 		
+		this.resetAndOrTags(myDataHolder);
+		this.getLearnerUtility().tagAllSentences(myDataHolder, "singletag", "sentence");
+		
 		myDataHolder.write2File("");
 		
 		myLogger.info("Learning done!");
@@ -3224,6 +3227,14 @@ public class Learner {
 		
 		
 		return 0;
+	}
+	
+	public void resetAndOrTags(DataHolder dataholderHandler) {
+		dataholderHandler.updateSentenceTag("andor", null);
+	}
+	
+	public void markupByPOS(DataHolder dataholderHandler) {
+		
 	}
 
 
