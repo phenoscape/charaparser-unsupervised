@@ -3177,15 +3177,51 @@ public class Learner {
 		for (SentenceStructure sentenceItem : sentenceItems) {
 			int sentenceID = sentenceItem.getID();
 			String sentence = sentenceItem.getSentence();
-			int result = this.andOrTag(sentenceID, sentence, Constant.SEGANDORPTN, Constant.ANDORPTN);
+			myLogger.trace(Constant.SEGANDORPTN);
+			myLogger.trace(Constant.ANDORPTN);
+			int result = this.andOrTag(dataholderHandler, sentenceID, sentence, Constant.SEGANDORPTN, Constant.ANDORPTN);
 			sign = sign + result;
 		}
 		
 	}
 
-	public int andOrTag(int sentenceID, String sentence, String segandorptn2,
-			String andorptn2) {
-		// TODO Auto-generated method stub
+	public int andOrTag(DataHolder dataholderHandler, int sentenceID, String sentence, String sPattern,
+			String wPattern) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.andOrTag");
+		
+		Set<String> token = new HashSet<String>();
+		token.addAll(Arrays.asList("and or nor".split(" ")));
+		token.add("\\");
+		token.add("and / or");
+		
+		int limit = 80;
+		List<String> words = new ArrayList<String>();
+		words.addAll(Arrays.asList(sentence.split(" ")));
+		String ptn = this.getLearnerUtility().getSentencePtn(dataholderHandler, token, limit, words);
+		ptn = ptn.replaceAll("t", "m");
+		
+		myLogger.info(String.format("Andor pattern %s for %s", ptn, words.toString()));
+		
+		if (ptn == null) {
+			return -1;
+		}
+		
+		Matcher m1 = StringUtility.createMatcher(ptn, wPattern);
+		Matcher m2 = StringUtility.createMatcher(ptn, "^b+&b+[,:;.]");
+		
+		if (m1.find()) {
+			myLogger.trace("Case 1");
+		}
+		else if (m2.find()) {
+			myLogger.trace("Case 2");
+		}
+		else {
+			myLogger.trace("Case 3");
+			myLogger.trace("[andortag]Andor can not determine a tag or modifier for "+sentenceID+": " + sentence);
+		}
+		
+		
 		return 0;
 	}
 
