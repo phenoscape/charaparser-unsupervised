@@ -1,8 +1,12 @@
 package semanticMarkup.ling.learn.knowledge;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import semanticMarkup.ling.learn.auxiliary.KnownTagCollection;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
@@ -26,6 +30,8 @@ public class MarkupByPOS implements IModule {
 		
 		
 		int sign = 0;
+		Set<String> token = new HashSet<String>();
+		token.add("################################");
 		do {
 			sign = 0;
 			this.tagUnknownSentences(dataholderHandler, "singletag");	
@@ -33,7 +39,9 @@ public class MarkupByPOS implements IModule {
 			
 			for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
 				if (sentenceItem.getTag() == null) {
-//					String ptn = this.myLearnerUtility.getSentencePtn(dataholderHandler, token, limit, words);
+					List<String> words = new ArrayList<String>();
+					words.addAll(Arrays.asList(sentenceItem.getSentence().split("\\s+")));
+					String ptn = this.myLearnerUtility.getSentencePtn(dataholderHandler, token, words.size()+1, words);
 				}
 			}
 			
