@@ -1047,6 +1047,8 @@ public class LearnerUtility {
 		String ptn = "";
 		
 		int counter = 0;
+		String regex = String.format("\\b(%s)\\b",StringUtils.join(token, "|"));
+		
 		Iterator<String> wordIter = words.iterator();
 		while (wordIter.hasNext()) {
 			if (counter > limit - 1) {
@@ -1054,7 +1056,9 @@ public class LearnerUtility {
 			}
 			counter++;
 			String word = wordIter.next();
-			if (token.contains(word)) {
+//			if (token.contains(word)) {
+			
+			if (StringUtility.isEntireMatchedNullSafe(word, regex))	{
 				ptn = ptn + "&";
 			}
 			else {
