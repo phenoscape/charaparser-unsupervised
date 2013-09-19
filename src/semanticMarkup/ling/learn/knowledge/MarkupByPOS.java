@@ -86,7 +86,20 @@ public class MarkupByPOS implements IModule {
 			}
 			
 			String boundary = words.get(start3);
-			String modifer = StringUtils.join(words.subList(0, end1), " ");
+			String modifier = StringUtils.join(words.subList(0, end1), " ");
+			
+			Matcher m23 = StringUtility.createMatcher(modifier, String.format("\\b(%s)\\b", Constant.PREPOSITION));
+			if (m23.find()) {
+				int start2 = m23.start(2);
+				int end2 = m23.end(2);
+				List<String> tagWords = words.subList(start2, end2);
+				if (tagWords.size()>1) {
+					modifier = modifier + " " + StringUtils.join(tagWords.subList(0, tagWords.size()-1), " ");
+					modifier = modifier.replaceAll("\\s*$", "");
+				}
+				
+			}
+			
 		}
 		else if (StringUtility.isMatchedNullSafe(ptn, "^([^qpn,;:]*)([pn]+)[tmb]")){
 			myLogger.trace("Case 3");
