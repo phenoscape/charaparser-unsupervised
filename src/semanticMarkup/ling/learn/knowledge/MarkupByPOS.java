@@ -51,7 +51,7 @@ public class MarkupByPOS implements IModule {
 					words.addAll(Arrays.asList(sentenceItem.getSentence().split("\\s+")));
 					String ptn = this.myLearnerUtility.getSentencePtn(dataholderHandler, token, words.size()+1, words);
 					
-					CaseHandler(dataholderHandler, sentenceItem, words, ptn);
+					sign += CaseHandler(dataholderHandler, sentenceItem, words, ptn);
 
 				}
 			}
@@ -60,8 +60,9 @@ public class MarkupByPOS implements IModule {
 		
 	}
 	
-	public void CaseHandler(DataHolder dataholderHandler,
+	public int CaseHandler(DataHolder dataholderHandler,
 			SentenceStructure sentenceItem, List<String> words, String ptn) {
+		int sign = 0;
 		Matcher m21 = StringUtility.createMatcher(ptn, "^([mtqb]*)([np]+)((?<=p)q)");
 		Matcher m22 = StringUtility.createMatcher(ptn, "^([mtqb]*)([np]+)(,|;|:|\\.|b)");
 		boolean case21 = m21.find();
@@ -97,6 +98,35 @@ public class MarkupByPOS implements IModule {
 					modifier = modifier + " " + StringUtils.join(tagWords.subList(0, tagWords.size()-1), " ");
 					modifier = modifier.replaceAll("\\s*$", "");
 				}
+				String tag = tagWords.get(tagWords.size()-1);
+				
+				if (StringUtility.isMatchedNullSafe(tag, "<")) {
+//					$sign += update($tag, "p", "-", "wordpos", 1)
+					int result = dataholderHandler.updateDataHolder(tag, "p", "-", "wordpos", 1);
+					sign = sign + result;
+				}
+				
+				// nontagged words in modifier
+
+				
+				List<String> modifierList = getModifiersForUntag(modifier);
+				for (String m : modifierList) {
+					int result = dataholderHandler.updateDataHolder(m, "m", "",
+							"modifiers", 1);
+					sign += result;
+				}
+				
+				
+				// update boundary
+				if (StringUtility.isMatchedNullSafe(boundary, "<")) {
+				int result = dataholderHandler.updateDataHolder(boundary, "b", "", "wordpos", 1);
+				sign += result;
+				}
+				
+				modifier = modifier.replaceAll("<\\S+?>", "");
+				tag = tag.replaceAll("<\\S+?>", "");
+				
+				dataholderHandler.tagSentenceWithMT(sentenceItem.getID(), sentenceItem.getSentence(), modifier, tag, "remainnulltag-[R1]");
 				
 			}
 			
@@ -105,6 +135,32 @@ public class MarkupByPOS implements IModule {
 			myLogger.trace("Case 3");
 		}
 		
+		return sign;
+	}
+
+
+
+	public List<String> getModifiersForUntag(String modifier) {
+		if (modifier == null) {
+			return null;
+		}
+		
+		List<String> modifiers = new LinkedList<String>();
+		if (modifier.equals("")) {
+			return modifiers;
+		}
+		
+		String modifierCopy = modifier;
+		Matcher m24 = StringUtility.createMatcher(modifierCopy, "(?:^| )(\\w+) (.*)");
+		while (m24.find()) {
+			String g1 = m24.group(1);
+			modifiers.add(g1);
+			
+			modifierCopy = m24.group(2);
+			m24 = StringUtility.createMatcher(modifierCopy, "(?:^| )(\\w+) (.*)");
+		}
+		
+		return modifiers;
 	}
 
 

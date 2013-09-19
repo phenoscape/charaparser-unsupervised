@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.junit.Test;
@@ -35,6 +36,17 @@ public class MarkupByPOSTest {
 		myTester.CaseHandler(myDataHolder, null, words, ptn);
 		
 		
+	}
+	
+	@Test
+	public void testGetModifiersForUntag() {
+		String modifier = "enlarged postorbital <N>tessera</N>";
+		List<String> target = new LinkedList<String>();
+		target.add("enlarged");		
+		target.add("postorbital");
+		
+		MarkupByPOS myTester = this.markupByPOSFactory();
+		assertEquals("getModifiersForUntag", target, myTester.getModifiersForUntag(modifier));
 	}
 	
 	private MarkupByPOS markupByPOSFactory() {
