@@ -39,6 +39,25 @@ public class MarkupByPOSTest {
 	}
 	
 	@Test
+	public void testGetTagAndModifierForCase1() {
+		MarkupByPOS myTester = this.markupByPOSFactory();
+
+		String modifier = "large interlocking";
+		int start = 2;
+		int end = 3;
+		List<String> words = new ArrayList<String>();
+		words.addAll(Arrays.asList("large interlocking <N>plates</N> <B>with</B> pronounced crescentic <N>margins</N>"
+				.split(" ")));
+		
+		List<String> target = new LinkedList<String>();
+		target.add("<N>plates</N>");
+		target.add("large interlocking");
+		
+		assertEquals("getTagAndModiferForCase1", target, myTester.getTagAndModifierForCase1(modifier, start, end, words));
+		
+	}
+	
+	@Test
 	public void testGetModifiersForUntag() {
 		String modifier = "enlarged postorbital <N>tessera</N>";
 		List<String> target = new LinkedList<String>();
@@ -47,6 +66,7 @@ public class MarkupByPOSTest {
 		
 		MarkupByPOS myTester = this.markupByPOSFactory();
 		assertEquals("getModifiersForUntag", target, myTester.getModifiersForUntag(modifier));
+		assertEquals("getModifiersForUntag", "enlarged postorbital <N>tessera</N>", modifier);
 	}
 	
 	private MarkupByPOS markupByPOSFactory() {
