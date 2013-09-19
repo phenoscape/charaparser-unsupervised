@@ -24,22 +24,22 @@ public class MarkupByPOSTest {
 
 	@Test
 	public void testCaseHandler() {
-		List<String> words = new ArrayList<String>();
-		words.addAll(Arrays
-				.asList("large interlocking <N>plates</N> <B>with</B> pronounced crescentic <N>margins</N>"
-						.split(" ")));
-		String ptn = "qqnbqqn";
-		
-		MarkupByPOS myTester = this.markupByPOSFactory();
-		DataHolder myDataHolder = this.dataHolderFactory();
-		
-		myTester.CaseHandler(myDataHolder, null, words, ptn);
+//		List<String> words = new ArrayList<String>();
+//		words.addAll(Arrays
+//				.asList("large interlocking <N>plates</N> <B>with</B> pronounced crescentic <N>margins</N>"
+//						.split(" ")));
+//		String ptn = "qqnbqqn";
+//		
+//		MarkupByPOS myTester = this.markupByPOSFactory();
+//		DataHolder myDataHolder = this.dataHolderFactory();
+//		
+//		myTester.CaseHandler(myDataHolder, null, words, ptn);
 		
 		
 	}
 	
 	@Test
-	public void testGetTagAndModifierForCase1() {
+	public void testGetModifierAndTagForCase1() {
 		MarkupByPOS myTester = this.markupByPOSFactory();
 
 		String modifier = "large interlocking";
@@ -50,10 +50,10 @@ public class MarkupByPOSTest {
 				.split(" ")));
 		
 		List<String> target = new LinkedList<String>();
-		target.add("<N>plates</N>");
 		target.add("large interlocking");
-		
-		assertEquals("getTagAndModiferForCase1", target, myTester.getTagAndModifierForCase1(modifier, start, end, words));
+		target.add("<N>plates</N>");
+
+		assertEquals("getModifierAndTagForCase1", target, myTester.getModifierAndTagForCase1(modifier, start, end, words));
 		
 	}
 	

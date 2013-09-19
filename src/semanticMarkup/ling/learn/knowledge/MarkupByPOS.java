@@ -94,13 +94,12 @@ public class MarkupByPOS implements IModule {
 			
 			String boundary = words.get(start3);
 			String modifier = StringUtils.join(words.subList(0, end1), " ");
-//			Matcher m23 = StringUtility.createMatcher(modifier, String.format("\\b(%s)\\b", Constant.PREPOSITION));
 			
 			// get tag and modifer for case 1
-			List<String> case1TagAndModidier = this.getTagAndModifierForCase1(modifier, start2, end2, words);
-			if (case1TagAndModidier != null && case1TagAndModidier.size() == 2) {
-				String tag = case1TagAndModidier.get(1);
-				modifier = case1TagAndModidier.get(2);
+			List<String> case1ModidierAndTag = this.getModifierAndTagForCase1(modifier, start2, end2, words);
+			if (case1ModidierAndTag != null && case1ModidierAndTag.size() == 2) {
+				modifier = case1ModidierAndTag.get(1);
+				String tag = case1ModidierAndTag.get(2);
 				
 				// update on q and p
 				if (StringUtility.isMatchedNullSafe(tag, "<")) {
@@ -139,14 +138,13 @@ public class MarkupByPOS implements IModule {
 		return sign;
 	}
 
-	public List<String> getTagAndModifierForCase1(String modifier, int start, int end, List<String> words) {
+	public List<String> getModifierAndTagForCase1(String modifier, int start, int end, List<String> words) {
 		Matcher m23 = StringUtility.createMatcher(modifier,
 				String.format("\\b(%s)\\b", Constant.PREPOSITION));
-		boolean case1 = m23.find();
 		if (!StringUtility.isMatchedNullSafe(modifier,
 				String.format("\\b(%s)\\b", Constant.PREPOSITION))) {
 			List<String> tagAndModifier = new LinkedList<String>();
-			// get tag and modifer
+			// get tag and modifier
 			List<String> tagWords = words.subList(start, end);
 			if (tagWords.size() > 1) {
 				modifier = modifier
@@ -156,9 +154,9 @@ public class MarkupByPOS implements IModule {
 				modifier = modifier.replaceAll("\\s*$", "");
 			}
 			String tag = tagWords.get(tagWords.size() - 1);
-
-			tagAndModifier.add(tag);
+			
 			tagAndModifier.add(modifier);
+			tagAndModifier.add(tag);			
 
 			return tagAndModifier;
 		}
