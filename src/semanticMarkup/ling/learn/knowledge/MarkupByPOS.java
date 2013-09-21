@@ -63,17 +63,27 @@ public class MarkupByPOS implements IModule {
 	public int CaseHandler(DataHolder dataholderHandler,
 			SentenceStructure sentenceItem, List<String> words, String ptn) {
 		int sign = 0;
-		Matcher m21 = StringUtility.createMatcher(ptn, "^([mtqb]*)([np]+)((?<=p)q)");
-		Matcher m22 = StringUtility.createMatcher(ptn, "^([mtqb]*)([np]+)(,|;|:|\\.|b)");
+		Matcher m21 = StringUtility.createMatcher(ptn,
+				"^([mtqb]*)([np]+)((?<=p)q)");
+		Matcher m22 = StringUtility.createMatcher(ptn,
+				"^([mtqb]*)([np]+)(,|;|:|\\.|b)");
 		boolean case21 = m21.find();
 		boolean case22 = m22.find();
+
+		Matcher m3 = StringUtility.createMatcher(ptn,
+				"^([^qpn,;:]*)([pn]+)[tmb]");
+		List<String> modifierAndTagCase3 = this.getModifierAndTagForCase2(ptn,
+				words);
+		boolean case3 = (modifierAndTagCase3 != null);
+
 		if (StringUtility.isMatchedNullSafe(ptn, "^[qmb][,;:\\.]$")) {
 			myLogger.trace("Case 1");
-			// tagsentwmt($sentid, $sentence, "", "ditto", "remainnulltag-[R0]");
-			dataholderHandler.tagSentenceWithMT(sentenceItem.getID(), 
-					sentenceItem.getSentence(), "", "ditto", "remainnulltag-[R0]");
-		}
-		else if (case21 || case22) {
+			// tagsentwmt($sentid, $sentence, "", "ditto",
+			// "remainnulltag-[R0]");
+			dataholderHandler.tagSentenceWithMT(sentenceItem.getID(),
+					sentenceItem.getSentence(), "", "ditto",
+					"remainnulltag-[R0]");
+		} else if (case21 || case22) {
 			myLogger.trace("Case 2");
 			int start3;
 			int end1;
@@ -81,61 +91,101 @@ public class MarkupByPOS implements IModule {
 			int end2;
 			if (case21) {
 				start3 = m21.start(3);
-				end1 = m21.end(1); 
+				end1 = m21.end(1);
 				start2 = m21.start(2);
 				end2 = m21.end(2);
-			}
-			else {
+			} else {
 				start3 = m22.start(3);
 				end1 = m22.end(1);
 				start2 = m22.start(2);
 				end2 = m22.end(2);
 			}
-			
+
 			String boundary = words.get(start3);
 			String modifier = StringUtils.join(words.subList(0, end1), " ");
-			
+
 			// get tag and modifer for case 1
-			List<String> case1ModidierAndTag = this.getModifierAndTagForCase1(modifier, start2, end2, words);
+			List<String> case1ModidierAndTag = this.getModifierAndTagForCase1(
+					modifier, start2, end2, words);
 			if (case1ModidierAndTag != null && case1ModidierAndTag.size() == 2) {
 				modifier = case1ModidierAndTag.get(1);
 				String tag = case1ModidierAndTag.get(2);
-				
+
 				// update on q and p
 				if (StringUtility.isMatchedNullSafe(tag, "<")) {
-					int result = dataholderHandler.updateDataHolder(tag, "p", "-", "wordpos", 1);
+					int result = dataholderHandler.updateDataHolder(tag, "p",
+							"-", "wordpos", 1);
 					sign = sign + result;
 				}
-				
-				// nontagged words in modifier				
+
+				// nontagged words in modifier
 				List<String> modifierList = getModifiersForUntag(modifier);
 				for (String m : modifierList) {
 					int result = dataholderHandler.updateDataHolder(m, "m", "",
 							"modifiers", 1);
 					sign += result;
-				}				
-				
+				}
+
 				// update boundary
 				if (StringUtility.isMatchedNullSafe(boundary, "<")) {
 					int result = dataholderHandler.updateDataHolder(boundary,
 							"b", "", "wordpos", 1);
 					sign += result;
 				}
-				
+
 				modifier = modifier.replaceAll("<\\S+?>", "");
 				tag = tag.replaceAll("<\\S+?>", "");
-				
+
 				dataholderHandler.tagSentenceWithMT(sentenceItem.getID(),
 						sentenceItem.getSentence(), modifier, tag,
-						"remainnulltag-[R1]");				
+						"remainnulltag-[R1]");
 			}
-			
-		}
-		else if (StringUtility.isMatchedNullSafe(ptn, "^([^qpn,;:]*)([pn]+)[tmb]")){
+
+		} else if (case3) {
 			myLogger.trace("Case 3");
+			String modifier = modifierAndTagCase3.get(0);
+			String tag = modifierAndTagCase3.get(1);
+			dataholderHandler.tagSentenceWithMT(sentenceItem.getID(),
+					sentenceItem.getSentence(), modifier, tag,
+					"remainnulltag-[R2]");
 		}
-		
+
 		return sign;
+	}
+
+	public List<String> getModifierAndTagForCase2(String ptn, List<String> words) {
+		Matcher m = StringUtility.createMatcher(ptn,
+				"^([^qpn,;:]*)([pn]+)[tmb]");
+		if (m.find()) {
+			int start1 = m.start(1);
+			int end1 = m.end(1);
+			int start2 = m.start(2);
+			int end2 = m.end(2);
+			String lStr = StringUtils.join(words.subList(0, end1), " ");
+			String pattern1 = String.format("\\b(%s)", Constant.FORBIDDEN);
+			String pattern2 = String.format("\\b(%s)\\b", Constant.STOP);
+			if (!StringUtility.isMatchedNullSafe(lStr, pattern1)
+					&& !StringUtility.isMatchedNullSafe(lStr, pattern2)) {
+				List<String> tagWords = words.subList(start2, end2);
+				String pattern3 = ".*?[,:;](.*)";
+				if (!StringUtility.isMatchedNullSafe(lStr, pattern3)) {
+					lStr = m.group(1);
+				}
+				String modifier = lStr
+						+ StringUtils.join(
+								tagWords.subList(0, tagWords.size() - 1), " ");
+				String tag = tagWords.get(0);
+				modifier = modifier.replaceAll("<\\S+?>", "");
+				tag = tag.replaceAll("<\\S+?>", "");
+
+				List<String> modifierAndTag = new LinkedList<String>();
+				modifierAndTag.add(modifier);
+				modifierAndTag.add(tag);
+				return modifierAndTag;
+			}
+		}
+
+		return null;
 	}
 
 	public List<String> getModifierAndTagForCase1(String modifier, int start, int end, List<String> words) {
@@ -143,7 +193,7 @@ public class MarkupByPOS implements IModule {
 				String.format("\\b(%s)\\b", Constant.PREPOSITION));
 		if (!StringUtility.isMatchedNullSafe(modifier,
 				String.format("\\b(%s)\\b", Constant.PREPOSITION))) {
-			List<String> tagAndModifier = new LinkedList<String>();
+			List<String> modifierAndTag = new LinkedList<String>();
 			// get tag and modifier
 			List<String> tagWords = words.subList(start, end);
 			if (tagWords.size() > 1) {
@@ -155,10 +205,10 @@ public class MarkupByPOS implements IModule {
 			}
 			String tag = tagWords.get(tagWords.size() - 1);
 			
-			tagAndModifier.add(modifier);
-			tagAndModifier.add(tag);			
+			modifierAndTag.add(modifier);
+			modifierAndTag.add(tag);			
 
-			return tagAndModifier;
+			return modifierAndTag;
 		}
 		else {
 			return null;
