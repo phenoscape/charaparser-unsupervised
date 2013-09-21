@@ -70,9 +70,7 @@ public class MarkupByPOS implements IModule {
 		boolean case21 = m21.find();
 		boolean case22 = m22.find();
 
-		Matcher m3 = StringUtility.createMatcher(ptn,
-				"^([^qpn,;:]*)([pn]+)[tmb]");
-		List<String> modifierAndTagCase3 = this.getModifierAndTagForCase2(ptn,
+		List<String> modifierAndTagCase3 = this.getModifierAndTagForCase3(ptn,
 				words);
 		boolean case3 = (modifierAndTagCase3 != null);
 
@@ -104,8 +102,8 @@ public class MarkupByPOS implements IModule {
 			String boundary = words.get(start3);
 			String modifier = StringUtils.join(words.subList(0, end1), " ");
 
-			// get tag and modifer for case 1
-			List<String> case1ModidierAndTag = this.getModifierAndTagForCase1(
+			// get tag and modifer for case 2
+			List<String> case1ModidierAndTag = this.getModifierAndTagForCase2(
 					modifier, start2, end2, words);
 			if (case1ModidierAndTag != null && case1ModidierAndTag.size() == 2) {
 				modifier = case1ModidierAndTag.get(1);
@@ -153,7 +151,7 @@ public class MarkupByPOS implements IModule {
 		return sign;
 	}
 
-	public List<String> getModifierAndTagForCase2(String ptn, List<String> words) {
+	public List<String> getModifierAndTagForCase3(String ptn, List<String> words) {
 		Matcher m = StringUtility.createMatcher(ptn,
 				"^([^qpn,;:]*)([pn]+)[tmb]");
 		if (m.find()) {
@@ -188,7 +186,7 @@ public class MarkupByPOS implements IModule {
 		return null;
 	}
 
-	public List<String> getModifierAndTagForCase1(String modifier, int start, int end, List<String> words) {
+	public List<String> getModifierAndTagForCase2(String modifier, int start, int end, List<String> words) {
 		Matcher m23 = StringUtility.createMatcher(modifier,
 				String.format("\\b(%s)\\b", Constant.PREPOSITION));
 		if (!StringUtility.isMatchedNullSafe(modifier,

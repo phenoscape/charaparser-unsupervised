@@ -39,7 +39,7 @@ public class MarkupByPOSTest {
 	}
 	
 	@Test
-	public void testGetModifierAndTagForCase1() {
+	public void testGetModifierAndTagForCase2() {
 		MarkupByPOS myTester = this.markupByPOSFactory();
 
 		String modifier = "large interlocking";
@@ -53,9 +53,30 @@ public class MarkupByPOSTest {
 		target.add("large interlocking");
 		target.add("<N>plates</N>");
 
-		assertEquals("getModifierAndTagForCase1", target, myTester.getModifierAndTagForCase1(modifier, start, end, words));
+		assertEquals("getModifierAndTagForCase1", target, myTester.getModifierAndTagForCase2(modifier, start, end, words));
 		
 	}
+	
+	@Test
+	public void testGetModifierAndTagForCase3() {
+		MarkupByPOS myTester = this.markupByPOSFactory();
+		
+		String ptn = "ntqqq,qbbn";
+		List<String> words = new ArrayList<String>();
+		words.addAll(Arrays
+				.asList("<N>orbit</N> <M>dorsal</M> or dorsolaterally facing , surrounded <B>laterally</B> <B>by</B> <N>endocranium</N>"
+						.split(" ")));
+		
+		List<String> target = new LinkedList<String>();
+		target.add("");
+		target.add("orbit");
+		
+		assertEquals("getModifierAndTagForCase3", target, myTester.getModifierAndTagForCase3(ptn, words));
+		
+		ptn = "qbbnbtn";
+		assertEquals("getModifierAndTagForCase3 - null", null, myTester.getModifierAndTagForCase3(ptn, words));
+	}
+	
 	
 	@Test
 	public void testGetModifiersForUntag() {
