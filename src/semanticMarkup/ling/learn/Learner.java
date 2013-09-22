@@ -37,6 +37,7 @@ import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
 import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.learn.knowledge.Initiation;
+import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
 import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrapping;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
@@ -65,6 +66,8 @@ public class Learner {
 	
 	UnknownWordBootstrapping unknownWordBootstrappingModule; 
 	
+	MarkupByPOS markupByPOS;
+	
 	public Learner(Configuration configuration, ITokenizer tokenizer, LearnerUtility learnerUtility) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learner");
@@ -90,7 +93,7 @@ public class Learner {
 		
 		initiationModule = new Initiation(this.myLearnerUtility, this.NUM_LEAD_WORDS);
 		unknownWordBootstrappingModule = new UnknownWordBootstrapping(this.myLearnerUtility);
-		
+		markupByPOS = new MarkupByPOS(this.myLearnerUtility);
 	}
 
 	public DataHolder Learn(List<Treatment> treatments, IGlossary glossary, String markupMode) {
@@ -171,6 +174,8 @@ public class Learner {
 			} while (v > 0);
 		}
 		
+		this.resetAndOrTags(myDataHolder);
+		
 		myDataHolder.write2File("");
 		
 		myLogger.info("Learning done!");
@@ -181,6 +186,15 @@ public class Learner {
 //		myLogger.info(myDataHolder.getSentenceHolder().get(0).toString());
 		
 		return myDataHolder;
+	}
+
+	private void resetAndOrTags(DataHolder myDataHolder) {
+		for (SentenceStructure sentenceItem : myDataHolder.getSentenceHolder()) {
+			if (StringUtils.equals(sentenceItem.getTag(), "andor")) {
+				sentenceItem.setTag(null);
+			}
+		}
+		
 	}
 
 	public void addGlossary(IGlossary glossary) {
