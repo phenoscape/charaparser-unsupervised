@@ -103,11 +103,11 @@ public class MarkupByPOS implements IModule {
 			String modifier = StringUtils.join(words.subList(0, end1), " ");
 
 			// get tag and modifer for case 2
-			List<String> case1ModidierAndTag = this.getModifierAndTagForCase2(
+			List<String> case2ModidierAndTag = this.getModifierAndTagForCase2(
 					modifier, start2, end2, words);
-			if (case1ModidierAndTag != null && case1ModidierAndTag.size() == 2) {
-				modifier = case1ModidierAndTag.get(1);
-				String tag = case1ModidierAndTag.get(2);
+			if (case2ModidierAndTag != null && case2ModidierAndTag.size() == 2) {
+				modifier = case2ModidierAndTag.get(0);
+				String tag = case2ModidierAndTag.get(1);
 
 				// update on q and p
 				if (StringUtility.isMatchedNullSafe(tag, "<")) {
@@ -187,8 +187,6 @@ public class MarkupByPOS implements IModule {
 	}
 
 	public List<String> getModifierAndTagForCase2(String modifier, int start, int end, List<String> words) {
-		Matcher m23 = StringUtility.createMatcher(modifier,
-				String.format("\\b(%s)\\b", Constant.PREPOSITION));
 		if (!StringUtility.isMatchedNullSafe(modifier,
 				String.format("\\b(%s)\\b", Constant.PREPOSITION))) {
 			List<String> modifierAndTag = new LinkedList<String>();

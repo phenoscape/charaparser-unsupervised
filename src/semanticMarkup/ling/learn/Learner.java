@@ -176,6 +176,8 @@ public class Learner {
 		
 		this.resetAndOrTags(myDataHolder);
 		
+		this.markupByPOS.run(myDataHolder);
+		
 		myDataHolder.write2File("");
 		
 		myLogger.info("Learning done!");
