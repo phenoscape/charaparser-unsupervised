@@ -1057,6 +1057,26 @@ public class LearnerTest {
 		
 	}
 	
+	@Test
+	public void testDittoHelper() {
+		String nPhrasePattern = "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\\/[A-Z]*[NO]+[A-Z]*>\\s*)+";
+		String mPhrasePattern = "(?:<[A-Z]*M[A-Z]*>[^<]+?<\\/[A-Z]*M[A-Z]*>\\s*)+";
+		
+		Learner myTester = learnerFactory();
+		assertEquals("ditto helper", 0, myTester.dittoHelper(myTester.getDataHolder(), 0, "prismatic calcified <N>cartilage</N>", nPhrasePattern, mPhrasePattern));
+		
+		assertEquals("ditto helper", 1, myTester.dittoHelper(
+				myTester.getDataHolder(), 0, "<B>absent</B>", nPhrasePattern,
+				mPhrasePattern));
+		assertEquals("ditto helper", 21, 
+				myTester.dittoHelper(myTester.getDataHolder(), 0, 
+						"<B>in</B> tubes below visceral surface <B>of</B> <M>dermal</M> <N>bone</N>", 
+						nPhrasePattern, mPhrasePattern));
+		
+		
+		
+	}
+	
 	private Learner learnerFactory() {
 		Learner tester;
 

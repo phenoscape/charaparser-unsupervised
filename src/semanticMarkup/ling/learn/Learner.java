@@ -3247,7 +3247,7 @@ public class Learner {
 			if (sentenceItem.getTag() == null) {
 				int sentenceID = sentenceItem.getID();
 				String sentence = sentenceItem.getSentence();
-				
+				this.dittoHelper(dataholderHandler, sentenceID, sentence, nPhrasePattern, mPhrasePattern);
 			}
 		}
 	}
@@ -3268,7 +3268,7 @@ public class Learner {
 		}
 		else if (m2.find()) {
 			String head = m2.group(1);
-			String pattern21 = String.format("\b(%s)\b", Constant.PREPOSITION);
+			String pattern21 = String.format("\\b(%s)\\b", Constant.PREPOSITION);
 			if (StringUtility.isMatchedNullSafe(head, pattern21)) {
 				String tag = "ditto";
 				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "ditto-proposition");
