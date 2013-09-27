@@ -37,6 +37,7 @@ import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
 import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.learn.knowledge.Initiation;
+import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
 import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrapping;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
@@ -65,6 +66,8 @@ public class Learner {
 	
 	UnknownWordBootstrapping unknownWordBootstrappingModule; 
 	
+	MarkupByPOS markupByPOS;
+	
 	public Learner(Configuration configuration, ITokenizer tokenizer, LearnerUtility learnerUtility) {
 		PropertyConfigurator.configure( "conf/log4j.properties" );
 		Logger myLogger = Logger.getLogger("Learner");
@@ -90,7 +93,7 @@ public class Learner {
 		
 		initiationModule = new Initiation(this.myLearnerUtility, this.NUM_LEAD_WORDS);
 		unknownWordBootstrappingModule = new UnknownWordBootstrapping(this.myLearnerUtility);
-		
+		markupByPOS = new MarkupByPOS(this.myLearnerUtility);
 	}
 
 	public DataHolder Learn(List<Treatment> treatments, IGlossary glossary, String markupMode) {
@@ -172,7 +175,14 @@ public class Learner {
 		}
 		
 		this.resetAndOrTags(myDataHolder);
+
 		this.getLearnerUtility().tagAllSentences(myDataHolder, "singletag", "sentence");
+		
+		this.markupByPOS.run(myDataHolder);
+		
+		this.phraseClause(myDataHolder);
+		
+		this.ditto(myDataHolder);
 		
 		myDataHolder.write2File("");
 		
@@ -3230,15 +3240,154 @@ public class Learner {
 	}
 	
 	public void resetAndOrTags(DataHolder dataholderHandler) {
-		dataholderHandler.updateSentenceTag("andor", null);
+		dataholderHandler.updateSentenceTag("^andor$", null);
 	}
 	
-	public void markupByPOS(DataHolder dataholderHandler) {
+	public void ditto (DataHolder dataholderHandler) {
+		String nPhrasePattern = "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\\/[A-Z]*[NO]+[A-Z]*>\\s*)+";
+		String mPhrasePattern = "(?:<[A-Z]*M[A-Z]*>[^<]+?<\\/[A-Z]*M[A-Z]*>\\s*)+";
 		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			if (sentenceItem.getTag() == null) {
+				int sentenceID = sentenceItem.getID();
+				String sentence = sentenceItem.getSentence();
+				this.dittoHelper(dataholderHandler, sentenceID, sentence, nPhrasePattern, mPhrasePattern);
+			}
+		}
+	}
+	
+	public int dittoHelper(DataHolder dataholderHandler, int sentenceID,
+			String sentence, String nPhrasePattern, String mPhrasePattern) {
+		int res = 0;
+		String sentenceCopy = "" + sentence;
+		sentenceCopy = sentenceCopy.replaceAll("></?", "");
+		String modifier = "";
+		
+		Matcher m2 = StringUtility.createMatcher(sentenceCopy, "(.*?)"+nPhrasePattern);
+		
+		if (!StringUtility.isMatchedNullSafe(sentence, "<[NO]>")) {
+			String tag = "ditto";
+			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "ditto-no-N");
+			res = 1;
+		}
+		else if (m2.find()) {
+			String head = m2.group(1);
+			String pattern21 = String.format("\\b(%s)\\b", Constant.PREPOSITION);
+			if (StringUtility.isMatchedNullSafe(head, pattern21)) {
+				String tag = "ditto";
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "ditto-proposition");
+				res = 21;
+			}
+			else if (StringUtility.isMatchedNullSafe(head, ",<\\/B>\\s*$")) {
+				String tag = "ditto";
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "ditto-,-N");
+				res = 22;
+			}
+		}	
+		
+		return res;
+	}
+	
+	public void phraseClause(DataHolder dataholderHandler) {
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
+			if (sentenceItem.getTag() == null) {
+				int sentenceID = sentenceItem.getID();
+				String sentence = sentenceItem.getSentence();
+				List<String> res = this.phraseClauseHelper(sentence);
+				if (res != null && res.size() == 2) {
+					String modifier = res.get(0);
+					String tag = res.get(1);
+					dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+							modifier, tag, "phraseclause");
+				}
+			}
+		}
 	}
 
+	public List<String> phraseClauseHelper(String sentence) {
+		if (sentence == null) {
+			return null;
+		}
 
+		List<String> res = new ArrayList<String>(2);
+		String pattern = "^(.*?)((?:<[A-Z]*M[A-Z]*>[^<]*?<\\/[A-Z]*M[A-Z]*>\\s*)*)((?:<[A-Z]*[NO]+[A-Z]*>[^<]*?<\\/[A-Z]*[NO]+[A-Z]*>\\s*)+)<B>[,:\\.;]<\\/B>\\s*$";
+		String sentenceCopy = "" + sentence;
+		sentenceCopy = sentenceCopy.replaceAll("></?", "");
+		
+		Matcher m = StringUtility.createMatcher(sentenceCopy, pattern);
+		if (m.find()) {
+			String head = m.group(1);
+			String modifier = m.group(2);
+			String tag = m.group(3);
 
+			String prepositionPattern = String.format("\\b(%s)\\b",
+					Constant.PREPOSITION);
+			if (!StringUtility.isMatchedNullSafe(head, prepositionPattern)
+					&& !StringUtility.isMatchedNullSafe(head, "<\\/N>")
+					&& !StringUtility.isMatchedNullSafe(modifier,
+							prepositionPattern)) {
+				if (tag != null) {
+					Matcher m2 = StringUtility.createMatcher(tag,
+							"(.*?)<N>([^<]+)<\\/N>\\s*$");
+					if (m2.find()) {
+						modifier = modifier + m2.group(1);
+						tag = m2.group(2);
+					}
+					tag = tag.replaceAll("<\\S+?>", "");
+					modifier = modifier.replaceAll("<\\S+?>", "");
+					tag = tag.replaceAll("(^\\s*|\\s*$)", "");
+					modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
+					res.add(modifier);
+					res.add(tag);
+
+					return res;
+				}
+			}
+		}
+		return res;
+	}
+	
+	public void pronounCharacterSubject(DataHolder dataholderHandler) {
+		String t = "(?:<\\/?[A-Z]+>)?";
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
+			String tag = sentenceItem.getTag();
+			String lead = sentenceItem.getLead();
+			String sentence = sentenceItem.getSentence();
+			
+			boolean b1 = !StringUtils.equals(tag, "ignore");
+			boolean b2 = (tag == null);
+			boolean b3 = StringUtility.isMatchedNullSafe(lead, "(^| )("+Constant.CHARACTER+")( |$)");
+			boolean b4 = StringUtility.isMatchedNullSafe(tag, "(^| )("+Constant.CHARACTER+")( |$)");
+			if (((b1 || b2) && b3) || b4) {
+				String sentenceCopy = "" + sentence;
+				sentence = sentence.replaceAll("></?", "");
+				if (sentence != null) {
+					String pattern1 = String.format("^.*?%s\\b($CHARACTER)\\b%s %s(?:of)%s (.*?)(<[NO]>([^<]*?)<\\/[NO]> ?)+ ", t, t, t, t);
+					Matcher m1 = StringUtility.createMatcher(sentence, pattern1);
+					if (m1.find()) {
+						tag = m1.group(4);
+						String modifier = sentence.substring(m1.start(2), m1.end(4));
+						String s2 = m1.group(2);
+						String s3 = m1.group(3);
+						
+						if ((!StringUtility.isMatchedNullSafe(s2, String.format("\\b(%s)\\b", Constant.PREPOSITION)))
+								&& (!StringUtility.isMatchedNullSafe(s3, String.format("\\b(%s|\\d)\\b", Constant.STOP)))) {
+							modifier = modifier.replaceAll("<\\S+?>", "");
+							modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
+							tag = tag.replaceAll("<\\S+?>", "");
+							tag = tag.replaceAll("(^\\s*|\\s*$)", "");
+						}
+						else {
+							modifier = "";
+							tag = "ditto";							
+						}
+					}
+				}				
+			}				
+		}
+	}
 
 
 	// some unused variables in perl

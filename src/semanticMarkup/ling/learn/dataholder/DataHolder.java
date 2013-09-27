@@ -536,6 +536,7 @@ public class DataHolder {
 
 	/** Class Methods**/
 	public SentenceStructure getSentence(int ID) {
+		
 		Iterator<SentenceStructure> iter = this.sentenceTable.iterator();
 		
 		while(iter.hasNext()) {
@@ -1809,6 +1810,10 @@ public class DataHolder {
 		
 		myLogger.trace(String.format("Enter (%d, %s, %s, %s, %s)", sentID,
 				sentence, modifier, tag, label));
+		
+		if (this.getSentence(sentID) == null) {
+			return;
+		}
 		
 		if (modifier != null) {
 			// modifier preprocessing
