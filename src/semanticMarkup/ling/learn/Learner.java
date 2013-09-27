@@ -180,6 +180,10 @@ public class Learner {
 		
 		this.markupByPOS.run(myDataHolder);
 		
+		this.phraseClause(myDataHolder);
+		
+		this.ditto(myDataHolder);
+		
 		myDataHolder.write2File("");
 		
 		myLogger.info("Learning done!");
@@ -3342,6 +3346,47 @@ public class Learner {
 			}
 		}
 		return res;
+	}
+	
+	public void pronounCharacterSubject(DataHolder dataholderHandler) {
+		String t = "(?:<\\/?[A-Z]+>)?";
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
+			String tag = sentenceItem.getTag();
+			String lead = sentenceItem.getLead();
+			String sentence = sentenceItem.getSentence();
+			
+			boolean b1 = !StringUtils.equals(tag, "ignore");
+			boolean b2 = (tag == null);
+			boolean b3 = StringUtility.isMatchedNullSafe(lead, "(^| )("+Constant.CHARACTER+")( |$)");
+			boolean b4 = StringUtility.isMatchedNullSafe(tag, "(^| )("+Constant.CHARACTER+")( |$)");
+			if (((b1 || b2) && b3) || b4) {
+				String sentenceCopy = "" + sentence;
+				sentence = sentence.replaceAll("></?", "");
+				if (sentence != null) {
+					String pattern1 = String.format("^.*?%s\\b($CHARACTER)\\b%s %s(?:of)%s (.*?)(<[NO]>([^<]*?)<\\/[NO]> ?)+ ", t, t, t, t);
+					Matcher m1 = StringUtility.createMatcher(sentence, pattern1);
+					if (m1.find()) {
+						tag = m1.group(4);
+						String modifier = sentence.substring(m1.start(2), m1.end(4));
+						String s2 = m1.group(2);
+						String s3 = m1.group(3);
+						
+						if ((!StringUtility.isMatchedNullSafe(s2, String.format("\\b(%s)\\b", Constant.PREPOSITION)))
+								&& (!StringUtility.isMatchedNullSafe(s3, String.format("\\b(%s|\\d)\\b", Constant.STOP)))) {
+							modifier = modifier.replaceAll("<\\S+?>", "");
+							modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
+							tag = tag.replaceAll("<\\S+?>", "");
+							tag = tag.replaceAll("(^\\s*|\\s*$)", "");
+						}
+						else {
+							modifier = "";
+							tag = "ditto";							
+						}
+					}
+				}				
+			}				
+		}
 	}
 
 
