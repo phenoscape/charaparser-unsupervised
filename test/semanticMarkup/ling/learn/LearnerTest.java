@@ -1071,10 +1071,27 @@ public class LearnerTest {
 		assertEquals("ditto helper", 21, 
 				myTester.dittoHelper(myTester.getDataHolder(), 0, 
 						"<B>in</B> tubes below visceral surface <B>of</B> <M>dermal</M> <N>bone</N>", 
-						nPhrasePattern, mPhrasePattern));
+						nPhrasePattern, mPhrasePattern));		
+	}
+	
+	@Test
+	public void testPhraseClauseHelper() {
+		Learner myTester = learnerFactory();
 		
+		String sentence = "mid and distal <B>progressively</B> smaller , <B>becoming</B> <B>sessile</B> , <B>narrower</B> , <N>bases</N> obtuse to acuminate , <M><B>cauline</B></M> <B>usually</B> 15 or fewer <B>.</B>";		
+		assertEquals("phraseChauseHelper - empty return", new ArrayList<String>(), myTester.phraseClauseHelper(sentence));
 		
+		sentence = "<M><B>cauline</B></M> <B>linear</B> or <B>oblong</B> , <B>crowded</B> or well separated , <B>usually</B> <B>not</B> surpassing <N>heads</N> <B>.</B>";
+		List<String> target = new ArrayList<String>(2);
+		target.add("");
+		target.add("heads");
+		assertEquals("phraseChauseHelper", target, myTester.phraseClauseHelper(sentence));
 		
+		sentence = "distal <M><B>cauline</B></M> <B>sessile</B> , ?<N>decurrent</N> <B>.</B>";
+		target.clear();
+		target.add("");
+		target.add("decurrent");
+		assertEquals("phraseChauseHelper", target, myTester.phraseClauseHelper(sentence));
 	}
 	
 	private Learner learnerFactory() {
