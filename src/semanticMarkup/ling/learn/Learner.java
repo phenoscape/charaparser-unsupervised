@@ -3352,9 +3352,12 @@ public class Learner {
 		String t = "(?:<\\/?[A-Z]+>)?";
 		for (SentenceStructure sentenceItem : dataholderHandler
 				.getSentenceHolder()) {
-			String tag = sentenceItem.getTag();
+			
+			int sentenceID = sentenceItem.getID();
 			String lead = sentenceItem.getLead();
 			String sentence = sentenceItem.getSentence();
+			String modifier = sentenceItem.getModifier();
+			String tag = sentenceItem.getTag();
 			
 			boolean b1 = !StringUtils.equals(tag, "ignore");
 			boolean b2 = (tag == null);
@@ -3366,9 +3369,14 @@ public class Learner {
 				if (sentence != null) {
 					String pattern1 = String.format("^.*?%s\\b($CHARACTER)\\b%s %s(?:of)%s (.*?)(<[NO]>([^<]*?)<\\/[NO]> ?)+ ", t, t, t, t);
 					Matcher m1 = StringUtility.createMatcher(sentence, pattern1);
+					
+					String pattern2 = String.format("^(.*?)((?:<\\/?[BM]+>\\w+?<\\/?[BM]+>\\s*)*)%s\\b(%s)\\b%s", t, Constant.CHARACTER, t);
+					Matcher m2 = StringUtility.createMatcher(sentence, pattern2);
+					
+					// case 1.1
 					if (m1.find()) {
 						tag = m1.group(4);
-						String modifier = sentence.substring(m1.start(2), m1.end(4));
+						modifier = sentence.substring(m1.start(2), m1.end(4));
 						String s2 = m1.group(2);
 						String s3 = m1.group(3);
 						
@@ -3384,6 +3392,50 @@ public class Learner {
 							tag = "ditto";							
 						}
 					}
+					
+					// case 1.2
+					else if (m2.find()) {
+						String text = m2.group(1);
+						
+						if ((!StringUtility.isMatchedNullSafe(text, "\\b("+Constant.STOP+"|\\d+)\\b")) 
+								&& (StringUtility.isMatchedNullSafe(text, "\\w")) 
+								&& (!StringUtility.isMatchedNullSafe(text, "[,:;.]"))) {
+							text = text.replaceAll("<\\S+?>", "");
+//							$text =~ s#(^\s*|\s*$)##g;
+//							$text =~ s#[[:punct:]]##g;
+							text = text.replaceAll("(^\\s*|\\s*$)", "");
+							text = text.replaceAll("\\s", "");
+							
+							String[] textArray = text.split("\\s+");
+//							List<String> textList = new LinkedList<String>();
+//							textList.addAll(Arrays.asList(textArray));
+							if (textArray.length >= 1) {
+								tag = textArray[textArray.length-1];
+								if (StringUtility.isMatchedNullSafe(sentence, "<[NO]>"+tag+"<\\/[NO]>")) {
+									text = text.replaceAll(tag, "");
+									modifier = text;
+								}
+								else {
+									modifier = "";
+									tag = "ditto";
+								}
+							}
+						}
+						else {
+							modifier = "";
+							tag = "ditto";
+						}
+					}
+					
+					// case 1.3
+					else if (StringUtility.isMatchedNullSafe(sentence, "\\b("+Constant.CHARACTER+")\\b")) {
+						modifier = "";
+						tag = "ditto";
+					}
+					
+					dataholderHandler.tagSentenceWithMT(sentenceID,
+							sentenceCopy, modifier, tag,
+							"pronouncharactersubject[character subject]");
 				}				
 			}				
 		}
