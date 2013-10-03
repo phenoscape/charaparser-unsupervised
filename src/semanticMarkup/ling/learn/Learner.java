@@ -3439,6 +3439,34 @@ public class Learner {
 				}				
 			}				
 		}
+		
+		// preposition cases
+		String prepositionPattern = String.format("^(%s)", Constant.PREPOSITION);
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			int sentenceID = sentenceItem.getID();
+			String lead = sentenceItem.getLead();
+			String modifier = sentenceItem.getModifier();
+			String tag = sentenceItem.getTag();
+			String sentence = sentenceItem.getSentence();
+			boolean case1 = (StringUtils.equals(tag, "ignore"));
+			boolean case2 = (tag == null);
+			boolean case3 = StringUtility.isMatchedNullSafe(tag, prepositionPattern + " ");
+			if ((case1 || case2) && case3) {
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "", "pronouncharactersubject[proposition subject]");
+			}
+		}
+		
+		// pronoun cases
+		String pronounPattern = String.format("(%s)", Constant.PRONOUN);
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			int sentenceID = sentenceItem.getID();
+			String lead = sentenceItem.getLead();
+			String modifier = sentenceItem.getModifier();
+			String tag = sentenceItem.getTag();
+			String sentence = sentenceItem.getSentence();
+			
+			boolean case1 = 
+		}
 	}
 
 
