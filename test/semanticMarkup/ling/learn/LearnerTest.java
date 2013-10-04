@@ -1103,6 +1103,13 @@ public class LearnerTest {
 		String modifier;
 		String tag;
 		
+		// null
+		lead = "prismatic calcified cartilage";
+		sentence = "prismatic calcified <N>cartilage</N>";
+		modifier = null;
+		tag = null;
+		assertEquals("pronounCharacterSubjectHelper null", null, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+		
 		// case 1.1.1
 		lead = "size of";
 		sentence = "<B>size</B> <B>of</B> <N>lateral</N> <B>gular</B>";
@@ -1142,6 +1149,35 @@ public class LearnerTest {
 		target.add("");
 		target.add("ditto");
 		assertEquals("pronounCharacterSubjectHelper case 1.2.2", target, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+	}
+	
+	@Test
+	public void testPronounCharacterSubjectHelper4() {
+		Learner myTester = learnerFactory();
+		List<String> target = new ArrayList<String>(2);
+		String lead;
+		String sentence;
+		String modifier;
+		String tag;
+		
+		// null
+		lead = "prismatic calcified cartilage";
+		sentence = "prismatic calcified <N>cartilage</N>";
+		modifier = null;
+		tag = null;
+		assertEquals("pronounCharacterSubjectHelper null", null, myTester.pronounCharacterSubjectHelper4(lead, sentence, modifier, tag));
+	
+//		
+//				lead = "skull shape";
+//				sentence = "<N>skull</N> <B>shape</B>";
+//				modifier = "";
+//				tag = "skull";
+//				target.clear();
+//				target.add("");
+//				target.add("skull");
+//				assertEquals("pronounCharacterSubjectHelper4", target, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+				
+		
 	}
 	
 	private Learner learnerFactory() {

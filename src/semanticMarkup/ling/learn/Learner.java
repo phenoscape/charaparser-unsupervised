@@ -3428,41 +3428,56 @@ public class Learner {
 			String tag = sentenceItem.getTag();
 			String sentence = sentenceItem.getSentence();
 			
-			boolean case1 = (StringUtils.equals(tag, "ignore"));
-			boolean case2 = (tag == null);
-			boolean case3 = !StringUtility.isMatchedNullSafe(tag, " (and|nor|or) ");
-			boolean case4 = !StringUtility.isMatchedNullSafe(sentence, "\\[");
-			boolean case5 = false;
-			if (sentence != null) {
-				Pattern p = Pattern.compile("^[^N]*<N>" + tag);
-				Matcher m = p.matcher(sentence);
-				if (m.find()) {
-					case5 = true;
-				}
+			List<String> mt = this.pronounCharacterSubjectHelper4(lead, sentence, modifier, tag);			
+			if (mt != null) {
+				modifier = mt.get(0);
+				tag = mt.get(1);
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "pronouncharactersubject[correct to missed N]");
+			}			
+		}
+	}
+
+	public List<String> pronounCharacterSubjectHelper4(String lead,
+			String sentence, String modifier, String tag) {
+		boolean case1 = (StringUtils.equals(tag, "ignore"));
+		boolean case2 = (tag == null);
+		boolean case3 = !StringUtility.isMatchedNullSafe(tag, " (and|nor|or) ");
+		boolean case4 = !StringUtility.isMatchedNullSafe(sentence, "\\[");
+		boolean case5 = false;
+		if (sentence != null) {
+			Pattern p = Pattern.compile("^[^N]*<N>" + tag);
+			Matcher m = p.matcher(sentence);
+			if (m.find()) {
+				case5 = true;
 			}
-			
-			if ((case1 || case2) && case3 && case4 && case5) {
-				if (sentence != null) {
-					String sentenceCopy = "" + sentence;
-					sentence = sentence.replaceAll("></?", "");
-					Pattern p = Pattern.compile("^(\\S*) ?<N>([^<]+)<\\/N> <[MB]+>(\\S+)<\\/[MB]+> \\S*\\b"+tag+"\\b\\S*");
-					Matcher m2 = p.matcher(sentence);
-					if (m2.find()) {
-						modifier = m2.group(1);
-						tag = m2.group(2);
-						String g3 = m2.group(3);
-						if (!StringUtility.isMatchedNullSafe(g3, "\\bof\\b")) {
-							modifier = modifier.replaceAll("<\\S+?>", "");
-							tag = tag.replaceAll("<\\S+?>", "");
-							modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
-							tag = tag.replaceAll("(^\\s*|\\s*$)", "");
-							dataholderHandler.tagSentenceWithMT(sentenceID, sentenceCopy, modifier, tag, "pronouncharactersubject[correct to missed N]");
-						}
+		}
+
+		if ((case1 || case2) && case3 && case4 && case5) {
+			if (sentence != null) {
+				sentence = sentence.replaceAll("></?", "");
+				Pattern p = Pattern
+						.compile("^(\\S*) ?<N>([^<]+)<\\/N> <[MB]+>(\\S+)<\\/[MB]+> \\S*\\b"
+								+ tag + "\\b\\S*");
+				Matcher m2 = p.matcher(sentence);
+				if (m2.find()) {
+					modifier = m2.group(1);
+					tag = m2.group(2);
+					String g3 = m2.group(3);
+					if (!StringUtility.isMatchedNullSafe(g3, "\\bof\\b")) {
+						modifier = modifier.replaceAll("<\\S+?>", "");
+						tag = tag.replaceAll("<\\S+?>", "");
+						modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
+						tag = tag.replaceAll("(^\\s*|\\s*$)", "");
+						List<String> mt = new ArrayList<String>();
+						mt.add(modifier);
+						mt.add(tag);
+						return mt;
 					}
-							
 				}
 			}
 		}
+	return null;
+	
 	}
 
 	public List<String> pronounCharacterSubjectHelper(String lead,
@@ -3560,6 +3575,8 @@ public class Learner {
 		}
 		
 	}
+	
+	
 
 
 
