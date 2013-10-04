@@ -3465,8 +3465,28 @@ public class Learner {
 			String tag = sentenceItem.getTag();
 			String sentence = sentenceItem.getSentence();
 			
-			boolean case1 = 
+			boolean case1 = StringUtility.isMatchedNullSafe(tag, String.format("(^| )%s( |\\$)", pronounPattern));
+			boolean case2 = StringUtility.isMatchedNullSafe(modifier, String.format("(^| )%s( |\\$)", pronounPattern));			
+			if (case1 || case2) {				
+				modifier = modifier.replaceAll("\\b("+Constant.PRONOUN+")\\b", "");
+				tag = tag.replaceAll("\\b("+Constant.PRONOUN+")\\b", "");
+				modifier = modifier.replaceAll("\\s+", " ");
+				tag = tag.replaceAll("\\s+", " ");
+				
+				if (!StringUtility.isMatchedNullSafe(tag, "\\w") || StringUtility.isMatchedNullSafe(tag, "ditto")) {
+					tag = this.getParentSentenceTag(sentenceID);
+				}
+				
+				modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
+				tag = tag.replaceAll("(^\\s*|\\s*$)", "");
+			}
 		}
+	}
+
+
+	public String getParentSentenceTag(int sentenceID) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
