@@ -3474,20 +3474,24 @@ public class Learner {
 				tag = tag.replaceAll("\\s+", " ");
 				
 				if (!StringUtility.isMatchedNullSafe(tag, "\\w") || StringUtility.isMatchedNullSafe(tag, "ditto")) {
-					tag = this.getParentSentenceTag(sentenceID);
+					tag = dataholderHandler.getParentSentenceTag(sentenceID);
 				}
 				
 				modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
 				tag = tag.replaceAll("(^\\s*|\\s*$)", "");
+				
+				List<String> mt = dataholderHandler.getMTFromParentTag(tag);
+				String m = mt.get(0);
+				tag = mt.get(1);
+				
+				if (StringUtility.isMatchedNullSafe(m, "\\w")) {
+					modifier = modifier + m;
+					dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "pronouncharactersubject[pronoun subject]");
+				}
 			}
 		}
 	}
 
-
-	public String getParentSentenceTag(int sentenceID) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 
 	// some unused variables in perl
