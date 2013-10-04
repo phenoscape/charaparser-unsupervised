@@ -184,6 +184,8 @@ public class Learner {
 		
 		this.ditto(myDataHolder);
 		
+		this.pronounCharacterSubject(myDataHolder);
+		
 		myDataHolder.write2File("");
 		
 		myLogger.info("Learning done!");
@@ -3429,7 +3431,7 @@ public class Learner {
 			boolean case1 = (StringUtils.equals(tag, "ignore"));
 			boolean case2 = (tag == null);
 			boolean case3 = !StringUtility.isMatchedNullSafe(tag, " (and|nor|or) ");
-			boolean case4 = !StringUtility.isMatchedNullSafe(sentence, "[");
+			boolean case4 = !StringUtility.isMatchedNullSafe(sentence, "\\[");
 			boolean case5 = false;
 			if (sentence != null) {
 				Pattern p = Pattern.compile("^[^N]*<N>" + tag);
