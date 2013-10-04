@@ -1094,6 +1094,56 @@ public class LearnerTest {
 		assertEquals("phraseChauseHelper", target, myTester.phraseClauseHelper(sentence));
 	}
 	
+	@Test
+	public void testPronounCharacterSubjectHelper() {
+		Learner myTester = learnerFactory();
+		List<String> target = new ArrayList<String>(2);
+		String lead;
+		String sentence;
+		String modifier;
+		String tag;
+		
+		// case 1.1.1
+		lead = "size of";
+		sentence = "<B>size</B> <B>of</B> <N>lateral</N> <B>gular</B>";
+		modifier = "";
+		tag = "ditto";
+		target.clear();
+		target.add("");
+		target.add("lateral");
+		assertEquals("pronounCharacterSubjectHelper case 1.1.1", target, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+		
+		// case 1.2.1.1
+		lead = "body scale profile";
+		sentence = "<M>body</M> <N>scale</N> <B>profile</B>";
+		modifier = "body";
+		tag = "scale";
+		target.clear();
+		target.add("body ");
+		target.add("scale");
+		assertEquals("pronounCharacterSubjectHelper case 1.2.1.1", target, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+		
+		// case 1.2.1.1
+		lead = "lyre_ shaped";
+		sentence = "<N>lyre_</N> <B>shaped</B>";
+		modifier = "";
+		tag = "lyre_";
+		target.clear();
+		target.add("");
+		target.add("ditto");
+		assertEquals("pronounCharacterSubjectHelper case 1.2.1.2", target, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+				
+		// case 1.2.2
+		lead = "shape of";
+		sentence = "<B>shape</B> <B>of</B> opercular <N>ossification</N>";
+		modifier = "";
+		tag = "ditto";
+		target.clear();
+		target.add("");
+		target.add("ditto");
+		assertEquals("pronounCharacterSubjectHelper case 1.2.2", target, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+	}
+	
 	private Learner learnerFactory() {
 		Learner tester;
 
