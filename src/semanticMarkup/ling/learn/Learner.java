@@ -3205,6 +3205,12 @@ public class Learner {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.andOrTag");
 		
+		List<String> mPatterns = new ArrayList<String>();
+		List<String> sPatterns = new ArrayList<String>();
+		List<String> mSegments = new ArrayList<String>();
+		List<String> sSegments = new ArrayList<String>();
+		
+		
 		Set<String> token = new HashSet<String>();
 		token.addAll(Arrays.asList("and or nor".split(" ")));
 		token.add("\\");
@@ -3213,20 +3219,96 @@ public class Learner {
 		int limit = 80;
 		List<String> words = new ArrayList<String>();
 		words.addAll(Arrays.asList(sentence.split(" ")));
-		String ptn = this.getLearnerUtility().getSentencePtn(dataholderHandler, token, limit, words);
-		ptn = ptn.replaceAll("t", "m");
+		String pattern = this.getLearnerUtility().getSentencePtn(dataholderHandler, token, limit, words);
+		pattern = pattern.replaceAll("t", "m");
 		
-		myLogger.info(String.format("Andor pattern %s for %s", ptn, words.toString()));
+		myLogger.info(String.format("Andor pattern %s for %s", pattern, words.toString()));
 		
-		if (ptn == null) {
+		if (pattern == null) {
 			return -1;
 		}
 		
-		Matcher m1 = StringUtility.createMatcher(ptn, wPattern);
-		Matcher m2 = StringUtility.createMatcher(ptn, "^b+&b+[,:;.]");
+		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
+		Matcher m2 = StringUtility.createMatcher(pattern, "^b+&b+[,:;.]");
 		
 		if (m1.find()) {
 			myLogger.trace("Case 1");
+			
+			int start1 = m1.start(1);
+			int end1 = m1.end(1);
+			
+			int start2 = m1.start(2);
+			int end2 = m1.end(2);
+			
+			int start3 = m1.start(3);
+			int end3 = m1.end(3);
+			
+			int start4 = m1.start(4);
+			int end4 = m1.end(4);
+			
+			int start5 = m1.start(5);
+			int end5 = m1.end(5);
+			
+			
+			
+			String earlyGroupsPattern = pattern.substring(0, start1);
+			String[] patterns = earlyGroupsPattern.split("s*<B>,<\\/B>\\s*");			
+			String earlyGroupsWords = StringUtils.join(words.subList(0, start1), " ");
+			String[] segments = earlyGroupsWords.split("\\s*<B>,<\\/B>s*");
+			
+			String secondLastModifierPattern = m1.group(1);
+			String secondLastModifierWords = StringUtils.join(words.subList(start1, end1), " ");
+			
+			String sencondLastStructurePattern = m1.group(2);
+			String secondLastStructureWords = StringUtils.join(words.subList(start2, end2), " ");
+			
+			String lastModifierPattern = m1.group(3);
+			String lastModifierWords = StringUtils.join(words.subList(start3, end3), " ");
+			
+			String lastStructurePattern = m1.group(4);
+			String lastStructureWords = StringUtils.join(words.subList(start4, end4), " ");
+			
+			String endSegmentPattern = m1.group(5);
+			String endSegmentWords = StringUtils.join(words.subList(start5, end5), " ");
+			
+			int bIndex = end5;
+			
+			// matching pattern with original text
+			for (int i = 0; i < patterns.length; i++) {
+				Pattern p = Pattern.compile("sPattern");
+				Matcher m11 = p.matcher(patterns[i]);
+				if (m11.find()) {
+					String g1 = m11.group(1);
+					mPatterns.add(g1);
+					String g2 = m11.group(2);
+					sPatterns.add(g2);
+					
+					List<String> w = new ArrayList<String>(Arrays.asList(segments[i].split(" ")));
+					String m = StringUtils.join(w.subList(0, m11.end(1)), " ");
+					
+					if (StringUtility.isMatchedNullSafe(m, "\\b(although|but|when|if|where)\\b")) {
+						return 0;
+					}
+					
+					mSegments.add(m);
+					sSegments.add(StringUtils.join(w.subList(m11.end(1), w.size()), " "));
+				}
+				else {
+					myLogger.info("wrong segment: "+patterns[i]+"=>"+segments[i]+"\n");
+					return 0;
+				}
+			}
+			
+			mPatterns.add(secondLastModifierPattern);
+			mSegments.add(secondLastStructureWords);
+			sPatterns.add(sencondLastStructurePattern);
+			sSegments.add(secondLastStructureWords);
+			
+			mPatterns.add(lastModifierPattern);
+			mSegments.add(lastModifierWords);
+			sPatterns.add(lastStructurePattern);
+			sPatterns.add(lastStructureWords);
+			
 		}
 		else if (m2.find()) {
 			myLogger.trace("Case 2");
@@ -3239,6 +3321,17 @@ public class Learner {
 		
 		
 		return 0;
+	}
+	
+	public int countStructures(List<String> patterns) {
+		int count = 0;
+		for (String pattern : patterns) {
+			if (StringUtility.isMatchedNullSafe(pattern, "\\w")) {
+				count++;
+			}
+		}
+		
+		return count;
 	}
 	
 	public void resetAndOrTags(DataHolder dataholderHandler) {
