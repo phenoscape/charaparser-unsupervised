@@ -3215,6 +3215,7 @@ public class Learner {
 		token.addAll(Arrays.asList("and or nor".split(" ")));
 		token.add("\\");
 		token.add("and / or");
+		String strToken = "("+StringUtils.join(token, " ")+")";
 		
 		int limit = 80;
 		List<String> words = new ArrayList<String>();
@@ -3276,22 +3277,22 @@ public class Learner {
 			// matching pattern with original text
 			for (int i = 0; i < patterns.length; i++) {
 				Pattern p = Pattern.compile("sPattern");
-				Matcher m11 = p.matcher(patterns[i]);
-				if (m11.find()) {
-					String g1 = m11.group(1);
+				Matcher m10 = p.matcher(patterns[i]);
+				if (m10.find()) {
+					String g1 = m10.group(1);
 					mPatterns.add(g1);
-					String g2 = m11.group(2);
+					String g2 = m10.group(2);
 					sPatterns.add(g2);
 					
 					List<String> w = new ArrayList<String>(Arrays.asList(segments[i].split(" ")));
-					String m = StringUtils.join(w.subList(0, m11.end(1)), " ");
+					String m = StringUtils.join(w.subList(0, m10.end(1)), " ");
 					
 					if (StringUtility.isMatchedNullSafe(m, "\\b(although|but|when|if|where)\\b")) {
 						return 0;
 					}
 					
 					mSegments.add(m);
-					sSegments.add(StringUtils.join(w.subList(m11.end(1), w.size()), " "));
+					sSegments.add(StringUtils.join(w.subList(m10.end(1), w.size()), " "));
 				}
 				else {
 					myLogger.info("wrong segment: "+patterns[i]+"=>"+segments[i]+"\n");
@@ -3308,6 +3309,68 @@ public class Learner {
 			mSegments.add(lastModifierWords);
 			sPatterns.add(lastStructurePattern);
 			sPatterns.add(lastStructureWords);
+			
+			// find the modifier and the tag for sentenceID
+			// case 1.1
+			if (this.countStructures(sPatterns) > 1) {
+				// compound subject involving multiple structures: mn,mn,&mn => use all but bounary as the tag, modifier="";
+				String tag = StringUtils.join(words.subList(0, bIndex), " ");
+				String modifier = "";
+				tag = tag.replaceAll("<\\S+?>", "");
+				if (tag != null) {
+					String regex11 = "\\b("+StringUtils.join(token, "|")+")\\b";
+					Matcher m11 = StringUtility.createMatcher(tag, regex11);
+					
+					if (m11.find()) {
+						String conj = m11.group(1);
+						
+						tag = tag.replaceAll(",", " "+conj+" ");
+						tag = tag.replaceAll("\\s+", " ");
+						tag = tag.replaceAll("("+conj+" )+", conj);
+						tag = tag.replaceAll("^\\s+", "");
+						tag = tag.replaceAll("\\s+$", "");
+						
+						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "andor[n&n]");						
+					}
+					else {
+						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+					}
+				}
+				// case 1.2
+				else if (this.countStructures(sPatterns) == 1) {
+					// m&mn => connect all modifiers as the modifier, and the n as the tag
+					int i = 0;
+					for (i = 0; i < sPatterns.size(); i++) {
+						if (StringUtility.isMatchedNullSafe(sPatterns.get(i), "\\w")) {
+							break;
+						}
+					}
+					
+					tag = sSegments.get(i);
+					tag = tag.replaceAll("<\\S+?>", "");
+					modifier = StringUtils.join(mSegments, " ");
+					modifier = modifier.replaceAll("<\\S+?>", "");
+					
+					tag = StringUtility.trimString(tag);
+					modifier = StringUtility.trimString(modifier);
+					
+					String myStop = Constant.STOP;
+					myStop = myStop.replaceAll(String.format("\\b%s\\b", token), "");
+					myStop = myStop.replaceAll("\\s+$", "");
+					
+					if (StringUtility.isMatchedNullSafe(modifier, "\\b"+strToken+"\\b")
+							&& StringUtility.isEntireMatchedNullSafe(modifier, "\\b("+myStop+"|to)\\b")) {
+						List<String> wordsTemp = new ArrayList<String>(); 
+						wordsTemp.addAll(Arrays.asList(tag.split("\\s+")));
+						
+					}
+				}
+				// case 1.3
+				else {
+					myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+				}
+
+			}
 			
 		}
 		else if (m2.find()) {
