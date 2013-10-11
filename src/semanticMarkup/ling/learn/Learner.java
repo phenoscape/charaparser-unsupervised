@@ -3205,6 +3205,8 @@ public class Learner {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.andOrTag");
 		
+		int sign = 0;
+		
 		List<String> mPatterns = new ArrayList<String>();
 		List<String> sPatterns = new ArrayList<String>();
 		List<String> mSegments = new ArrayList<String>();
@@ -3374,6 +3376,42 @@ public class Learner {
 				// case 1.3
 				else {
 					myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+				}
+				
+				int q = -1;
+				if (endSegmentPattern != null) {
+					Matcher m13 = StringUtility.createMatcher(endSegmentPattern, "q");
+					if (m13.find()) {
+						q = m13.start();
+					}
+				}
+				
+				if (q >= 0) {
+					String newBoundaryWord = endSegmentWords.split(" ")[q];
+					if (StringUtility.isMatchedNullSafe(newBoundaryWord, "\\w")) {
+						sign = sign + dataholderHandler.updateDataHolder(newBoundaryWord, "b", "", "wordpos", 1);
+					}
+				}
+				
+				// structure patterns and segments: $nptn =
+				// "((?:[np],?)*&?[np])"; #grouped #must present, no q allowed
+				// mark all ps "p"
+				for (int i = 0; i < sPatterns.size(); i++) {
+					String sPatternI = sPatterns.get(i);
+					sPatternI = sPatternI.replaceAll("(.)", "$1 ");
+					sPatternI = StringUtility.trimString(sPatternI);
+					String[] ps = sPatternI.split(" ");
+					String[] ts = sPatternI.split("\\s+");
+					
+					for (int j = 0; j < ps.length; j++) {
+						if (StringUtils.equals(ps[j], "p")) {
+							ts[j] = StringUtility.trimString(ts[j]);
+							sign = sign
+									+ dataholderHandler.updateDataHolder(ts[j],
+											"p", "-", "wordpos", 1);
+						}
+					}
+					
 				}
 
 			}
