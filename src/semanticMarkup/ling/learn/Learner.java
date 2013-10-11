@@ -3360,9 +3360,15 @@ public class Learner {
 					
 					if (StringUtility.isMatchedNullSafe(modifier, "\\b"+strToken+"\\b")
 							&& StringUtility.isEntireMatchedNullSafe(modifier, "\\b("+myStop+"|to)\\b")) {
+						// case 1.2.1
 						List<String> wordsTemp = new ArrayList<String>(); 
 						wordsTemp.addAll(Arrays.asList(tag.split("\\s+")));
-						
+						modifier = modifier + " " + StringUtils.join(wordsTemp.subList(0, wordsTemp.size()-1), " ");
+						tag = wordsTemp.get(wordsTemp.size()-1);
+						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "andor[m&mn]");
+					}
+					else {
+						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
 					}
 				}
 				// case 1.3
