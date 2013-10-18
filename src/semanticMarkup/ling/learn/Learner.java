@@ -3231,8 +3231,264 @@ public class Learner {
 			return -1;
 		}
 		
-		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
+//		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
 		Matcher m2 = StringUtility.createMatcher(pattern, "^b+&b+[,:;.]");
+		
+		List<List<String>> res = this.andOrTagCase1Helper(pattern, wPattern, words, token);
+		if (res != null) {
+			mPatterns = res.get(0);
+			mSegments = res.get(1);
+			sPatterns = res.get(2);
+			sSegments = res.get(3);
+			List<String> tagAndModifier1 = res.get(4);
+			List<String> tagAndModifier2 = res.get(5);
+			List<String> update1 = res.get(6);
+			List<String> update2 = res.get(7);
+			
+			if (tagAndModifier1.size() > 0) {
+				String modifier = tagAndModifier1.get(0);
+				String tag = tagAndModifier1.get(1);
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "andor[n&n]");	
+			}
+			else {
+				myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+			}
+
+			if (tagAndModifier2.size() > 0) {
+				String modifier = tagAndModifier2.get(0);
+				String tag = tagAndModifier2.get(1);
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "andor[m&mn]");
+			}
+			else {
+				myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+			}
+
+			if (update1.size() > 0) {
+				String newBoundaryWord = update1.get(0);
+				sign = sign + dataholderHandler.updateDataHolder(newBoundaryWord, "b", "", "wordpos", 1);
+			}
+
+			if (update2.size() > 0) {
+				for (String tempWord : update2) {
+						sign = sign+ dataholderHandler.updateDataHolder(tempWord, "p", "-", "wordpos", 1);
+					}
+				}
+			}		
+		
+//		if (m1.find()) {
+//			myLogger.trace("Case 1");
+//			
+//			int start1 = m1.start(1);
+//			int end1 = m1.end(1);
+//			
+//			int start2 = m1.start(2);
+//			int end2 = m1.end(2);
+//			
+//			int start3 = m1.start(3);
+//			int end3 = m1.end(3);
+//			
+//			int start4 = m1.start(4);
+//			int end4 = m1.end(4);
+//			
+//			int start5 = m1.start(5);
+//			int end5 = m1.end(5);
+//			
+//			
+//			
+//			String earlyGroupsPattern = pattern.substring(0, start1);
+//			String[] patterns = earlyGroupsPattern.split("s*<B>,<\\/B>\\s*");			
+//			String earlyGroupsWords = StringUtils.join(words.subList(0, start1), " ");
+//			String[] segments = earlyGroupsWords.split("\\s*<B>,<\\/B>s*");
+//			
+//			String secondLastModifierPattern = m1.group(1);
+//			String secondLastModifierWords = StringUtils.join(words.subList(start1, end1), " ");
+//			
+//			String sencondLastStructurePattern = m1.group(2);
+//			String secondLastStructureWords = StringUtils.join(words.subList(start2, end2), " ");
+//			
+//			String lastModifierPattern = m1.group(3);
+//			String lastModifierWords = StringUtils.join(words.subList(start3, end3), " ");
+//			
+//			String lastStructurePattern = m1.group(4);
+//			String lastStructureWords = StringUtils.join(words.subList(start4, end4), " ");
+//			
+//			String endSegmentPattern = m1.group(5);
+//			String endSegmentWords = StringUtils.join(words.subList(start5, end5), " ");
+//			
+//			int bIndex = end5;
+//			
+//			// matching pattern with original text
+//			for (int i = 0; i < patterns.length; i++) {
+//				Pattern p = Pattern.compile("sPattern");
+//				Matcher m10 = p.matcher(patterns[i]);
+//				if (m10.find()) {
+//					String g1 = m10.group(1);
+//					mPatterns.add(g1);
+//					String g2 = m10.group(2);
+//					sPatterns.add(g2);
+//					
+//					List<String> w = new ArrayList<String>(Arrays.asList(segments[i].split(" ")));
+//					String m = StringUtils.join(w.subList(0, m10.end(1)), " ");
+//					
+//					if (StringUtility.isMatchedNullSafe(m, "\\b(although|but|when|if|where)\\b")) {
+//						return 0;
+//					}
+//					
+//					mSegments.add(m);
+//					sSegments.add(StringUtils.join(w.subList(m10.end(1), w.size()), " "));
+//				}
+//				else {
+//					myLogger.info("wrong segment: "+patterns[i]+"=>"+segments[i]+"\n");
+//					return 0;
+//				}
+//			}
+//			
+//			mPatterns.add(secondLastModifierPattern);
+//			mSegments.add(secondLastStructureWords);
+//			sPatterns.add(sencondLastStructurePattern);
+//			sSegments.add(secondLastStructureWords);
+//			
+//			mPatterns.add(lastModifierPattern);
+//			mSegments.add(lastModifierWords);
+//			sPatterns.add(lastStructurePattern);
+//			sPatterns.add(lastStructureWords);
+//			
+//			// find the modifier and the tag for sentenceID
+//			// case 1.1
+//			if (this.countStructures(sPatterns) > 1) {
+//				// compound subject involving multiple structures: mn,mn,&mn => use all but bounary as the tag, modifier="";
+//				String tag = StringUtils.join(words.subList(0, bIndex), " ");
+//				String modifier = "";
+//				tag = tag.replaceAll("<\\S+?>", "");
+//				if (tag != null) {
+//					String regex11 = "\\b("+StringUtils.join(token, "|")+")\\b";
+//					Matcher m11 = StringUtility.createMatcher(tag, regex11);
+//					
+//					if (m11.find()) {
+//						String conj = m11.group(1);
+//						
+//						tag = tag.replaceAll(",", " "+conj+" ");
+//						tag = tag.replaceAll("\\s+", " ");
+//						tag = tag.replaceAll("("+conj+" )+", conj);
+//						tag = tag.replaceAll("^\\s+", "");
+//						tag = tag.replaceAll("\\s+$", "");
+//						
+//						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "andor[n&n]");						
+//					}
+//					else {
+//						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+//					}
+//				}
+//				// case 1.2
+//				else if (this.countStructures(sPatterns) == 1) {
+//					// m&mn => connect all modifiers as the modifier, and the n as the tag
+//					int i = 0;
+//					for (i = 0; i < sPatterns.size(); i++) {
+//						if (StringUtility.isMatchedNullSafe(sPatterns.get(i), "\\w")) {
+//							break;
+//						}
+//					}
+//					
+//					tag = sSegments.get(i);
+//					tag = tag.replaceAll("<\\S+?>", "");
+//					modifier = StringUtils.join(mSegments, " ");
+//					modifier = modifier.replaceAll("<\\S+?>", "");
+//					
+//					tag = StringUtility.trimString(tag);
+//					modifier = StringUtility.trimString(modifier);
+//					
+//					String myStop = Constant.STOP;
+//					myStop = myStop.replaceAll(String.format("\\b%s\\b", token), "");
+//					myStop = myStop.replaceAll("\\s+$", "");
+//					
+//					if (StringUtility.isMatchedNullSafe(modifier, "\\b"+strToken+"\\b")
+//							&& StringUtility.isEntireMatchedNullSafe(modifier, "\\b("+myStop+"|to)\\b")) {
+//						// case 1.2.1
+//						List<String> wordsTemp = new ArrayList<String>(); 
+//						wordsTemp.addAll(Arrays.asList(tag.split("\\s+")));
+//						modifier = modifier + " " + StringUtils.join(wordsTemp.subList(0, wordsTemp.size()-1), " ");
+//						tag = wordsTemp.get(wordsTemp.size()-1);
+//						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "andor[m&mn]");
+//					}
+//					else {
+//						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+//					}
+//				}
+//				// case 1.3
+//				else {
+//					myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+//				}
+//				
+//				int q = -1;
+//				if (endSegmentPattern != null) {
+//					Matcher m13 = StringUtility.createMatcher(endSegmentPattern, "q");
+//					if (m13.find()) {
+//						q = m13.start();
+//					}
+//				}
+//				
+//				if (q >= 0) {
+//					String newBoundaryWord = endSegmentWords.split(" ")[q];
+//					if (StringUtility.isMatchedNullSafe(newBoundaryWord, "\\w")) {
+//						sign = sign + dataholderHandler.updateDataHolder(newBoundaryWord, "b", "", "wordpos", 1);
+//					}
+//				}
+//				
+//				// structure patterns and segments: $nptn =
+//				// "((?:[np],?)*&?[np])"; #grouped #must present, no q allowed
+//				// mark all ps "p"
+//				for (int i = 0; i < sPatterns.size(); i++) {
+//					String sPatternI = sPatterns.get(i);
+//					sPatternI = sPatternI.replaceAll("(.)", "$1 ");
+//					sPatternI = StringUtility.trimString(sPatternI);
+//					String[] ps = sPatternI.split(" ");
+//					String[] ts = sPatternI.split("\\s+");
+//					
+//					for (int j = 0; j < ps.length; j++) {
+//						if (StringUtils.equals(ps[j], "p")) {
+//							ts[j] = StringUtility.trimString(ts[j]);
+//							sign = sign
+//									+ dataholderHandler.updateDataHolder(ts[j],
+//											"p", "-", "wordpos", 1);
+//						}
+//					}
+//					
+//				}
+//
+//			}
+//			
+//		}
+		else if (m2.find()) {
+			myLogger.trace("Case 2");
+			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "ditto", "andor");
+		}
+		else {
+			myLogger.trace("Case 3");
+			myLogger.trace("[andortag]Andor can not determine a tag or modifier for "+sentenceID+": " + sentence);
+		}		
+		
+		return sign;
+	}
+	
+	public List<List<String>> andOrTagCase1Helper(String pattern, String wPattern, List<String> words, Set<String> token){
+		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.andOrTag");
+		
+		List<String> mPatterns = new ArrayList<String>();
+		List<String> sPatterns = new ArrayList<String>();
+		List<String> mSegments = new ArrayList<String>();
+		List<String> sSegments = new ArrayList<String>();
+		
+		List<String> update1 = new ArrayList<String>();
+		List<String> update2 = new ArrayList<String>();
+		
+		List<String> tagAndModifier1 = new ArrayList<String>();
+		List<String> tagAndModifier2 = new ArrayList<String>();
+		
+		String strToken = "("+StringUtils.join(token, " ")+")";
+
+		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
 		
 		if (m1.find()) {
 			myLogger.trace("Case 1");
@@ -3255,28 +3511,35 @@ public class Learner {
 			
 			
 			String earlyGroupsPattern = pattern.substring(0, start1);
-			String[] patterns = earlyGroupsPattern.split("s*<B>,<\\/B>\\s*");			
-			String earlyGroupsWords = StringUtils.join(words.subList(0, start1), " ");
+			String[] patterns = earlyGroupsPattern.split("s*<B>,<\\/B>\\s*");
+			String earlyGroupsWords = StringUtils.join(
+					words.subList(0, start1), " ");
 			String[] segments = earlyGroupsWords.split("\\s*<B>,<\\/B>s*");
-			
+
 			String secondLastModifierPattern = m1.group(1);
-			String secondLastModifierWords = StringUtils.join(words.subList(start1, end1), " ");
-			
+			String secondLastModifierWords = secondLastModifierPattern == null ? ""
+					: StringUtils.join(words.subList(start1, end1), " ");
+
 			String sencondLastStructurePattern = m1.group(2);
-			String secondLastStructureWords = StringUtils.join(words.subList(start2, end2), " ");
-			
+			String secondLastStructureWords = sencondLastStructurePattern == null ? ""
+					: StringUtils.join(words.subList(start2, end2), " ");
+
 			String lastModifierPattern = m1.group(3);
-			String lastModifierWords = StringUtils.join(words.subList(start3, end3), " ");
-			
+			String lastModifierWords = lastModifierPattern == null ? ""
+					: StringUtils.join(words.subList(start3, end3), " ");
+
 			String lastStructurePattern = m1.group(4);
-			String lastStructureWords = StringUtils.join(words.subList(start4, end4), " ");
-			
+			String lastStructureWords = lastStructurePattern == null ? ""
+					: StringUtils.join(words.subList(start4, end4), " ");
+
 			String endSegmentPattern = m1.group(5);
-			String endSegmentWords = StringUtils.join(words.subList(start5, end5), " ");
-			
+			String endSegmentWords = endSegmentPattern == null ? ""
+					: StringUtils.join(words.subList(start5, end5), " ");
+
 			int bIndex = end5;
 			
 			// matching pattern with original text
+			if (!(patterns.length == 1 && StringUtils.equals(patterns[0],""))) {
 			for (int i = 0; i < patterns.length; i++) {
 				Pattern p = Pattern.compile("sPattern");
 				Matcher m10 = p.matcher(patterns[i]);
@@ -3290,7 +3553,7 @@ public class Learner {
 					String m = StringUtils.join(w.subList(0, m10.end(1)), " ");
 					
 					if (StringUtility.isMatchedNullSafe(m, "\\b(although|but|when|if|where)\\b")) {
-						return 0;
+						return null;
 					}
 					
 					mSegments.add(m);
@@ -3298,19 +3561,29 @@ public class Learner {
 				}
 				else {
 					myLogger.info("wrong segment: "+patterns[i]+"=>"+segments[i]+"\n");
-					return 0;
+					return null;
 				}
 			}
+			}
 			
-			mPatterns.add(secondLastModifierPattern);
-			mSegments.add(secondLastStructureWords);
-			sPatterns.add(sencondLastStructurePattern);
-			sSegments.add(secondLastStructureWords);
+			if (secondLastModifierPattern != null)
+				mPatterns.add(secondLastModifierPattern);
+			if (!StringUtils.equals(secondLastModifierWords, ""))
+				mSegments.add(secondLastModifierWords);
+			if (sencondLastStructurePattern != null)
+				sPatterns.add(sencondLastStructurePattern);
+			if (!StringUtils.equals(secondLastStructureWords, ""))
+				sSegments.add(secondLastStructureWords);
 			
-			mPatterns.add(lastModifierPattern);
-			mSegments.add(lastModifierWords);
-			sPatterns.add(lastStructurePattern);
-			sPatterns.add(lastStructureWords);
+			if (lastModifierPattern != null)
+				mPatterns.add(lastModifierPattern);
+			if (!StringUtils.equals(lastModifierWords, ""))
+				mSegments.add(lastModifierWords);
+			if (lastStructurePattern != null)
+				sPatterns.add(lastStructurePattern);
+			if (!StringUtils.equals(lastStructureWords, ""))
+				sSegments.add(lastStructureWords);
+			
 			
 			// find the modifier and the tag for sentenceID
 			// case 1.1
@@ -3328,15 +3601,17 @@ public class Learner {
 						
 						tag = tag.replaceAll(",", " "+conj+" ");
 						tag = tag.replaceAll("\\s+", " ");
-						tag = tag.replaceAll("("+conj+" )+", conj);
+						tag = tag.replaceAll("("+conj+" )+", "$1");
 						tag = tag.replaceAll("^\\s+", "");
 						tag = tag.replaceAll("\\s+$", "");
 						
-						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "andor[n&n]");						
+//						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "andor[n&n]");
+						tagAndModifier1.add("");
+						tagAndModifier1.add(tag);
 					}
-					else {
-						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
-					}
+//					else {
+//						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+//					}
 				}
 				// case 1.2
 				else if (this.countStructures(sPatterns) == 1) {
@@ -3367,15 +3642,18 @@ public class Learner {
 						wordsTemp.addAll(Arrays.asList(tag.split("\\s+")));
 						modifier = modifier + " " + StringUtils.join(wordsTemp.subList(0, wordsTemp.size()-1), " ");
 						tag = wordsTemp.get(wordsTemp.size()-1);
-						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "andor[m&mn]");
+//						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "andor[m&mn]");
+						tagAndModifier2.add(modifier);
+						tagAndModifier2.add(tag);
+						
 					}
-					else {
-						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
-					}
+//					else {
+//						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+//					}
 				}
 				// case 1.3
 				else {
-					myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+					myLogger.debug("Andor can not determine a tag or modifier");
 				}
 				
 				int q = -1;
@@ -3389,7 +3667,8 @@ public class Learner {
 				if (q >= 0) {
 					String newBoundaryWord = endSegmentWords.split(" ")[q];
 					if (StringUtility.isMatchedNullSafe(newBoundaryWord, "\\w")) {
-						sign = sign + dataholderHandler.updateDataHolder(newBoundaryWord, "b", "", "wordpos", 1);
+						update1.add(newBoundaryWord);
+//						sign = sign + dataholderHandler.updateDataHolder(newBoundaryWord, "b", "", "wordpos", 1);
 					}
 				}
 				
@@ -3401,14 +3680,15 @@ public class Learner {
 					sPatternI = sPatternI.replaceAll("(.)", "$1 ");
 					sPatternI = StringUtility.trimString(sPatternI);
 					String[] ps = sPatternI.split(" ");
-					String[] ts = sPatternI.split("\\s+");
+					String[] ts = sSegments.get(i).split("\\s+");
 					
 					for (int j = 0; j < ps.length; j++) {
 						if (StringUtils.equals(ps[j], "p")) {
 							ts[j] = StringUtility.trimString(ts[j]);
-							sign = sign
-									+ dataholderHandler.updateDataHolder(ts[j],
-											"p", "-", "wordpos", 1);
+							update2.add(ts[j]);
+//							sign = sign
+//									+ dataholderHandler.updateDataHolder(ts[j],
+//											"p", "-", "wordpos", 1);
 						}
 					}
 					
@@ -3416,18 +3696,21 @@ public class Learner {
 
 			}
 			
-		}
-		else if (m2.find()) {
-			myLogger.trace("Case 2");
-			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "ditto", "andor");
+			List<List<String>> res = new ArrayList<List<String>>();
+			res.add(mPatterns);
+			res.add(mSegments);
+			res.add(sPatterns);
+			res.add(sSegments);
+			res.add(tagAndModifier1);
+			res.add(tagAndModifier2);
+			res.add(update1);
+			res.add(update2);
+			
+			return res;
 		}
 		else {
-			myLogger.trace("Case 3");
-			myLogger.trace("[andortag]Andor can not determine a tag or modifier for "+sentenceID+": " + sentence);
+			return null;
 		}
-		
-		
-		return 0;
 	}
 	
 	public int countStructures(List<String> patterns) {
