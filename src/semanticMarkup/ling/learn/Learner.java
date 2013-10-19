@@ -3986,6 +3986,36 @@ public class Learner {
 			}
 		}
 	}
+	
+	// sentences that are tagged with a commons substructure, such as blades,
+	// margins need to be modified with its parent structure
+	public void commonSubstructure(DataHolder dataholderHandler) {
+		Set<String> commonTags = this.collectCommonStructures(dataholderHandler);
+		
+		String pattern = StringUtils.join(commonTags, "|");
+		pattern = "\\\\[?(" + pattern + ")\\\\]?";
+		
+		
+	}
+	
+	// find tags with more than one different structure modifiers
+	public Set<String> collectCommonStructures(DataHolder dataholderHandler) {
+		
+		
+		Set<String> PSTags = new HashSet<String>(Arrays.asList("s p".split(" ")));
+		Set<String> BTags = new HashSet<String>();
+		BTags.add("b");
+		Set<String> PSWords = dataholderHandler.getWordsFromWordPOSByPOSs(PSTags);
+		Set<String> BWords = dataholderHandler.getWordsFromWordPOSByPOSs(BTags);
+		
+		Set<String> structures  = StringUtility.setSubtraction(PSWords, BWords);
+		
+		Set<String> commonTags = new HashSet<String>();
+		
+		// ...
+		
+		return commonTags;
+	}
 
 	// some unused variables in perl
 	// directory of /descriptions folder
