@@ -186,6 +186,8 @@ public class Learner {
 		
 		this.pronounCharacterSubject(myDataHolder);
 		
+		this.finalizeIgnored(myDataHolder);
+		
 		myDataHolder.write2File("");
 		
 		myLogger.info("Learning done!");
@@ -3893,6 +3895,27 @@ public class Learner {
 			return null;
 		}
 		
+	}
+	
+	public void finalizeIgnored(DataHolder dataholderHandler) {
+		List<SentenceStructure> sentences = dataholderHandler.getSentencesByTagPattern("^ignore$");
+		
+		for (SentenceStructure sentenceItem : sentences) {
+			String sentence = sentenceItem.getSentence();
+			if (sentence != null) {
+				Matcher m = StringUtility.createMatcher(sentence, Constant.IGNOREPTN);
+				if (m.find()) {
+					String g1 = m.group(1);
+					if (StringUtility.isMatchedNullSafe(g1, "<N>")) {
+						int sentenceID = sentenceItem.getID();
+						SentenceStructure sentenceItemX = dataholderHandler.getSentence(sentenceID);
+						sentenceItemX.setTag(null);
+					}
+				}
+			}
+		}
+		
+		this.markupByPOS.run(dataholderHandler);
 	}
 	
 	
