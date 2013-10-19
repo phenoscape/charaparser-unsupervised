@@ -3235,6 +3235,10 @@ public class Learner {
 //		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
 		Matcher m2 = StringUtility.createMatcher(pattern, "^b+&b+[,:;.]");
 		
+		if (sentenceID == 163) {
+			System.out.println();
+		}
+		
 		List<List<String>> res = this.andOrTagCase1Helper(pattern, wPattern, words, token);
 		if (res != null) {
 			mPatterns = res.get(0);
@@ -3368,7 +3372,7 @@ public class Learner {
 			String endSegmentWords = endSegmentPattern == null ? ""
 					: StringUtils.join(words.subList(start5, end5), " ");
 
-			int bIndex = end5;
+			int bIndex = start5;
 			
 			// matching pattern with original text
 			if (!(patterns.length == 1 && StringUtils.equals(patterns[0],""))) {
