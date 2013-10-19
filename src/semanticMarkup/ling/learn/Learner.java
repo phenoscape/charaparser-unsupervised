@@ -3234,7 +3234,11 @@ public class Learner {
 		
 //		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
 		Matcher m2 = StringUtility.createMatcher(pattern, "^b+&b+[,:;.]");
-		
+
+		if (sentenceID == 163) {
+			System.out.println();
+		}
+
 		List<List<String>> res = this.andOrTagCase1Helper(pattern, wPattern, words, token);
 		if (res != null) {
 			mPatterns = res.get(0);
@@ -3248,10 +3252,9 @@ public class Learner {
 			
 			if (tagAndModifier1.size() > 0) {
 				String modifier = tagAndModifier1.get(0);
-				String tag = tagAndModifier1.get(1);				
+				String tag = tagAndModifier1.get(1);
 				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "andor[n&n]");
-				myLogger.trace("tagSentenceWithMT(" + sentenceID + ", "
-						+ sentence + ", , " + tag + ", andor[n&n])");
+				myLogger.trace("tagSentenceWithMT("+sentenceID+", "+sentence+", , "+tag+", andor[n&n]");
 			}
 			else {
 				myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
@@ -3291,8 +3294,9 @@ public class Learner {
 			myLogger.trace("Case 3");
 			myLogger.trace("[andortag]Andor can not determine a tag or modifier for "+sentenceID+": " + sentence);
 		}		
-		
-		myLogger.trace("Return " + sign);
+
+		myLogger.trace("Return "+sign+"\n");
+
 		return sign;
 	}
 	
@@ -3318,7 +3322,10 @@ public class Learner {
 		
 		if (m1.find()) {
 			myLogger.trace("Case 1");
-			
+			if (pattern.equals("n&qqnbq")) {
+//				System.out.println();
+			}
+
 			int start1 = m1.start(1);
 			int end1 = m1.end(1);
 			
@@ -3334,9 +3341,13 @@ public class Learner {
 			int start5 = m1.start(5);
 			int end5 = m1.end(5);
 			
-			String earlyGroupsPattern = pattern.substring(0, start1);
+//			System.out.println(pattern);
+//			System.out.println(start1);
+//			System.out.println();
+			String earlyGroupsPattern = start1 == -1 ? "" : pattern.substring(
+					0, start1);
 			String[] patterns = earlyGroupsPattern.split("s*<B>,<\\/B>\\s*");
-			String earlyGroupsWords = StringUtils.join(
+			String earlyGroupsWords = start1 == -1 ? "" : StringUtils.join(
 					words.subList(0, start1), " ");
 			String[] segments = earlyGroupsWords.split("\\s*<B>,<\\/B>s*");
 
@@ -3360,8 +3371,8 @@ public class Learner {
 			String endSegmentWords = endSegmentPattern == null ? ""
 					: StringUtils.join(words.subList(start5, end5), " ");
 
-			int bIndex = end5;
-			
+			int bIndex = start5;
+
 			// matching pattern with original text
 			if (!(patterns.length == 1 && StringUtils.equals(patterns[0],""))) {
 			for (int i = 0; i < patterns.length; i++) {
