@@ -1231,7 +1231,31 @@ public class LearnerTest {
 //		System.out.println(returned);
 		
 		// test case 2
-		pattern = "";
+		pattern = "n&qqnbq";
+		words.clear();
+		words.addAll(Arrays.asList("<N>perforate</N> or fenestrate anterodorsal <N>portion</N> <B>of</B> palatoquadrate".split(" ")));
+		mPatterns.clear();
+		mSegments.clear();
+		sPatterns.clear();
+		sSegments.clear();
+		
+		mPatterns.add("qq");
+		mSegments.add("fenestrate anterodorsal");
+		sPatterns.addAll(Arrays.asList("n n".split(" ")));
+		sSegments.addAll(Arrays.asList("<N>perforate</N> <N>portion</N>".split(" ")));
+		
+		tagAndModifier1.clear();
+		tagAndModifier1.add("");
+		tagAndModifier1.add("perforate or fenestrate anterodorsal portion");
+		tagAndModifier2.clear();
+		
+		update1.clear();
+		update2.clear();
+		
+		assertEquals("andOrTagCase1Helper", target, myTester.andOrTagCase1Helper(pattern, wPattern, words, token));
+		
+		
+		
 	}
 	
 	private Learner learnerFactory() {
