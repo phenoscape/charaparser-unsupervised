@@ -48,8 +48,8 @@ public class Constant {
 	public static final String INSTITUTES_ABBR = "dept|univ|assn|bros";
 	public static final String COMPANIES_ABBR = "inc|ltd|co|corp";
 	// the question mark mean the prior character can be exist or not
-	public static final String PLACES_ABBR = "arc|al|ave|blv?d|cl|ct|cres|dr|expy?|dist|mt|ft|fw?y|hwa?y|la|pde?|pl|plz|rd|st|tce|Ala|Ariz|Ark|Cal|Calif|Col|Colo|Conn|Del|Fed|Fla|Ga|Ida|Id|Ill|Ind|Ia|Kan|Kans|Ken|Ky|La|Me|Md|Is|Mass|Mich|Minn|Miss|Mo|Mont|Neb|Nebr|Nev|Mex|Okla|Ok|Ore|Penna|Penn|Pa|Dak|Tenn|Tex|Ut|Vt|Va|Wash|Wis|Wisc|Wy|Wyo|USAFA|Alta|Man|Ont|Qu¨¦|Sask|Yuk";
-	//public static final String PLACES_ABBR = "arc|al|ave|blvd|cl|ct|cres|dr|expy|dist|mt|ft|fwy|hway|la|pde|pl|plz|rd|st|tce|Ala|Ariz|Ark|Cal|Calif|Col|Colo|Conn|Del|Fed|Fla|Ga|Ida|Id|Ill|Ind|Ia|Kan|Kans|Ken|Ky|La|Me|Md|Is|Mass|Mich|Minn|Miss|Mo|Mont|Neb|Nebr|Nev|Mex|Okla|Ok|Ore|Penna|Penn|Pa|Dak|Tenn|Tex|Ut|Vt|Va|Wash|Wis|Wisc|Wy|Wyo|USAFA|Alta|Man|Ont|Qu¨¦|Sask|Yuk";
+	
+	
 	public static final String MONTHS_ABBR = "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|sept";
 	public static final String MISC_ABBR = "vs|etc|no|esp";
 	public static final String BOT1_ABBR = "diam|sq|Rottb";
