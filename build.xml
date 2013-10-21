@@ -36,9 +36,9 @@
 
 	<target name="install-wordnet" depends="init,check-wordnet" unless="WordNet.found">
 		<mkdir dir="res/WordNet" />
-		<get src="http://wordnetcode.princeton.edu/3.0/WNdb-3.0.tar.gz" dest="res/WordNet/WNdb-3.0.tar.gz" usetimestamp="true" skipexisting="true" />
-		<gunzip src="res/WordNet/WNdb-3.0.tar.gz" />
-		<untar src="res/WordNet/WNdb-3.0.tar" dest="res/WordNet/WordNet-3.0" />
+		<get src="http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" dest="res/WordNet/WordNet-3.0.tar.gz" usetimestamp="true" skipexisting="true" />
+		<gunzip src="res/WordNet/WordNet-3.0.tar.gz" />
+		<untar src="res/WordNet/WordNet-3.0.tar" dest="res/WordNet/" />
 	</target>
 
 	<!-- The compile target runs javac on all the java files, and saves them into  the classfiles directory  -->
