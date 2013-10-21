@@ -283,7 +283,7 @@ public class StringUtility {
 		
 		Pattern p = Pattern.compile(pattern);
 		Matcher m = p.matcher(text);
-		if (m.find()) {
+		if (m.matches()) {
 			return true;
 		}
 		else {
