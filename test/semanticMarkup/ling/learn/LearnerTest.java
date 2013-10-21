@@ -22,6 +22,7 @@ import semanticMarkup.ling.learn.auxiliary.StringAndInt;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
+import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.transform.ITokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
@@ -1092,6 +1093,169 @@ public class LearnerTest {
 		target.add("");
 		target.add("decurrent");
 		assertEquals("phraseChauseHelper", target, myTester.phraseClauseHelper(sentence));
+	}
+	
+	@Test
+	public void testPronounCharacterSubjectHelper() {
+		Learner myTester = learnerFactory();
+		List<String> target = new ArrayList<String>(2);
+		String lead;
+		String sentence;
+		String modifier;
+		String tag;
+		
+		// null
+		lead = "prismatic calcified cartilage";
+		sentence = "prismatic calcified <N>cartilage</N>";
+		modifier = null;
+		tag = null;
+		assertEquals("pronounCharacterSubjectHelper null", null, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+		
+		// case 1.1.1
+		lead = "size of";
+		sentence = "<B>size</B> <B>of</B> <N>lateral</N> <B>gular</B>";
+		modifier = "";
+		tag = "ditto";
+		target.clear();
+		target.add("");
+		target.add("lateral");
+		assertEquals("pronounCharacterSubjectHelper case 1.1.1", target, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+		
+		// case 1.2.1.1
+		lead = "body scale profile";
+		sentence = "<M>body</M> <N>scale</N> <B>profile</B>";
+		modifier = "body";
+		tag = "scale";
+		target.clear();
+		target.add("body ");
+		target.add("scale");
+		assertEquals("pronounCharacterSubjectHelper case 1.2.1.1", target, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+		
+		// case 1.2.1.1
+		lead = "lyre_ shaped";
+		sentence = "<N>lyre_</N> <B>shaped</B>";
+		modifier = "";
+		tag = "lyre_";
+		target.clear();
+		target.add("");
+		target.add("ditto");
+		assertEquals("pronounCharacterSubjectHelper case 1.2.1.2", target, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+				
+		// case 1.2.2
+		lead = "shape of";
+		sentence = "<B>shape</B> <B>of</B> opercular <N>ossification</N>";
+		modifier = "";
+		tag = "ditto";
+		target.clear();
+		target.add("");
+		target.add("ditto");
+		assertEquals("pronounCharacterSubjectHelper case 1.2.2", target, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+	}
+	
+	@Test
+	public void testPronounCharacterSubjectHelper4() {
+		Learner myTester = learnerFactory();
+		List<String> target = new ArrayList<String>(2);
+		String lead;
+		String sentence;
+		String modifier;
+		String tag;
+		
+		// null
+		lead = "prismatic calcified cartilage";
+		sentence = "prismatic calcified <N>cartilage</N>";
+		modifier = null;
+		tag = null;
+		assertEquals("pronounCharacterSubjectHelper null", null, myTester.pronounCharacterSubjectHelper4(lead, sentence, modifier, tag));
+	
+//		
+//				lead = "skull shape";
+//				sentence = "<N>skull</N> <B>shape</B>";
+//				modifier = "";
+//				tag = "skull";
+//				target.clear();
+//				target.add("");
+//				target.add("skull");
+//				assertEquals("pronounCharacterSubjectHelper4", target, myTester.pronounCharacterSubjectHelper(lead, sentence, modifier, tag));
+				
+		
+	}
+	
+	@Test
+	public void testAndOrTagCase1Helper() {
+		Learner myTester = learnerFactory();		
+		String sPattern = Constant.SEGANDORPTN;
+		String wPattern = Constant.ANDORPTN;
+		Set<String> token = new HashSet<String>();
+		token.addAll(Arrays.asList("and or nor".split(" ")));
+		token.add("\\");
+		token.add("and / or");
+		
+		// test case 1
+		String pattern = "qqn&p";
+		List<String> words = new ArrayList<String>();
+		words.addAll(Arrays.asList("smaller undifferentiated <N>plates</N> or tesserae".split(" ")));
+		
+		List<List<String>> target = new ArrayList<List<String>>();
+		List<String> mPatterns = new ArrayList<String>();
+		mPatterns.add("qq");
+		List<String> mSegments = new ArrayList<String>();
+		mSegments.add("smaller undifferentiated");
+		List<String> sPatterns = new ArrayList<String>();
+		sPatterns.addAll(Arrays.asList("n p".split(" ")));
+		List<String> sSegments = new ArrayList<String>();
+		sSegments.addAll(Arrays.asList("<N>plates</N> tesserae".split(" ")));	
+		
+		List<String> tagAndModifier1 = new ArrayList<String>();
+		tagAndModifier1.add("");
+		tagAndModifier1.add("smaller undifferentiated plates or tesserae");
+		List<String> tagAndModifier2 = new ArrayList<String>();
+		
+		List<String> update1 = new ArrayList<String>();
+		List<String> update2 = new ArrayList<String>();
+		update2.add("tesserae");
+		
+		target.add(mPatterns);
+		target.add(mSegments);
+		target.add(sPatterns);
+		target.add(sSegments);
+		
+		target.add(tagAndModifier1);
+		target.add(tagAndModifier2);
+		
+		target.add(update1);
+		target.add(update2);
+		
+		assertEquals("andOrTagCase1Helper", target, myTester.andOrTagCase1Helper(pattern, wPattern, words, token));
+//		List<List<String>> returned = myTester.andOrTagCase1Helper(pattern, wPattern, words, token);
+//		System.out.println(returned);
+		
+		// test case 2
+		pattern = "n&qqnbq";
+		words.clear();
+		words.addAll(Arrays.asList("<N>perforate</N> or fenestrate anterodorsal <N>portion</N> <B>of</B> palatoquadrate".split(" ")));
+		mPatterns.clear();
+		mSegments.clear();
+		sPatterns.clear();
+		sSegments.clear();
+		
+		mPatterns.add("qq");
+		mSegments.add("fenestrate anterodorsal");
+		sPatterns.addAll(Arrays.asList("n n".split(" ")));
+		sSegments.addAll(Arrays.asList("<N>perforate</N> <N>portion</N>".split(" ")));
+		
+		tagAndModifier1.clear();
+		tagAndModifier1.add("");
+		tagAndModifier1.add("perforate or fenestrate anterodorsal portion");
+		tagAndModifier2.clear();
+		
+		update1.clear();
+		update2.clear();
+		
+		assertEquals("andOrTagCase1Helper", target, myTester.andOrTagCase1Helper(pattern, wPattern, words, token));
+		
+		
+		
 	}
 	
 	private Learner learnerFactory() {

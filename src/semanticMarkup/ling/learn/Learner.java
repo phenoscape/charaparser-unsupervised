@@ -184,6 +184,8 @@ public class Learner {
 		
 		this.ditto(myDataHolder);
 		
+		this.pronounCharacterSubject(myDataHolder);
+		
 		myDataHolder.write2File("");
 		
 		myLogger.info("Learning done!");
@@ -3182,7 +3184,7 @@ public class Learner {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.handleAndOr");
 		
-		myLogger.info("to match pattern $ANDORPTN");
+		myLogger.info("to match pattern "+Constant.ANDORPTN);
 		
 		List<SentenceStructure> sentenceItems = dataholderHandler.getSentencesByTagPattern("^andor$");
 		
@@ -3190,8 +3192,8 @@ public class Learner {
 		for (SentenceStructure sentenceItem : sentenceItems) {
 			int sentenceID = sentenceItem.getID();
 			String sentence = sentenceItem.getSentence();
-			myLogger.trace(Constant.SEGANDORPTN);
-			myLogger.trace(Constant.ANDORPTN);
+//			myLogger.trace(Constant.SEGANDORPTN);
+//			myLogger.trace(Constant.ANDORPTN);
 			int result = this.andOrTag(dataholderHandler, sentenceID, sentence, Constant.SEGANDORPTN, Constant.ANDORPTN);
 			sign = sign + result;
 		}
@@ -3202,30 +3204,88 @@ public class Learner {
 			String wPattern) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.andOrTag");
+		myLogger.trace("Enter");
+		
+		int sign = 0;
+		
+		List<String> mPatterns = new ArrayList<String>();
+		List<String> sPatterns = new ArrayList<String>();
+		List<String> mSegments = new ArrayList<String>();
+		List<String> sSegments = new ArrayList<String>();
+		
 		
 		Set<String> token = new HashSet<String>();
 		token.addAll(Arrays.asList("and or nor".split(" ")));
 		token.add("\\");
 		token.add("and / or");
+		String strToken = "("+StringUtils.join(token, " ")+")";
 		
 		int limit = 80;
 		List<String> words = new ArrayList<String>();
 		words.addAll(Arrays.asList(sentence.split(" ")));
-		String ptn = this.getLearnerUtility().getSentencePtn(dataholderHandler, token, limit, words);
-		ptn = ptn.replaceAll("t", "m");
+		String pattern = this.getLearnerUtility().getSentencePtn(dataholderHandler, token, limit, words);
+		pattern = pattern.replaceAll("t", "m");
 		
-		myLogger.info(String.format("Andor pattern %s for %s", ptn, words.toString()));
+		myLogger.info(String.format("Andor pattern %s for %s", pattern, words.toString()));
 		
-		if (ptn == null) {
+		if (pattern == null) {
 			return -1;
 		}
 		
-		Matcher m1 = StringUtility.createMatcher(ptn, wPattern);
-		Matcher m2 = StringUtility.createMatcher(ptn, "^b+&b+[,:;.]");
-		
-		if (m1.find()) {
-			myLogger.trace("Case 1");
+//		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
+		Matcher m2 = StringUtility.createMatcher(pattern, "^b+&b+[,:;.]");
+
+		if (sentenceID == 163) {
+			System.out.println();
 		}
+
+		List<List<String>> res = this.andOrTagCase1Helper(pattern, wPattern, words, token);
+		if (res != null) {
+			mPatterns = res.get(0);
+			mSegments = res.get(1);
+			sPatterns = res.get(2);
+			sSegments = res.get(3);
+			List<String> tagAndModifier1 = res.get(4);
+			List<String> tagAndModifier2 = res.get(5);
+			List<String> update1 = res.get(6);
+			List<String> update2 = res.get(7);
+			
+			if (tagAndModifier1.size() > 0) {
+				String modifier = tagAndModifier1.get(0);
+				String tag = tagAndModifier1.get(1);
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "andor[n&n]");
+				myLogger.trace("tagSentenceWithMT("+sentenceID+", "+sentence+", , "+tag+", andor[n&n]");
+			}
+			else {
+				myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+			}
+
+			if (tagAndModifier2.size() > 0) {
+				String modifier = tagAndModifier2.get(0);
+				String tag = tagAndModifier2.get(1);
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "andor[m&mn]");
+				myLogger.trace("tagSentenceWithMT(" + sentenceID + ", "
+						+ sentence + ", " + modifier + ", " + tag
+						+ ", andor[m&mn])");
+			}
+			else {
+				myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+			}
+
+			if (update1.size() > 0) {
+				String newBoundaryWord = update1.get(0);
+				sign = sign + dataholderHandler.updateDataHolder(newBoundaryWord, "b", "", "wordpos", 1);
+			}
+
+			if (update2.size() > 0) {
+				for (String tempWord : update2) {
+					sign = sign
+							+ dataholderHandler.updateDataHolder(tempWord, "p",
+									"-", "wordpos", 1);
+				}
+			}
+		}	
+
 		else if (m2.find()) {
 			myLogger.trace("Case 2");
 			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "ditto", "andor");
@@ -3233,10 +3293,270 @@ public class Learner {
 		else {
 			myLogger.trace("Case 3");
 			myLogger.trace("[andortag]Andor can not determine a tag or modifier for "+sentenceID+": " + sentence);
+		}		
+
+		myLogger.trace("Return "+sign+"\n");
+
+		return sign;
+	}
+	
+	public List<List<String>> andOrTagCase1Helper(String pattern, String wPattern, List<String> words, Set<String> token){
+		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.andOrTag");
+		
+		List<String> mPatterns = new ArrayList<String>();
+		List<String> sPatterns = new ArrayList<String>();
+		List<String> mSegments = new ArrayList<String>();
+		List<String> sSegments = new ArrayList<String>();
+		
+		List<String> update1 = new ArrayList<String>();
+		List<String> update2 = new ArrayList<String>();
+		
+		List<String> tagAndModifier1 = new ArrayList<String>();
+		List<String> tagAndModifier2 = new ArrayList<String>();
+		
+		String strToken = "("+StringUtils.join(token, " ")+")";
+
+		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
+		
+		if (m1.find()) {
+			myLogger.trace("Case 1");
+			if (pattern.equals("n&qqnbq")) {
+//				System.out.println();
+			}
+
+			int start1 = m1.start(1);
+			int end1 = m1.end(1);
+			
+			int start2 = m1.start(2);
+			int end2 = m1.end(2);
+			
+			int start3 = m1.start(3);
+			int end3 = m1.end(3);
+			
+			int start4 = m1.start(4);
+			int end4 = m1.end(4);
+			
+			int start5 = m1.start(5);
+			int end5 = m1.end(5);
+			
+//			System.out.println(pattern);
+//			System.out.println(start1);
+//			System.out.println();
+			String earlyGroupsPattern = start1 == -1 ? "" : pattern.substring(
+					0, start1);
+			String[] patterns = earlyGroupsPattern.split("s*<B>,<\\/B>\\s*");
+			String earlyGroupsWords = start1 == -1 ? "" : StringUtils.join(
+					words.subList(0, start1), " ");
+			String[] segments = earlyGroupsWords.split("\\s*<B>,<\\/B>s*");
+
+			String secondLastModifierPattern = m1.group(1);
+			String secondLastModifierWords = secondLastModifierPattern == null ? ""
+					: StringUtils.join(words.subList(start1, end1), " ");
+
+			String sencondLastStructurePattern = m1.group(2);
+			String secondLastStructureWords = sencondLastStructurePattern == null ? ""
+					: StringUtils.join(words.subList(start2, end2), " ");
+
+			String lastModifierPattern = m1.group(3);
+			String lastModifierWords = lastModifierPattern == null ? ""
+					: StringUtils.join(words.subList(start3, end3), " ");
+
+			String lastStructurePattern = m1.group(4);
+			String lastStructureWords = lastStructurePattern == null ? ""
+					: StringUtils.join(words.subList(start4, end4), " ");
+
+			String endSegmentPattern = m1.group(5);
+			String endSegmentWords = endSegmentPattern == null ? ""
+					: StringUtils.join(words.subList(start5, end5), " ");
+
+			int bIndex = start5;
+
+			// matching pattern with original text
+			if (!(patterns.length == 1 && StringUtils.equals(patterns[0],""))) {
+			for (int i = 0; i < patterns.length; i++) {
+				Pattern p = Pattern.compile("sPattern");
+				Matcher m10 = p.matcher(patterns[i]);
+				if (m10.find()) {
+					String g1 = m10.group(1);
+					mPatterns.add(g1);
+					String g2 = m10.group(2);
+					sPatterns.add(g2);
+					
+					List<String> w = new ArrayList<String>(Arrays.asList(segments[i].split(" ")));
+					String m = StringUtils.join(w.subList(0, m10.end(1)), " ");
+					
+					if (StringUtility.isMatchedNullSafe(m, "\\b(although|but|when|if|where)\\b")) {
+						return null;
+					}
+					
+					mSegments.add(m);
+					sSegments.add(StringUtils.join(w.subList(m10.end(1), w.size()), " "));
+				}
+				else {
+					myLogger.info("wrong segment: "+patterns[i]+"=>"+segments[i]+"\n");
+					return null;
+				}
+			}
+			}
+			
+			if (secondLastModifierPattern != null)
+				mPatterns.add(secondLastModifierPattern);
+			if (!StringUtils.equals(secondLastModifierWords, ""))
+				mSegments.add(secondLastModifierWords);
+			if (sencondLastStructurePattern != null)
+				sPatterns.add(sencondLastStructurePattern);
+			if (!StringUtils.equals(secondLastStructureWords, ""))
+				sSegments.add(secondLastStructureWords);
+			
+			if (lastModifierPattern != null)
+				mPatterns.add(lastModifierPattern);
+			if (!StringUtils.equals(lastModifierWords, ""))
+				mSegments.add(lastModifierWords);
+			if (lastStructurePattern != null)
+				sPatterns.add(lastStructurePattern);
+			if (!StringUtils.equals(lastStructureWords, ""))
+				sSegments.add(lastStructureWords);
+			
+			
+			// find the modifier and the tag for sentenceID
+			// case 1.1
+			if (this.countStructures(sPatterns) > 1) {
+				// compound subject involving multiple structures: mn,mn,&mn => use all but bounary as the tag, modifier="";
+				String tag = StringUtils.join(words.subList(0, bIndex), " ");
+				String modifier = "";
+				tag = tag.replaceAll("<\\S+?>", "");
+				if (tag != null) {
+					String regex11 = "\\b("+StringUtils.join(token, "|")+")\\b";
+					Matcher m11 = StringUtility.createMatcher(tag, regex11);
+					
+					if (m11.find()) {
+						String conj = m11.group(1);
+						
+						tag = tag.replaceAll(",", " "+conj+" ");
+						tag = tag.replaceAll("\\s+", " ");
+						tag = tag.replaceAll("("+conj+" )+", "$1");
+						tag = tag.replaceAll("^\\s+", "");
+						tag = tag.replaceAll("\\s+$", "");
+						
+//						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "andor[n&n]");
+						tagAndModifier1.add("");
+						tagAndModifier1.add(tag);
+					}
+//					else {
+//						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+//					}
+				}
+				// case 1.2
+				else if (this.countStructures(sPatterns) == 1) {
+					// m&mn => connect all modifiers as the modifier, and the n as the tag
+					int i = 0;
+					for (i = 0; i < sPatterns.size(); i++) {
+						if (StringUtility.isMatchedNullSafe(sPatterns.get(i), "\\w")) {
+							break;
+						}
+					}
+					
+					tag = sSegments.get(i);
+					tag = tag.replaceAll("<\\S+?>", "");
+					modifier = StringUtils.join(mSegments, " ");
+					modifier = modifier.replaceAll("<\\S+?>", "");
+					
+					tag = StringUtility.trimString(tag);
+					modifier = StringUtility.trimString(modifier);
+					
+					String myStop = Constant.STOP;
+					myStop = myStop.replaceAll(String.format("\\b%s\\b", token), "");
+					myStop = myStop.replaceAll("\\s+$", "");
+					
+					if (StringUtility.isMatchedNullSafe(modifier, "\\b"+strToken+"\\b")
+							&& StringUtility.isEntireMatchedNullSafe(modifier, "\\b("+myStop+"|to)\\b")) {
+						// case 1.2.1
+						List<String> wordsTemp = new ArrayList<String>(); 
+						wordsTemp.addAll(Arrays.asList(tag.split("\\s+")));
+						modifier = modifier + " " + StringUtils.join(wordsTemp.subList(0, wordsTemp.size()-1), " ");
+						tag = wordsTemp.get(wordsTemp.size()-1);
+//						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "andor[m&mn]");
+						tagAndModifier2.add(modifier);
+						tagAndModifier2.add(tag);
+						
+					}
+//					else {
+//						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+//					}
+				}
+				// case 1.3
+				else {
+					myLogger.debug("Andor can not determine a tag or modifier");
+				}
+				
+				int q = -1;
+				if (endSegmentPattern != null) {
+					Matcher m13 = StringUtility.createMatcher(endSegmentPattern, "q");
+					if (m13.find()) {
+						q = m13.start();
+					}
+				}
+				
+				if (q >= 0) {
+					String newBoundaryWord = endSegmentWords.split(" ")[q];
+					if (StringUtility.isMatchedNullSafe(newBoundaryWord, "\\w")) {
+						update1.add(newBoundaryWord);
+//						sign = sign + dataholderHandler.updateDataHolder(newBoundaryWord, "b", "", "wordpos", 1);
+					}
+				}
+				
+				// structure patterns and segments: $nptn =
+				// "((?:[np],?)*&?[np])"; #grouped #must present, no q allowed
+				// mark all ps "p"
+				for (int i = 0; i < sPatterns.size(); i++) {
+					String sPatternI = sPatterns.get(i);
+					sPatternI = sPatternI.replaceAll("(.)", "$1 ");
+					sPatternI = StringUtility.trimString(sPatternI);
+					String[] ps = sPatternI.split(" ");
+					String[] ts = sSegments.get(i).split("\\s+");
+					
+					for (int j = 0; j < ps.length; j++) {
+						if (StringUtils.equals(ps[j], "p")) {
+							ts[j] = StringUtility.trimString(ts[j]);
+							update2.add(ts[j]);
+//							sign = sign
+//									+ dataholderHandler.updateDataHolder(ts[j],
+//											"p", "-", "wordpos", 1);
+						}
+					}
+					
+				}
+
+			}
+			
+			List<List<String>> res = new ArrayList<List<String>>();
+			res.add(mPatterns);
+			res.add(mSegments);
+			res.add(sPatterns);
+			res.add(sSegments);
+			res.add(tagAndModifier1);
+			res.add(tagAndModifier2);
+			res.add(update1);
+			res.add(update2);
+			
+			return res;
+		}
+		else {
+			return null;
+		}
+	}
+	
+	public int countStructures(List<String> patterns) {
+		int count = 0;
+		for (String pattern : patterns) {
+			if (StringUtility.isMatchedNullSafe(pattern, "\\w")) {
+				count++;
+			}
 		}
 		
-		
-		return 0;
+		return count;
 	}
 	
 	public void resetAndOrTags(DataHolder dataholderHandler) {
@@ -3349,45 +3669,233 @@ public class Learner {
 	}
 	
 	public void pronounCharacterSubject(DataHolder dataholderHandler) {
-		String t = "(?:<\\/?[A-Z]+>)?";
+		
 		for (SentenceStructure sentenceItem : dataholderHandler
 				.getSentenceHolder()) {
-			String tag = sentenceItem.getTag();
+			
+			int sentenceID = sentenceItem.getID();
 			String lead = sentenceItem.getLead();
 			String sentence = sentenceItem.getSentence();
+			String modifier = sentenceItem.getModifier();
+			String tag = sentenceItem.getTag();
 			
-			boolean b1 = !StringUtils.equals(tag, "ignore");
-			boolean b2 = (tag == null);
-			boolean b3 = StringUtility.isMatchedNullSafe(lead, "(^| )("+Constant.CHARACTER+")( |$)");
-			boolean b4 = StringUtility.isMatchedNullSafe(tag, "(^| )("+Constant.CHARACTER+")( |$)");
-			if (((b1 || b2) && b3) || b4) {
-				String sentenceCopy = "" + sentence;
-				sentence = sentence.replaceAll("></?", "");
-				if (sentence != null) {
-					String pattern1 = String.format("^.*?%s\\b($CHARACTER)\\b%s %s(?:of)%s (.*?)(<[NO]>([^<]*?)<\\/[NO]> ?)+ ", t, t, t, t);
-					Matcher m1 = StringUtility.createMatcher(sentence, pattern1);
-					if (m1.find()) {
-						tag = m1.group(4);
-						String modifier = sentence.substring(m1.start(2), m1.end(4));
-						String s2 = m1.group(2);
-						String s3 = m1.group(3);
-						
-						if ((!StringUtility.isMatchedNullSafe(s2, String.format("\\b(%s)\\b", Constant.PREPOSITION)))
-								&& (!StringUtility.isMatchedNullSafe(s3, String.format("\\b(%s|\\d)\\b", Constant.STOP)))) {
-							modifier = modifier.replaceAll("<\\S+?>", "");
-							modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
-							tag = tag.replaceAll("<\\S+?>", "");
-							tag = tag.replaceAll("(^\\s*|\\s*$)", "");
-						}
-						else {
-							modifier = "";
-							tag = "ditto";							
-						}
-					}
-				}				
-			}				
+			List<String> mt = pronounCharacterSubjectHelper(lead, sentence, modifier, tag);
+			if (mt != null) {
+				dataholderHandler.tagSentenceWithMT(sentenceID,
+					sentence, modifier, tag,
+					"pronouncharactersubject[character subject]");
+			}
+		}
+		
+		// preposition cases
+		String prepositionPattern = String.format("^(%s)", Constant.PREPOSITION);
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			int sentenceID = sentenceItem.getID();
+			String lead = sentenceItem.getLead();
+			String modifier = sentenceItem.getModifier();
+			String tag = sentenceItem.getTag();
+			String sentence = sentenceItem.getSentence();
+			boolean case1 = (StringUtils.equals(tag, "ignore"));
+			boolean case2 = (tag == null);
+			boolean case3 = StringUtility.isMatchedNullSafe(tag, prepositionPattern + " ");
+			if ((case1 || case2) && case3) {
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "", "pronouncharactersubject[proposition subject]");
+			}
+		}
+		
+		// pronoun cases
+		String pronounPattern = String.format("(%s)", Constant.PRONOUN);
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			int sentenceID = sentenceItem.getID();
+			String lead = sentenceItem.getLead();
+			String modifier = sentenceItem.getModifier();
+			String tag = sentenceItem.getTag();
+			String sentence = sentenceItem.getSentence();
+			
+			boolean case1 = StringUtility.isMatchedNullSafe(tag, String.format("(^| )%s( |\\$)", pronounPattern));
+			boolean case2 = StringUtility.isMatchedNullSafe(modifier, String.format("(^| )%s( |\\$)", pronounPattern));			
+			if (case1 || case2) {				
+				modifier = modifier.replaceAll("\\b("+Constant.PRONOUN+")\\b", "");
+				tag = tag.replaceAll("\\b("+Constant.PRONOUN+")\\b", "");
+				modifier = modifier.replaceAll("\\s+", " ");
+				tag = tag.replaceAll("\\s+", " ");
+				
+				if (!StringUtility.isMatchedNullSafe(tag, "\\w") || StringUtility.isMatchedNullSafe(tag, "ditto")) {
+					tag = dataholderHandler.getParentSentenceTag(sentenceID);
+				}
+				
+				modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
+				tag = tag.replaceAll("(^\\s*|\\s*$)", "");
+				
+				List<String> mt = dataholderHandler.getMTFromParentTag(tag);
+				String m = mt.get(0);
+				tag = mt.get(1);
+				
+				if (StringUtility.isMatchedNullSafe(m, "\\w")) {
+					modifier = modifier + m;
+					dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "pronouncharactersubject[pronoun subject]");
+				}
+			}
+		}
+		
+		// correct to missed N
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			int sentenceID = sentenceItem.getID();
+			String lead = sentenceItem.getLead();
+			String modifier = sentenceItem.getModifier();
+			String tag = sentenceItem.getTag();
+			String sentence = sentenceItem.getSentence();
+			
+			List<String> mt = this.pronounCharacterSubjectHelper4(lead, sentence, modifier, tag);			
+			if (mt != null) {
+				modifier = mt.get(0);
+				tag = mt.get(1);
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "pronouncharactersubject[correct to missed N]");
+			}			
 		}
 	}
+
+	public List<String> pronounCharacterSubjectHelper4(String lead,
+			String sentence, String modifier, String tag) {
+		boolean case1 = (StringUtils.equals(tag, "ignore"));
+		boolean case2 = (tag == null);
+		boolean case3 = !StringUtility.isMatchedNullSafe(tag, " (and|nor|or) ");
+		boolean case4 = !StringUtility.isMatchedNullSafe(sentence, "\\[");
+		boolean case5 = false;
+		if (sentence != null) {
+			Pattern p = Pattern.compile("^[^N]*<N>" + tag);
+			Matcher m = p.matcher(sentence);
+			if (m.find()) {
+				case5 = true;
+			}
+		}
+
+		if ((case1 || case2) && case3 && case4 && case5) {
+			if (sentence != null) {
+				sentence = sentence.replaceAll("></?", "");
+				Pattern p = Pattern
+						.compile("^(\\S*) ?<N>([^<]+)<\\/N> <[MB]+>(\\S+)<\\/[MB]+> \\S*\\b"
+								+ tag + "\\b\\S*");
+				Matcher m2 = p.matcher(sentence);
+				if (m2.find()) {
+					modifier = m2.group(1);
+					tag = m2.group(2);
+					String g3 = m2.group(3);
+					if (!StringUtility.isMatchedNullSafe(g3, "\\bof\\b")) {
+						modifier = modifier.replaceAll("<\\S+?>", "");
+						tag = tag.replaceAll("<\\S+?>", "");
+						modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
+						tag = tag.replaceAll("(^\\s*|\\s*$)", "");
+						List<String> mt = new ArrayList<String>();
+						mt.add(modifier);
+						mt.add(tag);
+						return mt;
+					}
+				}
+			}
+		}
+	return null;
+	
+	}
+
+	public List<String> pronounCharacterSubjectHelper(String lead,
+			String sentence, String modifier, String tag) {
+		String t = "(?:<\\/?[A-Z]+>)?";
+		
+		boolean b1 = !StringUtils.equals(tag, "ignore");
+		boolean b2 = (tag == null);
+		boolean b3 = StringUtility.isMatchedNullSafe(lead, "(^| )("+Constant.CHARACTER+")( |$)");
+		boolean b4 = StringUtility.isMatchedNullSafe(tag, "(^| )("+Constant.CHARACTER+")( |$)");
+		if (((b1 || b2) && b3) || b4) {
+			sentence = sentence.replaceAll("></?", "");
+			if (sentence != null) {
+				String pattern1 = String
+						.format("^.*?%s\\b(%s)\\b%s %s(?:of)%s (.*?)(<[NO]>([^<]*?)<\\/[NO]> ?)+ ",
+								t, Constant.CHARACTER, t, t, t);
+				Matcher m1 = StringUtility.createMatcher(sentence, pattern1);
+				
+				String pattern2 = String.format("^(.*?)((?:<\\/?[BM]+>\\w+?<\\/?[BM]+>\\s*)*)%s\\b(%s)\\b%s", t, Constant.CHARACTER, t);
+				Matcher m2 = StringUtility.createMatcher(sentence, pattern2);
+				
+				// case 1.1
+				if (m1.find()) {
+					tag = m1.group(4);
+					modifier = sentence.substring(m1.start(2), m1.start(4));
+					String s2 = m1.group(2);
+					String s3 = m1.group(3);
+					
+					if ((!StringUtility.isMatchedNullSafe(s2, String.format("\\b(%s)\\b", Constant.PREPOSITION)))
+							&& (!StringUtility.isMatchedNullSafe(s3, String.format("\\b(%s|\\d)\\b", Constant.STOP)))) {
+						modifier = modifier.replaceAll("<\\S+?>", "");
+						modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
+						tag = tag.replaceAll("<\\S+?>", "");
+						tag = tag.replaceAll("(^\\s*|\\s*$)", "");
+					}
+					else {
+						modifier = "";
+						tag = "ditto";							
+					}
+				}
+				
+				// case 1.2
+				else if (m2.find()) {
+					String text = m2.group(1);
+					
+					if ((!StringUtility.isMatchedNullSafe(text, "\\b("+Constant.STOP+"|\\d+)\\b")) 
+							&& (StringUtility.isMatchedNullSafe(text, "\\w")) 
+							&& (!StringUtility.isMatchedNullSafe(text, "[,:;.]"))) {
+						text = text.replaceAll("<\\S+?>", "");
+//						$text =~ s#(^\s*|\s*$)##g;
+//						$text =~ s#[[:punct:]]##g;
+						text = text.replaceAll("(^\\s*|\\s*$)", "");
+						text = text.replaceAll("\\p{Punct}", "");
+						
+						String[] textArray = text.split("\\s+");
+//						List<String> textList = new LinkedList<String>();
+//						textList.addAll(Arrays.asList(textArray));
+						if (textArray.length >= 1) {
+							tag = textArray[textArray.length-1];
+							String pattern = "<[NO]>"+tag+"</[NO]>";
+							if (StringUtility.isMatchedNullSafe(sentence, pattern)) {
+								// 1.2.1.1
+								text = text.replaceAll(tag, "");
+								modifier = text;
+							}
+							else {
+								// 1.2.1.2
+								modifier = "";
+								tag = "ditto";
+							}
+						}
+					}
+					else {
+						// 1.2.2
+						modifier = "";
+						tag = "ditto";
+					}
+				}
+				
+				// case 1.3
+				else if (StringUtility.isMatchedNullSafe(sentence, "\\b("+Constant.CHARACTER+")\\b")) {
+					modifier = "";
+					tag = "ditto";
+				}
+				
+				
+			}	
+			List<String> mt = new ArrayList<String>(2);
+			mt.add(modifier);
+			mt.add(tag);
+			return mt;
+		}	
+		else {
+			return null;
+		}
+		
+	}
+	
+	
+
 
 
 	// some unused variables in perl
