@@ -60,6 +60,9 @@ public class Learner {
 	// leading three words of sentences 
 	private Set<String> checkedWordSet;
 	
+	//
+	private String defaultGeneralTag;
+	
 	
 	// modules
 	Initiation initiationModule;
@@ -85,6 +88,8 @@ public class Learner {
 		NUM_LEAD_WORDS = this.myConfiguration.getNumLeadWords(); // Set the number of leading words be 3
 		
 		checkedWordSet = new HashSet<String>();
+		
+		this.defaultGeneralTag = "general";
 		
 		myLogger.info("Created Learner");
 		myLogger.info("\tLearning Mode: "+myConfiguration.getLearningMode());
@@ -185,6 +190,8 @@ public class Learner {
 		this.ditto(myDataHolder);
 		
 		this.pronounCharacterSubject(myDataHolder);
+		
+		this.finalizeIgnored(myDataHolder);
 		
 		myDataHolder.write2File("");
 		
@@ -3234,7 +3241,7 @@ public class Learner {
 		
 //		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
 		Matcher m2 = StringUtility.createMatcher(pattern, "^b+&b+[,:;.]");
-
+		
 		if (sentenceID == 163) {
 			System.out.println();
 		}
@@ -3300,8 +3307,7 @@ public class Learner {
 		return sign;
 	}
 	
-	public List<List<String>> andOrTagCase1Helper(String pattern, String wPattern, List<String> words, Set<String> token){
-		
+	public List<List<String>> andOrTagCase1Helper(String pattern, String wPattern, List<String> words, Set<String> token){		
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.andOrTag");
 		
@@ -3894,9 +3900,91 @@ public class Learner {
 		
 	}
 	
+	public void finalizeIgnored(DataHolder dataholderHandler) {
+		List<SentenceStructure> sentences = dataholderHandler.getSentencesByTagPattern("^ignore$");
+		
+		for (SentenceStructure sentenceItem : sentences) {
+			String sentence = sentenceItem.getSentence();
+			if (sentence != null) {
+				Matcher m = StringUtility.createMatcher(sentence, Constant.IGNOREPTN);
+				if (m.find()) {
+					String g1 = m.group(1);
+					if (StringUtility.isMatchedNullSafe(g1, "<N>")) {
+						int sentenceID = sentenceItem.getID();
+						SentenceStructure sentenceItemX = dataholderHandler.getSentence(sentenceID);
+						sentenceItemX.setTag(null);
+					}
+				}
+			}
+		}
+		
+		this.markupByPOS.run(dataholderHandler);
+	}
 	
-
-
+	public void remainNullTag(DataHolder dataholderHandler) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.remainNullTag");
+		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String tag = sentenceItem.getTag();
+			String source = sentenceItem.getSource();
+			boolean c1 = (tag == null);
+			boolean c2 = (StringUtils.equals(tag, ""));
+			boolean c3 = (StringUtils.equals(tag, "ditto"));
+			boolean c4 = (StringUtils.equals(tag, "unknown"));
+			boolean c5 = StringUtility.isMatchedNullSafe(source, "-0$");
+			
+			if ((c1 || c2 || c3 || c4) && c5) {
+				sentenceItem.setModifier("");
+				sentenceItem.setTag(this.defaultGeneralTag);
+				myLogger.debug(String.format("mark [%d] <general>: %s", sentenceItem.getID(), sentenceItem.getSentence()));				
+			}
+		}
+		
+		String nPhrasePattern = "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\\/[A-Z]*[NO]+[A-Z]*>\\s*)+";
+		String mPhrasePattern = "(?:<[A-Z]*M[A-Z]*>[^<]+?<\\/[A-Z]*M[A-Z]*>\\s*)+";
+		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+//			String tag = sentenceItem.getTag();
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			String sentenceCopy = ""+sentenceItem.getSentence();
+			sentenceCopy = sentenceCopy.replaceAll("></?", "");
+			if (!StringUtility.isMatchedNullSafe(sentenceCopy, "<[NO]>")) {
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "ditto", "remainnulltag-[R3]");
+			}
+			else {				
+				if (sentenceCopy != null) {
+					Matcher m2 = StringUtility.createMatcher(sentenceCopy, "(.*?)("+nPhrasePattern+")");
+					if (m2.find()) {
+						String head = m2.group(1);
+						String tagPhrase = m2.group(2);
+						tagPhrase = StringUtility.trimString(tagPhrase);
+						if (StringUtility.isMatchedNullSafe(head, "\\b("+Constant.PREPOSITION+")\\b")) {
+							dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "ditto", "remainnulltag-[R3:ditto]");
+						}
+						else {
+							String[] words = tagPhrase.split("\\s+");
+							String tagX = words[words.length-1];
+							List<String> wordList = new ArrayList<String>();
+							wordList.addAll(Arrays.asList(words));
+							String modifier = StringUtils.join(wordList.subList(0, wordList.size()-1), " ");
+							if (head != null) {
+								Matcher m22 = StringUtility.createMatcher(head, "([^,]+)$");
+								if (m22.find()) {
+									modifier = m22.group(1)+" " + modifier;
+								}
+								tagX = tagX.replaceAll("<\\S+?>", "");
+								modifier = modifier.replaceAll("<\\S+?>", "");
+								tagX = StringUtility.trimString(tagX);
+								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tagX, "remainnulltag-[R3:m-t]");
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
 	// some unused variables in perl
 	// directory of /descriptions folder
@@ -3906,7 +3994,7 @@ public class Learner {
 	// prefix for all tables generated by this program
 	private String prefix = "";
 	// default general tag
-	private String defaultGeneralTag = "general";
+	
 	// knowledge base
 	private String knlgBase = "phenoscape";
 

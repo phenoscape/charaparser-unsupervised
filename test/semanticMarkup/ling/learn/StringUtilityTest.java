@@ -187,7 +187,7 @@ public class StringUtilityTest {
 	}
 	
 	@Test
-	public void testIsEntireMatched(){
+	public void testIsEntireMatchedNullSafe(){
 		assertEquals("not match - pattern null", false, StringUtility.isEntireMatchedNullSafe("[abc]", null));
 		assertEquals("not match - text null", false, StringUtility.isEntireMatchedNullSafe(null, "^\\[.*$"));
 		assertEquals("not match - pattern empty", false, StringUtility.isEntireMatchedNullSafe("[abc]", ""));
