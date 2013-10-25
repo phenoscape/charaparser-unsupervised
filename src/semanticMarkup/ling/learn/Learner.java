@@ -4019,7 +4019,23 @@ public class Learner {
 									parentStructure)
 							&& !StringUtility.isMatchedNullSafe(tag,
 									parentStructure)) {
-
+						// remove any overlapped words btw parentStructure and tag
+						pTag = pTag.replaceAll("\\b" + tag + "\\b", "");
+						String modifierCopy = "" + modifier;
+						modifier = StringUtility.trimString(modifier);
+						pTag = StringUtility.trimString(pTag);
+						pTag = pTag.replaceAll("\\s+", " ");
+						if (isTypeModifier(modifier)) {
+							// cauline/base => cauline [leaf] / base
+							modifier = modifier + " " + pTag;
+						}
+						else {
+							// main marginal/spine => [leaf blade] main marginal/spine
+							modifier = pTag + " " + modifier;
+						}
+						
+//						tagsentwmt($sentid, $sentence, $modifier, $tag, "commonsubstructure");
+						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "commonsubstructure");
 					}
 				}
 			}
@@ -4028,6 +4044,11 @@ public class Learner {
 		
 	}
 	
+	public boolean isTypeModifier(String modifier) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	public boolean isModifierContainsStructure(String modifier) {
 		// TODO Auto-generated method stub
 		return false;
