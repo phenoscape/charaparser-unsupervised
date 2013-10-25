@@ -4011,6 +4011,16 @@ public class Learner {
 					// when the tag is not already inferred from parent tag: mid/[phyllaries]
 					
 					String parentStructure = this.myLearnerUtility.getParentSentenceTag(sentenceID);
+					
+					String pTag = "" + parentStructure;
+					parentStructure = parentStructure.replaceAll("([\\[\\]])", "") ;
+					if (!StringUtils.equals(parentStructure, "[parenttag]")
+							&& !StringUtility.isMatchedNullSafe(modifier,
+									parentStructure)
+							&& !StringUtility.isMatchedNullSafe(tag,
+									parentStructure)) {
+
+					}
 				}
 			}
 		}
