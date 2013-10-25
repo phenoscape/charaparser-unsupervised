@@ -4045,8 +4045,19 @@ public class Learner {
 	}
 	
 	public boolean isTypeModifier(DataHolder dataholderHandler, String modifier) {
-		// TODO Auto-generated method stub
-		return false;
+		boolean res = false;
+		
+		String[] words = modifier.split("\\s+");
+		String word = words[words.length-1];
+		
+		if (dataholderHandler.getModifierHolder().containsKey(modifier)) {
+			ModifierTableValue modifierItem = dataholderHandler.getModifierHolder().get(modifier);
+			if (modifierItem.getIsTypeModifier()) {
+				res = true;
+			}
+		}		
+		
+		return res;
 	}
 
 	public boolean isModifierContainsStructure(DataHolder dataholderHandler, String modifier) {
