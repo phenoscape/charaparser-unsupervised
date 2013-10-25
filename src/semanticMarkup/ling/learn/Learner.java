@@ -4006,7 +4006,7 @@ public class Learner {
 				String modifier = sentenceItem.getModifier();
 				String sentence = sentenceItem.getSentence();
 						
-				if (!isModifierContainsStructure(modifier) && !StringUtility.isMatchedNullSafe(tag, "\\[")) {
+				if (!isModifierContainsStructure(dataholderHandler, modifier) && !StringUtility.isMatchedNullSafe(tag, "\\[")) {
 					// when the common substructure is not already modified by a structure, and
 					// when the tag is not already inferred from parent tag: mid/[phyllaries]
 					
@@ -4025,7 +4025,7 @@ public class Learner {
 						modifier = StringUtility.trimString(modifier);
 						pTag = StringUtility.trimString(pTag);
 						pTag = pTag.replaceAll("\\s+", " ");
-						if (isTypeModifier(modifier)) {
+						if (isTypeModifier(dataholderHandler, modifier)) {
 							// cauline/base => cauline [leaf] / base
 							modifier = modifier + " " + pTag;
 						}
@@ -4044,14 +4044,28 @@ public class Learner {
 		
 	}
 	
-	public boolean isTypeModifier(String modifier) {
+	public boolean isTypeModifier(DataHolder dataholderHandler, String modifier) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	public boolean isModifierContainsStructure(String modifier) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean isModifierContainsStructure(DataHolder dataholderHandler, String modifier) {
+		boolean res = false;
+		
+		String[] words = modifier.split("\\s+");
+		
+		for (String word : words) {
+			Set<String> POSTags = new HashSet<String>();
+			POSTags.add("p");
+			POSTags.add("s");
+			Set<String> PSWords = dataholderHandler.getWordsFromWordPOSByPOSs(POSTags);
+			if (PSWords.contains(word)) {
+				res = true;
+				break;
+			}
+		}
+		
+		return res;
 	}
 
 	// find tags with more than one different structure modifiers
