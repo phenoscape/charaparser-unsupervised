@@ -193,6 +193,8 @@ public class Learner {
 		
 		this.finalizeIgnored(myDataHolder);
 		
+		this.remainNullTag(myDataHolder);
+		
 		myDataHolder.write2File("");
 		
 		myLogger.info("Learning done!");
@@ -3922,6 +3924,7 @@ public class Learner {
 		this.markupByPOS.run(dataholderHandler);
 	}
 	
+	// tag remaining sentences whose tag is null
 	public void remainNullTag(DataHolder dataholderHandler) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.remainNullTag");
@@ -4038,10 +4041,6 @@ public class Learner {
 	
 	public static void main(String[] args){
 		assertEquals("tagAllSentenceHelper", 1, 12);
-		
-		
-		
-		
 	}
 	
 }
