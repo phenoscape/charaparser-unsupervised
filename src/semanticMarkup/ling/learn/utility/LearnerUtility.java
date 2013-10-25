@@ -1093,5 +1093,10 @@ public class LearnerUtility {
 		
 		return ptn;
 	}
+
+	public String getParentSentenceTag(int sentenceID) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }

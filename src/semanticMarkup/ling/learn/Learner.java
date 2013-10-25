@@ -3995,9 +3995,34 @@ public class Learner {
 		String pattern = StringUtils.join(commonTags, "|");
 		pattern = "\\\\[?(" + pattern + ")\\\\]?";
 		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String tag = sentenceItem.getTag();
+			boolean c1 = StringUtils.equals(tag, "ignore");
+			boolean c2 = (tag == null);
+			boolean c3 = (StringUtility.isMatchedNullSafe(tag, "^"+pattern+"$"));
+			
+			if ((c1 || c2) && c3) {
+				int sentenceID = sentenceItem.getID();
+				String modifier = sentenceItem.getModifier();
+				String sentence = sentenceItem.getSentence();
+						
+				if (!isModifierContainsStructure(modifier) && !StringUtility.isMatchedNullSafe(tag, "\\[")) {
+					// when the common substructure is not already modified by a structure, and
+					// when the tag is not already inferred from parent tag: mid/[phyllaries]
+					
+					String parentStructure = this.myLearnerUtility.getParentSentenceTag(sentenceID);
+				}
+			}
+		}
+		
 		
 	}
 	
+	public boolean isModifierContainsStructure(String modifier) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	// find tags with more than one different structure modifiers
 	public Set<String> collectCommonStructures(DataHolder dataholderHandler) {
 		
