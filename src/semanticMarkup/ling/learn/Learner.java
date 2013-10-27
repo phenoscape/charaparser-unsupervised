@@ -193,6 +193,12 @@ public class Learner {
 		
 		this.finalizeIgnored(myDataHolder);
 		
+		this.remainNullTag(myDataHolder);
+		
+		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
+//			this.commonSubstructure(myDataHolder);
+		}
+		
 		myDataHolder.write2File("");
 		
 		myLogger.info("Learning done!");
@@ -4010,7 +4016,7 @@ public class Learner {
 					// when the common substructure is not already modified by a structure, and
 					// when the tag is not already inferred from parent tag: mid/[phyllaries]
 					
-					String parentStructure = this.myLearnerUtility.getParentSentenceTag(sentenceID);
+					String parentStructure = dataholderHandler.getParentSentenceTag(sentenceID);
 					
 					String pTag = "" + parentStructure;
 					parentStructure = parentStructure.replaceAll("([\\[\\]])", "") ;
@@ -4039,9 +4045,7 @@ public class Learner {
 					}
 				}
 			}
-		}
-		
-		
+		}				
 	}
 	
 	public boolean isTypeModifier(DataHolder dataholderHandler, String modifier) {
@@ -4050,7 +4054,7 @@ public class Learner {
 		String[] words = modifier.split("\\s+");
 		String word = words[words.length-1];
 		
-		if (dataholderHandler.getModifierHolder().containsKey(modifier)) {
+		if (dataholderHandler.getModifierHolder().containsKey(word)) {
 			ModifierTableValue modifierItem = dataholderHandler.getModifierHolder().get(modifier);
 			if (modifierItem.getIsTypeModifier()) {
 				res = true;
@@ -4098,6 +4102,54 @@ public class Learner {
 		return commonTags;
 	}
 
+	/**
+	 * comma used for 'and': seen in TreatiseH, using comma for 'and' as in
+	 * "adductor , diductor scars clearly differentiated ;", which is the same
+	 * as "adductor and diductor scars clearly differentiated ;". ^m*n+,m*n+ or
+	 * m*n+,m*n+;$, or m,mn. Clauses dealt in commaand do not contain "and/or".
+	 * andortag() deals with clauses that do.
+	 * 
+	 * @param dataholderHandler
+	 */
+	public void CommaAnd(DataHolder dataholderHandler) {
+		// cover m,mn
+
+		// last + =>*
+		// "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\/[A-Z]*[NO]+[A-Z]*>\\s*)+"
+		String nPhrasePattern = "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\\/[A-Z]*[NO]+[A-Z]*>\\s*)+";
+
+		// add last \\s*
+		// "(?:<[A-Z]*M[A-Z]*>[^<]+?<\/[A-Z]*M[A-Z]*>\\s*)"
+		String mPhrasePattern = "(?:<[A-Z]*M[A-Z]*>[^<]+?<\\/[A-Z]*M[A-Z]*>\\s*)";
+
+		// "(?:<[A-Z]*B[A-Z]*>[,:\.;<]<\/[A-Z]*B[A-Z]*>)"
+		String bPattern = "(?:<[A-Z]*B[A-Z]*>[,:.;<]<\\/[A-Z]*B[A-Z]*>)";
+
+		String commaPattern = "<B>,</B>";
+		
+		String phrasePattern = mPhrasePattern + "\\s*" + nPhrasePattern;
+		String pattern = phrasePattern + "\\s+" + commaPattern + "\\s+(?:" + phrasePattern + "| |" + commaPattern + ")+";
+		String pattern1 = "^(" + pattern + ")";
+		String pattern2 = "(.*?)(" + pattern + ")\\s*" + bPattern + "\\$";
+		// changed last * to +
+		String pattern3 = "^((?:" + mPhrasePattern + "\\s+)+" + commaPattern
+				+ "\\s+(?:" + mPhrasePattern + "|\\s*|" + commaPattern + ")+"
+				+ mPhrasePattern + "+\\s*" + nPhrasePattern + ")"; 
+		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			
+			String sentenceCopy = "" + sentence;
+			sentenceCopy = sentenceCopy.replaceAll("></?", "");
+			
+			
+		}
+		
+		
+		
+	}
+	
 	// some unused variables in perl
 	// directory of /descriptions folder
 	private String desDir = "";
@@ -4148,11 +4200,7 @@ public class Learner {
 	}
 	
 	public static void main(String[] args){
-		assertEquals("tagAllSentenceHelper", 1, 12);
-		
-		
-		
-		
+		assertEquals("tagAllSentenceHelper", 1, 12);		
 	}
 	
 }
