@@ -194,6 +194,10 @@ public class Learner {
 		this.finalizeIgnored(myDataHolder);
 		
 		this.remainNullTag(myDataHolder);
+
+		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
+//			this.commonSubstructure(myDataHolder);
+		}
 		
 		myDataHolder.write2File("");
 		
@@ -3989,7 +3993,164 @@ public class Learner {
 			}
 		}
 	}
+	
+	// sentences that are tagged with a commons substructure, such as blades,
+	// margins need to be modified with its parent structure
+	public void commonSubstructure(DataHolder dataholderHandler) {
+		Set<String> commonTags = this.collectCommonStructures(dataholderHandler);
+		
+		String pattern = StringUtils.join(commonTags, "|");
+		pattern = "\\\\[?(" + pattern + ")\\\\]?";
+		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String tag = sentenceItem.getTag();
+			boolean c1 = StringUtils.equals(tag, "ignore");
+			boolean c2 = (tag == null);
+			boolean c3 = (StringUtility.isMatchedNullSafe(tag, "^"+pattern+"$"));
+			
+			if ((c1 || c2) && c3) {
+				int sentenceID = sentenceItem.getID();
+				String modifier = sentenceItem.getModifier();
+				String sentence = sentenceItem.getSentence();
+						
+				if (!isModifierContainsStructure(dataholderHandler, modifier) && !StringUtility.isMatchedNullSafe(tag, "\\[")) {
+					// when the common substructure is not already modified by a structure, and
+					// when the tag is not already inferred from parent tag: mid/[phyllaries]
+					
+					String parentStructure = dataholderHandler.getParentSentenceTag(sentenceID);
+					
+					String pTag = "" + parentStructure;
+					parentStructure = parentStructure.replaceAll("([\\[\\]])", "") ;
+					if (!StringUtils.equals(parentStructure, "[parenttag]")
+							&& !StringUtility.isMatchedNullSafe(modifier,
+									parentStructure)
+							&& !StringUtility.isMatchedNullSafe(tag,
+									parentStructure)) {
+						// remove any overlapped words btw parentStructure and tag
+						pTag = pTag.replaceAll("\\b" + tag + "\\b", "");
+						String modifierCopy = "" + modifier;
+						modifier = StringUtility.trimString(modifier);
+						pTag = StringUtility.trimString(pTag);
+						pTag = pTag.replaceAll("\\s+", " ");
+						if (isTypeModifier(dataholderHandler, modifier)) {
+							// cauline/base => cauline [leaf] / base
+							modifier = modifier + " " + pTag;
+						}
+						else {
+							// main marginal/spine => [leaf blade] main marginal/spine
+							modifier = pTag + " " + modifier;
+						}
+						
+//						tagsentwmt($sentid, $sentence, $modifier, $tag, "commonsubstructure");
+						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "commonsubstructure");
+					}
+				}
+			}
+		}				
+	}
+	
+	public boolean isTypeModifier(DataHolder dataholderHandler, String modifier) {
+		boolean res = false;
+		
+		String[] words = modifier.split("\\s+");
+		String word = words[words.length-1];
+		
+		if (dataholderHandler.getModifierHolder().containsKey(word)) {
+			ModifierTableValue modifierItem = dataholderHandler.getModifierHolder().get(modifier);
+			if (modifierItem.getIsTypeModifier()) {
+				res = true;
+			}
+		}		
+		
+		return res;
+	}
 
+	public boolean isModifierContainsStructure(DataHolder dataholderHandler, String modifier) {
+		boolean res = false;
+		
+		String[] words = modifier.split("\\s+");
+		
+		for (String word : words) {
+			Set<String> POSTags = new HashSet<String>();
+			POSTags.add("p");
+			POSTags.add("s");
+			Set<String> PSWords = dataholderHandler.getWordsFromWordPOSByPOSs(POSTags);
+			if (PSWords.contains(word)) {
+				res = true;
+				break;
+			}
+		}
+		
+		return res;
+	}
+
+	// find tags with more than one different structure modifiers
+	public Set<String> collectCommonStructures(DataHolder dataholderHandler) {
+		
+		
+		Set<String> PSTags = new HashSet<String>(Arrays.asList("s p".split(" ")));
+		Set<String> BTags = new HashSet<String>();
+		BTags.add("b");
+		Set<String> PSWords = dataholderHandler.getWordsFromWordPOSByPOSs(PSTags);
+		Set<String> BWords = dataholderHandler.getWordsFromWordPOSByPOSs(BTags);
+		
+		Set<String> structures  = StringUtility.setSubtraction(PSWords, BWords);
+		
+		Set<String> commonTags = new HashSet<String>();
+		
+		// ...
+		
+		return commonTags;
+	}
+
+	/**
+	 * comma used for 'and': seen in TreatiseH, using comma for 'and' as in
+	 * "adductor , diductor scars clearly differentiated ;", which is the same
+	 * as "adductor and diductor scars clearly differentiated ;". ^m*n+,m*n+ or
+	 * m*n+,m*n+;$, or m,mn. Clauses dealt in commaand do not contain "and/or".
+	 * andortag() deals with clauses that do.
+	 * 
+	 * @param dataholderHandler
+	 */
+	public void CommaAnd(DataHolder dataholderHandler) {
+		// cover m,mn
+
+		// last + =>*
+		// "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\/[A-Z]*[NO]+[A-Z]*>\\s*)+"
+		String nPhrasePattern = "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\\/[A-Z]*[NO]+[A-Z]*>\\s*)+";
+
+		// add last \\s*
+		// "(?:<[A-Z]*M[A-Z]*>[^<]+?<\/[A-Z]*M[A-Z]*>\\s*)"
+		String mPhrasePattern = "(?:<[A-Z]*M[A-Z]*>[^<]+?<\\/[A-Z]*M[A-Z]*>\\s*)";
+
+		// "(?:<[A-Z]*B[A-Z]*>[,:\.;<]<\/[A-Z]*B[A-Z]*>)"
+		String bPattern = "(?:<[A-Z]*B[A-Z]*>[,:.;<]<\\/[A-Z]*B[A-Z]*>)";
+
+		String commaPattern = "<B>,</B>";
+		
+		String phrasePattern = mPhrasePattern + "\\s*" + nPhrasePattern;
+		String pattern = phrasePattern + "\\s+" + commaPattern + "\\s+(?:" + phrasePattern + "| |" + commaPattern + ")+";
+		String pattern1 = "^(" + pattern + ")";
+		String pattern2 = "(.*?)(" + pattern + ")\\s*" + bPattern + "\\$";
+		// changed last * to +
+		String pattern3 = "^((?:" + mPhrasePattern + "\\s+)+" + commaPattern
+				+ "\\s+(?:" + mPhrasePattern + "|\\s*|" + commaPattern + ")+"
+				+ mPhrasePattern + "+\\s*" + nPhrasePattern + ")"; 
+		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			
+			String sentenceCopy = "" + sentence;
+			sentenceCopy = sentenceCopy.replaceAll("></?", "");
+			
+			
+		}
+		
+		
+		
+	}
+	
 	// some unused variables in perl
 	// directory of /descriptions folder
 	private String desDir = "";
@@ -4040,7 +4201,7 @@ public class Learner {
 	}
 	
 	public static void main(String[] args){
-		assertEquals("tagAllSentenceHelper", 1, 12);
+		assertEquals("tagAllSentenceHelper", 1, 12);		
 	}
 	
 }
