@@ -4144,11 +4144,58 @@ public class Learner {
 			String sentenceCopy = "" + sentence;
 			sentenceCopy = sentenceCopy.replaceAll("></?", "");
 			
+
+			Matcher m1 = StringUtility.createMatcher(sentenceCopy, pattern1);
+			Matcher m2 = StringUtility.createMatcher(sentenceCopy, pattern2);
+			Matcher m3 = StringUtility.createMatcher(sentenceCopy, pattern3);
 			
+			// case 1			
+			if (m1.find()){
+				String tag = m1.group(1);				
+				tag = tag.replaceAll(",", "and");
+				tag = tag.replaceAll("</?\\S+?>", "");
+				tag = StringUtility.trimString(tag);
+				// case 1.1
+				if (!StringUtility.isMatchedNullSafe(tag, " and$")) {
+					dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "commaand[CA1]");
+				}
+			}			
+			// case 2
+			else if (m2.find()) {
+				String g1 = m2.group(1);
+				String tag = m2.group(2);
+				if (!StringUtility.isMatchedNullSafe(g1, "\\b("+Constant.PREPOSITION+")\\b") 
+						&& !StringUtility.isMatchedNullSafe(g1, "<N>")) {
+					tag = tag.replaceAll(",", "and");
+					tag = tag.replaceAll("</?\\S+?>", "");
+					tag = StringUtility.trimString(tag);
+					// case 2.1.1
+					if (!StringUtility.isMatchedNullSafe(tag, " and$")) {
+						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "commaand[CA2]");
+					}
+					
+				}
+			}
+			// case 3
+			else if (m3.find()) {
+				String tag = m3.group(1);
+				String g1 = m3.group(1);
+				// case 3.1
+				if (!StringUtility.isMatchedNullSafe(g1, "\\b("+Constant.PREPOSITION+")\\b")) {
+					tag = tag.replaceAll(",", "and");
+					tag = tag.replaceAll("</?\\S+?>", "");
+					tag = StringUtility.trimString(tag);
+					// case 3.1.1
+					if (!StringUtility.isMatchedNullSafe(tag, " and$")) {
+						String[] tagWords = tag.split("\\s+");
+						List<String> tagWordsList = new ArrayList<String>(Arrays.asList(tagWords));
+						tag = tagWordsList.get(tagWordsList.size()-1);
+						String modifier = StringUtils.join(tagWordsList.subList(0, tagWordsList.size()-1), " ");
+						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "commaand[CA3]");						
+					}
+				}
+			}
 		}
-		
-		
-		
 	}
 	
 	// some unused variables in perl
