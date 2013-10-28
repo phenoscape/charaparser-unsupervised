@@ -60,6 +60,9 @@ public class Learner {
 	// leading three words of sentences 
 	private Set<String> checkedWordSet;
 	
+	//
+	private String defaultGeneralTag;
+	
 	
 	// modules
 	Initiation initiationModule;
@@ -85,6 +88,8 @@ public class Learner {
 		NUM_LEAD_WORDS = this.myConfiguration.getNumLeadWords(); // Set the number of leading words be 3
 		
 		checkedWordSet = new HashSet<String>();
+		
+		this.defaultGeneralTag = "general";
 		
 		myLogger.info("Created Learner");
 		myLogger.info("\tLearning Mode: "+myConfiguration.getLearningMode());
@@ -185,6 +190,14 @@ public class Learner {
 		this.ditto(myDataHolder);
 		
 		this.pronounCharacterSubject(myDataHolder);
+		
+		this.finalizeIgnored(myDataHolder);
+		
+		this.remainNullTag(myDataHolder);
+
+		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
+//			this.commonSubstructure(myDataHolder);
+		}
 		
 		myDataHolder.write2File("");
 		
@@ -3234,7 +3247,7 @@ public class Learner {
 		
 //		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
 		Matcher m2 = StringUtility.createMatcher(pattern, "^b+&b+[,:;.]");
-
+		
 		if (sentenceID == 163) {
 			System.out.println();
 		}
@@ -3300,8 +3313,7 @@ public class Learner {
 		return sign;
 	}
 	
-	public List<List<String>> andOrTagCase1Helper(String pattern, String wPattern, List<String> words, Set<String> token){
-		
+	public List<List<String>> andOrTagCase1Helper(String pattern, String wPattern, List<String> words, Set<String> token){		
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.andOrTag");
 		
@@ -3894,10 +3906,250 @@ public class Learner {
 		
 	}
 	
+	public void finalizeIgnored(DataHolder dataholderHandler) {
+		List<SentenceStructure> sentences = dataholderHandler.getSentencesByTagPattern("^ignore$");
+		
+		for (SentenceStructure sentenceItem : sentences) {
+			String sentence = sentenceItem.getSentence();
+			if (sentence != null) {
+				Matcher m = StringUtility.createMatcher(sentence, Constant.IGNOREPTN);
+				if (m.find()) {
+					String g1 = m.group(1);
+					if (StringUtility.isMatchedNullSafe(g1, "<N>")) {
+						int sentenceID = sentenceItem.getID();
+						SentenceStructure sentenceItemX = dataholderHandler.getSentence(sentenceID);
+						sentenceItemX.setTag(null);
+					}
+				}
+			}
+		}
+		
+		this.markupByPOS.run(dataholderHandler);
+	}
 	
+	// tag remaining sentences whose tag is null
+	public void remainNullTag(DataHolder dataholderHandler) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.remainNullTag");
+		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String tag = sentenceItem.getTag();
+			String source = sentenceItem.getSource();
+			boolean c1 = (tag == null);
+			boolean c2 = (StringUtils.equals(tag, ""));
+			boolean c3 = (StringUtils.equals(tag, "ditto"));
+			boolean c4 = (StringUtils.equals(tag, "unknown"));
+			boolean c5 = StringUtility.isMatchedNullSafe(source, "-0$");
+			
+			if ((c1 || c2 || c3 || c4) && c5) {
+				sentenceItem.setModifier("");
+				sentenceItem.setTag(this.defaultGeneralTag);
+				myLogger.debug(String.format("mark [%d] <general>: %s", sentenceItem.getID(), sentenceItem.getSentence()));				
+			}
+		}
+		
+		String nPhrasePattern = "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\\/[A-Z]*[NO]+[A-Z]*>\\s*)+";
+		String mPhrasePattern = "(?:<[A-Z]*M[A-Z]*>[^<]+?<\\/[A-Z]*M[A-Z]*>\\s*)+";
+		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+//			String tag = sentenceItem.getTag();
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			String sentenceCopy = ""+sentenceItem.getSentence();
+			sentenceCopy = sentenceCopy.replaceAll("></?", "");
+			if (!StringUtility.isMatchedNullSafe(sentenceCopy, "<[NO]>")) {
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "ditto", "remainnulltag-[R3]");
+			}
+			else {				
+				if (sentenceCopy != null) {
+					Matcher m2 = StringUtility.createMatcher(sentenceCopy, "(.*?)("+nPhrasePattern+")");
+					if (m2.find()) {
+						String head = m2.group(1);
+						String tagPhrase = m2.group(2);
+						tagPhrase = StringUtility.trimString(tagPhrase);
+						if (StringUtility.isMatchedNullSafe(head, "\\b("+Constant.PREPOSITION+")\\b")) {
+							dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "ditto", "remainnulltag-[R3:ditto]");
+						}
+						else {
+							String[] words = tagPhrase.split("\\s+");
+							String tagX = words[words.length-1];
+							List<String> wordList = new ArrayList<String>();
+							wordList.addAll(Arrays.asList(words));
+							String modifier = StringUtils.join(wordList.subList(0, wordList.size()-1), " ");
+							if (head != null) {
+								Matcher m22 = StringUtility.createMatcher(head, "([^,]+)$");
+								if (m22.find()) {
+									modifier = m22.group(1)+" " + modifier;
+								}
+								tagX = tagX.replaceAll("<\\S+?>", "");
+								modifier = modifier.replaceAll("<\\S+?>", "");
+								tagX = StringUtility.trimString(tagX);
+								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tagX, "remainnulltag-[R3:m-t]");
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	// sentences that are tagged with a commons substructure, such as blades,
+	// margins need to be modified with its parent structure
+	public void commonSubstructure(DataHolder dataholderHandler) {
+		Set<String> commonTags = this.collectCommonStructures(dataholderHandler);
+		
+		String pattern = StringUtils.join(commonTags, "|");
+		pattern = "\\\\[?(" + pattern + ")\\\\]?";
+		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String tag = sentenceItem.getTag();
+			boolean c1 = StringUtils.equals(tag, "ignore");
+			boolean c2 = (tag == null);
+			boolean c3 = (StringUtility.isMatchedNullSafe(tag, "^"+pattern+"$"));
+			
+			if ((c1 || c2) && c3) {
+				int sentenceID = sentenceItem.getID();
+				String modifier = sentenceItem.getModifier();
+				String sentence = sentenceItem.getSentence();
+						
+				if (!isModifierContainsStructure(dataholderHandler, modifier) && !StringUtility.isMatchedNullSafe(tag, "\\[")) {
+					// when the common substructure is not already modified by a structure, and
+					// when the tag is not already inferred from parent tag: mid/[phyllaries]
+					
+					String parentStructure = dataholderHandler.getParentSentenceTag(sentenceID);
+					
+					String pTag = "" + parentStructure;
+					parentStructure = parentStructure.replaceAll("([\\[\\]])", "") ;
+					if (!StringUtils.equals(parentStructure, "[parenttag]")
+							&& !StringUtility.isMatchedNullSafe(modifier,
+									parentStructure)
+							&& !StringUtility.isMatchedNullSafe(tag,
+									parentStructure)) {
+						// remove any overlapped words btw parentStructure and tag
+						pTag = pTag.replaceAll("\\b" + tag + "\\b", "");
+						String modifierCopy = "" + modifier;
+						modifier = StringUtility.trimString(modifier);
+						pTag = StringUtility.trimString(pTag);
+						pTag = pTag.replaceAll("\\s+", " ");
+						if (isTypeModifier(dataholderHandler, modifier)) {
+							// cauline/base => cauline [leaf] / base
+							modifier = modifier + " " + pTag;
+						}
+						else {
+							// main marginal/spine => [leaf blade] main marginal/spine
+							modifier = pTag + " " + modifier;
+						}
+						
+//						tagsentwmt($sentid, $sentence, $modifier, $tag, "commonsubstructure");
+						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "commonsubstructure");
+					}
+				}
+			}
+		}				
+	}
+	
+	public boolean isTypeModifier(DataHolder dataholderHandler, String modifier) {
+		boolean res = false;
+		
+		String[] words = modifier.split("\\s+");
+		String word = words[words.length-1];
+		
+		if (dataholderHandler.getModifierHolder().containsKey(word)) {
+			ModifierTableValue modifierItem = dataholderHandler.getModifierHolder().get(modifier);
+			if (modifierItem.getIsTypeModifier()) {
+				res = true;
+			}
+		}		
+		
+		return res;
+	}
 
+	public boolean isModifierContainsStructure(DataHolder dataholderHandler, String modifier) {
+		boolean res = false;
+		
+		String[] words = modifier.split("\\s+");
+		
+		for (String word : words) {
+			Set<String> POSTags = new HashSet<String>();
+			POSTags.add("p");
+			POSTags.add("s");
+			Set<String> PSWords = dataholderHandler.getWordsFromWordPOSByPOSs(POSTags);
+			if (PSWords.contains(word)) {
+				res = true;
+				break;
+			}
+		}
+		
+		return res;
+	}
 
+	// find tags with more than one different structure modifiers
+	public Set<String> collectCommonStructures(DataHolder dataholderHandler) {
+		
+		
+		Set<String> PSTags = new HashSet<String>(Arrays.asList("s p".split(" ")));
+		Set<String> BTags = new HashSet<String>();
+		BTags.add("b");
+		Set<String> PSWords = dataholderHandler.getWordsFromWordPOSByPOSs(PSTags);
+		Set<String> BWords = dataholderHandler.getWordsFromWordPOSByPOSs(BTags);
+		
+		Set<String> structures  = StringUtility.setSubtraction(PSWords, BWords);
+		
+		Set<String> commonTags = new HashSet<String>();
+		
+		// ...
+		
+		return commonTags;
+	}
 
+	/**
+	 * comma used for 'and': seen in TreatiseH, using comma for 'and' as in
+	 * "adductor , diductor scars clearly differentiated ;", which is the same
+	 * as "adductor and diductor scars clearly differentiated ;". ^m*n+,m*n+ or
+	 * m*n+,m*n+;$, or m,mn. Clauses dealt in commaand do not contain "and/or".
+	 * andortag() deals with clauses that do.
+	 * 
+	 * @param dataholderHandler
+	 */
+	public void CommaAnd(DataHolder dataholderHandler) {
+		// cover m,mn
+
+		// last + =>*
+		// "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\/[A-Z]*[NO]+[A-Z]*>\\s*)+"
+		String nPhrasePattern = "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\\/[A-Z]*[NO]+[A-Z]*>\\s*)+";
+
+		// add last \\s*
+		// "(?:<[A-Z]*M[A-Z]*>[^<]+?<\/[A-Z]*M[A-Z]*>\\s*)"
+		String mPhrasePattern = "(?:<[A-Z]*M[A-Z]*>[^<]+?<\\/[A-Z]*M[A-Z]*>\\s*)";
+
+		// "(?:<[A-Z]*B[A-Z]*>[,:\.;<]<\/[A-Z]*B[A-Z]*>)"
+		String bPattern = "(?:<[A-Z]*B[A-Z]*>[,:.;<]<\\/[A-Z]*B[A-Z]*>)";
+
+		String commaPattern = "<B>,</B>";
+		
+		String phrasePattern = mPhrasePattern + "\\s*" + nPhrasePattern;
+		String pattern = phrasePattern + "\\s+" + commaPattern + "\\s+(?:" + phrasePattern + "| |" + commaPattern + ")+";
+		String pattern1 = "^(" + pattern + ")";
+		String pattern2 = "(.*?)(" + pattern + ")\\s*" + bPattern + "\\$";
+		// changed last * to +
+		String pattern3 = "^((?:" + mPhrasePattern + "\\s+)+" + commaPattern
+				+ "\\s+(?:" + mPhrasePattern + "|\\s*|" + commaPattern + ")+"
+				+ mPhrasePattern + "+\\s*" + nPhrasePattern + ")"; 
+		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			
+			String sentenceCopy = "" + sentence;
+			sentenceCopy = sentenceCopy.replaceAll("></?", "");
+			
+			
+		}
+		
+		
+		
+	}
+	
 	// some unused variables in perl
 	// directory of /descriptions folder
 	private String desDir = "";
@@ -3906,7 +4158,7 @@ public class Learner {
 	// prefix for all tables generated by this program
 	private String prefix = "";
 	// default general tag
-	private String defaultGeneralTag = "general";
+	
 	// knowledge base
 	private String knlgBase = "phenoscape";
 
@@ -3948,11 +4200,7 @@ public class Learner {
 	}
 	
 	public static void main(String[] args){
-		assertEquals("tagAllSentenceHelper", 1, 12);
-		
-		
-		
-		
+		assertEquals("tagAllSentenceHelper", 1, 12);		
 	}
 	
 }
