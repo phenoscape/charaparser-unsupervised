@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -4198,6 +4199,97 @@ public class Learner {
 		}
 	}
 	
+	public void normalizeModifiers(DataHolder dataholderHandler){
+		// non- and/or/to/plus cases
+		List<SentenceStructure> sentenceList = new ArrayList<SentenceStructure>();
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String modifier = sentenceItem.getModifier();
+			boolean c1 = !StringUtils.equals(modifier, "");
+			boolean c2 = !StringUtility.isMatchedNullSafe(modifier, " (and|or|nor|plus|to) ");
+			if (c1 && c2) {
+				sentenceList.add(sentenceItem);
+			}
+		}
+		
+		Comparator<SentenceStructure> stringLengthComparator = new Comparator<SentenceStructure>() {
+            @Override
+            public int compare(SentenceStructure s1, SentenceStructure s2) {
+            	
+            	String m1 = s1.getModifier();
+            	String m2 = s2.getModifier();
+            	if (m1.length() == m2.length()) {
+            		return 0;
+            	}
+            	else {
+            		return m1.length() < m2.length() ? -1 : 1;
+            	}
+            }
+		};
+		
+		Collections.sort(sentenceList, stringLengthComparator);		
+		Collections.reverse(sentenceList);
+		
+		for (SentenceStructure sentenceItem : sentenceList) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			String modifier = sentenceItem.getModifier();
+			
+			String mCopy = "" + modifier;
+			modifier = finalizeModifier(modifier, tag, sentence);
+			modifier = modifier.replaceAll("\\s*\\[.*?\\]\\s*", " ");
+			modifier = StringUtility.trimString(modifier);
+			
+			if (!StringUtils.equals(mCopy, modifier)) {
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "normalizemodifiers");
+			}
+		}
+		
+		// deal with to: characterA to characterB organ (small to median shells)
+		List<SentenceStructure> sentenceList2 = new ArrayList<SentenceStructure>();
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String modifier = sentenceItem.getModifier();
+			boolean c1 = StringUtility.isMatchedNullSafe(modifier, " to ");
+			if (c1) {
+				sentenceList2.add(sentenceItem);
+			}
+		}
+		
+		Collections.sort(sentenceList2, stringLengthComparator);
+		for (SentenceStructure sentenceItem : sentenceList2) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			String modifier = sentenceItem.getModifier();
+			
+			String mCopy = ""+modifier;
+			modifier = modifier.replaceAll(".*? to ", "");
+			List<String> mWords = new ArrayList<String>(Arrays.asList(modifier.split("\\s+")));
+			Collections.reverse(mWords);
+			
+			String m = "";
+			int count = dataholderHandler.getSentenceCount(true, m, true, tag);
+			String modi = "" + m;
+			for (String word : mWords) {
+				m = word + " " + m;
+				m = m.replaceAll("\\s+$", "");
+				int c = dataholderHandler.getSentenceCount(true, m, true, tag);
+				if (c > count) {
+					count = c;
+					modi = "" + m;
+				}
+			}
+//			tagsentwmt($sentid, $sentence, $modi, $tag, "normalizemodifiers");
+			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modi, tag, "normalizemodifiers");
+		}
+		
+	}
+	
+	public String finalizeModifier(String modifier, String tag, String sentence) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	// some unused variables in perl
 	// directory of /descriptions folder
 	private String desDir = "";

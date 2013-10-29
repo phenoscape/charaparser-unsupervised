@@ -926,6 +926,30 @@ public class DataHolder {
 		return sentences;
 	}
 	
+	public int getSentenceCount(boolean isModifierUsed, String mPattern,
+			boolean isTagUsed, String tPattern) {
+		int count = 0;
+		for (SentenceStructure sentenceItem : this.sentenceTable) {
+			boolean c1 = true;
+			if (isModifierUsed) {
+				c1 = StringUtility.isMatchedNullSafe(
+						sentenceItem.getModifier(), mPattern);
+			}
+
+			boolean c2 = true;
+			if (isTagUsed) {
+				c2 = StringUtility.isMatchedNullSafe(sentenceItem.getTag(),
+						tPattern);
+			}
+
+			if (c1 && c2) {
+				count++;
+			}
+		}
+
+		return count;
+	}
+	
 	
 	/**
 	 * add the singular form and the plural form of a word into the
