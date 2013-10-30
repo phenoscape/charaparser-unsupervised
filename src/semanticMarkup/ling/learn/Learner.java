@@ -4215,6 +4215,7 @@ public class Learner {
             }
 		};
 		
+		// Part 1
 		// non- and/or/to/plus cases
 		List<SentenceStructure> sentenceList = new ArrayList<SentenceStructure>();
 		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
@@ -4245,6 +4246,7 @@ public class Learner {
 			}
 		}
 		
+		// Part 2
 		// deal with to: characterA to characterB organ (small to median shells)
 		List<SentenceStructure> sentenceList2 = new ArrayList<SentenceStructure>();
 		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
@@ -4283,7 +4285,7 @@ public class Learner {
 			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modi, tag, "normalizemodifiers");
 		}
 		
-		
+		// Part 3
 		// modifier with and/or/plus
 		List<SentenceStructure> sentenceList3 = new ArrayList<SentenceStructure>();
 		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
@@ -4304,7 +4306,7 @@ public class Learner {
 			String modifier = sentenceItem.getModifier();
 			
 			String mCopy = ""+modifier;
-			modifier = this.finalizeCompoundTag(modifier, tag, sentence);
+			modifier = this.finalizeCompoundModifier(modifier, tag, sentence);
 			
 			modifier = modifier.replaceAll("\\s*\\[.*?\\]\\s*", " ");
 			modifier = StringUtility.trimString(modifier);
@@ -4314,10 +4316,48 @@ public class Learner {
 				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "normalizemodifiers");
 			}			
 		}
+		
+		// Part 4
+		// modifier with and/or/plus
+		List<SentenceStructure> sentenceList4 = new ArrayList<SentenceStructure>();
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String modifier = sentenceItem.getModifier();
+			// ???
+			boolean con = !StringUtility.isMatchedNullSafe(modifier, "[_ ](and|or|nor|plus|to)[ _]");
+			if (con) {
+				sentenceList4.add(sentenceItem);
+			}
+		}
+		
+		Collections.sort(sentenceList4, stringLengthComparator);		
+		Collections.reverse(sentenceList4);
+		
+		for (SentenceStructure sentenceItem : sentenceList4) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			String modifier = sentenceItem.getModifier();
+			
+			String mTag = "" + tag;
+			tag = this.finalizeCompoundTag(tag, sentence);
+			tag = tag.replaceAll("\\s*\\[.*?\\]\\s*", " ");
+			tag = StringUtility.trimString(tag);
+			
+			if (!StringUtils.equals(mTag, tag)) {
+//				tagsentwmt($sentid, $sentence, $modifier, $tag, "normalizemodifiers");
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "normalizemodifiers");
+			}
+		}
+		
 	}
 	
-	private String finalizeCompoundTag(String modifier, String tag,
+	private String finalizeCompoundModifier(String modifier, String tag,
 			String sentence) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	private String finalizeCompoundTag(String tag, String sentence) {
 		// TODO Auto-generated method stub
 		return null;
 	}
