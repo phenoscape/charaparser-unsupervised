@@ -4202,8 +4202,7 @@ public class Learner {
 	public void normalizeModifiers(DataHolder dataholderHandler){
 		Comparator<SentenceStructure> stringLengthComparator = new Comparator<SentenceStructure>() {
             @Override
-            public int compare(SentenceStructure s1, SentenceStructure s2) {
-            	
+            public int compare(SentenceStructure s1, SentenceStructure s2) {            	
             	String m1 = s1.getModifier();
             	String m2 = s2.getModifier();
             	if (m1.length() == m2.length()) {
@@ -4348,7 +4347,6 @@ public class Learner {
 				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "normalizemodifiers");
 			}
 		}
-		
 	}
 	
 	private String finalizeCompoundModifier(String modifier, String tag,
