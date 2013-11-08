@@ -4671,8 +4671,35 @@ public class Learner {
 		return result;
 	}
 
-	private String finalizeCompoundTag(String tag, String sentence) {
-		// TODO Auto-generated method stub
+	// [bm]+n+&[bm]+n+
+	public String finalizeCompoundTag(String tag, String sentence) {
+		// avoid unmatched ( in regexp
+		tag = tag.replaceAll("\\(.*?\\)", " ");
+		tag = tag.replaceAll("\\(.*", "");
+		tag = tag.replaceAll("\\s+", " ");
+		
+		String tCopy = "" + tag;
+		String result = "";
+		
+		// components
+		List<String> parts = new ArrayList<String>();
+		List<String> conj = new ArrayList<String>();
+		conj.add("");
+		
+		Matcher m1 = StringUtility.createMatcher(tag, "(^.*?)[_ ](and|or|nor|plus)[_ ](.*)");
+		while (m1.find()) {
+			String g1 = m1.group(1);
+			String g2 = m1.group(2);
+			String g3 = m1.group(3);
+			parts.add(g1);
+			conj.add(g2);
+			tag = g3;
+			m1 = StringUtility.createMatcher(tag, "(^.*?)[_ ](and|or|nor|plus)[_ ](.*)");
+		}
+		
+		parts.add(tag);
+		// at least one m in a part
+		
 		return null;
 	}
 
@@ -4761,8 +4788,7 @@ public class Learner {
 		}
 		else {
 			this.checkedModifiers.put(word, true);
-			return true;
-			
+			return true;			
 		}
 	}
 	
