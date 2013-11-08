@@ -1265,7 +1265,7 @@ public class LearnerTest {
 		String sentence = "maxillary and dentary <B>tooth_</B> bearing <N>elements</N>";
 				
 		assertEquals("finalizeCompoundModifier case 1", modifier,
-				myTester.finalizeCompoundModifier(modifier, tag, sentence));
+				myTester.finalizeCompoundModifier(myTester.getDataHolder(), modifier, tag, sentence));
 		
 	}
 	
