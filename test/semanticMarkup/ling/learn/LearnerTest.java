@@ -888,7 +888,7 @@ public class LearnerTest {
 		
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"margins", "p", "role", "0", "0", null, null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"often", "b", "role", "0", "0", null, null}));
-		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"��", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"??", "b", "role", "0", "0", null, null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"deeply", "b", "role", "0", "0", null, null}));
 		
 		List<String> nouns = new ArrayList<String>();
@@ -898,7 +898,7 @@ public class LearnerTest {
 		String bWord = "often";
 		GetNounsAfterPtnReturnValue target = new GetNounsAfterPtnReturnValue(nouns, nounPtn, bWord);
 		
-		assertEquals("getNounsAfterPtn", target, myTester.getNounsAfterPtn("proximal blade margins often �� deeply lobed , ( spiny in c . benedicta ) , distal ?smaller , often entire , faces glabrous or ?tomentose , sometimes also villous , strigose , or puberulent , often glandular_punctate .", 2));
+		assertEquals("getNounsAfterPtn", target, myTester.getNounsAfterPtn("proximal blade margins often ?? deeply lobed , ( spiny in c . benedicta ) , distal ?smaller , often entire , faces glabrous or ?tomentose , sometimes also villous , strigose , or puberulent , often glandular_punctate .", 2));
 		
 	}
 	
