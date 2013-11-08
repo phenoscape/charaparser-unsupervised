@@ -4740,15 +4740,41 @@ public class Learner {
 		}
 		
 		// when word has been used as "b" and "m" or neither "b" nor "m" and is not a "s"
+		int mCount = this.getMCount(dataholderHandler, word);
+		String wCopy = ""+word;
+		if (StringUtility.isMatchedNullSafe(word, "_")) {
+			wCopy = wCopy.replaceAll("_", " - ");
+		}
 		
+		int tCount = 0;
+		String pattern = "(^| )"+wCopy+" ";
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String oSentence = sentenceItem.getOriginalSentence();
+			if (StringUtility.isMatchedNullSafe(oSentence, pattern)) {
+				tCount++;
+			}
+		}
 		
-		return false;
+		if (tCount == 0 || tCount > 0.25 * mCount) {
+			this.checkedModifiers.put(word, false);
+			return false;
+		}
+		else {
+			this.checkedModifiers.put(word, true);
+			return true;
+			
+		}
 	}
 	
-	public int getMCount() {
+	public int getMCount(DataHolder dataholderHandler, String word) {
 		int count = 0;
-		String pattern = "";
-		for ()
+		String pattern = "(>| )"+word+"(</B></M>)? <N";
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String sentence = sentenceItem.getSentence();
+			if (StringUtility.isMatchedNullSafe(sentence, pattern)) {
+				count++;
+			}
+		}
 		
 		return count;
 	}

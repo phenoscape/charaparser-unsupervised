@@ -103,8 +103,7 @@ public class DataHolder {
 		this.termCategoryTable = new HashSet<StringPair>();
 		this.unknownWordTable = new HashMap<String, String>();
 		this.wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
-		this.wordRoleTable = new HashMap<StringPair, String>();
-		
+		this.wordRoleTable = new HashMap<StringPair, String>();		
 	}
 
 	@Override
