@@ -615,6 +615,21 @@ public class DataHolder {
 		
 		return result;
     }
+    
+    public List<Entry<WordPOSKey,WordPOSValue>> getWordPOSEntriesByWordPOS(String word, Set<String> POSs) {
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();
+		List<Entry<WordPOSKey, WordPOSValue>> result = new ArrayList<Entry<WordPOSKey, WordPOSValue>>();
+		
+		while (iter.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> wordPOSEntry = iter.next();
+			if (StringUtils.equals(wordPOSEntry.getKey().getWord(), word)
+					&& POSs.contains(wordPOSEntry.getValue())) {
+				result.add(wordPOSEntry);
+			}
+		}		
+		
+		return result;
+    }
 
 
 	/**

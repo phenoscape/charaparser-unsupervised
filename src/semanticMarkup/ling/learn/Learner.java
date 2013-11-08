@@ -70,6 +70,8 @@ public class Learner {
 	UnknownWordBootstrapping unknownWordBootstrappingModule;
 
 	MarkupByPOS markupByPOS;
+	
+	Map<String, Boolean> checkedModifiers;
 
 	public Learner(Configuration configuration, ITokenizer tokenizer,
 			LearnerUtility learnerUtility) {
@@ -107,6 +109,9 @@ public class Learner {
 		unknownWordBootstrappingModule = new UnknownWordBootstrapping(
 				this.myLearnerUtility);
 		markupByPOS = new MarkupByPOS(this.myLearnerUtility);
+		
+		
+		this.checkedModifiers = new HashMap<String, Boolean>();
 	}
 
 	public DataHolder Learn(List<Treatment> treatments, IGlossary glossary,
@@ -4444,7 +4449,7 @@ public class Learner {
 			String modifier = sentenceItem.getModifier();
 
 			String mCopy = "" + modifier;
-			modifier = finalizeModifier(modifier, tag, sentence);
+			modifier = finalizeModifier(dataholderHandler, modifier, tag, sentence);
 			modifier = modifier.replaceAll("\\s*\\[.*?\\]\\s*", " ");
 			modifier = StringUtility.trimString(modifier);
 
@@ -4642,7 +4647,7 @@ public class Learner {
 			String r = "";
 			
 			for (String word : words) {
-				if (isCheckedModifiers(word) || StringUtility.isMatchedNullSafe(sentence, "<N>"+word)) {
+				if ((this.checkedModifiers.containsKey(word) && this.checkedModifiers.get(word)) || StringUtility.isMatchedNullSafe(sentence, "<N>"+word)) {
 					isFound = true;
 					r = r + " " + word;
 				}
@@ -4666,19 +4671,86 @@ public class Learner {
 		return result;
 	}
 
-	private boolean isCheckedModifiers(String word) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	private String finalizeCompoundTag(String tag, String sentence) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public String finalizeModifier(String modifier, String tag, String sentence) {
-		// TODO Auto-generated method stub
-		return null;
+	public String finalizeModifier(DataHolder dataholderHandler, String modifier, String tag, String sentence) {
+		String fModifier = "";
+		modifier = modifier.replaceAll("\\[.*?\\]", "");
+		modifier = StringUtility.trimString(modifier);
+		if (StringUtility.isMatchedNullSafe(modifier, "\\w")) {
+			List<String> mWords = new ArrayList<String>(Arrays.asList(modifier.split("\\s+")));
+			Collections.reverse(mWords);
+			
+			for (String mWord : mWords) {
+				boolean isModifier = this.isModifier(dataholderHandler, mWord, modifier, tag);
+				if (isModifier) {
+					fModifier = mWord + " " + fModifier;
+				}
+				else {
+					break;
+				}
+			}
+			
+			fModifier = fModifier.replaceAll("\\s+", "");
+		}
+		
+		return fModifier;
+	}
+
+	public boolean isModifier(DataHolder dataholderHandler, String word, String modifier, String tag) {
+		if (this.checkedModifiers.containsKey(word)) {
+			if (this.checkedModifiers.get(word)) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		// if word is a "s", return 1
+		Set<String> nouns = new HashSet<String>(Arrays.asList("s p n"
+				.split(" ")));
+		List<Entry<WordPOSKey, WordPOSValue>> entries = dataholderHandler
+				.getWordPOSEntriesByWordPOS(word, nouns);
+		if (entries.size() > 0) {
+
+			this.checkedModifiers.put(word, true);
+			return true;
+
+		}
+		
+		// if word is a "b", and not a "m", return 0
+		Set<String> bPOS = new HashSet<String>();
+		bPOS.add("b");
+		List<Entry<WordPOSKey, WordPOSValue>> boundaries = dataholderHandler
+				.getWordPOSEntriesByWordPOS(word, bPOS);
+		boolean c1 = (boundaries.size() > 0);		
+		boolean c2 = dataholderHandler.getModifierHolder().containsKey(word);
+		if (c1 && !c2) {
+			// the word is a boundary word, but not a modifier
+			this.checkedModifiers.put(word, false);
+			return false;
+		}
+		
+		if (!c1 && c2) {
+			this.checkedModifiers.put(word, true);
+			return true;
+		}
+		
+		// when word has been used as "b" and "m" or neither "b" nor "m" and is not a "s"
+		
+		
+		return false;
+	}
+	
+	public int getMCount() {
+		int count = 0;
+		String pattern = "";
+		for ()
+		
+		return count;
 	}
 
 	// some unused variables in perl
