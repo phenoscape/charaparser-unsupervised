@@ -1269,6 +1269,26 @@ public class LearnerTest {
 		
 	}
 	
+	@Test
+	public void testGetMCount(){
+		Learner myTester = learnerFactory();
+		DataHolder myDataHolder = myTester.getDataHolder();
+		
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<B>number</B> <B>of</B> <M><B>marginal</B></M> <N>bones</N> <B>alongside</B> postparietal", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "through <M><B>marginal</B></M> <N>bones</N> <B>alongside</B> postparietal", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<M><B>marginal</B></M> <N>teeth</N> <B>on</B> dentary", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<B>broad</B> <M><B>marginal</B></M> <N>tooth</N> <B>field</B>", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<B>narrow</B> <M><B>marginal</B></M> <N>tooth</N> <N>row</N>", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "anterodorsal <B>peg_</B> like <N>process</N> <B>on</B> <N>scale</N>", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		
+		assertEquals("getMCount", 5, myTester.getMCount(myDataHolder, "marginal"));
+	}
 	
 	
 	private Learner learnerFactory() {
