@@ -4349,9 +4349,30 @@ public class Learner {
 		}
 	}
 	
-	private String finalizeCompoundModifier(String modifier, String tag,
+	public String finalizeCompoundModifier(String modifier, String tag,
 			String sentence) {
-		// TODO Auto-generated method stub
+		// case 1
+		if (StringUtility.isMatchedNullSafe(modifier, "\\[")) {
+			return modifier;
+		}
+		
+		modifier = modifier.replaceAll("\\(.*?\\)", " ");
+		modifier = modifier.replaceAll("\\(.*", "");
+		modifier = modifier.replaceAll("\\W","");
+		modifier = modifier.replaceAll("\\s+", " ");
+		
+		String mCopy = ""+modifier;
+		String result = "";
+		String m = "";
+				String n = "";
+				
+		List<String> lastPart = new ArrayList(Arrays.asList(modifier.split("\\s+")));
+		Collections.reverse(lastPart);
+		
+		for (String l : lastPart) {
+			
+		}
+		
 		return null;
 	}
 

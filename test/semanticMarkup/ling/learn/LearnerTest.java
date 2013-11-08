@@ -888,7 +888,7 @@ public class LearnerTest {
 		
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"margins", "p", "role", "0", "0", null, null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"often", "b", "role", "0", "0", null, null}));
-		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"¡À", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"ï¿½ï¿½", "b", "role", "0", "0", null, null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"deeply", "b", "role", "0", "0", null, null}));
 		
 		List<String> nouns = new ArrayList<String>();
@@ -898,7 +898,7 @@ public class LearnerTest {
 		String bWord = "often";
 		GetNounsAfterPtnReturnValue target = new GetNounsAfterPtnReturnValue(nouns, nounPtn, bWord);
 		
-		assertEquals("getNounsAfterPtn", target, myTester.getNounsAfterPtn("proximal blade margins often ¡À deeply lobed , ( spiny in c . benedicta ) , distal ?smaller , often entire , faces glabrous or ?tomentose , sometimes also villous , strigose , or puberulent , often glandular_punctate .", 2));
+		assertEquals("getNounsAfterPtn", target, myTester.getNounsAfterPtn("proximal blade margins often ï¿½ï¿½ deeply lobed , ( spiny in c . benedicta ) , distal ?smaller , often entire , faces glabrous or ?tomentose , sometimes also villous , strigose , or puberulent , often glandular_punctate .", 2));
 		
 	}
 	
@@ -1252,11 +1252,24 @@ public class LearnerTest {
 		update1.clear();
 		update2.clear();
 		
-		assertEquals("andOrTagCase1Helper", target, myTester.andOrTagCase1Helper(pattern, wPattern, words, token));
+		assertEquals("andOrTagCase1Helper", target, myTester.andOrTagCase1Helper(pattern, wPattern, words, token));	
+	}
+	
+	@Test
+	public void testFinalizeCompoundModifier() {
+		Learner myTester = learnerFactory();	
 		
-		
+		// case 1
+		String modifier = "maxillary and [dentary] tooth_ bearing";
+		String tag = "elements";
+		String sentence = "maxillary and dentary <B>tooth_</B> bearing <N>elements</N>";
+				
+		assertEquals("finalizeCompoundModifier case 1", modifier,
+				myTester.finalizeCompoundModifier(modifier, tag, sentence));
 		
 	}
+	
+	
 	
 	private Learner learnerFactory() {
 		Learner tester;
@@ -1279,7 +1292,4 @@ public class LearnerTest {
 
 		return tester;
 	}
-	
-	
-
 }
