@@ -4698,9 +4698,44 @@ public class Learner {
 		}
 		
 		parts.add(tag);
-		// at least one m in a part
 		
-		return null;
+		// at least one m in a part
+//		for (String part : parts) {
+		for (int i = 0; i < parts.size(); i++) {
+			String part = parts.get(i);
+			String[] words = part.split("\\s+");
+			boolean isFoundM = false;
+			String r = "";
+			for (String word : words) {
+				String escapedW = escapePerlRegexp(word);
+				if ((this.checkedModifiers.containsKey(word) && this.checkedModifiers
+						.get(word))
+						|| StringUtility.isMatchedNullSafe(sentence, "<N>"
+								+ escapedW)) {
+					isFoundM = true;
+					r = r + " " + word;
+				}
+			}
+			String regex = "\\b(" + Constant.CHARACTER + "|" + Constant.STOP
+					+ "|" + Constant.NUMBER + "|" + Constant.CLUSTERSTRING
+					+ ")\\b";
+			r = r.replaceAll(regex, "");
+			r = StringUtility.trimString(r);
+			
+			if (StringUtility.isMatchedNullSafe(r, "\\w")) {
+				result = result + " " + conj.get(i) +" "+r;
+			}
+		}
+		
+		result = result.replaceAll("\\s+", " ");
+		result = StringUtility.trimString(result);
+		
+		return result;
+	}
+
+	private String escapePerlRegexp(String word) {
+		// TODO Auto-generated method stub
+		return word;
 	}
 
 	public String finalizeModifier(DataHolder dataholderHandler, String modifier, String tag, String sentence) {
