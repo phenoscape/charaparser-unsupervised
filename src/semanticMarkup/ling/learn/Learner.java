@@ -4839,6 +4839,33 @@ public class Learner {
 		
 		return count;
 	}
+	
+	public void normalizeTags(DataHolder dataholderHandler) {
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			int sentenceID = sentenceItem.getID();
+			String modifier = sentenceItem.getModifier();
+			String tag = sentenceItem.getTag();
+			if (tag != null && StringUtils.equals(tag, "ignore")) {				
+				tag = this.normalizeItem(tag);
+				modifier = this.normalizeItem(modifier);
+			}
+			
+			String sentence = sentenceItem.getSentence();
+			sentence = sentence.replaceAll("</?[NBM]>", "");
+			dataholderHandler.getSentence(sentenceID).setSentence(sentence);
+			if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "normalizetags");
+			}
+			else {
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, null, "normalizetags");
+			}
+		}
+	}
+
+	public String normalizeItem(String tag) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	// some unused variables in perl
 	// directory of /descriptions folder
