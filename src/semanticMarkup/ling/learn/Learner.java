@@ -4861,9 +4861,25 @@ public class Learner {
 			}
 		}
 	}
+	
+	
 
 	public String normalizeItem(String tag) {
-		// TODO Auto-generated method stub
+//		$tag =~ s#\s*NUM\s*# #g;
+//		$tag =~ s#(^\s*|\s*$)##g;
+		tag = tag.replaceAll("\\s*NUM\\s*", " ");
+		tag = StringUtility.trimString(tag);
+		
+		if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
+// 			$tag =~ s#\[#[*#g;
+// 			$tag =~ s#\]#*]#g;
+			
+			tag = tag.replaceAll("\\[", "[*");
+			tag = tag.replaceAll("\\]", "*]");
+			
+			String[] tagWords = tag.split("[\\]\\[]");
+		}
+		
 		return null;
 	}
 
