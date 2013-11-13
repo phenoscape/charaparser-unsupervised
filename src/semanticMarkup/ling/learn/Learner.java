@@ -4865,22 +4865,55 @@ public class Learner {
 	
 
 	public String normalizeItem(String tag) {
-//		$tag =~ s#\s*NUM\s*# #g;
-//		$tag =~ s#(^\s*|\s*$)##g;
 		tag = tag.replaceAll("\\s*NUM\\s*", " ");
 		tag = StringUtility.trimString(tag);
-		
+
 		if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
-// 			$tag =~ s#\[#[*#g;
-// 			$tag =~ s#\]#*]#g;
-			
 			tag = tag.replaceAll("\\[", "[*");
 			tag = tag.replaceAll("\\]", "*]");
-			
-			String[] tagWords = tag.split("[\\]\\[]");
+
+			String[] twSegs = tag.split("[\\]\\[]");
+
+			StringBuilder tagSB = new StringBuilder();
+
+			for (int j = 0; j < twSegs.length; j++) {
+				StringBuilder outSB = new StringBuilder();
+				if (StringUtility.isMatchedNullSafe(twSegs[j], "\\*")) {
+					twSegs[j] = twSegs[j].replaceAll("\\*", "");
+					String[] tagWords = twSegs[j].split("\\s+");
+					outSB.append('[');
+					for (int i = 0; i < tagWords.length; i++) {
+						tagWords[i] = this.myLearnerUtility
+								.getWordFormUtility().getSingular(tagWords[i]);
+						outSB.append(tagWords[i]);
+						outSB.append(" ");
+					}
+					outSB.deleteCharAt(outSB.length() - 1);
+					outSB.append(']');
+				} 
+				else if (StringUtility.isMatchedNullSafe(twSegs[j], "\\w")) {
+					String[] tagWords = twSegs[j].split("\\s+");
+					for (int i = 0; i < tagWords.length; i++) {
+						tagWords[i] = this.myLearnerUtility
+								.getWordFormUtility().getSingular(tagWords[i]);
+						outSB.append(tagWords[i]);
+						outSB.append(" ");
+					}
+					outSB.deleteCharAt(outSB.length() - 1);
+				}
+				String out = outSB.toString();
+				if (StringUtility.isMatchedNullSafe(out, "\\w")) {
+					tagSB.append(out.toString());
+					tagSB.append(' ');
+				}
+			}
+
+			tagSB.deleteCharAt(tagSB.length() - 1);
+			tag = tagSB.toString();
+			tag = tag.replaceAll("\\s+", " ");
 		}
-		
-		return null;
+
+		return tag;
 	}
 
 	// some unused variables in perl
