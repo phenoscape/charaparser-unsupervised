@@ -4878,6 +4878,7 @@ public class Learner {
 
 			for (int j = 0; j < twSegs.length; j++) {
 				StringBuilder outSB = new StringBuilder();
+				// case 1
 				if (StringUtility.isMatchedNullSafe(twSegs[j], "\\*")) {
 					twSegs[j] = twSegs[j].replaceAll("\\*", "");
 					String[] tagWords = twSegs[j].split("\\s+");
@@ -4891,6 +4892,7 @@ public class Learner {
 					outSB.deleteCharAt(outSB.length() - 1);
 					outSB.append(']');
 				} 
+				// case 2
 				else if (StringUtility.isMatchedNullSafe(twSegs[j], "\\w")) {
 					String[] tagWords = twSegs[j].split("\\s+");
 					for (int i = 0; i < tagWords.length; i++) {

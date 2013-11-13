@@ -1290,6 +1290,16 @@ public class LearnerTest {
 		assertEquals("getMCount", 5, myTester.getMCount(myDataHolder, "marginal"));
 	}
 	
+	@Test
+	public void testNormalizeItem() {
+		Learner myTester = learnerFactory();
+		DataHolder myDataHolder = myTester.getDataHolder();
+		assertEquals("normalizeItem case 2", "general", myTester.normalizeItem("general"));
+		assertEquals("normalizeItem case 2", "fin", myTester.normalizeItem("fins"));
+		assertEquals("normalizeItem case 2", "squamosal and quadratojugal and bone",
+				myTester.normalizeItem("squamosal and quadratojugal and bones"));
+	}
+	
 	
 	private Learner learnerFactory() {
 		Learner tester;
