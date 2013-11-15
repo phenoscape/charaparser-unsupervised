@@ -103,8 +103,7 @@ public class DataHolder {
 		this.termCategoryTable = new HashSet<StringPair>();
 		this.unknownWordTable = new HashMap<String, String>();
 		this.wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
-		this.wordRoleTable = new HashMap<StringPair, String>();
-		
+		this.wordRoleTable = new HashMap<StringPair, String>();		
 	}
 
 	@Override
@@ -615,6 +614,21 @@ public class DataHolder {
 		
 		return result;
     }
+    
+    public List<Entry<WordPOSKey,WordPOSValue>> getWordPOSEntriesByWordPOS(String word, Set<String> POSs) {
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();
+		List<Entry<WordPOSKey, WordPOSValue>> result = new ArrayList<Entry<WordPOSKey, WordPOSValue>>();
+		
+		while (iter.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> wordPOSEntry = iter.next();
+			if (StringUtils.equals(wordPOSEntry.getKey().getWord(), word)
+					&& POSs.contains(wordPOSEntry.getValue())) {
+				result.add(wordPOSEntry);
+			}
+		}		
+		
+		return result;
+    }
 
 
 	/**
@@ -924,6 +938,30 @@ public class DataHolder {
 		}
 		
 		return sentences;
+	}
+	
+	public int getSentenceCount(boolean isModifierUsed, String mPattern,
+			boolean isTagUsed, String tPattern) {
+		int count = 0;
+		for (SentenceStructure sentenceItem : this.sentenceTable) {
+			boolean c1 = true;
+			if (isModifierUsed) {
+				c1 = StringUtility.isMatchedNullSafe(
+						sentenceItem.getModifier(), mPattern);
+			}
+
+			boolean c2 = true;
+			if (isTagUsed) {
+				c2 = StringUtility.isMatchedNullSafe(sentenceItem.getTag(),
+						tPattern);
+			}
+
+			if (c1 && c2) {
+				count++;
+			}
+		}
+
+		return count;
 	}
 	
 	
@@ -2054,6 +2092,21 @@ public class DataHolder {
 		}
 		
 		return tags;
+	}
+	
+	public void untagSentences(){
+		for (SentenceStructure sentenceItem : this.sentenceTable) {
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			boolean c1 = StringUtils.equals(tag, "ignore");
+			boolean c2 = (tag == null);
+			boolean c3 = StringUtility.isMatchedNullSafe(sentence, "<");
+			if ((c1||c2)&&c3) {
+				sentence = sentence.replaceAll("<\\S+?>", "");
+				sentence = sentence.replaceAll("'", "\\'");
+				sentenceItem.setSentence(sentence);				
+			}
+		}
 	}
 	
 	// add2Holder

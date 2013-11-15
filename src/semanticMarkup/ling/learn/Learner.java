@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -43,171 +44,188 @@ import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 import semanticMarkup.ling.transform.ITokenizer;
 
-public class Learner {	
-	private static final Set<String> NONS = null; //??
+public class Learner {
+	private static final Set<String> NONS = null; // ??
 	private Configuration myConfiguration;
 	private ITokenizer myTokenizer;
-	
+
 	// Data holder
 	private DataHolder myDataHolder;
-	
+
 	// Learner utility
 	private LearnerUtility myLearnerUtility;
-	
+
 	// Class variables
 	private int NUM_LEAD_WORDS; // Number of leading words
-	
-	// leading three words of sentences 
+
+	// leading three words of sentences
 	private Set<String> checkedWordSet;
-	
+
 	//
 	private String defaultGeneralTag;
-	
-	
+
 	// modules
 	Initiation initiationModule;
-	
-	UnknownWordBootstrapping unknownWordBootstrappingModule; 
-	
+
+	UnknownWordBootstrapping unknownWordBootstrappingModule;
+
 	MarkupByPOS markupByPOS;
 	
-	public Learner(Configuration configuration, ITokenizer tokenizer, LearnerUtility learnerUtility) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+	Map<String, Boolean> checkedModifiers;
+
+	public Learner(Configuration configuration, ITokenizer tokenizer,
+			LearnerUtility learnerUtility) {
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("Learner");
-		
+
 		this.myConfiguration = configuration;
 		this.myTokenizer = tokenizer;
-		
+
 		// Utilities
 		this.myLearnerUtility = learnerUtility;
-		
+
 		// Data holder
-		this.myDataHolder = new DataHolder(myConfiguration, myLearnerUtility.getWordFormUtility());
-		
+		this.myDataHolder = new DataHolder(myConfiguration,
+				myLearnerUtility.getWordFormUtility());
+
 		// Class variables
-		NUM_LEAD_WORDS = this.myConfiguration.getNumLeadWords(); // Set the number of leading words be 3
-		
+		NUM_LEAD_WORDS = this.myConfiguration.getNumLeadWords(); // Set the
+																	// number of
+																	// leading
+																	// words be
+																	// 3
+
 		checkedWordSet = new HashSet<String>();
-		
+
 		this.defaultGeneralTag = "general";
-		
+
 		myLogger.info("Created Learner");
-		myLogger.info("\tLearning Mode: "+myConfiguration.getLearningMode());
-		myLogger.info("\tMax Tag Lengthr: "+myConfiguration.getMaxTagLength());
+		myLogger.info("\tLearning Mode: " + myConfiguration.getLearningMode());
+		myLogger.info("\tMax Tag Lengthr: " + myConfiguration.getMaxTagLength());
 		myLogger.info("\n");
-		
-		initiationModule = new Initiation(this.myLearnerUtility, this.NUM_LEAD_WORDS);
-		unknownWordBootstrappingModule = new UnknownWordBootstrapping(this.myLearnerUtility);
+
+		initiationModule = new Initiation(this.myLearnerUtility,
+				this.NUM_LEAD_WORDS);
+		unknownWordBootstrappingModule = new UnknownWordBootstrapping(
+				this.myLearnerUtility);
 		markupByPOS = new MarkupByPOS(this.myLearnerUtility);
+		
+		
+		this.checkedModifiers = new HashMap<String, Boolean>();
 	}
 
-	public DataHolder Learn(List<Treatment> treatments, IGlossary glossary, String markupMode) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+	public DataHolder Learn(List<Treatment> treatments, IGlossary glossary,
+			String markupMode) {
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("Learn");
 		myLogger.trace("Enter Learn");
-		myLogger.trace(String.format("Learning Mode: %s", this.myConfiguration.getLearningMode()));
-		
-//		this.populateSentence(treatments);
-//		this.populateUnknownWordsTable(this.myDataHolder.allWords);
-		
+		myLogger.trace(String.format("Learning Mode: %s",
+				this.myConfiguration.getLearningMode()));
+
+		// this.populateSentence(treatments);
+		// this.populateUnknownWordsTable(this.myDataHolder.allWords);
+
 		this.initiationModule.loadTreatments(treatments);
 		this.initiationModule.run(myDataHolder);
 
 		/*
-		Map<String, String> mygetHeuristicNounHolder() = myDataHolder.getgetHeuristicNounHolder()();
-		myHeuristicNounTable.put("word1", "type1");
-		
-		List<Sentence> mygetSentenceHolder() = myDataHolder.getgetSentenceHolder()();
-		mygetSentenceHolder().add(new Sentence("source1", "sentence1", "originalSentence", "lead1", "status1", "tag1", "modifier1", "type1"));
-		*/
-		
+		 * Map<String, String> mygetHeuristicNounHolder() =
+		 * myDataHolder.getgetHeuristicNounHolder()();
+		 * myHeuristicNounTable.put("word1", "type1");
+		 * 
+		 * List<Sentence> mygetSentenceHolder() =
+		 * myDataHolder.getgetSentenceHolder()(); mygetSentenceHolder().add(new
+		 * Sentence("source1", "sentence1", "originalSentence", "lead1",
+		 * "status1", "tag1", "modifier1", "type1"));
+		 */
+
 		// List<String> fileNameList = fileLoader.getFileNameList();
 		// List<Integer> typeList = fileLoader.getTypeList();
 
 		// List<String> textList = fileLoader.getTextList();
 
 		// process treatments
-		//this.populateSentences(treatments);
-		
+		// this.populateSentences(treatments);
 
 		// pre load words
 		this.addHeuristicsNouns();
 		this.addPredefinedWords();
-
 
 		// ???
 		this.posBySuffix();
 		this.resetCounts(myDataHolder);
 		this.markupByPattern();
 		this.markupIgnore();
-		
+
 		// learning rules with high certainty
 		// At the every beginning, only those sentence whose first word is a p,
-		// could have a tag of "start", see populateSentece - getFirstNWords section -Dongye
+		// could have a tag of "start", see populateSentece - getFirstNWords
+		// section -Dongye
 		myLogger.info("Learning rules with high certainty:");
 		this.discover("start");
-		
+
 		// bootstrapping rules
 		myLogger.info("Bootstrapping rules:");
 		this.discover("normal");
-//		myDataHolder.write2File("");here!!!
+		// myDataHolder.write2File("");here!!!
 		myLogger.info("Additional bootstrappings:");
 		this.additionalBootstrapping();
-		
+
 		myLogger.info("Unknownword bootstrappings:");
-//		this.unknownWordBootstrapping();
+		// this.unknownWordBootstrapping();
 		this.unknownWordBootstrappingModule.run(myDataHolder);
-		
+
 		myLogger.info("Adjectives Verification:");
 		this.adjectivesVerification(myDataHolder);
-		
+
 		this.separateModifierTag(myDataHolder);
-		
+
 		this.resolveNMB(myDataHolder);
-		
+
 		this.setAndOr(myDataHolder);
-		
+
 		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
-//			print STDOUT "::::::::::::::::::::::::Bootstrapping on adjective subjects: \n";
-//			adjectivesubjectbootstrapping()
-		}
-		else {
+			// print STDOUT
+			// "::::::::::::::::::::::::Bootstrapping on adjective subjects: \n";
+			// adjectivesubjectbootstrapping()
+		} else {
 			int v = 0;
 			do {
 				v = 0;
 				this.handleAndOr(myDataHolder);
 			} while (v > 0);
 		}
-		
+
 		this.resetAndOrTags(myDataHolder);
 
-		this.getLearnerUtility().tagAllSentences(myDataHolder, "singletag", "sentence");
-		
+		this.getLearnerUtility().tagAllSentences(myDataHolder, "singletag",
+				"sentence");
+
 		this.markupByPOS.run(myDataHolder);
-		
+
 		this.phraseClause(myDataHolder);
-		
+
 		this.ditto(myDataHolder);
-		
+
 		this.pronounCharacterSubject(myDataHolder);
-		
+
 		this.finalizeIgnored(myDataHolder);
-		
+
 		this.remainNullTag(myDataHolder);
 
 		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
-//			this.commonSubstructure(myDataHolder);
+			// this.commonSubstructure(myDataHolder);
 		}
-		
+
 		myDataHolder.write2File("");
-		
+
 		myLogger.info("Learning done!");
-		
-//		myLogger.info(myDataHolder.toString());
-//		myLogger.info(myDataHolder.getSentenceHolder().toString());
-//		myLogger.info(this.myDataHolder.getHeuristicNounHolder().toString());
-//		myLogger.info(myDataHolder.getSentenceHolder().get(0).toString());
-		
+
+		// myLogger.info(myDataHolder.toString());
+		// myLogger.info(myDataHolder.getSentenceHolder().toString());
+		// myLogger.info(this.myDataHolder.getHeuristicNounHolder().toString());
+		// myLogger.info(myDataHolder.getSentenceHolder().get(0).toString());
+
 		return myDataHolder;
 	}
 
@@ -228,9 +246,9 @@ public class Learner {
 		this.addCharacters();
 		this.addNumbers();
 		this.addClusterStrings();
-		this.addProperNouns();		
+		this.addProperNouns();
 	}
-	
+
 	/**
 	 * 
 	 * @return
@@ -243,37 +261,38 @@ public class Learner {
 	 * 
 	 */
 	public void addHeuristicsNouns() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.addHeuristicsNouns");
-		
+
 		myLogger.trace("Enter addHeuristicsNouns");
-		
+
 		Set<String> nouns = this.learnHeuristicsNouns();
 		myLogger.debug("Nouns learned from heuristics:");
-		myLogger.debug("\t"+nouns.toString());
-		myLogger.debug("Total: "+nouns.size());
-		
+		myLogger.debug("\t" + nouns.toString());
+		myLogger.debug("Total: " + nouns.size());
+
 		List<Set<String>> results = this.characterHeuristics();
 		Set<String> rnouns = results.get(0);
-		Set<String> descriptors = results.get(1);		
+		Set<String> descriptors = results.get(1);
 		addDescriptors(descriptors);
-		addNouns(rnouns);	
-		
-		//this.myDataHolder.printHolder(DataHolder.SINGULAR_PLURAL);
-		
-		myLogger.debug("Total: "+nouns.size());
+		addNouns(rnouns);
+
+		// this.myDataHolder.printHolder(DataHolder.SINGULAR_PLURAL);
+
+		myLogger.debug("Total: " + nouns.size());
 		Iterator<String> iter = nouns.iterator();
-        myLogger.info("Learn singular-plural pair");
+		myLogger.info("Learn singular-plural pair");
 		while (iter.hasNext()) {
 			String e = iter.next();
-			myLogger.trace("Check Word: "+e);
-			
+			myLogger.trace("Check Word: " + e);
+
 			if ((e.matches("^.*\\w.*$"))
-					&& (!StringUtility.isMatchedWords(e, "NUM|" + Constant.NUMBER
-							+ "|" + Constant.CLUSTERSTRING + "|"
-							+ Constant.CHARACTER + "|" + Constant.PROPERNOUN))) {
+					&& (!StringUtility.isMatchedWords(e, "NUM|"
+							+ Constant.NUMBER + "|" + Constant.CLUSTERSTRING
+							+ "|" + Constant.CHARACTER + "|"
+							+ Constant.PROPERNOUN))) {
 				myLogger.trace("Pass");
-				
+
 				// same word may have two different pos tags
 				String[] nounArray = e.split("\\|");
 				for (int i = 0; i < nounArray.length; i++) {
@@ -283,7 +302,8 @@ public class Learner {
 					if (m.lookingAt()) {
 						String word = m.group(1);
 						String pos = m.group(2);
-						this.myDataHolder.updateDataHolder(word, pos, "*", "wordpos", 0);
+						this.myDataHolder.updateDataHolder(word, pos, "*",
+								"wordpos", 0);
 
 						if (pos.equals("p")) {
 							String plural = word;
@@ -306,7 +326,9 @@ public class Learner {
 								String plural = pluralIter.next();
 								if (plural != null) {
 									if (!plural.equals("")) {
-										this.myDataHolder.addSingularPluralPair(singular, plural);
+										this.myDataHolder
+												.addSingularPluralPair(
+														singular, plural);
 									}
 								}
 							}
@@ -315,12 +337,10 @@ public class Learner {
 				}
 			}
 		}
-				
+
 		myLogger.trace("Quite addHeuristicsNouns");
 	}
 
-
-	
 	/**
 	 * 
 	 * @param descriptors
@@ -329,14 +349,15 @@ public class Learner {
 		Iterator<String> iter = descriptors.iterator();
 		while (iter.hasNext()) {
 			String descriptor = iter.next();
-			
+
 			if (!StringUtility.isMatchedWords(descriptor, Constant.FORBIDDEN)) {
-				this.myDataHolder.updateDataHolder(descriptor, "b", "", "wordpos", 1);
+				this.myDataHolder.updateDataHolder(descriptor, "b", "",
+						"wordpos", 1);
 			}
 		}
-		
+
 	}
-	
+
 	/**
 	 * 
 	 * @param rnouns
@@ -351,16 +372,15 @@ public class Learner {
 		}
 	}
 
-
-
 	/**
 	 * 
 	 * @return nouns learned by heuristics
 	 */
 	public Set<String> learnHeuristicsNouns() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.addHeuristicsNouns.learnHeuristicsNouns");
-		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.addHeuristicsNouns.learnHeuristicsNouns");
+
 		// Set of words
 		Set<String> words = new HashSet<String>();
 
@@ -369,9 +389,9 @@ public class Learner {
 
 		List<String> sentences = new LinkedList<String>();
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			String originalSentence = this.myDataHolder.getSentenceHolder().get(i)
-					.getOriginalSentence();
-			myLogger.trace("Original Sentence: "+originalSentence);
+			String originalSentence = this.myDataHolder.getSentenceHolder()
+					.get(i).getOriginalSentence();
+			myLogger.trace("Original Sentence: " + originalSentence);
 			sentences.add(StringUtility.strip(originalSentence));
 		}
 
@@ -386,11 +406,12 @@ public class Learner {
 			}
 
 			// add words
-			List<String> tokens = this.myLearnerUtility.tokenizeText(sentence, "all");
-			for (String token: tokens) {
+			List<String> tokens = this.myLearnerUtility.tokenizeText(sentence,
+					"all");
+			for (String token : tokens) {
 				if (StringUtility.isWord(token)) {
 					words.add(token);
-					myLogger.trace("Add a word into words: "+token);
+					myLogger.trace("Add a word into words: " + token);
 				}
 			}
 		}
@@ -415,8 +436,8 @@ public class Learner {
 			if (wordMap.containsKey(root)) {
 				Set<String> wordList = wordMap.get(root);
 				wordList.add(word);
-				//List<String> wordList2 = wordMap.get(root);
-				//System.out.println(wordList2);
+				// List<String> wordList2 = wordMap.get(root);
+				// System.out.println(wordList2);
 			} else {
 				Set<String> wordList = new HashSet<String>();
 				wordList.add(word);
@@ -426,34 +447,36 @@ public class Learner {
 
 		// print out the wordMap
 		myLogger.trace("WordMap:");
-		Iterator<Map.Entry<String, Set<String>>> wordMapIter = wordMap.entrySet()
-				.iterator();
+		Iterator<Map.Entry<String, Set<String>>> wordMapIter = wordMap
+				.entrySet().iterator();
 		while (wordMapIter.hasNext()) {
 			Map.Entry<String, Set<String>> e = wordMapIter.next();
 			myLogger.trace(e.toString());
 		}
-	
-		
+
 		// find nouns
-        myLogger.info("Learn singular-plural pair");
-		Iterator<Map.Entry<String, Set<String>>> iter = wordMap.entrySet().iterator();
-		while (iter.hasNext()){
+		myLogger.info("Learn singular-plural pair");
+		Iterator<Map.Entry<String, Set<String>>> iter = wordMap.entrySet()
+				.iterator();
+		while (iter.hasNext()) {
 			Map.Entry<String, Set<String>> e = iter.next();
 			Set<String> wordSet = e.getValue();
 			Iterator<String> wordIterator = wordSet.iterator();
-			while(wordIterator.hasNext()){
+			while (wordIterator.hasNext()) {
 				String word = wordIterator.next();
-				
+
 				// getnouns
 				if (word.matches("^.*" + Constant.NENDINGS)) {
 					nouns.add(word + "[s]");
 					if (wordSet.contains(word + "s")) {
 						nouns.add(word + "s" + "[p]");
-						this.myDataHolder.addSingularPluralPair(word, word+"s");						
+						this.myDataHolder.addSingularPluralPair(word, word
+								+ "s");
 					}
 					if (wordSet.contains(word + "es")) {
 						nouns.add(word + "es" + "[p]");
-						this.myDataHolder.addSingularPluralPair(word, word+"es");
+						this.myDataHolder.addSingularPluralPair(word, word
+								+ "es");
 					}
 				}
 			}
@@ -469,10 +492,10 @@ public class Learner {
 
 			// check if there is a word with Vending
 			boolean hasVending = false;
-			//for (int i1 = 0; i1 < wordList.size(); i1++) {
+			// for (int i1 = 0; i1 < wordList.size(); i1++) {
 			Iterator<String> wordIterator = wordSet.iterator();
-			while(wordIterator.hasNext()){
-				String tempWord =wordIterator.next(); 
+			while (wordIterator.hasNext()) {
+				String tempWord = wordIterator.next();
 				if (tempWord.matches("^.*" + Constant.VENDINGS)) {
 					hasVending = true;
 					break;
@@ -486,25 +509,28 @@ public class Learner {
 					for (int j = i + 1; j < wordList.size(); j++) {
 						String word1 = wordList.get(i);
 						String word2 = wordList.get(j);
-						List<String> pair = myLearnerUtility.getWordFormUtility().getSingularPluralPair(word1, word2);
+						List<String> pair = myLearnerUtility
+								.getWordFormUtility().getSingularPluralPair(
+										word1, word2);
 						if (pair.size() == 2) {
 							String singular = pair.get(0);
 							String plural = pair.get(1);
 							nouns.add(singular + "[s]");
 							nouns.add(plural + "[p]");
-							this.myDataHolder.addSingularPluralPair(singular, plural);
+							this.myDataHolder.addSingularPluralPair(singular,
+									plural);
 						}
 					}
 				}
 			}
 		}
-		
-		//print out nouns
-		myLogger.debug("Nouns: "+nouns);
-				
+
+		// print out nouns
+		myLogger.debug("Nouns: " + nouns);
+
 		return nouns;
 	}
-	
+
 	// ---------------addHeuristicsNouns Help Function----
 	// #solve the problem: septa and septum are both s
 	// septum - Singular
@@ -531,14 +557,15 @@ public class Learner {
 	 * @return nouns learned
 	 */
 	public String getPresentAbsentNouns(String text) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.addHeuristicsNouns.learnHeuristicsNouns.getPresentAbsentNouns");
-		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.addHeuristicsNouns.learnHeuristicsNouns.getPresentAbsentNouns");
+
 		String pachecked = "and|or|to";
 
-//		if (text.matches("(\\w+?)\\s+(present|absent)")) {
-//			System.out.println(text);
-//		}
+		// if (text.matches("(\\w+?)\\s+(present|absent)")) {
+		// System.out.println(text);
+		// }
 
 		Matcher matcher = Pattern.compile("^.*?(\\w+?)\\s+(present|absent).*$")
 				.matcher(text);
@@ -548,7 +575,7 @@ public class Learner {
 					&& (!word.matches("\\b(" + Constant.STOP + ")\\b"))
 					&& (!word
 							.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
-				
+
 				myLogger.trace("present/absent " + word);
 
 				if (((word.matches("^.*" + Constant.PENDINGS))
@@ -572,9 +599,10 @@ public class Learner {
 	 *         element is a set of descriptors
 	 */
 	public List<Set<String>> characterHeuristics() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.addHeuristicsNouns.characterHeuristics");
-		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.addHeuristicsNouns.characterHeuristics");
+
 		Set<String> taxonNames = new HashSet<String>();
 		Set<String> nouns = new HashSet<String>();
 		Set<String> anouns = new HashSet<String>();
@@ -586,23 +614,24 @@ public class Learner {
 		for (int i = 0; i < sent_num; i++) {
 
 			// taxon rule
-			SentenceStructure sent = this.myDataHolder.getSentenceHolder().get(i);
+			SentenceStructure sent = this.myDataHolder.getSentenceHolder().get(
+					i);
 			String source = sent.getSource();
 			String sentence = sent.getSentence();
 			String originalSentence = sent.getOriginalSentence();
 
-			myLogger.trace("Source: "+source);
-			myLogger.trace("Sentence: "+sentence);
-			myLogger.trace("Original Sentence: "+originalSentence);
+			myLogger.trace("Source: " + source);
+			myLogger.trace("Sentence: " + sentence);
+			myLogger.trace("Original Sentence: " + originalSentence);
 
 			originalSentence = StringUtility.trimString(originalSentence);
 
 			// noun rule 0: taxon names
 			taxonNames = this.getTaxonNameNouns(originalSentence);
-			
-			//$sentence =~ s#<\s*/?\s*i\s*>##g;
-			//$originalsent =~ s#<\s*/?\s*i\s*>##g;
-			
+
+			// $sentence =~ s#<\s*/?\s*i\s*>##g;
+			// $originalsent =~ s#<\s*/?\s*i\s*>##g;
+
 			sentence = sentence.replaceAll("<\\s*/?\\s*i\\s*>", "");
 			originalSentence = originalSentence.replaceAll("<\\s*/?\\s*i\\s*>",
 					"");
@@ -656,9 +685,9 @@ public class Learner {
 			// remove puncts for descriptor rules
 			originalSentence = StringUtility.removePunctuation(
 					originalSentence, "-");
-//			System.out.println("oSent:");
-//			System.out.println(originalSentence);
-			
+			// System.out.println("oSent:");
+			// System.out.println(originalSentence);
+
 			// Descriptor rule 1: single term descriptions are descriptors
 			descriptors.addAll(this.getDescriptorsRule1(source,
 					originalSentence, nouns));
@@ -688,8 +717,6 @@ public class Learner {
 		return results;
 	}
 
-
-
 	/**
 	 * filter out descriptors from nouns, and return remaining nouns
 	 * 
@@ -699,7 +726,8 @@ public class Learner {
 	 *            set of descriptors
 	 * @return set of nouns that are not descriptors
 	 */
-	public Set<String> filterOutDescriptors(Set<String> rNouns, Set<String> rDescriptors) {
+	public Set<String> filterOutDescriptors(Set<String> rNouns,
+			Set<String> rDescriptors) {
 		Set<String> filtedNouns = new HashSet<String>();
 
 		Iterator<String> iter = rNouns.iterator();
@@ -909,7 +937,8 @@ public class Learner {
 			Set<String> nouns) {
 		Set<String> descriptors = new HashSet<String>();
 		// single word
-		if (source.matches("^.*\\.xml_\\S+_.*$") && (!sentence.matches("^.*\\s.*$"))) {
+		if (source.matches("^.*\\.xml_\\S+_.*$")
+				&& (!sentence.matches("^.*\\s.*$"))) {
 			Iterator<String> iter = nouns.iterator();
 			boolean isExist = false;
 			while (iter.hasNext()) {
@@ -970,8 +999,8 @@ public class Learner {
 			}
 		} else {
 			for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-				String originalSentence = this.myDataHolder.getSentenceHolder().get(i)
-						.getOriginalSentence();
+				String originalSentence = this.myDataHolder.getSentenceHolder()
+						.get(i).getOriginalSentence();
 				if (isMatched(originalSentence, term, descriptorMap)) {
 					return true;
 				}
@@ -1002,16 +1031,16 @@ public class Learner {
 			return false;
 		}
 	}
-	
+
 	public void addStopWords() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.addStopWords");
 		myLogger.trace("Add stop words");
-		
+
 		List<String> stops = new ArrayList<String>();
 		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
-		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{",
-				")", "]", "}", "d+" }));
+		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
+				"]", "}", "d+" }));
 
 		myLogger.trace("Stop Words: " + stops);
 		for (int i = 0; i < stops.size(); i++) {
@@ -1020,7 +1049,8 @@ public class Learner {
 				continue;
 			}
 			this.myDataHolder.updateDataHolder(word, "b", "*", "wordpos", 0);
-			myLogger.trace(String.format("(\"%s\", \"b\", \"*\", \"wordpos\", 0) added\n", word));
+			myLogger.trace(String.format(
+					"(\"%s\", \"b\", \"*\", \"wordpos\", 0) added\n", word));
 			// this.getWordPOSHolder().put(new WordPOSKey(word, "b"), new
 			// WordPOSValue("*", 0, 0, null, null));
 			// System.out.println("Add Stop Word: " + word+"\n");
@@ -1029,15 +1059,15 @@ public class Learner {
 	}
 
 	public void addCharacters() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.addCharacters");
-		myLogger.trace("Add characters");		
-		
+		myLogger.trace("Add characters");
+
 		List<String> chars = new ArrayList<String>();
 		chars.addAll(Arrays.asList(Constant.CHARACTER.split("\\|")));
-//
-//		System.out.println(chars);
-//		System.out.println(Constant.CHARACTER);
+		//
+		// System.out.println(chars);
+		// System.out.println(Constant.CHARACTER);
 
 		for (int i = 0; i < chars.size(); i++) {
 			String word = chars.get(i);
@@ -1054,15 +1084,15 @@ public class Learner {
 	}
 
 	public void addNumbers() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.addNumbers");
-		myLogger.trace("Add numbers");	
-		
+		myLogger.trace("Add numbers");
+
 		List<String> nums = new ArrayList<String>();
 		nums.addAll(Arrays.asList(Constant.NUMBER.split("\\|")));
 
-//		System.out.println(nums);
-//		System.out.println(Constant.NUMBER);
+		// System.out.println(nums);
+		// System.out.println(Constant.NUMBER);
 
 		for (int i = 0; i < nums.size(); i++) {
 			String word = nums.get(i);
@@ -1082,15 +1112,15 @@ public class Learner {
 	}
 
 	public void addClusterStrings() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.addClusterstrings");
-		myLogger.trace("Add clusterstrings");	
-		
+		myLogger.trace("Add clusterstrings");
+
 		List<String> cltstrs = new ArrayList<String>();
 		cltstrs.addAll(Arrays.asList(Constant.CLUSTERSTRING.split("\\|")));
 
-//		System.out.println(cltstrs);
-//		System.out.println(Constant.CLUSTERSTRING);
+		// System.out.println(cltstrs);
+		// System.out.println(Constant.CLUSTERSTRING);
 
 		for (int i = 0; i < cltstrs.size(); i++) {
 			String word = cltstrs.get(i);
@@ -1105,10 +1135,10 @@ public class Learner {
 	}
 
 	public void addProperNouns() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.addProperNouns");
-		myLogger.trace("Add proper nouns");	
-		
+		myLogger.trace("Add proper nouns");
+
 		List<String> ppnouns = new ArrayList<String>();
 		ppnouns.addAll(Arrays.asList(Constant.PROPERNOUN.split("\\|")));
 
@@ -1142,12 +1172,12 @@ public class Learner {
 	 * -merous(adj), -most(adj), -shaped(adj), -ous(adj)
 	 */
 	public void posBySuffix() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.posBySuffix");		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.posBySuffix");
 		myLogger.trace("Enter posBySuffix");
-		
-		Iterator<Map.Entry<String, String>> iterator = this.myDataHolder.getUnknownWordHolder()
-				.entrySet().iterator();
+
+		Iterator<Map.Entry<String, String>> iterator = this.myDataHolder
+				.getUnknownWordHolder().entrySet().iterator();
 
 		while (iterator.hasNext()) {
 			Map.Entry<String, String> unknownWordEntry = iterator.next();
@@ -1155,16 +1185,16 @@ public class Learner {
 			String unknownWordTag = unknownWordEntry.getValue();
 
 			if (unknownWordTag.equals("unknown")) {
-//				boolean flag1 = 
-				posBySuffixCase1Helper(unknownWord);				
-//				boolean flag2 = 
-				posBySuffixCase2Helper(unknownWord);								
+				// boolean flag1 =
+				posBySuffixCase1Helper(unknownWord);
+				// boolean flag2 =
+				posBySuffixCase2Helper(unknownWord);
 			}
 		}
-		
+
 		myLogger.trace("Quite posBySuffix");
 	}
-	
+
 	/**
 	 * 
 	 * @param dh
@@ -1172,42 +1202,42 @@ public class Learner {
 	 *            updated dataholder
 	 * @return Number of records that have been changed
 	 */
-	public int resetCounts(DataHolder dh){
+	public int resetCounts(DataHolder dh) {
 		int count = 0;
-		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = dh.getWordPOSHolderIterator();
+		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = dh
+				.getWordPOSHolderIterator();
 		while (iter.hasNext()) {
 			Entry<WordPOSKey, WordPOSValue> wordPOSObject = iter.next();
 			wordPOSObject.getValue().setCertiantyU(0);
 			wordPOSObject.getValue().setCertiantyL(0);
 			count++;
 		}
-		
+
 		return count;
 	}
 
 	public boolean posBySuffixCase1Helper(String unknownWord) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.posBySuffix");
-		
+
 		String pattern1 = "^[a-z_]+(" + Constant.SUFFIX + ")$";
-		myLogger.debug("Pattern1: "+pattern1);
-				
+		myLogger.debug("Pattern1: " + pattern1);
+
 		if (unknownWord.matches(pattern1)) {
-			Matcher matcher = Pattern.compile(
-					"(.*?)(" + Constant.SUFFIX + ")$").matcher(
-					unknownWord);
-			if ((unknownWord.matches("^[a-zA-Z0-9_-]+$"))
-					&& matcher.matches()) {
+			Matcher matcher = Pattern
+					.compile("(.*?)(" + Constant.SUFFIX + ")$").matcher(
+							unknownWord);
+			if ((unknownWord.matches("^[a-zA-Z0-9_-]+$")) && matcher.matches()) {
 				myLogger.debug("posBySuffix - check word: " + unknownWord);
 				String base = matcher.group(1);
 				String suffix = matcher.group(2);
 				if (this.containSuffix(unknownWord, base, suffix)) {
 					myLogger.debug("Pass\n");
-					this.myDataHolder.updateDataHolder(unknownWord, "b", "*", "wordpos", 0);							
+					this.myDataHolder.updateDataHolder(unknownWord, "b", "*",
+							"wordpos", 0);
 					myLogger.debug("posBySuffix - set word: " + unknownWord);
 					return true;
-				}
-				else {
+				} else {
 					myLogger.debug("Not Pass\n");
 				}
 			}
@@ -1216,23 +1246,24 @@ public class Learner {
 	}
 
 	public boolean posBySuffixCase2Helper(String unknownWord) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.posBySuffix");
-		
+
 		String pattern2 = "^[._.][a-z]+"; // , _nerved
-		myLogger.debug("Pattern2: "+pattern2);
-		
+		myLogger.debug("Pattern2: " + pattern2);
+
 		if (unknownWord.matches(pattern2)) {
-			this.myDataHolder.getWordPOSHolder().put(new WordPOSKey(unknownWord, "b"),
+			this.myDataHolder.getWordPOSHolder().put(
+					new WordPOSKey(unknownWord, "b"),
 					new WordPOSValue("*", 0, 0, null, null));
-			myLogger.debug("posbysuffix set "+unknownWord + " a boundary word\n");
+			myLogger.debug("posbysuffix set " + unknownWord
+					+ " a boundary word\n");
 			return true;
 		}
-		
+
 		return false;
 	}
 
-	
 	/**
 	 * return false or true depending on if the word contains the suffix as the
 	 * suffix
@@ -1243,14 +1274,15 @@ public class Learner {
 	 * @return
 	 */
 	public boolean containSuffix(String word, String base, String suffix) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.posBySuffix.containSuffix");		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.posBySuffix.containSuffix");
 		myLogger.trace("Enter containSuffix");
-		
+
 		boolean flag = false; // return value
 		boolean wordInWN = false; // if this word is in WordNet
 		boolean baseInWN = false;
-		WordNetPOSKnowledgeBase myWN = this.myLearnerUtility.getWordNetPOSKnowledgeBase();
+		WordNetPOSKnowledgeBase myWN = this.myLearnerUtility
+				.getWordNetPOSKnowledgeBase();
 
 		// check base
 		if (base.length() == 0) {
@@ -1295,12 +1327,11 @@ public class Learner {
 		else if (suffix.equals("er") || suffix.equals("est")) {
 			myLogger.trace("case 3.2");
 			if (wordInWN) {
-				boolean case1 =!myWN.isAdjective(word);
-				boolean case2 = myWN.isAdjective(base); 
+				boolean case1 = !myWN.isAdjective(word);
+				boolean case2 = myWN.isAdjective(base);
 				if (case1 && case2) {
 					return true;
-				}
-				else {
+				} else {
 					return false;
 				}
 			}
@@ -1325,24 +1356,25 @@ public class Learner {
 	}
 
 	public void markupByPattern() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.markupByPattern");		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.markupByPattern");
 		myLogger.trace("Enter markupByPattern");
-		
+
 		int size = this.myDataHolder.getSentenceHolder().size();
 
-		for (int i = 0; i < size; i++) {			
-			boolean flag = markupByPatternHelper(this.myDataHolder.getSentenceHolder().get(i));
+		for (int i = 0; i < size; i++) {
+			boolean flag = markupByPatternHelper(this.myDataHolder
+					.getSentenceHolder().get(i));
 			if (flag) {
-				myLogger.debug("Updated Sentence #"+i);
-			}			
+				myLogger.debug("Updated Sentence #" + i);
+			}
 		}
 		myLogger.trace("Quite markupByPattern");
 	}
 
 	public boolean markupByPatternHelper(SentenceStructure sentence) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("markupByPattern");	
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("markupByPattern");
 		// case 1
 		if (sentence.getOriginalSentence().matches("^x=.*")) {
 			myLogger.trace("Case 1");
@@ -1397,34 +1429,35 @@ public class Learner {
 
 	// private String IGNOREPTN ="(IGNOREPTN)"; //disabled
 	public void markupIgnore() {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.markupIgnore");		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.markupIgnore");
 		myLogger.trace("Enter markupIgnore");
-		
+
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			boolean flag = markupIgnoreHelper(this.myDataHolder.getSentenceHolder().get(i));
+			boolean flag = markupIgnoreHelper(this.myDataHolder
+					.getSentenceHolder().get(i));
 			if (flag) {
-				myLogger.debug("Updated Sentence #"+i);
+				myLogger.debug("Updated Sentence #" + i);
 			}
 		}
-		
+
 		myLogger.trace("Quite markupIgnore");
 	}
 
 	public boolean markupIgnoreHelper(SentenceStructure sentence) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("markupIgnore");		
-		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("markupIgnore");
+
 		String thisOriginalSentence = sentence.getOriginalSentence();
 		String pattern = "(^|^ )" + Constant.IGNOREPTN + ".*$";
 		if (thisOriginalSentence.matches(pattern)) {
 			sentence.setTag("ignore");
 			sentence.setModifier("");
 			myLogger.trace("Set Tag to \"ignore\", Modifier to \"\"");
-			
+
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -1435,55 +1468,54 @@ public class Learner {
 	 * @return
 	 */
 	public int discover(String status) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.discover");
-		
-		myLogger.trace("Enter Discover - Status: "+status);
-		
+
+		myLogger.trace("Enter Discover - Status: " + status);
+
 		int newDisc = 0;
-		
-//		this.myDataHolder.printHolder(DataHolder.SENTENCE);
-		
+
+		// this.myDataHolder.printHolder(DataHolder.SENTENCE);
+
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			SentenceStructure sentEntry = this.myDataHolder.getSentenceHolder().get(i);
+			SentenceStructure sentEntry = this.myDataHolder.getSentenceHolder()
+					.get(i);
 			// sentid
 			String thisSentence = sentEntry.getSentence();
 			String thisLead = sentEntry.getLead();
 			String thisTag = sentEntry.getTag();
 			String thisStatus = sentEntry.getStatus();
-			//if (!(thisTag == null || !thisTag.equals("ignore") 
-			
-			//myLogger.debug("Tag: "+thisTag);
+			// if (!(thisTag == null || !thisTag.equals("ignore")
 
-			
-			
-			if (    (!StringUtils.equals(thisTag, "ignore")
-					|| (thisTag == null))
-				&& thisStatus.equals(status)) {
-				
-				myLogger.debug("Sentence #: "+i);
+			// myLogger.debug("Tag: "+thisTag);
+
+			if ((!StringUtils.equals(thisTag, "ignore") || (thisTag == null))
+					&& thisStatus.equals(status)) {
+
+				myLogger.debug("Sentence #: " + i);
 				myLogger.debug("Lead: " + thisLead);
-				
-				myLogger.debug("Tag: "+thisTag);
-				
-				myLogger.debug("Sentence: "+thisSentence);
+
+				myLogger.debug("Tag: " + thisTag);
+
+				myLogger.debug("Sentence: " + thisSentence);
 				// tag is not null
 				if (isMarked(this.myDataHolder.getSentenceHolder().get(i))) {
 					myLogger.debug("Not Pass");
 					continue;
-				}				
+				}
 				// tag is null
 				else {
 					myLogger.debug("Pass");
-				}				
-				
+				}
+
 				String[] startWords = thisLead.split("\\s+");
-				myLogger.debug("startWords: "+startWords.toString());
+				myLogger.debug("startWords: " + startWords.toString());
 
 				String pattern = buildPattern(startWords);
-				
+
 				if (pattern != null) {
-                    myLogger.debug("Build pattern ["+pattern+"] from starting words ["+thisLead+"]");
+					myLogger.debug("Build pattern [" + pattern
+							+ "] from starting words [" + thisLead + "]");
 					// IDs of untagged sentences that match the pattern
 					Set<Integer> matched = matchPattern(pattern, status, false);
 					int round = 0;
@@ -1492,13 +1524,13 @@ public class Learner {
 					do {
 						numNew = ruleBasedLearn(matched);
 						newDisc = newDisc + numNew;
-						myLogger.trace("Round: "+round);
+						myLogger.trace("Round: " + round);
 						round++;
 					} while (numNew > 0);
+				} else {
+					myLogger.debug("Build no pattern from starting words ["
+							+ thisLead + "]");
 				}
-                else {
-                    myLogger.debug("Build no pattern from starting words ["+thisLead+"]");
-                }
 			}
 		}
 
@@ -1533,30 +1565,30 @@ public class Learner {
 	 * @return a pattern. If no pattern is generated, return null
 	 */
 	public String buildPattern(String[] startWords) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.discover.buildPattern");
-		
+
 		myLogger.trace("Enter buildPattern");
-		myLogger.trace("Start Words: "+startWords);
-				
+		myLogger.trace("Start Words: " + startWords);
+
 		Set<String> newWords = new HashSet<String>();
 		String temp = "";
 		String prefix = "\\w+\\s";
 		String pattern = "";
-		
+
 		Set<String> checkedWords = this.checkedWordSet;
 		myLogger.trace("checkedWords: " + checkedWords);
 
 		for (int i = 0; i < startWords.length; i++) {
 			String word = startWords[i];
 			// This is not very sure, need to make sure - Dongye
-			if ((!word.matches("[\\p{Punct}0-9]")) 
+			if ((!word.matches("[\\p{Punct}0-9]"))
 					&& (!checkedWords.contains(word))) {
 				temp = temp + word + "|";
 				newWords.add(word);
 			}
 		}
-		myLogger.trace("temp: " + temp);		
+		myLogger.trace("temp: " + temp);
 
 		// no new words
 		if (temp.length() == 0) {
@@ -1578,19 +1610,19 @@ public class Learner {
 			temp = prefix + temp;
 			pattern = pattern + "^" + temp + "|";
 		}
-		myLogger.trace("Pattern: "+pattern);
-		
+		myLogger.trace("Pattern: " + pattern);
+
 		pattern = pattern.substring(0, pattern.length() - 1);
 		pattern = "(?:" + pattern + ").*$";
 		checkedWords.addAll(newWords);
 		this.checkedWordSet = checkedWords;
-		
-		myLogger.trace("Return Pattern: "+pattern);
+
+		myLogger.trace("Return Pattern: " + pattern);
 		myLogger.trace("Quite buildPattern");
 		myLogger.trace("\n");
 		return pattern;
 	}
-	
+
 	/**
 	 * Find the IDs of the sentences that matches the pattern
 	 * 
@@ -1599,48 +1631,49 @@ public class Learner {
 	 * @param hasTag
 	 * @return a set of sentence IDs of the sentences that matches the pattern
 	 */
-	public Set<Integer> matchPattern(String pattern, String status, boolean hasTag) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+	public Set<Integer> matchPattern(String pattern, String status,
+			boolean hasTag) {
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.discover.matchPattern");
-		
+
 		myLogger.trace("Enter matchPattern");
-		myLogger.trace("Pattern: "+pattern);
-		myLogger.trace("Status: "+status);
-		myLogger.trace("HasTag: "+hasTag);
-		
+		myLogger.trace("Pattern: " + pattern);
+		myLogger.trace("Status: " + status);
+		myLogger.trace("HasTag: " + hasTag);
+
 		Set<Integer> matchedIDs = new HashSet<Integer>();
 
 		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			SentenceStructure sent = this.myDataHolder.getSentenceHolder().get(i);
+			SentenceStructure sent = this.myDataHolder.getSentenceHolder().get(
+					i);
 			String thisSentence = sent.getSentence();
 			String thisStatus = sent.getStatus();
 			String thisTag = sent.getTag();
-			
+
 			boolean a = hasTag;
 			boolean b = (thisTag == null);
-			
+
 			if ((a ^ b) && (StringUtils.equals(status, thisStatus))) {
 				Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 				Matcher m = p.matcher(thisSentence);
 				if (m.lookingAt()) {
-					myLogger.debug("Push Sentence #"+i);
-					myLogger.debug("Sentence: "+thisSentence);
-					myLogger.debug("Status: "+thisStatus);
-					myLogger.debug("Tag: "+thisTag);
+					myLogger.debug("Push Sentence #" + i);
+					myLogger.debug("Sentence: " + thisSentence);
+					myLogger.debug("Status: " + thisStatus);
+					myLogger.debug("Tag: " + thisTag);
 					myLogger.debug("\n");
-										
+
 					matchedIDs.add(i);
 				}
 			}
 		}
 
-		myLogger.trace("Return IDs: "+matchedIDs);
+		myLogger.trace("Return IDs: " + matchedIDs);
 		myLogger.trace("Quite matchPattern");
 		myLogger.trace("\n");
 		return matchedIDs;
 	}
 
-	
 	/**
 	 * return a positive number if anything new is learnt from @source sentences
 	 * by applying rules and clues to grow %NOUNS and %BDRY and to confirm tags
@@ -1650,70 +1683,72 @@ public class Learner {
 	 * @return
 	 */
 	public int ruleBasedLearn(Set<Integer> matched) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
+		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn");
-		
+
 		myLogger.trace("Enter ruleBasedLearn");
-		myLogger.trace("Matched IDs: "+matched);
-		
+		myLogger.trace("Matched IDs: " + matched);
+
 		int sign = 0;
 
 		Iterator<Integer> iter = matched.iterator();
 		while (iter.hasNext()) {
 			int sentID = iter.next().intValue();
-			SentenceStructure sentence = this.myDataHolder.getSentenceHolder().get(sentID);
+			SentenceStructure sentence = this.myDataHolder.getSentenceHolder()
+					.get(sentID);
 			if (!isMarked(sentence)) {
 				StringAndInt tagAndNew = null;
 				String tag = null;
 				int numNew = 0;
-				
-				tagAndNew = doIt(sentID); 
+
+				tagAndNew = doIt(sentID);
 				tag = tagAndNew.getString();
 				numNew = tagAndNew.getInt();
-				
-				this.tagSentence(sentID, tag);				
+
+				this.tagSentence(sentID, tag);
 				sign = sign + numNew;
 			}
 		}
-		
-		myLogger.trace("Return: "+sign);
+
+		myLogger.trace("Return: " + sign);
 		myLogger.trace("Quit ruleBaseLearn");
 		myLogger.trace("\n");
-		
+
 		return sign;
 	}
 
 	/**
 	 * update wordpos table (on certainty) when a sentence is tagged for the
-	 * first time. 
-	 * Note: 
-	 * 1) this update should not be done when a pos is looked
-	 * up, because we may lookup a pos for the same example multiple times. 
-	 * 2) if the tag need to be adjusted (not by doit function), also need 
-	 * to adjust certainty counts.
+	 * first time. Note: 1) this update should not be done when a pos is looked
+	 * up, because we may lookup a pos for the same example multiple times. 2)
+	 * if the tag need to be adjusted (not by doit function), also need to
+	 * adjust certainty counts.
 	 * 
 	 * @param sentID
 	 *            the ID of the sentence
 	 * @return a pair of (tag, sign)
 	 */
 	public StringAndInt doIt(int sentID) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.doIt");
-		
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.discover.ruleBasedLearn.doIt");
+
 		myLogger.trace("Enter doIt");
 		myLogger.trace("sentence ID: " + sentID);
-		
-		SentenceStructure sentEntry = this.myDataHolder.getSentenceHolder().get(sentID);
+
+		SentenceStructure sentEntry = this.myDataHolder.getSentenceHolder()
+				.get(sentID);
 		String thisSentence = sentEntry.getSentence();
 		String thisLead = sentEntry.getLead();
-		
+
 		StringAndInt returnValue = this.doItCaseHandle(thisSentence, thisLead);
-		
-		myLogger.trace("Return Tag: " + returnValue.getString() + ", sign: " + returnValue.getInt());
+
+		myLogger.trace("Return Tag: " + returnValue.getString() + ", sign: "
+				+ returnValue.getInt());
 		myLogger.trace("Quit doIt");
 		myLogger.trace("\n");
-		
-		return returnValue;		
+
+		return returnValue;
 	}
 
 	/**
@@ -1723,8 +1758,9 @@ public class Learner {
 	 * @return
 	 */
 	public StringAndInt doItCaseHandle(String thisSentence, String thisLead) {
-		PropertyConfigurator.configure( "conf/log4j.properties" );
-		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.doIt.doItCaseHandle");
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.discover.ruleBasedLearn.doIt.doItCaseHandle");
 
 		myLogger.trace("Enter doItCaseHandle");
 		myLogger.trace("Sentence: " + thisSentence);
@@ -1736,45 +1772,46 @@ public class Learner {
 
 		int sign = 0;
 		String tag = "";
-		
-		List<String> words = Arrays.asList(thisLead.split("\\s+"));		
-		String ptn = this.getPOSptn(words);		
-		myLogger.trace("ptn: "+ptn);
-		
+
+		List<String> words = Arrays.asList(thisLead.split("\\s+"));
+		String ptn = this.getPOSptn(words);
+		myLogger.trace("ptn: " + ptn);
+
 		Pattern p2 = Pattern.compile("ps");
 		Matcher m2 = p2.matcher(ptn);
-		
+
 		Pattern p3 = Pattern.compile("p(\\?)");
 		Matcher m3 = p3.matcher(ptn);
-		
+
 		Pattern p4 = Pattern.compile("[psn](b)");
 		Matcher m4 = p4.matcher(ptn);
-		
+
 		Pattern p5 = Pattern.compile("([psn][psn]+)");
 		Matcher m5 = p5.matcher(ptn);
-		
+
 		Pattern p6A = Pattern.compile("b[?b]([psn])$");
 		Matcher m6A = p6A.matcher(ptn);
-		
+
 		Pattern p6B = Pattern.compile("[?b]b([psn])$");
 		Matcher m6B = p6B.matcher(ptn);
-		
+
 		boolean case6A = m6A.find();
 		boolean case6B = m6B.find();
-		
+
 		Pattern p7 = Pattern.compile("^s(\\?)$");
 		Matcher m7 = p7.matcher(ptn);
-		
+
 		Pattern p10 = Pattern.compile("^\\?(b)");
 		Matcher m10 = p10.matcher(ptn);
-		
 
 		// Case 1: single word case
 		if (ptn.matches("^[pns]$")) {
 			myLogger.trace("Case 1");
 			tag = words.get(0);
-			sign = sign + this.myDataHolder.updateDataHolder(tag, ptn, "-", "wordpos", 1);
-			myLogger.debug("Directly markup with tag: "+tag+"\n");
+			sign = sign
+					+ this.myDataHolder.updateDataHolder(tag, ptn, "-",
+							"wordpos", 1);
+			myLogger.debug("Directly markup with tag: " + tag + "\n");
 		}
 
 		// Case 2: "ps"
@@ -1784,108 +1821,134 @@ public class Learner {
 			int start = m2.start();
 			int end = m2.end();
 			String pWord = words.get(start);
-			String sWord = words.get(end-1);
-			List<String> tempWords = StringUtility.stringArraySplice(words, 0, start+1);
+			String sWord = words.get(end - 1);
+			List<String> tempWords = StringUtility.stringArraySplice(words, 0,
+					start + 1);
 			tag = StringUtility.joinList(" ", tempWords);
 
-			myLogger.debug("\tdetermine the tag: "+tag);
-			
+			myLogger.debug("\tdetermine the tag: " + tag);
+
 			int returnedSign = 0;
-			returnedSign = this.myDataHolder.updateDataHolder(pWord, "p", "-", "wordpos", 1);
+			returnedSign = this.myDataHolder.updateDataHolder(pWord, "p", "-",
+					"wordpos", 1);
 			sign += returnedSign;
-			myLogger.trace(String.format("updateDataHolder(%s, p, -, wordpos, 1), returned: %d", pWord, returnedSign));
-			
-			returnedSign = this.myDataHolder.updateDataHolderNN(0, tempWords.size(), tempWords);
+			myLogger.trace(String.format(
+					"updateDataHolder(%s, p, -, wordpos, 1), returned: %d",
+					pWord, returnedSign));
+
+			returnedSign = this.myDataHolder.updateDataHolderNN(0,
+					tempWords.size(), tempWords);
 			sign += returnedSign;
-			myLogger.trace(String.format("updateDataHolderNN(0, %d, %s), returned: %d", tempWords.size(), tempWords.toString(), returnedSign));
-			
-			returnedSign = this.myDataHolder.updateDataHolder(sWord, "b", "", "wordpos", 1);
+			myLogger.trace(String.format(
+					"updateDataHolderNN(0, %d, %s), returned: %d",
+					tempWords.size(), tempWords.toString(), returnedSign));
+
+			returnedSign = this.myDataHolder.updateDataHolder(sWord, "b", "",
+					"wordpos", 1);
 			sign += returnedSign;
-			myLogger.trace(String.format("updateDataHolder(%s, b, , wordpos, 1), returned: %d", sWord, returnedSign));
-		} 
-		
+			myLogger.trace(String.format(
+					"updateDataHolder(%s, b, , wordpos, 1), returned: %d",
+					sWord, returnedSign));
+		}
+
 		// Case 3: "p(\\?)"
 		else if (m3.find()) {
 			myLogger.trace("Case 3");
 			myLogger.debug("Found [p?] pattern");
-			
-//			int start = m3.start(1);
+
+			// int start = m3.start(1);
 			int end = m3.end(1);
-			
-			String secondMatchedWord = words.get(end-1);
-			
+
+			String secondMatchedWord = words.get(end - 1);
+
 			// case 3.1
-			if (StringUtils.equals(this.myLearnerUtility.getWordFormUtility().getNumber(secondMatchedWord), "p")) {
+			if (StringUtils.equals(this.myLearnerUtility.getWordFormUtility()
+					.getNumber(secondMatchedWord), "p")) {
 				myLogger.trace("Case 3.1");
 				tag = secondMatchedWord;
-				sign = sign + this.myDataHolder.updateDataHolder(tag, "p", "-", "wordpos", 1);
-				this.myDataHolder.add2Holder(DataHolder.ISA, Arrays.asList(new String[] {tag, words.get(end-2)}));	
-				myLogger.debug("\t:[p p] pattern: determine the tag: "+tag);
+				sign = sign
+						+ this.myDataHolder.updateDataHolder(tag, "p", "-",
+								"wordpos", 1);
+				this.myDataHolder
+						.add2Holder(
+								DataHolder.ISA,
+								Arrays.asList(new String[] { tag,
+										words.get(end - 2) }));
+				myLogger.debug("\t:[p p] pattern: determine the tag: " + tag);
 			}
 			// case 3.2
 			else {
 				myLogger.trace("Case 3.2");
-				
+
 				List<String> wordsCopy = new ArrayList<String>(words);
 				// $i is just end-1
-				List<String> tempWords = StringUtility.stringArraySplice(words, 0, end-1);
+				List<String> tempWords = StringUtility.stringArraySplice(words,
+						0, end - 1);
 				tag = StringUtility.joinList(" ", tempWords);
-				
-				myLogger.debug("\t:determine the tag: "+tag);
+
+				myLogger.debug("\t:determine the tag: " + tag);
 				myLogger.debug("\t:updates on POSs");
-				
+
 				int temp = 0;
-				temp = this.myDataHolder.updateDataHolder(wordsCopy.get(end-1), "b", "", "wordpos", 1);
+				temp = this.myDataHolder.updateDataHolder(
+						wordsCopy.get(end - 1), "b", "", "wordpos", 1);
 				sign += temp;
 				myLogger.debug("\t:updateDataHolder1 returns " + temp);
-				
-				temp = this.myDataHolder.updateDataHolder(wordsCopy.get(end-2), "p", "-", "wordpos", 1);
+
+				temp = this.myDataHolder.updateDataHolder(
+						wordsCopy.get(end - 2), "p", "-", "wordpos", 1);
 				sign += temp;
 				myLogger.debug("\t:updateDataHolder2 returns " + temp);
-				
-				temp = this.myDataHolder.updateDataHolderNN(0, tempWords.size(), tempWords);
+
+				temp = this.myDataHolder.updateDataHolderNN(0,
+						tempWords.size(), tempWords);
 				sign += temp;
 				myLogger.debug("\t:updateDataHolder returns " + temp);
 			}
 		}
-		
+
 		// case 4: "[psn](b)"
 		else if (m4.find()) {
 			myLogger.trace("Case 4");
 			Pattern p41 = Pattern.compile("^sbp");
 			Matcher m41 = p41.matcher(ptn);
-			
+
 			if (m41.find()) {
 				myLogger.trace("\tCase 4.1");
 				myLogger.debug("Found [sbp] pattern");
 				List<String> wordsCopy = new ArrayList<String>(words);
-				tag = StringUtility.joinList(" ", StringUtility.stringArraySplice(wordsCopy, 0, 3));
+				tag = StringUtility.joinList(" ",
+						StringUtility.stringArraySplice(wordsCopy, 0, 3));
 				myLogger.trace("\t:determine the tag: " + tag);
-			}
-			else {
+			} else {
 				myLogger.trace("\tCase 4.2");
 				myLogger.debug("Found [[psn](b)] pattern");
 
 				int index = m4.start(1);
 
-				// get tag, which is the words prior to the b word (exclusive)				
-				List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
+				// get tag, which is the words prior to the b word (exclusive)
+				List<String> wordsTemp = StringUtility.stringArraySplice(words,
+						0, index);
 				tag = StringUtility.joinList(" ", wordsTemp);
 				myLogger.trace("Tag: " + tag);
 
 				// update the b word
-				sign += this.myDataHolder.updateDataHolder(words.get(index), "b", "", "wordpos", 1);
-				myLogger.trace(String.format("updateDataHolder (%s, b, , wordpos, 1)", words.get(index)));
-				
-				sign += this.myDataHolder.updateDataHolder(words.get(index - 1),
-						ptn.substring(index - 1, index), "-", "wordpos", 1);
+				sign += this.myDataHolder.updateDataHolder(words.get(index),
+						"b", "", "wordpos", 1);
+				myLogger.trace(String.format(
+						"updateDataHolder (%s, b, , wordpos, 1)",
+						words.get(index)));
+
+				sign += this.myDataHolder.updateDataHolder(
+						words.get(index - 1), ptn.substring(index - 1, index),
+						"-", "wordpos", 1);
 
 				myLogger.trace(String.format(
 						"updateDataHolder (%s, %s, -, wordpos, 1)",
 						words.get(index - 1), ptn.substring(index - 1, index)));
 
-				sign += this.myDataHolder.updateDataHolderNN(0, wordsTemp.size(),
-						wordsTemp);
+				sign += this.myDataHolder.updateDataHolderNN(0,
+						wordsTemp.size(), wordsTemp);
 				myLogger.trace(String.format("updateDataHolderNN (0, %d, %s)",
 						wordsTemp.size(), wordsTemp.toString()));
 
@@ -1893,7 +1956,7 @@ public class Learner {
 				myLogger.debug("\t:updates on POSs");
 			}
 		}
-		
+
 		// case 5: "pp"
 		else if (m5.find()) {
 			myLogger.debug("Case 5: Found [[psn][psn]+] pattern");
@@ -1901,70 +1964,70 @@ public class Learner {
 			int end = m5.end(1);
 			List<String> copyWords = new ArrayList<String>();
 			copyWords.addAll(words);
-			GetNounsAfterPtnReturnValue returnedValue = this.getNounsAfterPtn(thisSentence, end);
+			GetNounsAfterPtnReturnValue returnedValue = this.getNounsAfterPtn(
+					thisSentence, end);
 			List<String> moreNoun = new LinkedList<String>();
 			List<String> morePtn = new LinkedList<String>();
 			String bWord = "";
-			
+
 			moreNoun.addAll(returnedValue.getNouns());
 			morePtn.addAll(returnedValue.getNounPtn());
 			bWord = returnedValue.getBoundaryWord();
 			List<POSInfo> t;
-			
+
 			if (StringUtility.createMatcher(ptn, "pp").find()) {
 				myLogger.trace("Case 5.1");
-				
+
 				String morePtnStr = StringUtility.joinList("", morePtn);
 				Pattern p511 = Pattern.compile("/^p*(s)");
 				Matcher m511 = p511.matcher(morePtnStr);
 				Pattern p512 = Pattern.compile("^(p+)");
 				Matcher m512 = p512.matcher(morePtnStr);
-				
-				
+
 				if (m511.find()) {
 					myLogger.trace("Case 5.1.1");
 					// find last p word, and reset it to "b"
 					int sAfterPIndex = m511.start(1);
 					int lastPIndex = sAfterPIndex - 1;
 					String sWord = moreNoun.get(sAfterPIndex);
-					String lastPWord = lastPIndex >=0? moreNoun.get(lastPIndex):"";
+					String lastPWord = lastPIndex >= 0 ? moreNoun
+							.get(lastPIndex) : "";
 					bWord = lastPWord;
 					if (StringUtils.equals(lastPWord, "")) {
 						tag = words.get(ptn.lastIndexOf("p"));
-					}
-					else {
+					} else {
 						tag = lastPWord;
 					}
-					sign += this.getDataHolder().updateDataHolder(sWord, "b", "", "wordpos", 1);
-				}
-				else if (m512.find()) {
+					sign += this.getDataHolder().updateDataHolder(sWord, "b",
+							"", "wordpos", 1);
+				} else if (m512.find()) {
 					myLogger.trace("Case 5.1.2");
-					tag = moreNoun.get(m512.end(1)-1);
-				}
-				else {
+					tag = moreNoun.get(m512.end(1) - 1);
+				} else {
 					myLogger.trace("Case 5.1.3");
 					int lastPIndex = ptn.lastIndexOf("p");
 					tag = words.get(lastPIndex);
 				}
 				t = this.getDataHolder().checkPOSInfo(tag);
-			}
-			else {
+			} else {
 				myLogger.trace("Case 5.2");
 				List<String> tempWords = new LinkedList<String>();
-				tempWords.addAll(StringUtility.stringArraySplice(words, 0, end));
+				tempWords
+						.addAll(StringUtility.stringArraySplice(words, 0, end));
 				tag = StringUtility.joinList(" ", tempWords);
-				if (moreNoun.size()>0) {
-					tag = tag + " "+ StringUtility.joinList(" ", moreNoun);
+				if (moreNoun.size() > 0) {
+					tag = tag + " " + StringUtility.joinList(" ", moreNoun);
 				}
-				
-				t = this.getDataHolder().checkPOSInfo(tag.substring(tag.lastIndexOf(" ")+1, tag.length()));
+
+				t = this.getDataHolder().checkPOSInfo(
+						tag.substring(tag.lastIndexOf(" ") + 1, tag.length()));
 			}
-			
+
 			if (t.size() > 0) {
 				String pos = t.get(0).getPOS();
-//				String role = t.get(0).getRole();
-//				int certiantyU = t.get(0).getCertaintyU();
-//				int certiantyL = t.get(0).getCertaintyL();
+				// String role = t.get(0).getRole();
+				// int certiantyU = t.get(0).getCertaintyU();
+				// int certiantyL = t.get(0).getCertaintyL();
 
 				if (StringUtility.createMatcher(pos, "[psn]").find()) {
 					// case 5.x
@@ -1992,24 +2055,23 @@ public class Learner {
 					}
 				}
 			}
-			myLogger.debug("\t:determine the tag: "+tag);
-			
+			myLogger.debug("\t:determine the tag: " + tag);
+
 		}
-		
+
 		// case 6: "b[?b]([psn])$" or "[?b]b([psn])$"
 		else if (case6A || case6B) {
 			myLogger.debug("Case 6: Found [b?[psn]$] or [[?b]b([psn])$] pattern");
 			int end = -1;
 			// the index of noun
 			if (case6A) {
-				end = m6A.end(1)-1;
-			}
-			else {
-				end = m6B.end(1)-1;
+				end = m6A.end(1) - 1;
+			} else {
+				end = m6B.end(1) - 1;
 			}
 			GetNounsAfterPtnReturnValue tempReturnValue = this
 					.getNounsAfterPtn(thisSentence, end + 1);
-//			List<String> moreNouns = tempReturnValue.getNouns();
+			// List<String> moreNouns = tempReturnValue.getNouns();
 			List<String> morePtn = tempReturnValue.getNounPtn();
 			String bWord = tempReturnValue.getBoundaryWord();
 
@@ -2022,7 +2084,7 @@ public class Learner {
 			myLogger.debug("\t:updates on POSs");
 			if (StringUtility.createMatcher(bWord, "\\w").find()) {
 				sign += this.getDataHolder().updateDataHolder(bWord, "b", "",
-					"wordpos", 1);
+						"wordpos", 1);
 			}
 			String allPtn = "" + ptn;
 			allPtn = allPtn + StringUtility.joinList("", morePtn);
@@ -2034,7 +2096,7 @@ public class Learner {
 					sign += this.getDataHolder().updateDataHolder(
 							sentenceHeadWords.get(i),
 							allPtn.substring(i, i + 1), "_", "wordpos", 1);
-				} 
+				}
 				// case 6.2: not last ptn
 				else {
 					myLogger.trace("Case 6.2");
@@ -2045,112 +2107,128 @@ public class Learner {
 			}
 			myLogger.debug("\t:determine the tag: " + tag);
 		}
-		
-		
+
 		// case 7: "^s(\\?)$"
 		else if (m7.find()) {
 			myLogger.trace("Case 7");
 			String singularWord = words.get(0);
 			String questionedWord = words.get(1);
-			String wnPOS = this.myLearnerUtility.getWordFormUtility().checkWN(questionedWord, "pos");
-			
-			if (StringUtility.createMatcher(wnPOS, "p").find()){
+			String wnPOS = this.myLearnerUtility.getWordFormUtility().checkWN(
+					questionedWord, "pos");
+
+			if (StringUtility.createMatcher(wnPOS, "p").find()) {
 				myLogger.trace("Case 7.1");
-				tag = singularWord+" "+questionedWord;
-				myLogger.debug("\t:determine the tag: "+tag);
+				tag = singularWord + " " + questionedWord;
+				myLogger.debug("\t:determine the tag: " + tag);
 				myLogger.debug("\t:updates on POSs");
-				String questionedPOS = this.getLearnerUtility().getWordFormUtility().getNumber(singularWord);
-				sign += this.getDataHolder().updateDataHolder(questionedWord, questionedPOS, "-", "wordpos", 1);
-			}
-			else {
+				String questionedPOS = this.getLearnerUtility()
+						.getWordFormUtility().getNumber(singularWord);
+				sign += this.getDataHolder().updateDataHolder(questionedWord,
+						questionedPOS, "-", "wordpos", 1);
+			} else {
 				myLogger.trace("Case 7.2");
 				tag = words.get(0);
-				myLogger.debug("\t:determine the tag: "+tag);
+				myLogger.debug("\t:determine the tag: " + tag);
 				myLogger.debug("\t:updates on POSs");
-				sign += this.getDataHolder().updateDataHolder(questionedWord, "b", "", "wordpos", 1);
-				sign += this.getDataHolder().updateDataHolder(singularWord, "s", "-", "wordpos", 1);
+				sign += this.getDataHolder().updateDataHolder(questionedWord,
+						"b", "", "wordpos", 1);
+				sign += this.getDataHolder().updateDataHolder(singularWord,
+						"s", "-", "wordpos", 1);
 			}
 		}
-		
+
 		// case 8: "^bs$"
 		else if (StringUtility.createMatcher(ptn, "^bs$").find()) {
 			myLogger.trace("Case 8");
 			tag = StringUtility.joinList(" ", words);
-			sign += this.getDataHolder().updateDataHolder(words.get(0), "b", "", "wordpos", 1);
-			sign += this.getDataHolder().updateDataHolder(words.get(1), "s", "-", "wordpos", 1);
+			sign += this.getDataHolder().updateDataHolder(words.get(0), "b",
+					"", "wordpos", 1);
+			sign += this.getDataHolder().updateDataHolder(words.get(1), "s",
+					"-", "wordpos", 1);
 		}
-		
+
 		// case 9: ^bp$
 		else if (StringUtility.createMatcher(ptn, "^bp$").find()) {
 			myLogger.trace("Case 9");
 			tag = StringUtility.joinList(" ", words);
-			sign += this.getDataHolder().updateDataHolder(words.get(0), "b", "", "wordpos", 1);
-			sign += this.getDataHolder().updateDataHolder(words.get(1), "p", "-", "wordpos", 1);
-		} 
-		
+			sign += this.getDataHolder().updateDataHolder(words.get(0), "b",
+					"", "wordpos", 1);
+			sign += this.getDataHolder().updateDataHolder(words.get(1), "p",
+					"-", "wordpos", 1);
+		}
+
 		// case 10: "^\\?(b)"
 		else if (m10.find()) {
 			myLogger.trace("Case 10");
 			myLogger.trace("Found [?(b)] pattern");
-			
+
 			int index = m10.start(1);
 
-			sign += this.myDataHolder.updateDataHolder(words.get(index), "b", "", "wordpos", 1);
-			myLogger.trace(String.format("updateDataHolder (%s, b, , wordpos, 1)", words.get(index)));
+			sign += this.myDataHolder.updateDataHolder(words.get(index), "b",
+					"", "wordpos", 1);
+			myLogger.trace(String.format(
+					"updateDataHolder (%s, b, , wordpos, 1)", words.get(index)));
 
-			List<String> wordsTemp = StringUtility.stringArraySplice(words, 0, index);
+			List<String> wordsTemp = StringUtility.stringArraySplice(words, 0,
+					index);
 			tag = StringUtility.joinList(" ", wordsTemp);
-			String word = words.get(index-1); // the "?" word
-			
-			myLogger.trace("Tag: "+tag);
-			myLogger.trace("Word: "+word);
-			
+			String word = words.get(index - 1); // the "?" word
+
+			myLogger.trace("Tag: " + tag);
+			myLogger.trace("Word: " + word);
+
 			if (!isFollowedByNoun(thisSentence, thisLead)) {
 				myLogger.trace("Case 10.1");
-				String wnP1 = this.myLearnerUtility.getWordFormUtility().checkWN(word, "pos");
-				myLogger.trace("wnP1: "+wnP1);
+				String wnP1 = this.myLearnerUtility.getWordFormUtility()
+						.checkWN(word, "pos");
+				myLogger.trace("wnP1: " + wnP1);
 				String wnP2 = "";
-						
+
 				if (!StringUtility.createMatcher(wnP1, "\\w").find()) {
-					wnP2 = this.myLearnerUtility.getWordFormUtility().getNumber(word);	
+					wnP2 = this.myLearnerUtility.getWordFormUtility()
+							.getNumber(word);
 				}
-				myLogger.trace("wnP2: "+wnP2);
-				
+				myLogger.trace("wnP2: " + wnP2);
+
 				if (StringUtility.createMatcher(wnP1, "[ar]").find()) {
 					wnP1 = "";
 				}
-				
+
 				if ((StringUtility.createMatcher(wnP1, "[psn]").find())
 						|| (StringUtility.createMatcher(wnP2, "[ps]").find())) {
-					myLogger.trace("Case 10.1.1");	
-                    myLogger.debug("\t:determine the tag: "+tag);
-                    myLogger.debug("\t:updates on POSs");
-                    sign += this.myDataHolder.updateDataHolder(word, "n", "-", "wordpos", 1);
-                    myLogger.trace(String.format("updateDataHolder(%s, n, -, wordpos, 1)", word));
-                    sign += this.myDataHolder.updateDataHolderNN(0, wordsTemp.size()-1, wordsTemp);
-                    myLogger.trace(String.format("updateDataHolderNN(%d, %d, %s)", 0, wordsTemp.size()-1, wordsTemp));
-					
-				}
-				else{
+					myLogger.trace("Case 10.1.1");
+					myLogger.debug("\t:determine the tag: " + tag);
+					myLogger.debug("\t:updates on POSs");
+					sign += this.myDataHolder.updateDataHolder(word, "n", "-",
+							"wordpos", 1);
+					myLogger.trace(String.format(
+							"updateDataHolder(%s, n, -, wordpos, 1)", word));
+					sign += this.myDataHolder.updateDataHolderNN(0,
+							wordsTemp.size() - 1, wordsTemp);
+					myLogger.trace(String.format(
+							"updateDataHolderNN(%d, %d, %s)", 0,
+							wordsTemp.size() - 1, wordsTemp));
+
+				} else {
 					myLogger.trace("Case 10.1.2");
-					myLogger.debug("\t:"+tag+" is adv/adj or modifier. skip.");
+					myLogger.debug("\t:" + tag
+							+ " is adv/adj or modifier. skip.");
 					tag = "";
-				}	
-			}
-			else {
+				}
+			} else {
 				myLogger.trace("Case 10.2");
-				myLogger.debug(String.format("\t:%s is adv/adj or modifier. skip.", tag));
-                tag = "";
+				myLogger.debug(String.format(
+						"\t:%s is adv/adj or modifier. skip.", tag));
+				tag = "";
 			}
-		}
-		else {
+		} else {
 			myLogger.trace("\tCase 0");
 			myLogger.trace(String.format("Pattern [%s] is not processed", ptn));
 		}
-		
-		StringAndInt returnValue = new StringAndInt(tag,sign);
-		
-		myLogger.trace("Return: "+returnValue.toString());
+
+		StringAndInt returnValue = new StringAndInt(tag, sign);
+
+		myLogger.trace("Return: " + returnValue.toString());
 		return returnValue;
 	}
 
@@ -2163,24 +2241,28 @@ public class Learner {
 			return -1;
 		}
 	}
-	
-	public GetNounsAfterPtnReturnValue getNounsAfterPtn(String sentence, int startWordIndex){
+
+	public GetNounsAfterPtnReturnValue getNounsAfterPtn(String sentence,
+			int startWordIndex) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.getNounsAfterPattern");
-		myLogger.trace(String.format("enter (%s, %d)", sentence, startWordIndex));
-		
+		myLogger.trace(String
+				.format("enter (%s, %d)", sentence, startWordIndex));
+
 		String bWord = "";
 		List<String> nouns = new ArrayList<String>();
 		List<String> nounPtn = new ArrayList<String>();
-		
+
 		List<String> tempWords = new ArrayList<String>();
-		tempWords.addAll(this.getLearnerUtility().tokenizeText(sentence, "firstseg"));
-		List<String> words = StringUtility.stringArraySplice(tempWords, startWordIndex, tempWords.size());
-		myLogger.trace("words: "+words);
+		tempWords.addAll(this.getLearnerUtility().tokenizeText(sentence,
+				"firstseg"));
+		List<String> words = StringUtility.stringArraySplice(tempWords,
+				startWordIndex, tempWords.size());
+		myLogger.trace("words: " + words);
 		String ptn = this.getPOSptn(words);
 		myLogger.trace("ptn: " + ptn);
-		
-		if (ptn!=null) {
+
+		if (ptn != null) {
 			Matcher m1 = StringUtility.createMatcher(ptn, "^([psn]+)");
 			Matcher m2 = StringUtility.createMatcher(ptn, "^(\\?+)");
 			boolean case1 = false;
@@ -2196,29 +2278,29 @@ public class Learner {
 			}
 			if (case1 || case2) {
 				myLogger.trace("end: " + end);
-				if (end<words.size()) {
+				if (end < words.size()) {
 					bWord = words.get(end);
 				}
 				List<String> nWords = new ArrayList<String>();
 				nWords.addAll(StringUtility.stringArraySplice(words, 0, end));
-				for (int i=0;i<nWords.size();i++) {
-					String p = ptn.substring(i, i+1);
-					p = StringUtils.equals(p, "?") ? 
-							this.getLearnerUtility().getWordFormUtility().checkWN(nWords.get(i), "pos")
+				for (int i = 0; i < nWords.size(); i++) {
+					String p = ptn.substring(i, i + 1);
+					p = StringUtils.equals(p, "?") ? this.getLearnerUtility()
+							.getWordFormUtility().checkWN(nWords.get(i), "pos")
 							: p;
 					if (StringUtility.createMatcher(p, "^[psn]+$").find()) {
 						nouns.add(nWords.get(i));
 						nounPtn.add(p);
-					}
-					else {
+					} else {
 						bWord = nWords.get(i);
 						break;
 					}
 				}
 			}
 		}
-		
-		GetNounsAfterPtnReturnValue returnValue = new GetNounsAfterPtnReturnValue(nouns, nounPtn, bWord);
+
+		GetNounsAfterPtnReturnValue returnValue = new GetNounsAfterPtnReturnValue(
+				nouns, nounPtn, bWord);
 		myLogger.trace("return " + returnValue);
 		return (returnValue);
 	}
@@ -2236,42 +2318,43 @@ public class Learner {
 	 */
 	public boolean isFollowedByNoun(String sentence, String lead) {
 		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.discover.ruleBasedLearn.doIt.isFollowedByNoun");
+		Logger myLogger = Logger
+				.getLogger("learn.discover.ruleBasedLearn.doIt.isFollowedByNoun");
 		myLogger.trace(String.format("(%s, %s)", sentence, lead));
-		
+
 		// null case
 		if (sentence == null || lead == null) {
 			myLogger.trace("Return false");
 			return false;
 		}
-		
+
 		if (StringUtils.equals(sentence, "")) {
 			myLogger.trace("Return false");
 			return false;
 		}
-		
+
 		// remove lead from sentence
-		sentence = sentence.replaceFirst("^"+lead, "");
-		myLogger.trace("Sentence after remove lead: "+sentence);
-		
-		//List<String> nouns = this.myDataHolder.getWordByPOS("ps");
+		sentence = sentence.replaceFirst("^" + lead, "");
+		myLogger.trace("Sentence after remove lead: " + sentence);
+
+		// List<String> nouns = this.myDataHolder.getWordByPOS("ps");
 		Set<String> POSTags = new HashSet<String>();
 		POSTags.add("p");
 		POSTags.add("s");
-		Set<String> nouns = this.myDataHolder.getWordsFromWordPOSByPOSs(POSTags);
-		
-		if (nouns.size()==0) {
+		Set<String> nouns = this.myDataHolder
+				.getWordsFromWordPOSByPOSs(POSTags);
+
+		if (nouns.size() == 0) {
 			myLogger.trace("Return false");
 			return false;
 		}
-		
-//		String pattern1 = StringUtility.joinList("|", nouns);		
+
+		// String pattern1 = StringUtility.joinList("|", nouns);
 		String pattern1 = StringUtils.join(nouns, "|");
-		
-		
-		pattern1 = "(.*?)\\b("+pattern1+")"+"\\b";
+
+		pattern1 = "(.*?)\\b(" + pattern1 + ")" + "\\b";
 		myLogger.trace("Pattern: " + pattern1);
-		
+
 		Pattern p1 = Pattern.compile(pattern1);
 		Matcher m1 = p1.matcher(sentence);
 
@@ -2316,10 +2399,9 @@ public class Learner {
 			List<POSInfo> POSInfoList = this.myDataHolder.checkPOSInfo(word);
 			if (POSInfoList.size() >= 0) {
 				if (POSInfoList.size() == 0) {
-                    myLogger.trace("\t\tThe word is not in WordPOS holder");
+					myLogger.trace("\t\tThe word is not in WordPOS holder");
 					POS = "?";
-				} 
-				else {
+				} else {
 					POSInfo p = POSInfoList.get(0);
 					POS = p.getPOS();
 
@@ -2337,8 +2419,7 @@ public class Learner {
 							p.getCertaintyL()));
 					myLogger.trace(String
 							.format("\t\tCertainty: %f", certainty));
-					if ((!StringUtils.equals(POS, "?"))
-							&& (certainty <= 0.5)) {
+					if ((!StringUtils.equals(POS, "?")) && (certainty <= 0.5)) {
 						myLogger.info("\t\tThis POS has a certainty less than 0.5. It is ignored.");
 						POS = "?";
 					}
@@ -2360,15 +2441,15 @@ public class Learner {
 	/**
 	 * 
 	 */
-	public void additionalBootstrapping(){
+	public void additionalBootstrapping() {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");
 		myLogger.trace("[additionalBootStrapping]Start");
 
-//		this.myDataHolder.printHolder(DataHolder.SENTENCE);
-		
+		// this.myDataHolder.printHolder(DataHolder.SENTENCE);
+
 		int flag = 0;
-		
+
 		do {
 			myLogger.trace(String.format("Enter one do-while loop iteration"));
 			flag = 0;
@@ -2395,10 +2476,10 @@ public class Learner {
 			myLogger.trace(String.format("Quite this iteration with flag = %d",
 					flag));
 		} while (flag > 0);
-		
+
 		myLogger.trace("[additionalBootStrapping]End");
 	}
-	
+
 	/**
 	 * In the sentence collections, search for such sentence, whose lead is
 	 * among the tags passed in, and add the lead into word POS collections as a
@@ -2413,11 +2494,12 @@ public class Learner {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger
 				.getLogger("learn.additionalBootStrapping.oneLeadWordMarkup");
-		//String tags = StringUtility.joinList("|", tags);
+		// String tags = StringUtility.joinList("|", tags);
 		int sign = 0;
 		myLogger.trace(String.format("Enter (%s)", tags));
 
-		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder().iterator();
+		Iterator<SentenceStructure> iter = this.myDataHolder
+				.getSentenceHolder().iterator();
 
 		while (iter.hasNext()) {
 			SentenceStructure sentence = iter.next();
@@ -2425,7 +2507,8 @@ public class Learner {
 			String tag = sentence.getTag();
 			String lead = sentence.getLead();
 
-			if ((tag == null) && (!(StringUtility.createMatcher(lead, ".* .*").find()))) {
+			if ((tag == null)
+					&& (!(StringUtility.createMatcher(lead, ".* .*").find()))) {
 				if (tags.contains(lead)) {
 					this.tagSentence(ID, lead);
 					myLogger.trace(String.format(
@@ -2439,14 +2522,13 @@ public class Learner {
 		myLogger.trace("Return: " + sign);
 		return 0;
 	}
-	
+
 	/**
 	 * for the remaining of sentences that do not have a tag yet, look for lead
-	 * word co-ocurrance, use the most freq. co-occured phrases as tags 
-	 *   e.g. plication induplicate (n times) and plication reduplicate (m times) =>
-	 *     plication is the tag and a noun 
-	 *   e.g. stigmatic scar basal (n times) and stigmatic scar apical (m times) => 
-	 *     stigmatic scar is the tag and scar is
+	 * word co-ocurrance, use the most freq. co-occured phrases as tags e.g.
+	 * plication induplicate (n times) and plication reduplicate (m times) =>
+	 * plication is the tag and a noun e.g. stigmatic scar basal (n times) and
+	 * stigmatic scar apical (m times) => stigmatic scar is the tag and scar is
 	 * a noun. what about externally like A; externally like B, functionally
 	 * staminate florets, functionally staminate xyz?
 	 * 
@@ -2454,15 +2536,17 @@ public class Learner {
 	 */
 	public int wrapupMarkup() {
 		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping.wrapupMarkup");
+		Logger myLogger = Logger
+				.getLogger("learn.additionalBootStrapping.wrapupMarkup");
 		myLogger.trace("Enter");
-		
+
 		int sign = 0;
 		Set<Integer> checkedIDs = new HashSet<Integer>();
 		List<SentenceStructure> sentenceList = new LinkedList<SentenceStructure>();
-		
+
 		for (int id1 = 0; id1 < this.myDataHolder.getSentenceHolder().size(); id1++) {
-			SentenceStructure sentence = this.myDataHolder.getSentenceHolder().get(id1);
+			SentenceStructure sentence = this.myDataHolder.getSentenceHolder()
+					.get(id1);
 			String tag = sentence.getTag();
 			String lead = sentence.getLead();
 
@@ -2471,13 +2555,13 @@ public class Learner {
 				sentenceList.add(sentence);
 			}
 		}
-		
+
 		SentenceLeadLengthComparator myComparator = new SentenceLeadLengthComparator(
 				false);
 		Collections.sort(sentenceList, myComparator);
 
 		Iterator<SentenceStructure> iter1 = sentenceList.iterator();
-		while (iter1.hasNext()){
+		while (iter1.hasNext()) {
 			SentenceStructure sentence = iter1.next();
 			int ID1 = sentence.getID();
 			String lead = sentence.getLead();
@@ -2485,36 +2569,40 @@ public class Learner {
 			if (checkedIDs.contains(ID1)) {
 				continue;
 			}
-			
+
 			List<String> words = new ArrayList<String>();
 			words.addAll(Arrays.asList(lead.split("\\s+")));
 
 			List<String> sharedHead = new ArrayList<String>();
-			sharedHead.addAll(words.subList(0, words.size()-1));
+			sharedHead.addAll(words.subList(0, words.size() - 1));
 			String match = StringUtility.joinList(" ", sharedHead);
-			
+
 			Set<SentenceStructure> sentenceSet = new HashSet<SentenceStructure>();
-			for (int index=0;index<this.myDataHolder.getSentenceHolder().size();index++) {
-				SentenceStructure thisSentence = this.myDataHolder.getSentenceHolder().get(index);
+			for (int index = 0; index < this.myDataHolder.getSentenceHolder()
+					.size(); index++) {
+				SentenceStructure thisSentence = this.myDataHolder
+						.getSentenceHolder().get(index);
 				String thisLead = thisSentence.getLead();
 				String tag = thisSentence.getTag();
-				String pTemp = "^"+match + " [\\S]+$";
+				String pTemp = "^" + match + " [\\S]+$";
 				myLogger.trace(thisLead);
 				myLogger.trace(pTemp);
-				
-//				if ((tag==null) && StringUtility.isMatchedNullSafe(pTemp, thisLead)) {
-				if ((tag==null) && StringUtility.isMatchedNullSafe(thisLead, pTemp)) {
+
+				// if ((tag==null) && StringUtility.isMatchedNullSafe(pTemp,
+				// thisLead)) {
+				if ((tag == null)
+						&& StringUtility.isMatchedNullSafe(thisLead, pTemp)) {
 					if (!StringUtils.equals(thisLead, lead)) {
 						sentenceSet.add(thisSentence);
 					}
 				}
 			}
-			
+
 			if (sentenceSet.size() > 1) {
 				String ptn = this.getPOSptn(sharedHead);
-				String wnPOS = this.myLearnerUtility.getWordFormUtility().checkWN(
-						sharedHead.get(sharedHead.size() - 1), "pos");
-				
+				String wnPOS = this.myLearnerUtility.getWordFormUtility()
+						.checkWN(sharedHead.get(sharedHead.size() - 1), "pos");
+
 				myLogger.trace("ptn: " + ptn);
 				myLogger.trace("wnPOS: " + wnPOS);
 
@@ -2544,35 +2632,41 @@ public class Learner {
 
 						if (case1 && case2) {
 							myLogger.trace("Case 1");
-							String nb = words2.size() >= sharedHead.size() + 2 ? 
-									words2.get(sharedHead.size() + 1) : "";
-							words2 = 
-									StringUtility.stringArraySplice(words2, 0, sharedHead.size() + 1);
+							String nb = words2.size() >= sharedHead.size() + 2 ? words2
+									.get(sharedHead.size() + 1) : "";
+							words2 = StringUtility.stringArraySplice(words2, 0,
+									sharedHead.size() + 1);
 							String nmatch = StringUtility.joinList(" ", words2);
 
 							this.tagSentence(ID, nmatch);
-							myLogger.trace(String.format("tag (%d, %s)", ID, nmatch));
+							myLogger.trace(String.format("tag (%d, %s)", ID,
+									nmatch));
 							this.tagSentence(ID1, match);
-							myLogger.trace(String.format("tag (%d, %s)", ID1, match));
+							myLogger.trace(String.format("tag (%d, %s)", ID1,
+									match));
 
-							String updatedWord = words2.get(words2.size() - 1); 
+							String updatedWord = words2.get(words2.size() - 1);
 							int update1 = this.myDataHolder.updateDataHolder(
 									updatedWord, "n", "-", "wordpos", 1);
 							sign += update1;
-							myLogger.trace(String.format("update (%s)", updatedWord));
-							
+							myLogger.trace(String.format("update (%s)",
+									updatedWord));
+
 							if (!StringUtils.equals(nb, "")) {
-								int update2 = 
-										this.myDataHolder.updateDataHolder(nb, "b", "", "wordpos", 1);
+								int update2 = this.myDataHolder
+										.updateDataHolder(nb, "b", "",
+												"wordpos", 1);
 								sign += update2;
 								myLogger.trace(String.format("update (%s)", nb));
 							}
-							
+
 							updatedWord = words.get(words.size() - 1);
 							int update3 = this.myDataHolder.updateDataHolder(
-									words.get(words.size() - 1), "b", "", "wordpos", 1);
+									words.get(words.size() - 1), "b", "",
+									"wordpos", 1);
 							sign += update3;
-							myLogger.trace(String.format("update (%s)", updatedWord));
+							myLogger.trace(String.format("update (%s)",
+									updatedWord));
 						}
 						// case 2
 						else {
@@ -2583,20 +2677,24 @@ public class Learner {
 							this.tagSentence(ID, match);
 							this.tagSentence(ID1, match);
 
-//							if (sharedHead.get(sharedHead.size() - 1).equals("tissue")) {
-//								System.out.println();
-//							}
-							
+							// if (sharedHead.get(sharedHead.size() -
+							// 1).equals("tissue")) {
+							// System.out.println();
+							// }
+
 							int update1 = this.myDataHolder.updateDataHolder(
-									sharedHead.get(sharedHead.size() - 1), "n", "-", "wordpos", 1);
+									sharedHead.get(sharedHead.size() - 1), "n",
+									"-", "wordpos", 1);
 							sign += update1;
 							if (!StringUtils.equals(b, "")) {
 								int update2 = this.myDataHolder
-										.updateDataHolder(b, "b", "", "wordpos", 1);
+										.updateDataHolder(b, "b", "",
+												"wordpos", 1);
 								sign += update2;
 							}
 							int update3 = this.myDataHolder.updateDataHolder(
-									words.get(words.size() - 1), "b", "", "wordpos", 1);
+									words.get(words.size() - 1), "b", "",
+									"wordpos", 1);
 							sign += update3;
 
 						}
@@ -2604,7 +2702,7 @@ public class Learner {
 					}
 				} else {
 					Iterator<SentenceStructure> iter2 = sentenceSet.iterator();
-					while (iter2.hasNext()) { 
+					while (iter2.hasNext()) {
 						SentenceStructure thisSentence = iter2.next();
 						int ID = thisSentence.getID();
 						checkedIDs.add(ID);
@@ -2618,7 +2716,7 @@ public class Learner {
 		myLogger.trace("Return " + sign);
 		return sign;
 	}
-	
+
 	/**
 	 * check if the lead has the head in the beginning of it
 	 * 
@@ -2627,121 +2725,125 @@ public class Learner {
 	 * @return true if it has, false if it does not have
 	 */
 	public boolean hasHead(List<String> head, List<String> lead) {
-		
+
 		// null case
 		if (head == null || lead == null) {
 			return false;
 		}
-		
+
 		int headSize = head.size();
 		int leadSize = lead.size();
 		if (headSize > leadSize) {
 			return false;
 		}
-		
-		for (int i=0;i<headSize;i++) {
+
+		for (int i = 0; i < headSize; i++) {
 			if (!StringUtils.equals(head.get(i), lead.get(i))) {
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
-	
+
 	/**
-	 * skip and/or cases
-	 * skip leads with $stop words
+	 * skip and/or cases skip leads with $stop words
+	 * 
 	 * @return number of updates
 	 */
 	public int doItMarkup() {
 		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping.doItMarkup");
+		Logger myLogger = Logger
+				.getLogger("learn.additionalBootStrapping.doItMarkup");
 		myLogger.trace("Enter");
 
-		int sign = 0;		
-//		for (int i=0;i<myDataHolder.getSentenceHolder().size();i++) {			
-		Iterator<SentenceStructure> iter = this.myDataHolder.getSentenceHolder().iterator();
-		while(iter.hasNext()) {
+		int sign = 0;
+		// for (int i=0;i<myDataHolder.getSentenceHolder().size();i++) {
+		Iterator<SentenceStructure> iter = this.myDataHolder
+				.getSentenceHolder().iterator();
+		while (iter.hasNext()) {
 			SentenceStructure sentenceObject = iter.next();
 			String tag = sentenceObject.getTag();
 			if (doItMarkupHelper(tag)) {
 				int ID = sentenceObject.getID();
 				String lead = sentenceObject.getLead();
 				String sentence = sentenceObject.getSentence();
-				
-                // case 1
+
+				// case 1
 				if (doItMarkupCase1Helper(sentence)) {
-                    myLogger.trace(String.format("sent #%d: case 1", ID));
+					myLogger.trace(String.format("sent #%d: case 1", ID));
 					continue;
 				}
-				
-                // case 2
+
+				// case 2
 				if (doItMarkupCase2Helper(lead)) {
 					myLogger.trace(String.format("sent #%d: case 2", ID));
 					continue;
 				}
-				
+
 				StringAndInt tagAndSign = doIt(ID);
 				String doItTag = tagAndSign.getString();
 				int doItSign = tagAndSign.getInt();
 				sign = doItSign;
-                
-                // case 3
+
+				// case 3
 				if (StringUtility.createMatcher(doItTag, "\\w").find()) {
 					myLogger.trace(String.format("sent #%d: case 3", ID));
 					this.tagSentence(ID, doItTag);
 				}
 			}
 		}
-		
-		myLogger.trace("Return: "+sign);
+
+		myLogger.trace("Return: " + sign);
 		return sign;
 	}
-	
-	public boolean doItMarkupHelper(String tag){
+
+	public boolean doItMarkupHelper(String tag) {
 		boolean flag = false;
-		flag = (tag == null) 
-				|| (StringUtils.equals(tag, ""))
+		flag = (tag == null) || (StringUtils.equals(tag, ""))
 				|| (StringUtils.equals(tag, "unknown"));
-		
+
 		return flag;
 	}
-	
+
 	public boolean doItMarkupCase1Helper(String sentence) {
 		boolean flag = false;
-		flag = StringUtility.createMatcher(sentence, "^.{0,40} (nor|or|and|\\/)").find();
+		flag = StringUtility.createMatcher(sentence,
+				"^.{0,40} (nor|or|and|\\/)").find();
 		return flag;
 	}
-	
+
 	public boolean doItMarkupCase2Helper(String lead) {
 		boolean flag = false;
-		flag = StringUtility.createMatcher(lead, "\\b("+Constant.STOP+")\\b").find();
-		
+		flag = StringUtility.createMatcher(lead,
+				"\\b(" + Constant.STOP + ")\\b").find();
+
 		return flag;
 	}
-	
+
 	public void unknownWordBootstrapping() {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.unknownWordBootstrapping");
 		myLogger.trace("[unknownWordBootstrapping]Start");
-		
+
 		unknownWordBootstrappingPreprocessing();
 		unknownWordBootstrappingMain();
 		unknownWordBootstrappingPostprocessing();
-		
+
 		myLogger.trace("[unknownWordBootstrapping]End");
 	}
-	
+
 	public void unknownWordBootstrappingPreprocessing() {
-		this.myLearnerUtility.tagAllSentences(this.myDataHolder, "singletag", "sentence");
+		this.myLearnerUtility.tagAllSentences(this.myDataHolder, "singletag",
+				"sentence");
 	}
-	
+
 	public void unknownWordBootstrappingMain() {
 		String plMiddle = "(ee)";
-		
+
 		int newInt = 0;
 		do {
-//			this.unknownWordBootstrappingGetUnknownWord(plMiddle);
+			// this.unknownWordBootstrappingGetUnknownWord(plMiddle);
 		} while (newInt > 0);
 	}
 
@@ -2753,12 +2855,11 @@ public class Learner {
 		POSTags.add("s");
 		Set<String> nouns = this.getDataHolder().getWordsFromWordPOSByPOSs(
 				POSTags);
-		
+
 		// get boudaries
 		Set<String> boundaries = new HashSet<String>();
-		Set<String> words = this.getDataHolder()
-				.getWordsFromUnknownWord("^.*_.*$", true,
-						"^unknown$", true);
+		Set<String> words = this.getDataHolder().getWordsFromUnknownWord(
+				"^.*_.*$", true, "^unknown$", true);
 		Iterator<String> wordIter = words.iterator();
 		String pattern = "_(" + StringUtils.join(nouns, "|") + ")$";
 		while (wordIter.hasNext()) {
@@ -2772,10 +2873,11 @@ public class Learner {
 						"\\b(" + Constant.FORBIDDEN + ")\\b").find()) {
 					boundaries.add(word);
 				}
-				this.getDataHolder().updateDataHolder(word, "b", "", "wordpos", 1);
+				this.getDataHolder().updateDataHolder(word, "b", "", "wordpos",
+						1);
 			}
 		}
-		
+
 		// if the boundaries is not empty
 		if (boundaries.size() > 0) {
 			Iterator<SentenceStructure> iter = this.getDataHolder()
@@ -2792,7 +2894,8 @@ public class Learner {
 								.find())) {
 					KnownTagCollection tags = new KnownTagCollection(null,
 							null, null, boundaries, null, null);
-					sentence = this.myLearnerUtility.annotateSentence(sentence, tags, this.myDataHolder.getBMSWords());
+					sentence = this.myLearnerUtility.annotateSentence(sentence,
+							tags, this.myDataHolder.getBMSWords());
 					SentenceStructure updatedSentence = this.getDataHolder()
 							.getSentence(sentenceID);
 					updatedSentence.setSentence(sentence);
@@ -2800,34 +2903,33 @@ public class Learner {
 			}
 		}
 	}
-		
+
 	/**
 	 * Utilities
-	 * @return 
+	 * 
+	 * @return
 	 */
 	public Set<String> getCheckedWordSet() {
 		return this.checkedWordSet;
 	}
-	
+
 	public void setCheckedWordSet(Set<String> wordSet) {
 		this.checkedWordSet = wordSet;
 	}
-	
 
-	
 	public boolean tagSentence(int sentenceID, String tag) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.tagSentence");
 		myLogger.trace(String.format("Enter (%d, %s)", sentenceID, tag));
-		
+
 		// case 1
 		if (!StringUtility.createMatcher(tag, "\\w+").find()) {
 			myLogger.trace("\t:tag is not a word. Return");
 			return false;
 		} else {
 			// case 2
-			if (StringUtility
-					.createMatcher(tag, "^(" + Constant.STOP + ")\\b").find()) {
+			if (StringUtility.createMatcher(tag, "^(" + Constant.STOP + ")\\b")
+					.find()) {
 				myLogger.trace(String
 						.format("\t:tag %s starts with a stop word, ignore tagging requrest",
 								tag));
@@ -2843,7 +2945,8 @@ public class Learner {
 				} else {
 					;
 				}
-				SentenceStructure sentence = myDataHolder.getSentence(sentenceID);
+				SentenceStructure sentence = myDataHolder
+						.getSentence(sentenceID);
 				sentence.setTag(tag);
 				myLogger.debug(String.format(
 						"\t:mark up sentence #%d with tag %s", sentenceID, tag));
@@ -2851,42 +2954,41 @@ public class Learner {
 			}
 		}
 	}
-	
+
 	/**
 	 * correct markups that used an adj as an s, e.g lateral, adult, juvenile
 	 */
 	public void adjectivesVerification(DataHolder dataholderHandler) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.adjectivesVerification");
-		
+
 		String pattern = "^<N>([a-z]+)</N> ([^N,;.]+ <N>[a-z]+</N>)";
 		Iterator<SentenceStructure> iter = dataholderHandler
 				.getSentenceHolderIterator();
 		while (iter.hasNext()) {
 			SentenceStructure sentenceItem = iter.next();
 			String sentence = sentenceItem.getSentence();
-//			System.out.println(sentence);
+			// System.out.println(sentence);
 			Set<Integer> ids = new HashSet<Integer>();
 			ids.add(133);
 			ids.add(163);
 			ids.add(236);
 			ids.add(269);
-			
+
 			if (ids.contains(sentenceItem.getID())) {
 				System.out.println();
 			}
-			
-			
+
 			if (sentence != null) {
 				Pattern p = Pattern.compile(pattern);
 				Matcher m = p.matcher(sentence);
 				if (m.find()) {
 					String part1 = m.group(1);
 					String part2 = m.group(2);
-					myLogger.trace(String.format("Sentence %s\n" +
-							"\tSentence: %s\n" +
-							"\tPart1: %s\n" +
-							"\tPart2: %s", sentenceItem.getID(), sentenceItem.getSentence(), part1, part2));
+					myLogger.trace(String.format("Sentence %s\n"
+							+ "\tSentence: %s\n" + "\tPart1: %s\n"
+							+ "\tPart2: %s", sentenceItem.getID(),
+							sentenceItem.getSentence(), part1, part2));
 					boolean condition1 = this.isSentenceTag(dataholderHandler,
 							part2);
 					boolean condition2 = StringUtils.equals(this
@@ -2895,8 +2997,9 @@ public class Learner {
 
 					if (condition1 && condition2) {
 						String wrongWord = part1;
-						myLogger.trace("\tWrong: "+ wrongWord);
-//						if (StringUtility.isMatchedNullSafe(wrongWord, "\\w")) {
+						myLogger.trace("\tWrong: " + wrongWord);
+						// if (StringUtility.isMatchedNullSafe(wrongWord,
+						// "\\w")) {
 						if (StringUtility.isMatchedNullSafe(wrongWord, "\\w")) {
 							this.noun2Modifier(dataholderHandler, wrongWord);
 							Set<String> words = dataholderHandler
@@ -2912,7 +3015,7 @@ public class Learner {
 			}
 		}
 	}
-	
+
 	/**
 	 * Check if a word is (part of) the tag of any sentence
 	 * 
@@ -2924,8 +3027,9 @@ public class Learner {
 	 */
 	public boolean isSentenceTag(DataHolder dataholderHandler, String raw) {
 		boolean result = false;
-		result = dataholderHandler.isExistSentence(false, String.format("^%s.*$", raw));
-		
+		result = dataholderHandler.isExistSentence(false,
+				String.format("^%s.*$", raw));
+
 		return result;
 	}
 
@@ -2941,30 +3045,30 @@ public class Learner {
 	 */
 	public boolean noun2Modifier(DataHolder dataholderHandler, String word) {
 		boolean isUpdated = false;
-		
+
 		ArrayList<String> deletedPOSs = new ArrayList<String>();
 		deletedPOSs.add("s");
 		deletedPOSs.add("p");
 		deletedPOSs.add("n");
-		
-		for (String POS: deletedPOSs) {
+
+		for (String POS : deletedPOSs) {
 			dataholderHandler.deleteWordPOS(true, word, true, POS);
 		}
 		dataholderHandler.updateDataHolder(word, "m", "", "modifiers", 1);
-		
+
 		String oldPattern = String.format("(^%s$|^.* %s$)", word, word);
 		dataholderHandler.updateSentenceTag(oldPattern, null);
-		
+
 		return isUpdated;
 	}
-	
-	
+
 	public void separateModifierTag(DataHolder dataholderHandler) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.separateModifierTag");
-		
-		List<SentenceStructure> sentences = dataholderHandler.getSentencesByTagPattern("^.* .*$");
-		
+
+		List<SentenceStructure> sentences = dataholderHandler
+				.getSentencesByTagPattern("^.* .*$");
+
 		for (SentenceStructure sentenceItem : sentences) {
 			int sentenceID = sentenceItem.getID();
 			String sentence = sentenceItem.getSentence();
@@ -2972,55 +3076,58 @@ public class Learner {
 			myLogger.trace("ID: " + sentenceID);
 			myLogger.trace("Sentence: " + sentence);
 			myLogger.trace("Tag: " + tag);
-			
+
 			// case 1
 			String tagBackup = "" + tag;
-//			if (StringUtility.isMatchedNullSafe("\\w+", tagBackup)) {
-			if (StringUtility.isMatchedNullSafe(tagBackup, "\\w+")) {	
+			// if (StringUtility.isMatchedNullSafe("\\w+", tagBackup)) {
+			if (StringUtility.isMatchedNullSafe(tagBackup, "\\w+")) {
 				myLogger.trace("Case 1");
 				if (!StringUtility.isMatchedNullSafe(tagBackup,
 						String.format("\\b(%s)\\b", Constant.STOP))) {
-	
+
 					List<String> words = new LinkedList<String>();
 					words.addAll(Arrays.asList(tagBackup.split("\\s+")));
-					tag = words.get(words.size()-1);
-					
+					tag = words.get(words.size() - 1);
+
 					String modifier = "";
 					if (words.size() > 1) {
 						modifier = StringUtils.join(
 								StringUtility.stringArraySplice(words, 0,
 										words.size() - 1), " ");
 					}
-					
+
 					if (sentenceID == 22) {
 						System.out.println();
 					}
 					if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
 						// case 1.1
 						myLogger.trace("Case 1.1");
-						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "separatemodifiertag");
-					}
-					else {
+						dataholderHandler.tagSentenceWithMT(sentenceID,
+								sentence, modifier, tag, "separatemodifiertag");
+					} else {
 						// case 1.2
 						myLogger.trace("Case 1.2");
 						myLogger.trace(sentenceID);
-						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, null, tag, "separatemodifiertag");
+						dataholderHandler.tagSentenceWithMT(sentenceID,
+								sentence, null, tag, "separatemodifiertag");
 					}
 				}
-				
+
 			}
 			// case 2
 			else {
 				// treat them case by case
 				// case 2: in some species, abaxially with =>NULL
 				myLogger.trace("Case 2");
-				if ((StringUtility.isMatchedNullSafe(tagBackup, "^in"))&&(StringUtility.isMatchedNullSafe(tagBackup, "\\b(with|without)\\b"))) {
+				if ((StringUtility.isMatchedNullSafe(tagBackup, "^in"))
+						&& (StringUtility.isMatchedNullSafe(tagBackup,
+								"\\b(with|without)\\b"))) {
 					myLogger.trace("Case 2.1");
-					dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", null, "separtemodifiertag");
-				}
-				else {
+					dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+							"", null, "separtemodifiertag");
+				} else {
 					myLogger.trace("Case 2.2");
-					String tagWithStopWordsReplaced = ""+tagBackup;
+					String tagWithStopWordsReplaced = "" + tagBackup;
 					if (tagWithStopWordsReplaced != null) {
 						Pattern p = Pattern.compile("@ ([^@]+)$");
 						Matcher m = p.matcher(tagWithStopWordsReplaced);
@@ -3028,19 +3135,24 @@ public class Learner {
 							String tg = m.group(1);
 							ArrayList<String> tagWords = new ArrayList<String>();
 							tagWords.addAll(Arrays.asList(tg.split("\\s+")));
-							tag = tagWords.get(tagWords.size()-1);
+							tag = tagWords.get(tagWords.size() - 1);
 							String modifier = "";
-							if (tagWords.size()>1) {
-								modifier = StringUtils.join(StringUtility.stringArraySplice(tagWords, 0, tagWords.size()), " ");
+							if (tagWords.size() > 1) {
+								modifier = StringUtils.join(StringUtility
+										.stringArraySplice(tagWords, 0,
+												tagWords.size()), " ");
 							}
-							
+
 							if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
 								myLogger.trace("Case 2.2.1");
-								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "separatemodifiertag");
-							}
-							else {
+								dataholderHandler.tagSentenceWithMT(sentenceID,
+										sentence, modifier, tag,
+										"separatemodifiertag");
+							} else {
 								myLogger.trace("Case 2.2.2");
-								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", null, "separatemodifiertag");
+								dataholderHandler.tagSentenceWithMT(sentenceID,
+										sentence, "", null,
+										"separatemodifiertag");
 							}
 						}
 					}
@@ -3048,53 +3160,59 @@ public class Learner {
 			}
 		}
 	}
-	
+
 	public void resolveNMB(DataHolder dataholderHandler) {
 		Set<String> tags = dataholderHandler.getSentenceTags();
-		Iterator<Entry<WordPOSKey, WordPOSValue>> wordPOSIter = dataholderHandler.getWordPOSHolderIterator();
-		
+		Iterator<Entry<WordPOSKey, WordPOSValue>> wordPOSIter = dataholderHandler
+				.getWordPOSHolderIterator();
+
 		// get words
 		Set<String> words = new HashSet<String>();
 		while (wordPOSIter.hasNext()) {
 			Entry<WordPOSKey, WordPOSValue> wordPOSEntry = wordPOSIter.next();
 			if (StringUtils.equals(wordPOSEntry.getKey().getPOS(), "b")) {
 				String word = wordPOSEntry.getKey().getWord();
-				boolean case1 = dataholderHandler.getWordPOSHolder().containsKey(new WordPOSKey(word, "s"));
+				boolean case1 = dataholderHandler.getWordPOSHolder()
+						.containsKey(new WordPOSKey(word, "s"));
 				boolean case2 = tags.contains(word);
 				if (case1 || case2) {
 					words.add(word);
 				}
 			}
 		}
-		
+
 		// update wordPOS holder and / or sentence holder
 		Iterator<String> wordIter = words.iterator();
 		while (wordIter.hasNext()) {
 			String word = wordIter.next();
-			
+
 			if (dataholderHandler.getModifierHolder().containsKey(word)) {
 				// remove N role
-				dataholderHandler.getWordPOSHolder().remove(new WordPOSKey(word, "s"));
-				
+				dataholderHandler.getWordPOSHolder().remove(
+						new WordPOSKey(word, "s"));
+
 				// reset sentence tags
-				Iterator<SentenceStructure> sentenceIter = dataholderHandler.getSentenceHolderIterator();
+				Iterator<SentenceStructure> sentenceIter = dataholderHandler
+						.getSentenceHolderIterator();
 				while (sentenceIter.hasNext()) {
 					SentenceStructure sentenceItem = sentenceIter.next();
 					String tag = sentenceItem.getSentence();
 					boolean case1 = StringUtils.equals(tag, word);
-					boolean case2 = StringUtility.isMatchedNullSafe(tag, " "+word);
+					boolean case2 = StringUtility.isMatchedNullSafe(tag, " "
+							+ word);
 					if (case1 || case2) {
 						sentenceItem.setModifier("");
 						sentenceItem.setTag(null);
 					}
 				}
-				
+
 				dataholderHandler.getBMSWords().add(word);
 			}
 		}
-		
+
 		// retag clauses with <N><M><B> tags
-		Iterator<SentenceStructure> sentenceIter = dataholderHandler.getSentenceHolderIterator();
+		Iterator<SentenceStructure> sentenceIter = dataholderHandler
+				.getSentenceHolderIterator();
 		while (sentenceIter.hasNext()) {
 			SentenceStructure sentenceItem = sentenceIter.next();
 			String sentence = sentenceItem.getSentence();
@@ -3102,18 +3220,19 @@ public class Learner {
 			sentence = sentence.replaceAll("</B></M></[ON]>", "</B></M>");
 			sentenceItem.setSentence(sentence);
 		}
-		
+
 	}
-	
+
 	public void setAndOr(DataHolder dataholderHandler) {
 		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.separateModifierTag");		
+		Logger myLogger = Logger.getLogger("learn.separateModifierTag");
 		myLogger.debug("Tag and/or sentences andor");
-		
-		String ptn1="^(?:[mbq,]{0,10}[onp]+(?:,|(?=&)))+&(?:[mbq,]{0,10}[onp]+)"; // n,n,n&n
-		String ptn2="^(?:[mbq,]{0,10}(?:,|(?=&)))+&(?:[mbq,]{0,10})[onp]+"; // m,m,&mn
-		
-		Iterator<SentenceStructure> sentenceIter = dataholderHandler.getSentenceHolderIterator();
+
+		String ptn1 = "^(?:[mbq,]{0,10}[onp]+(?:,|(?=&)))+&(?:[mbq,]{0,10}[onp]+)"; // n,n,n&n
+		String ptn2 = "^(?:[mbq,]{0,10}(?:,|(?=&)))+&(?:[mbq,]{0,10})[onp]+"; // m,m,&mn
+
+		Iterator<SentenceStructure> sentenceIter = dataholderHandler
+				.getSentenceHolderIterator();
 		while (sentenceIter.hasNext()) {
 			SentenceStructure sentenceItem = sentenceIter.next();
 			int sentenceID = sentenceItem.getID();
@@ -3127,58 +3246,58 @@ public class Learner {
 
 	public boolean isIsAndOrSentence(int sentenceID, String sentence,
 			String lead, String ptn1, String ptn2) {
-		
+
 		Set<String> token = new HashSet<String>();
 		token.addAll(Arrays.asList("and or nor".split(" ")));
 		token.add("\\");
 		token.add("and / or");
-		
+
 		int limit = 80;
-		
+
 		List<String> words = new ArrayList<String>();
 		words.addAll(Arrays.asList(sentence.split(" ")));
-		
+
 		String sentencePtn = this.getLearnerUtility().getSentencePtn(
 				myDataHolder, token, limit, words);
-		
+
 		if (sentencePtn == null) {
 			return false;
 		}
-		
+
 		boolean result = isIsAndOrSentenceHelper(words, sentencePtn, ptn1, ptn2);
-		
+
 		return result;
 	}
-	
-	public boolean isIsAndOrSentenceHelper(List<String> words, String sentencePtn, String ptn1,
-			String ptn2) {
+
+	public boolean isIsAndOrSentenceHelper(List<String> words,
+			String sentencePtn, String ptn1, String ptn2) {
 		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.isIsAndOrSentence");		
-		
+		Logger myLogger = Logger.getLogger("learn.isIsAndOrSentence");
+
 		sentencePtn = sentencePtn.toLowerCase();
 		// ignore the distinction between type modifiers and modifiers
 		sentencePtn = sentencePtn.replaceAll("t", "m");
-		
+
 		Pattern p1 = Pattern.compile(ptn1);
 		Matcher m1 = p1.matcher(sentencePtn);
-		
+
 		Pattern p2 = Pattern.compile(ptn2);
 		Matcher m2 = p2.matcher(sentencePtn);
-		
+
 		int end = -1;
 		boolean case1 = false;
 		boolean case2 = false;
-		
+
 		if (m1.find()) {
 			end = m1.end();
 			case1 = true;
 		}
-		
+
 		if (m2.find()) {
 			end = m2.end();
 			case2 = true;
 		}
-		
+
 		if (case1 || case2) {
 			String matchedWords = StringUtils.join(words.subList(0, end), " ");
 			String regex = String.format("\\b(%s)\\b", Constant.PREPOSITION);
@@ -3193,61 +3312,108 @@ public class Learner {
 		return false;
 	}
 	
-	public void handleAndOr(DataHolder dataholderHandler) {
+	public void AdjectiveSubjectBootstrapping(DataHolder dataholderHandler) {
+		int flag = 0;
+		int count = 0;
+		
+		do {
+			this.myLearnerUtility.tagAllSentences(dataholderHandler, "singletag", "sentence");
+			int res1 = this.adjectiveSubjects(dataholderHandler);
+			flag += res1;
+			
+			int res2 = discoverNewModifiers(dataholderHandler);
+			flag += res2;
+			
+			int res3 = this.handleAndOr(dataholderHandler);
+			flag += res3;			
+			dataholderHandler.untagSentences();
+			
+			int res4 = this.doItMarkup();
+			
+		} while (flag > 0);
+		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String tag = sentenceItem.getTag();
+			if (StringUtils.equals(tag, "andor")) {
+				sentenceItem.setTag(null);
+			}
+		}
+		
+		this.myLearnerUtility.tagAllSentences(dataholderHandler, "singletag", "sentence");
+		this.adjectiveSubjects(dataholderHandler);
+	}
+	
+	public int adjectiveSubjects(DataHolder dataholderHandler) {
+		return 0;
+		// TODO Auto-generated method stub
+		
+	}
+	
+
+	public int discoverNewModifiers(DataHolder dataholderHandler) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public int handleAndOr(DataHolder dataholderHandler) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.handleAndOr");
-		
-		myLogger.info("to match pattern "+Constant.ANDORPTN);
-		
-		List<SentenceStructure> sentenceItems = dataholderHandler.getSentencesByTagPattern("^andor$");
-		
+
+		myLogger.info("to match pattern " + Constant.ANDORPTN);
+
+		List<SentenceStructure> sentenceItems = dataholderHandler
+				.getSentencesByTagPattern("^andor$");
+
 		int sign = 0;
 		for (SentenceStructure sentenceItem : sentenceItems) {
 			int sentenceID = sentenceItem.getID();
 			String sentence = sentenceItem.getSentence();
-//			myLogger.trace(Constant.SEGANDORPTN);
-//			myLogger.trace(Constant.ANDORPTN);
-			int result = this.andOrTag(dataholderHandler, sentenceID, sentence, Constant.SEGANDORPTN, Constant.ANDORPTN);
+			// myLogger.trace(Constant.SEGANDORPTN);
+			// myLogger.trace(Constant.ANDORPTN);
+			int result = this.andOrTag(dataholderHandler, sentenceID, sentence,
+					Constant.SEGANDORPTN, Constant.ANDORPTN);
 			sign = sign + result;
 		}
 		
+		return sign;
 	}
 
-	public int andOrTag(DataHolder dataholderHandler, int sentenceID, String sentence, String sPattern,
-			String wPattern) {
+	public int andOrTag(DataHolder dataholderHandler, int sentenceID,
+			String sentence, String sPattern, String wPattern) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.andOrTag");
 		myLogger.trace("Enter");
-		
+
 		int sign = 0;
-		
+
 		List<String> mPatterns = new ArrayList<String>();
 		List<String> sPatterns = new ArrayList<String>();
 		List<String> mSegments = new ArrayList<String>();
 		List<String> sSegments = new ArrayList<String>();
-		
-		
+
 		Set<String> token = new HashSet<String>();
 		token.addAll(Arrays.asList("and or nor".split(" ")));
 		token.add("\\");
 		token.add("and / or");
-		String strToken = "("+StringUtils.join(token, " ")+")";
-		
+		String strToken = "(" + StringUtils.join(token, " ") + ")";
+
 		int limit = 80;
 		List<String> words = new ArrayList<String>();
 		words.addAll(Arrays.asList(sentence.split(" ")));
-		String pattern = this.getLearnerUtility().getSentencePtn(dataholderHandler, token, limit, words);
+		String pattern = this.getLearnerUtility().getSentencePtn(
+				dataholderHandler, token, limit, words);
 		pattern = pattern.replaceAll("t", "m");
-		
-		myLogger.info(String.format("Andor pattern %s for %s", pattern, words.toString()));
-		
+
+		myLogger.info(String.format("Andor pattern %s for %s", pattern,
+				words.toString()));
+
 		if (pattern == null) {
 			return -1;
 		}
-		
-//		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
+
+		// Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
 		Matcher m2 = StringUtility.createMatcher(pattern, "^b+&b+[,:;.]");
-		
+
 		if (sentenceID == 163) {
 			System.out.println();
 		}
@@ -3262,32 +3428,39 @@ public class Learner {
 			List<String> tagAndModifier2 = res.get(5);
 			List<String> update1 = res.get(6);
 			List<String> update2 = res.get(7);
-			
+
 			if (tagAndModifier1.size() > 0) {
 				String modifier = tagAndModifier1.get(0);
 				String tag = tagAndModifier1.get(1);
-				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "andor[n&n]");
-				myLogger.trace("tagSentenceWithMT("+sentenceID+", "+sentence+", , "+tag+", andor[n&n]");
-			}
-			else {
-				myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "",
+						tag, "andor[n&n]");
+				myLogger.trace("tagSentenceWithMT(" + sentenceID + ", "
+						+ sentence + ", , " + tag + ", andor[n&n]");
+			} else {
+				myLogger.debug(String.format(
+						"Andor can not determine a tag or modifier for %d: %s",
+						sentenceID, sentence));
 			}
 
 			if (tagAndModifier2.size() > 0) {
 				String modifier = tagAndModifier2.get(0);
 				String tag = tagAndModifier2.get(1);
-				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "andor[m&mn]");
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+						modifier, tag, "andor[m&mn]");
 				myLogger.trace("tagSentenceWithMT(" + sentenceID + ", "
 						+ sentence + ", " + modifier + ", " + tag
-						+ ", andor[m&mn])");
-			}
-			else {
-				myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
+						+ ", andor[m&mn]");
+			} else {
+				myLogger.debug(String.format(
+						"Andor can not determine a tag or modifier for %d: %s",
+						sentenceID, sentence));
 			}
 
 			if (update1.size() > 0) {
 				String newBoundaryWord = update1.get(0);
-				sign = sign + dataholderHandler.updateDataHolder(newBoundaryWord, "b", "", "wordpos", 1);
+				sign = sign
+						+ dataholderHandler.updateDataHolder(newBoundaryWord,
+								"b", "", "wordpos", 1);
 			}
 
 			if (update2.size() > 0) {
@@ -3297,65 +3470,66 @@ public class Learner {
 									"-", "wordpos", 1);
 				}
 			}
-		}	
+		}
 
 		else if (m2.find()) {
 			myLogger.trace("Case 2");
-			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "ditto", "andor");
-		}
-		else {
+			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "",
+					"ditto", "andor");
+		} else {
 			myLogger.trace("Case 3");
-			myLogger.trace("[andortag]Andor can not determine a tag or modifier for "+sentenceID+": " + sentence);
-		}		
-
-		myLogger.trace("Return "+sign+"\n");
-
+			myLogger.trace("[andortag]Andor can not determine a tag or modifier for "
+					+ sentenceID + ": " + sentence);
+		}
+		myLogger.trace("Return " + sign + "\n");
 		return sign;
 	}
-	
-	public List<List<String>> andOrTagCase1Helper(String pattern, String wPattern, List<String> words, Set<String> token){		
+
+	public List<List<String>> andOrTagCase1Helper(String pattern,
+			String wPattern, List<String> words, Set<String> token) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.andOrTag");
-		
+
 		List<String> mPatterns = new ArrayList<String>();
 		List<String> sPatterns = new ArrayList<String>();
 		List<String> mSegments = new ArrayList<String>();
 		List<String> sSegments = new ArrayList<String>();
-		
+
 		List<String> update1 = new ArrayList<String>();
 		List<String> update2 = new ArrayList<String>();
-		
+
 		List<String> tagAndModifier1 = new ArrayList<String>();
 		List<String> tagAndModifier2 = new ArrayList<String>();
-		
-		String strToken = "("+StringUtils.join(token, " ")+")";
+
+		String strToken = "(" + StringUtils.join(token, " ") + ")";
 
 		Matcher m1 = StringUtility.createMatcher(pattern, wPattern);
-		
+
 		if (m1.find()) {
 			myLogger.trace("Case 1");
 			if (pattern.equals("n&qqnbq")) {
-//				System.out.println();
+				// System.out.println();
 			}
 
 			int start1 = m1.start(1);
 			int end1 = m1.end(1);
-			
+
 			int start2 = m1.start(2);
 			int end2 = m1.end(2);
-			
+
 			int start3 = m1.start(3);
 			int end3 = m1.end(3);
-			
+
 			int start4 = m1.start(4);
 			int end4 = m1.end(4);
-			
+
 			int start5 = m1.start(5);
 			int end5 = m1.end(5);
-			
-//			System.out.println(pattern);
-//			System.out.println(start1);
-//			System.out.println();
+
+
+			// System.out.println(pattern);
+			// System.out.println(start1);
+			// System.out.println();
 			String earlyGroupsPattern = start1 == -1 ? "" : pattern.substring(
 					0, start1);
 			String[] patterns = earlyGroupsPattern.split("s*<B>,<\\/B>\\s*");
@@ -3386,33 +3560,37 @@ public class Learner {
 			int bIndex = start5;
 
 			// matching pattern with original text
-			if (!(patterns.length == 1 && StringUtils.equals(patterns[0],""))) {
-			for (int i = 0; i < patterns.length; i++) {
-				Pattern p = Pattern.compile("sPattern");
-				Matcher m10 = p.matcher(patterns[i]);
-				if (m10.find()) {
-					String g1 = m10.group(1);
-					mPatterns.add(g1);
-					String g2 = m10.group(2);
-					sPatterns.add(g2);
-					
-					List<String> w = new ArrayList<String>(Arrays.asList(segments[i].split(" ")));
-					String m = StringUtils.join(w.subList(0, m10.end(1)), " ");
-					
-					if (StringUtility.isMatchedNullSafe(m, "\\b(although|but|when|if|where)\\b")) {
+			if (!(patterns.length == 1 && StringUtils.equals(patterns[0], ""))) {
+				for (int i = 0; i < patterns.length; i++) {
+					Pattern p = Pattern.compile("sPattern");
+					Matcher m10 = p.matcher(patterns[i]);
+					if (m10.find()) {
+						String g1 = m10.group(1);
+						mPatterns.add(g1);
+						String g2 = m10.group(2);
+						sPatterns.add(g2);
+
+						List<String> w = new ArrayList<String>(
+								Arrays.asList(segments[i].split(" ")));
+						String m = StringUtils.join(w.subList(0, m10.end(1)),
+								" ");
+
+						if (StringUtility.isMatchedNullSafe(m,
+								"\\b(although|but|when|if|where)\\b")) {
+							return null;
+						}
+
+						mSegments.add(m);
+						sSegments.add(StringUtils.join(
+								w.subList(m10.end(1), w.size()), " "));
+					} else {
+						myLogger.info("wrong segment: " + patterns[i] + "=>"
+								+ segments[i] + "\n");
 						return null;
 					}
-					
-					mSegments.add(m);
-					sSegments.add(StringUtils.join(w.subList(m10.end(1), w.size()), " "));
-				}
-				else {
-					myLogger.info("wrong segment: "+patterns[i]+"=>"+segments[i]+"\n");
-					return null;
 				}
 			}
-			}
-			
+
 			if (secondLastModifierPattern != null)
 				mPatterns.add(secondLastModifierPattern);
 			if (!StringUtils.equals(secondLastModifierWords, ""))
@@ -3421,7 +3599,7 @@ public class Learner {
 				sPatterns.add(sencondLastStructurePattern);
 			if (!StringUtils.equals(secondLastStructureWords, ""))
 				sSegments.add(secondLastStructureWords);
-			
+
 			if (lastModifierPattern != null)
 				mPatterns.add(lastModifierPattern);
 			if (!StringUtils.equals(lastModifierWords, ""))
@@ -3430,95 +3608,111 @@ public class Learner {
 				sPatterns.add(lastStructurePattern);
 			if (!StringUtils.equals(lastStructureWords, ""))
 				sSegments.add(lastStructureWords);
-			
-			
+
 			// find the modifier and the tag for sentenceID
 			// case 1.1
 			if (this.countStructures(sPatterns) > 1) {
-				// compound subject involving multiple structures: mn,mn,&mn => use all but bounary as the tag, modifier="";
+				// compound subject involving multiple structures: mn,mn,&mn =>
+				// use all but bounary as the tag, modifier="";
 				String tag = StringUtils.join(words.subList(0, bIndex), " ");
 				String modifier = "";
 				tag = tag.replaceAll("<\\S+?>", "");
 				if (tag != null) {
-					String regex11 = "\\b("+StringUtils.join(token, "|")+")\\b";
+					String regex11 = "\\b(" + StringUtils.join(token, "|")
+							+ ")\\b";
 					Matcher m11 = StringUtility.createMatcher(tag, regex11);
-					
+
 					if (m11.find()) {
 						String conj = m11.group(1);
-						
-						tag = tag.replaceAll(",", " "+conj+" ");
+
+						tag = tag.replaceAll(",", " " + conj + " ");
 						tag = tag.replaceAll("\\s+", " ");
-						tag = tag.replaceAll("("+conj+" )+", "$1");
+						tag = tag.replaceAll("(" + conj + " )+", "$1");
 						tag = tag.replaceAll("^\\s+", "");
 						tag = tag.replaceAll("\\s+$", "");
-						
-//						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "andor[n&n]");
+
+						// dataholderHandler.tagSentenceWithMT(sentenceID,
+						// sentence, "", tag, "andor[n&n]");
 						tagAndModifier1.add("");
 						tagAndModifier1.add(tag);
 					}
-//					else {
-//						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
-//					}
+					// else {
+					// myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s",
+					// sentenceID, sentence));
+					// }
 				}
 				// case 1.2
 				else if (this.countStructures(sPatterns) == 1) {
-					// m&mn => connect all modifiers as the modifier, and the n as the tag
+					// m&mn => connect all modifiers as the modifier, and the n
+					// as the tag
 					int i = 0;
 					for (i = 0; i < sPatterns.size(); i++) {
-						if (StringUtility.isMatchedNullSafe(sPatterns.get(i), "\\w")) {
+						if (StringUtility.isMatchedNullSafe(sPatterns.get(i),
+								"\\w")) {
 							break;
 						}
 					}
-					
+
 					tag = sSegments.get(i);
 					tag = tag.replaceAll("<\\S+?>", "");
 					modifier = StringUtils.join(mSegments, " ");
 					modifier = modifier.replaceAll("<\\S+?>", "");
-					
+
 					tag = StringUtility.trimString(tag);
 					modifier = StringUtility.trimString(modifier);
-					
+
 					String myStop = Constant.STOP;
-					myStop = myStop.replaceAll(String.format("\\b%s\\b", token), "");
+					myStop = myStop.replaceAll(
+							String.format("\\b%s\\b", token), "");
 					myStop = myStop.replaceAll("\\s+$", "");
-					
-					if (StringUtility.isMatchedNullSafe(modifier, "\\b"+strToken+"\\b")
-							&& StringUtility.isEntireMatchedNullSafe(modifier, "\\b("+myStop+"|to)\\b")) {
+
+					if (StringUtility.isMatchedNullSafe(modifier, "\\b"
+							+ strToken + "\\b")
+							&& StringUtility.isEntireMatchedNullSafe(modifier,
+									"\\b(" + myStop + "|to)\\b")) {
 						// case 1.2.1
-						List<String> wordsTemp = new ArrayList<String>(); 
+						List<String> wordsTemp = new ArrayList<String>();
 						wordsTemp.addAll(Arrays.asList(tag.split("\\s+")));
-						modifier = modifier + " " + StringUtils.join(wordsTemp.subList(0, wordsTemp.size()-1), " ");
-						tag = wordsTemp.get(wordsTemp.size()-1);
-//						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "andor[m&mn]");
+						modifier = modifier
+								+ " "
+								+ StringUtils.join(wordsTemp.subList(0,
+										wordsTemp.size() - 1), " ");
+						tag = wordsTemp.get(wordsTemp.size() - 1);
+						// dataholderHandler.tagSentenceWithMT(sentenceID,
+						// sentence, modifier, tag, "andor[m&mn]");
 						tagAndModifier2.add(modifier);
 						tagAndModifier2.add(tag);
-						
+
 					}
-//					else {
-//						myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s", sentenceID, sentence));
-//					}
+					// else {
+					// myLogger.debug(String.format("Andor can not determine a tag or modifier for %d: %s",
+					// sentenceID, sentence));
+					// }
 				}
 				// case 1.3
 				else {
 					myLogger.debug("Andor can not determine a tag or modifier");
 				}
-				
+
 				int q = -1;
 				if (endSegmentPattern != null) {
-					Matcher m13 = StringUtility.createMatcher(endSegmentPattern, "q");
+					Matcher m13 = StringUtility.createMatcher(
+							endSegmentPattern, "q");
 					if (m13.find()) {
 						q = m13.start();
 					}
 				}
-				
+
 				if (q >= 0) {
 					String newBoundaryWord = endSegmentWords.split(" ")[q];
 					if (StringUtility.isMatchedNullSafe(newBoundaryWord, "\\w")) {
 						update1.add(newBoundaryWord);
-//						sign = sign + dataholderHandler.updateDataHolder(newBoundaryWord, "b", "", "wordpos", 1);
+						// sign = sign +
+						// dataholderHandler.updateDataHolder(newBoundaryWord,
+						// "b", "", "wordpos", 1);
 					}
 				}
-				
+
 				// structure patterns and segments: $nptn =
 				// "((?:[np],?)*&?[np])"; #grouped #must present, no q allowed
 				// mark all ps "p"
@@ -3528,21 +3722,21 @@ public class Learner {
 					sPatternI = StringUtility.trimString(sPatternI);
 					String[] ps = sPatternI.split(" ");
 					String[] ts = sSegments.get(i).split("\\s+");
-					
+
 					for (int j = 0; j < ps.length; j++) {
 						if (StringUtils.equals(ps[j], "p")) {
 							ts[j] = StringUtility.trimString(ts[j]);
 							update2.add(ts[j]);
-//							sign = sign
-//									+ dataholderHandler.updateDataHolder(ts[j],
-//											"p", "-", "wordpos", 1);
+							// sign = sign
+							// + dataholderHandler.updateDataHolder(ts[j],
+							// "p", "-", "wordpos", 1);
 						}
 					}
-					
+
 				}
 
 			}
-			
+
 			List<List<String>> res = new ArrayList<List<String>>();
 			res.add(mPatterns);
 			res.add(mSegments);
@@ -3552,14 +3746,13 @@ public class Learner {
 			res.add(tagAndModifier2);
 			res.add(update1);
 			res.add(update2);
-			
+
 			return res;
-		}
-		else {
+		} else {
 			return null;
 		}
 	}
-	
+
 	public int countStructures(List<String> patterns) {
 		int count = 0;
 		for (String pattern : patterns) {
@@ -3567,59 +3760,64 @@ public class Learner {
 				count++;
 			}
 		}
-		
+
 		return count;
 	}
-	
+
 	public void resetAndOrTags(DataHolder dataholderHandler) {
 		dataholderHandler.updateSentenceTag("^andor$", null);
 	}
-	
-	public void ditto (DataHolder dataholderHandler) {
+
+	public void ditto(DataHolder dataholderHandler) {
 		String nPhrasePattern = "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\\/[A-Z]*[NO]+[A-Z]*>\\s*)+";
 		String mPhrasePattern = "(?:<[A-Z]*M[A-Z]*>[^<]+?<\\/[A-Z]*M[A-Z]*>\\s*)+";
-		
-		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
 			if (sentenceItem.getTag() == null) {
 				int sentenceID = sentenceItem.getID();
 				String sentence = sentenceItem.getSentence();
-				this.dittoHelper(dataholderHandler, sentenceID, sentence, nPhrasePattern, mPhrasePattern);
+				this.dittoHelper(dataholderHandler, sentenceID, sentence,
+						nPhrasePattern, mPhrasePattern);
 			}
 		}
 	}
-	
+
 	public int dittoHelper(DataHolder dataholderHandler, int sentenceID,
 			String sentence, String nPhrasePattern, String mPhrasePattern) {
 		int res = 0;
 		String sentenceCopy = "" + sentence;
 		sentenceCopy = sentenceCopy.replaceAll("></?", "");
 		String modifier = "";
-		
-		Matcher m2 = StringUtility.createMatcher(sentenceCopy, "(.*?)"+nPhrasePattern);
-		
+
+		Matcher m2 = StringUtility.createMatcher(sentenceCopy, "(.*?)"
+				+ nPhrasePattern);
+
 		if (!StringUtility.isMatchedNullSafe(sentence, "<[NO]>")) {
 			String tag = "ditto";
-			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag, "ditto-no-N");
+			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", tag,
+					"ditto-no-N");
 			res = 1;
-		}
-		else if (m2.find()) {
+		} else if (m2.find()) {
 			String head = m2.group(1);
-			String pattern21 = String.format("\\b(%s)\\b", Constant.PREPOSITION);
+			String pattern21 = String
+					.format("\\b(%s)\\b", Constant.PREPOSITION);
 			if (StringUtility.isMatchedNullSafe(head, pattern21)) {
 				String tag = "ditto";
-				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "ditto-proposition");
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+						modifier, tag, "ditto-proposition");
 				res = 21;
-			}
-			else if (StringUtility.isMatchedNullSafe(head, ",<\\/B>\\s*$")) {
+			} else if (StringUtility.isMatchedNullSafe(head, ",<\\/B>\\s*$")) {
 				String tag = "ditto";
-				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "ditto-,-N");
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+						modifier, tag, "ditto-,-N");
 				res = 22;
 			}
-		}	
-		
+		}
+
 		return res;
 	}
-	
+
 	public void phraseClause(DataHolder dataholderHandler) {
 		for (SentenceStructure sentenceItem : dataholderHandler
 				.getSentenceHolder()) {
@@ -3646,7 +3844,7 @@ public class Learner {
 		String pattern = "^(.*?)((?:<[A-Z]*M[A-Z]*>[^<]*?<\\/[A-Z]*M[A-Z]*>\\s*)*)((?:<[A-Z]*[NO]+[A-Z]*>[^<]*?<\\/[A-Z]*[NO]+[A-Z]*>\\s*)+)<B>[,:\\.;]<\\/B>\\s*$";
 		String sentenceCopy = "" + sentence;
 		sentenceCopy = sentenceCopy.replaceAll("></?", "");
-		
+
 		Matcher m = StringUtility.createMatcher(sentenceCopy, pattern);
 		if (m.find()) {
 			String head = m.group(1);
@@ -3679,29 +3877,32 @@ public class Learner {
 		}
 		return res;
 	}
-	
+
 	public void pronounCharacterSubject(DataHolder dataholderHandler) {
-		
+
 		for (SentenceStructure sentenceItem : dataholderHandler
 				.getSentenceHolder()) {
-			
+
 			int sentenceID = sentenceItem.getID();
 			String lead = sentenceItem.getLead();
 			String sentence = sentenceItem.getSentence();
 			String modifier = sentenceItem.getModifier();
 			String tag = sentenceItem.getTag();
-			
-			List<String> mt = pronounCharacterSubjectHelper(lead, sentence, modifier, tag);
+
+			List<String> mt = pronounCharacterSubjectHelper(lead, sentence,
+					modifier, tag);
 			if (mt != null) {
-				dataholderHandler.tagSentenceWithMT(sentenceID,
-					sentence, modifier, tag,
-					"pronouncharactersubject[character subject]");
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+						modifier, tag,
+						"pronouncharactersubject[character subject]");
 			}
 		}
-		
+
 		// preposition cases
-		String prepositionPattern = String.format("^(%s)", Constant.PREPOSITION);
-		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+		String prepositionPattern = String
+				.format("^(%s)", Constant.PREPOSITION);
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
 			int sentenceID = sentenceItem.getID();
 			String lead = sentenceItem.getLead();
 			String modifier = sentenceItem.getModifier();
@@ -3709,61 +3910,74 @@ public class Learner {
 			String sentence = sentenceItem.getSentence();
 			boolean case1 = (StringUtils.equals(tag, "ignore"));
 			boolean case2 = (tag == null);
-			boolean case3 = StringUtility.isMatchedNullSafe(tag, prepositionPattern + " ");
+			boolean case3 = StringUtility.isMatchedNullSafe(tag,
+					prepositionPattern + " ");
 			if ((case1 || case2) && case3) {
-				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "", "pronouncharactersubject[proposition subject]");
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "",
+						"", "pronouncharactersubject[proposition subject]");
 			}
 		}
-		
+
 		// pronoun cases
 		String pronounPattern = String.format("(%s)", Constant.PRONOUN);
-		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
 			int sentenceID = sentenceItem.getID();
 			String lead = sentenceItem.getLead();
 			String modifier = sentenceItem.getModifier();
 			String tag = sentenceItem.getTag();
 			String sentence = sentenceItem.getSentence();
-			
-			boolean case1 = StringUtility.isMatchedNullSafe(tag, String.format("(^| )%s( |\\$)", pronounPattern));
-			boolean case2 = StringUtility.isMatchedNullSafe(modifier, String.format("(^| )%s( |\\$)", pronounPattern));			
-			if (case1 || case2) {				
-				modifier = modifier.replaceAll("\\b("+Constant.PRONOUN+")\\b", "");
-				tag = tag.replaceAll("\\b("+Constant.PRONOUN+")\\b", "");
+
+			boolean case1 = StringUtility.isMatchedNullSafe(tag,
+					String.format("(^| )%s( |\\$)", pronounPattern));
+			boolean case2 = StringUtility.isMatchedNullSafe(modifier,
+					String.format("(^| )%s( |\\$)", pronounPattern));
+			if (case1 || case2) {
+				modifier = modifier.replaceAll("\\b(" + Constant.PRONOUN
+						+ ")\\b", "");
+				tag = tag.replaceAll("\\b(" + Constant.PRONOUN + ")\\b", "");
 				modifier = modifier.replaceAll("\\s+", " ");
 				tag = tag.replaceAll("\\s+", " ");
-				
-				if (!StringUtility.isMatchedNullSafe(tag, "\\w") || StringUtility.isMatchedNullSafe(tag, "ditto")) {
+
+				if (!StringUtility.isMatchedNullSafe(tag, "\\w")
+						|| StringUtility.isMatchedNullSafe(tag, "ditto")) {
 					tag = dataholderHandler.getParentSentenceTag(sentenceID);
 				}
-				
+
 				modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
 				tag = tag.replaceAll("(^\\s*|\\s*$)", "");
-				
+
 				List<String> mt = dataholderHandler.getMTFromParentTag(tag);
 				String m = mt.get(0);
 				tag = mt.get(1);
-				
+
 				if (StringUtility.isMatchedNullSafe(m, "\\w")) {
 					modifier = modifier + m;
-					dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "pronouncharactersubject[pronoun subject]");
+					dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+							modifier, tag,
+							"pronouncharactersubject[pronoun subject]");
 				}
 			}
 		}
-		
+
 		// correct to missed N
-		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
 			int sentenceID = sentenceItem.getID();
 			String lead = sentenceItem.getLead();
 			String modifier = sentenceItem.getModifier();
 			String tag = sentenceItem.getTag();
 			String sentence = sentenceItem.getSentence();
-			
-			List<String> mt = this.pronounCharacterSubjectHelper4(lead, sentence, modifier, tag);			
+
+			List<String> mt = this.pronounCharacterSubjectHelper4(lead,
+					sentence, modifier, tag);
 			if (mt != null) {
 				modifier = mt.get(0);
 				tag = mt.get(1);
-				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "pronouncharactersubject[correct to missed N]");
-			}			
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+						modifier, tag,
+						"pronouncharactersubject[correct to missed N]");
+			}
 		}
 	}
 
@@ -3806,18 +4020,20 @@ public class Learner {
 				}
 			}
 		}
-	return null;
-	
+		return null;
+
 	}
 
 	public List<String> pronounCharacterSubjectHelper(String lead,
 			String sentence, String modifier, String tag) {
 		String t = "(?:<\\/?[A-Z]+>)?";
-		
+
 		boolean b1 = !StringUtils.equals(tag, "ignore");
 		boolean b2 = (tag == null);
-		boolean b3 = StringUtility.isMatchedNullSafe(lead, "(^| )("+Constant.CHARACTER+")( |$)");
-		boolean b4 = StringUtility.isMatchedNullSafe(tag, "(^| )("+Constant.CHARACTER+")( |$)");
+		boolean b3 = StringUtility.isMatchedNullSafe(lead, "(^| )("
+				+ Constant.CHARACTER + ")( |$)");
+		boolean b4 = StringUtility.isMatchedNullSafe(tag, "(^| )("
+				+ Constant.CHARACTER + ")( |$)");
 		if (((b1 || b2) && b3) || b4) {
 			sentence = sentence.replaceAll("></?", "");
 			if (sentence != null) {
@@ -3825,114 +4041,121 @@ public class Learner {
 						.format("^.*?%s\\b(%s)\\b%s %s(?:of)%s (.*?)(<[NO]>([^<]*?)<\\/[NO]> ?)+ ",
 								t, Constant.CHARACTER, t, t, t);
 				Matcher m1 = StringUtility.createMatcher(sentence, pattern1);
-				
-				String pattern2 = String.format("^(.*?)((?:<\\/?[BM]+>\\w+?<\\/?[BM]+>\\s*)*)%s\\b(%s)\\b%s", t, Constant.CHARACTER, t);
+
+				String pattern2 = String
+						.format("^(.*?)((?:<\\/?[BM]+>\\w+?<\\/?[BM]+>\\s*)*)%s\\b(%s)\\b%s",
+								t, Constant.CHARACTER, t);
 				Matcher m2 = StringUtility.createMatcher(sentence, pattern2);
-				
+
 				// case 1.1
 				if (m1.find()) {
 					tag = m1.group(4);
 					modifier = sentence.substring(m1.start(2), m1.start(4));
 					String s2 = m1.group(2);
 					String s3 = m1.group(3);
-					
-					if ((!StringUtility.isMatchedNullSafe(s2, String.format("\\b(%s)\\b", Constant.PREPOSITION)))
-							&& (!StringUtility.isMatchedNullSafe(s3, String.format("\\b(%s|\\d)\\b", Constant.STOP)))) {
+
+					if ((!StringUtility.isMatchedNullSafe(s2,
+							String.format("\\b(%s)\\b", Constant.PREPOSITION)))
+							&& (!StringUtility.isMatchedNullSafe(s3, String
+									.format("\\b(%s|\\d)\\b", Constant.STOP)))) {
 						modifier = modifier.replaceAll("<\\S+?>", "");
 						modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
 						tag = tag.replaceAll("<\\S+?>", "");
 						tag = tag.replaceAll("(^\\s*|\\s*$)", "");
-					}
-					else {
+					} else {
 						modifier = "";
-						tag = "ditto";							
+						tag = "ditto";
 					}
 				}
-				
+
 				// case 1.2
 				else if (m2.find()) {
 					String text = m2.group(1);
-					
-					if ((!StringUtility.isMatchedNullSafe(text, "\\b("+Constant.STOP+"|\\d+)\\b")) 
-							&& (StringUtility.isMatchedNullSafe(text, "\\w")) 
-							&& (!StringUtility.isMatchedNullSafe(text, "[,:;.]"))) {
+
+					if ((!StringUtility.isMatchedNullSafe(text, "\\b("
+							+ Constant.STOP + "|\\d+)\\b"))
+							&& (StringUtility.isMatchedNullSafe(text, "\\w"))
+							&& (!StringUtility
+									.isMatchedNullSafe(text, "[,:;.]"))) {
 						text = text.replaceAll("<\\S+?>", "");
-//						$text =~ s#(^\s*|\s*$)##g;
-//						$text =~ s#[[:punct:]]##g;
+						// $text =~ s#(^\s*|\s*$)##g;
+						// $text =~ s#[[:punct:]]##g;
 						text = text.replaceAll("(^\\s*|\\s*$)", "");
 						text = text.replaceAll("\\p{Punct}", "");
-						
+
 						String[] textArray = text.split("\\s+");
-//						List<String> textList = new LinkedList<String>();
-//						textList.addAll(Arrays.asList(textArray));
+						// List<String> textList = new LinkedList<String>();
+						// textList.addAll(Arrays.asList(textArray));
 						if (textArray.length >= 1) {
-							tag = textArray[textArray.length-1];
-							String pattern = "<[NO]>"+tag+"</[NO]>";
-							if (StringUtility.isMatchedNullSafe(sentence, pattern)) {
+							tag = textArray[textArray.length - 1];
+							String pattern = "<[NO]>" + tag + "</[NO]>";
+							if (StringUtility.isMatchedNullSafe(sentence,
+									pattern)) {
 								// 1.2.1.1
 								text = text.replaceAll(tag, "");
 								modifier = text;
-							}
-							else {
+							} else {
 								// 1.2.1.2
 								modifier = "";
 								tag = "ditto";
 							}
 						}
-					}
-					else {
+					} else {
 						// 1.2.2
 						modifier = "";
 						tag = "ditto";
 					}
 				}
-				
+
 				// case 1.3
-				else if (StringUtility.isMatchedNullSafe(sentence, "\\b("+Constant.CHARACTER+")\\b")) {
+				else if (StringUtility.isMatchedNullSafe(sentence, "\\b("
+						+ Constant.CHARACTER + ")\\b")) {
 					modifier = "";
 					tag = "ditto";
 				}
-				
-				
-			}	
+
+			}
 			List<String> mt = new ArrayList<String>(2);
 			mt.add(modifier);
 			mt.add(tag);
 			return mt;
-		}	
-		else {
+		} else {
 			return null;
 		}
-		
+
 	}
-	
+
 	public void finalizeIgnored(DataHolder dataholderHandler) {
-		List<SentenceStructure> sentences = dataholderHandler.getSentencesByTagPattern("^ignore$");
-		
+		List<SentenceStructure> sentences = dataholderHandler
+				.getSentencesByTagPattern("^ignore$");
+
 		for (SentenceStructure sentenceItem : sentences) {
 			String sentence = sentenceItem.getSentence();
 			if (sentence != null) {
-				Matcher m = StringUtility.createMatcher(sentence, Constant.IGNOREPTN);
+				Matcher m = StringUtility.createMatcher(sentence,
+						Constant.IGNOREPTN);
 				if (m.find()) {
 					String g1 = m.group(1);
 					if (StringUtility.isMatchedNullSafe(g1, "<N>")) {
 						int sentenceID = sentenceItem.getID();
-						SentenceStructure sentenceItemX = dataholderHandler.getSentence(sentenceID);
+						SentenceStructure sentenceItemX = dataholderHandler
+								.getSentence(sentenceID);
 						sentenceItemX.setTag(null);
 					}
 				}
 			}
 		}
-		
+
 		this.markupByPOS.run(dataholderHandler);
 	}
-	
+
 	// tag remaining sentences whose tag is null
 	public void remainNullTag(DataHolder dataholderHandler) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.remainNullTag");
-		
-		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
 			String tag = sentenceItem.getTag();
 			String source = sentenceItem.getSource();
 			boolean c1 = (tag == null);
@@ -3940,51 +4163,61 @@ public class Learner {
 			boolean c3 = (StringUtils.equals(tag, "ditto"));
 			boolean c4 = (StringUtils.equals(tag, "unknown"));
 			boolean c5 = StringUtility.isMatchedNullSafe(source, "-0$");
-			
+
 			if ((c1 || c2 || c3 || c4) && c5) {
 				sentenceItem.setModifier("");
 				sentenceItem.setTag(this.defaultGeneralTag);
-				myLogger.debug(String.format("mark [%d] <general>: %s", sentenceItem.getID(), sentenceItem.getSentence()));				
+				myLogger.debug(String.format("mark [%d] <general>: %s",
+						sentenceItem.getID(), sentenceItem.getSentence()));
 			}
 		}
-		
+
 		String nPhrasePattern = "(?:<[A-Z]*[NO]+[A-Z]*>[^<]+?<\\/[A-Z]*[NO]+[A-Z]*>\\s*)+";
 		String mPhrasePattern = "(?:<[A-Z]*M[A-Z]*>[^<]+?<\\/[A-Z]*M[A-Z]*>\\s*)+";
-		
-		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
-//			String tag = sentenceItem.getTag();
+
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
+			// String tag = sentenceItem.getTag();
 			int sentenceID = sentenceItem.getID();
 			String sentence = sentenceItem.getSentence();
-			String sentenceCopy = ""+sentenceItem.getSentence();
+			String sentenceCopy = "" + sentenceItem.getSentence();
 			sentenceCopy = sentenceCopy.replaceAll("></?", "");
 			if (!StringUtility.isMatchedNullSafe(sentenceCopy, "<[NO]>")) {
-				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "ditto", "remainnulltag-[R3]");
-			}
-			else {				
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "",
+						"ditto", "remainnulltag-[R3]");
+			} else {
 				if (sentenceCopy != null) {
-					Matcher m2 = StringUtility.createMatcher(sentenceCopy, "(.*?)("+nPhrasePattern+")");
+					Matcher m2 = StringUtility.createMatcher(sentenceCopy,
+							"(.*?)(" + nPhrasePattern + ")");
 					if (m2.find()) {
 						String head = m2.group(1);
 						String tagPhrase = m2.group(2);
 						tagPhrase = StringUtility.trimString(tagPhrase);
-						if (StringUtility.isMatchedNullSafe(head, "\\b("+Constant.PREPOSITION+")\\b")) {
-							dataholderHandler.tagSentenceWithMT(sentenceID, sentence, "", "ditto", "remainnulltag-[R3:ditto]");
-						}
-						else {
+						if (StringUtility.isMatchedNullSafe(head, "\\b("
+								+ Constant.PREPOSITION + ")\\b")) {
+							dataholderHandler.tagSentenceWithMT(sentenceID,
+									sentence, "", "ditto",
+									"remainnulltag-[R3:ditto]");
+						} else {
 							String[] words = tagPhrase.split("\\s+");
-							String tagX = words[words.length-1];
+							String tagX = words[words.length - 1];
 							List<String> wordList = new ArrayList<String>();
 							wordList.addAll(Arrays.asList(words));
-							String modifier = StringUtils.join(wordList.subList(0, wordList.size()-1), " ");
+							String modifier = StringUtils.join(
+									wordList.subList(0, wordList.size() - 1),
+									" ");
 							if (head != null) {
-								Matcher m22 = StringUtility.createMatcher(head, "([^,]+)$");
+								Matcher m22 = StringUtility.createMatcher(head,
+										"([^,]+)$");
 								if (m22.find()) {
-									modifier = m22.group(1)+" " + modifier;
+									modifier = m22.group(1) + " " + modifier;
 								}
 								tagX = tagX.replaceAll("<\\S+?>", "");
 								modifier = modifier.replaceAll("<\\S+?>", "");
 								tagX = StringUtility.trimString(tagX);
-								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tagX, "remainnulltag-[R3:m-t]");
+								dataholderHandler.tagSentenceWithMT(sentenceID,
+										sentence, modifier, tagX,
+										"remainnulltag-[R3:m-t]");
 							}
 						}
 					}
@@ -3992,40 +4225,49 @@ public class Learner {
 			}
 		}
 	}
-	
+
 	// sentences that are tagged with a commons substructure, such as blades,
 	// margins need to be modified with its parent structure
 	public void commonSubstructure(DataHolder dataholderHandler) {
-		Set<String> commonTags = this.collectCommonStructures(dataholderHandler);
-		
+		Set<String> commonTags = this
+				.collectCommonStructures(dataholderHandler);
+
 		String pattern = StringUtils.join(commonTags, "|");
 		pattern = "\\\\[?(" + pattern + ")\\\\]?";
-		
-		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
 			String tag = sentenceItem.getTag();
 			boolean c1 = StringUtils.equals(tag, "ignore");
 			boolean c2 = (tag == null);
-			boolean c3 = (StringUtility.isMatchedNullSafe(tag, "^"+pattern+"$"));
-			
+			boolean c3 = (StringUtility.isMatchedNullSafe(tag, "^" + pattern
+					+ "$"));
+
 			if ((c1 || c2) && c3) {
 				int sentenceID = sentenceItem.getID();
 				String modifier = sentenceItem.getModifier();
 				String sentence = sentenceItem.getSentence();
-						
-				if (!isModifierContainsStructure(dataholderHandler, modifier) && !StringUtility.isMatchedNullSafe(tag, "\\[")) {
-					// when the common substructure is not already modified by a structure, and
-					// when the tag is not already inferred from parent tag: mid/[phyllaries]
-					
-					String parentStructure = dataholderHandler.getParentSentenceTag(sentenceID);
-					
+
+				if (!isModifierContainsStructure(dataholderHandler, modifier)
+						&& !StringUtility.isMatchedNullSafe(tag, "\\[")) {
+					// when the common substructure is not already modified by a
+					// structure, and
+					// when the tag is not already inferred from parent tag:
+					// mid/[phyllaries]
+
+					String parentStructure = dataholderHandler
+							.getParentSentenceTag(sentenceID);
+
 					String pTag = "" + parentStructure;
-					parentStructure = parentStructure.replaceAll("([\\[\\]])", "") ;
+					parentStructure = parentStructure.replaceAll("([\\[\\]])",
+							"");
 					if (!StringUtils.equals(parentStructure, "[parenttag]")
 							&& !StringUtility.isMatchedNullSafe(modifier,
 									parentStructure)
 							&& !StringUtility.isMatchedNullSafe(tag,
 									parentStructure)) {
-						// remove any overlapped words btw parentStructure and tag
+						// remove any overlapped words btw parentStructure and
+						// tag
 						pTag = pTag.replaceAll("\\b" + tag + "\\b", "");
 						String modifierCopy = "" + modifier;
 						modifier = StringUtility.trimString(modifier);
@@ -4034,71 +4276,77 @@ public class Learner {
 						if (isTypeModifier(dataholderHandler, modifier)) {
 							// cauline/base => cauline [leaf] / base
 							modifier = modifier + " " + pTag;
-						}
-						else {
-							// main marginal/spine => [leaf blade] main marginal/spine
+						} else {
+							// main marginal/spine => [leaf blade] main
+							// marginal/spine
 							modifier = pTag + " " + modifier;
 						}
-						
-//						tagsentwmt($sentid, $sentence, $modifier, $tag, "commonsubstructure");
-						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "commonsubstructure");
+
+						// tagsentwmt($sentid, $sentence, $modifier, $tag,
+						// "commonsubstructure");
+						dataholderHandler.tagSentenceWithMT(sentenceID,
+								sentence, modifier, tag, "commonsubstructure");
 					}
 				}
 			}
-		}				
+		}
 	}
-	
+
 	public boolean isTypeModifier(DataHolder dataholderHandler, String modifier) {
 		boolean res = false;
-		
+
 		String[] words = modifier.split("\\s+");
-		String word = words[words.length-1];
-		
+		String word = words[words.length - 1];
+
 		if (dataholderHandler.getModifierHolder().containsKey(word)) {
-			ModifierTableValue modifierItem = dataholderHandler.getModifierHolder().get(modifier);
+			ModifierTableValue modifierItem = dataholderHandler
+					.getModifierHolder().get(modifier);
 			if (modifierItem.getIsTypeModifier()) {
 				res = true;
 			}
-		}		
-		
+		}
+
 		return res;
 	}
 
-	public boolean isModifierContainsStructure(DataHolder dataholderHandler, String modifier) {
+	public boolean isModifierContainsStructure(DataHolder dataholderHandler,
+			String modifier) {
 		boolean res = false;
-		
+
 		String[] words = modifier.split("\\s+");
-		
+
 		for (String word : words) {
 			Set<String> POSTags = new HashSet<String>();
 			POSTags.add("p");
 			POSTags.add("s");
-			Set<String> PSWords = dataholderHandler.getWordsFromWordPOSByPOSs(POSTags);
+			Set<String> PSWords = dataholderHandler
+					.getWordsFromWordPOSByPOSs(POSTags);
 			if (PSWords.contains(word)) {
 				res = true;
 				break;
 			}
 		}
-		
+
 		return res;
 	}
 
 	// find tags with more than one different structure modifiers
 	public Set<String> collectCommonStructures(DataHolder dataholderHandler) {
-		
-		
-		Set<String> PSTags = new HashSet<String>(Arrays.asList("s p".split(" ")));
+
+		Set<String> PSTags = new HashSet<String>(
+				Arrays.asList("s p".split(" ")));
 		Set<String> BTags = new HashSet<String>();
 		BTags.add("b");
-		Set<String> PSWords = dataholderHandler.getWordsFromWordPOSByPOSs(PSTags);
+		Set<String> PSWords = dataholderHandler
+				.getWordsFromWordPOSByPOSs(PSTags);
 		Set<String> BWords = dataholderHandler.getWordsFromWordPOSByPOSs(BTags);
-		
-		Set<String> structures  = StringUtility.setSubtraction(PSWords, BWords);
-		
+
+		Set<String> structures = StringUtility.setSubtraction(PSWords, BWords);
+
 		Set<String> commonTags = new HashSet<String>();
-		
+
 		// ...
-		
+
 		return commonTags;
 	}
 
@@ -4126,30 +4374,592 @@ public class Learner {
 		String bPattern = "(?:<[A-Z]*B[A-Z]*>[,:.;<]<\\/[A-Z]*B[A-Z]*>)";
 
 		String commaPattern = "<B>,</B>";
-		
+
 		String phrasePattern = mPhrasePattern + "\\s*" + nPhrasePattern;
-		String pattern = phrasePattern + "\\s+" + commaPattern + "\\s+(?:" + phrasePattern + "| |" + commaPattern + ")+";
+		String pattern = phrasePattern + "\\s+" + commaPattern + "\\s+(?:"
+				+ phrasePattern + "| |" + commaPattern + ")+";
 		String pattern1 = "^(" + pattern + ")";
 		String pattern2 = "(.*?)(" + pattern + ")\\s*" + bPattern + "\\$";
 		// changed last * to +
 		String pattern3 = "^((?:" + mPhrasePattern + "\\s+)+" + commaPattern
 				+ "\\s+(?:" + mPhrasePattern + "|\\s*|" + commaPattern + ")+"
-				+ mPhrasePattern + "+\\s*" + nPhrasePattern + ")"; 
-		
-		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+				+ mPhrasePattern + "+\\s*" + nPhrasePattern + ")";
+
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
 			int sentenceID = sentenceItem.getID();
 			String sentence = sentenceItem.getSentence();
-			
+
 			String sentenceCopy = "" + sentence;
 			sentenceCopy = sentenceCopy.replaceAll("></?", "");
-			
-			
+
+			Matcher m1 = StringUtility.createMatcher(sentenceCopy, pattern1);
+			Matcher m2 = StringUtility.createMatcher(sentenceCopy, pattern2);
+			Matcher m3 = StringUtility.createMatcher(sentenceCopy, pattern3);
+
+			// case 1
+			if (m1.find()) {
+				String tag = m1.group(1);
+				tag = tag.replaceAll(",", "and");
+				tag = tag.replaceAll("</?\\S+?>", "");
+				tag = StringUtility.trimString(tag);
+				// case 1.1
+				if (!StringUtility.isMatchedNullSafe(tag, " and$")) {
+					dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+							"", tag, "commaand[CA1]");
+				}
+			}
+			// case 2
+			else if (m2.find()) {
+				String g1 = m2.group(1);
+				String tag = m2.group(2);
+				if (!StringUtility.isMatchedNullSafe(g1, "\\b("
+						+ Constant.PREPOSITION + ")\\b")
+						&& !StringUtility.isMatchedNullSafe(g1, "<N>")) {
+					tag = tag.replaceAll(",", "and");
+					tag = tag.replaceAll("</?\\S+?>", "");
+					tag = StringUtility.trimString(tag);
+					// case 2.1.1
+					if (!StringUtility.isMatchedNullSafe(tag, " and$")) {
+						dataholderHandler.tagSentenceWithMT(sentenceID,
+								sentence, "", tag, "commaand[CA2]");
+					}
+
+				}
+			}
+			// case 3
+			else if (m3.find()) {
+				String tag = m3.group(1);
+				String g1 = m3.group(1);
+				// case 3.1
+				if (!StringUtility.isMatchedNullSafe(g1, "\\b("
+						+ Constant.PREPOSITION + ")\\b")) {
+					tag = tag.replaceAll(",", "and");
+					tag = tag.replaceAll("</?\\S+?>", "");
+					tag = StringUtility.trimString(tag);
+					// case 3.1.1
+					if (!StringUtility.isMatchedNullSafe(tag, " and$")) {
+						String[] tagWords = tag.split("\\s+");
+						List<String> tagWordsList = new ArrayList<String>(
+								Arrays.asList(tagWords));
+						tag = tagWordsList.get(tagWordsList.size() - 1);
+						String modifier = StringUtils.join(tagWordsList
+								.subList(0, tagWordsList.size() - 1), " ");
+						dataholderHandler.tagSentenceWithMT(sentenceID,
+								sentence, modifier, tag, "commaand[CA3]");
+					}
+				}
+			}
+		}
+	}
+
+	public void normalizeModifiers(DataHolder dataholderHandler) {
+		Comparator<SentenceStructure> stringLengthComparator = new Comparator<SentenceStructure>() {
+			@Override
+			public int compare(SentenceStructure s1, SentenceStructure s2) {
+				String m1 = s1.getModifier();
+				String m2 = s2.getModifier();
+				if (m1.length() == m2.length()) {
+					return 0;
+				} else {
+					return m1.length() < m2.length() ? -1 : 1;
+				}
+			}
+		};
+
+		// Part 1
+		// non- and/or/to/plus cases
+		List<SentenceStructure> sentenceList = new ArrayList<SentenceStructure>();
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
+			String modifier = sentenceItem.getModifier();
+			boolean c1 = !StringUtils.equals(modifier, "");
+			boolean c2 = !StringUtility.isMatchedNullSafe(modifier,
+					" (and|or|nor|plus|to) ");
+			if (c1 && c2) {
+				sentenceList.add(sentenceItem);
+			}
+		}
+
+		Collections.sort(sentenceList, stringLengthComparator);
+		Collections.reverse(sentenceList);
+
+		for (SentenceStructure sentenceItem : sentenceList) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			String modifier = sentenceItem.getModifier();
+
+			String mCopy = "" + modifier;
+			modifier = finalizeModifier(dataholderHandler, modifier, tag, sentence);
+			modifier = modifier.replaceAll("\\s*\\[.*?\\]\\s*", " ");
+			modifier = StringUtility.trimString(modifier);
+
+			if (!StringUtils.equals(mCopy, modifier)) {
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+						modifier, tag, "normalizemodifiers");
+			}
+		}
+
+		// Part 2
+		// deal with to: characterA to characterB organ (small to median shells)
+		List<SentenceStructure> sentenceList2 = new ArrayList<SentenceStructure>();
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
+			String modifier = sentenceItem.getModifier();
+			boolean c1 = StringUtility.isMatchedNullSafe(modifier, " to ");
+			if (c1) {
+				sentenceList2.add(sentenceItem);
+			}
+		}
+
+		Collections.sort(sentenceList2, stringLengthComparator);
+		for (SentenceStructure sentenceItem : sentenceList2) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			String modifier = sentenceItem.getModifier();
+
+			String mCopy = "" + modifier;
+			modifier = modifier.replaceAll(".*? to ", "");
+			List<String> mWords = new ArrayList<String>(Arrays.asList(modifier
+					.split("\\s+")));
+			Collections.reverse(mWords);
+
+			String m = "";
+			int count = dataholderHandler.getSentenceCount(true, m, true, tag);
+			String modi = "" + m;
+			for (String word : mWords) {
+				m = word + " " + m;
+				m = m.replaceAll("\\s+$", "");
+				int c = dataholderHandler.getSentenceCount(true, m, true, tag);
+				if (c > count) {
+					count = c;
+					modi = "" + m;
+				}
+			}
+			// tagsentwmt($sentid, $sentence, $modi, $tag,
+			// "normalizemodifiers");
+			dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modi,
+					tag, "normalizemodifiers");
+		}
+
+		// Part 3
+		// modifier with and/or/plus
+		List<SentenceStructure> sentenceList3 = new ArrayList<SentenceStructure>();
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
+			String modifier = sentenceItem.getModifier();
+			boolean con = !StringUtility.isMatchedNullSafe(modifier,
+					" (and|or|nor|plus|to) ");
+			if (con) {
+				sentenceList3.add(sentenceItem);
+			}
+		}
+
+		Collections.sort(sentenceList3, stringLengthComparator);
+		Collections.reverse(sentenceList3);
+
+		for (SentenceStructure sentenceItem : sentenceList3) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			String modifier = sentenceItem.getModifier();
+
+			String mCopy = "" + modifier;
+			modifier = this.finalizeCompoundModifier(dataholderHandler,
+					modifier, tag, sentence);
+
+			modifier = modifier.replaceAll("\\s*\\[.*?\\]\\s*", " ");
+			modifier = StringUtility.trimString(modifier);
+
+			if (!StringUtils.equals(mCopy, modifier)) {
+				// tagsentwmt($sentid, $sentence, $modifier, $tag,
+				// "normalizemodifiers");
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+						modifier, tag, "normalizemodifiers");
+			}
+		}
+
+		// Part 4
+		// modifier with and/or/plus
+		List<SentenceStructure> sentenceList4 = new ArrayList<SentenceStructure>();
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
+			String modifier = sentenceItem.getModifier();
+			// ???
+			boolean con = !StringUtility.isMatchedNullSafe(modifier,
+					"[_ ](and|or|nor|plus|to)[ _]");
+			if (con) {
+				sentenceList4.add(sentenceItem);
+			}
+		}
+
+		Collections.sort(sentenceList4, stringLengthComparator);
+		Collections.reverse(sentenceList4);
+
+		for (SentenceStructure sentenceItem : sentenceList4) {
+			int sentenceID = sentenceItem.getID();
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			String modifier = sentenceItem.getModifier();
+
+			String mTag = "" + tag;
+			tag = this.finalizeCompoundTag(tag, sentence);
+			tag = tag.replaceAll("\\s*\\[.*?\\]\\s*", " ");
+			tag = StringUtility.trimString(tag);
+
+			if (!StringUtils.equals(mTag, tag)) {
+				// tagsentwmt($sentid, $sentence, $modifier, $tag,
+				// "normalizemodifiers");
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
+						modifier, tag, "normalizemodifiers");
+			}
+		}
+	}
+
+	public String finalizeCompoundModifier(DataHolder dataholderHandler, String modifier, String tag,
+			String sentence) {
+		// case 1
+		if (StringUtility.isMatchedNullSafe(modifier, "\\[")) {
+			return modifier;
 		}
 		
+		modifier = modifier.replaceAll("\\(.*?\\)", " ");
+		modifier = modifier.replaceAll("\\(.*", "");
+		modifier = modifier.replaceAll("\\W","");
+		modifier = modifier.replaceAll("\\s+", " ");
 		
+		String mCopy = ""+modifier;
+		String result = "";
+		String m = "";
+				String n = "";
+				
+		List<String> lastPart = new ArrayList(Arrays.asList(modifier.split("\\s+")));
+		Collections.reverse(lastPart);
+		int cut = 0;		
+		for (String l : lastPart) {
+			if (cut == 0 && StringUtility.isMatchedNullSafe(sentence, "<N>"+l)) {
+				n = l + " " + n;
+				n = StringUtility.trimString(n);
+			}
+			else {
+				cut = 1;
+				String tm = StringUtility.isMatchedNullSafe(n, "\\w") ? l + " "
+						+ n : l;
+				for (SentenceStructure sentenceItem : dataholderHandler
+						.getSentenceHolder()) {
+					if (StringUtils.equals(sentenceItem.getModifier(), tm)
+							&& StringUtils.equals(sentenceItem.getTag(), tag)) {
+						m = l + " " + m;
+					}
+				}
+				break;
+			}
+		}
 		
+		m = StringUtility.trimString(m);
+		n = StringUtility.trimString(n);
+		modifier = modifier.replaceAll("\\s*"+n, "");
+		
+		// components
+		List<String> parts = new ArrayList<String>();
+		List<String> conj = new ArrayList<String>();
+		conj.add("");
+		if (modifier != null) {
+			Matcher m1 = StringUtility.createMatcher(modifier, "(^.*?) (and|or|nor|plus) (.*)");
+			while (m1.find()) {
+				String g1 = m1.group(1);
+				String g2 = m1.group(2);
+				String g3 = m1.group(3);
+				parts.add(g1);
+				parts.add(g2);
+				modifier = g3;
+				m1 = StringUtility.createMatcher(modifier, "(^.*?) (and|or|nor|plus) (.*)");
+			}
+		}
+		parts.add(modifier);
+		
+		// at least one m in a part
+//		for (String part : parts) {
+		for (int i = 0; i < parts.size(); i++) {
+			String part = parts.get(i);
+			String[] words = part.split("\\s+");
+			boolean isFound = false;
+			String r = "";
+			
+			for (String word : words) {
+				if ((this.checkedModifiers.containsKey(word) && this.checkedModifiers.get(word)) || StringUtility.isMatchedNullSafe(sentence, "<N>"+word)) {
+					isFound = true;
+					r = r + " " + word;
+				}
+			}
+			r = StringUtility.trimString(r);
+			
+			result = result + " " + conj.get(i)+ " "+r;
+			String regex2 = "\\b(" + Constant.CHARACTER + "|" + Constant.STOP
+					+ "|" + Constant.NUMBER + "|" + Constant.CLUSTERSTRING
+					+ ")\\b";
+			if (!StringUtility.isMatchedNullSafe(r, "\\w")
+					|| StringUtility.isMatchedNullSafe(r, regex2)) {
+				result = "";
+				break;
+			}
+		}
+		result = StringUtility.isMatchedNullSafe(result, "\\w") ? result
+				+ " " + n : m + " " + n;
+		result = StringUtility.trimString(result);
+		
+		return result;
+	}
+
+	// [bm]+n+&[bm]+n+
+	public String finalizeCompoundTag(String tag, String sentence) {
+		// avoid unmatched ( in regexp
+		tag = tag.replaceAll("\\(.*?\\)", " ");
+		tag = tag.replaceAll("\\(.*", "");
+		tag = tag.replaceAll("\\s+", " ");
+		
+		String tCopy = "" + tag;
+		String result = "";
+		
+		// components
+		List<String> parts = new ArrayList<String>();
+		List<String> conj = new ArrayList<String>();
+		conj.add("");
+		
+		Matcher m1 = StringUtility.createMatcher(tag, "(^.*?)[_ ](and|or|nor|plus)[_ ](.*)");
+		while (m1.find()) {
+			String g1 = m1.group(1);
+			String g2 = m1.group(2);
+			String g3 = m1.group(3);
+			parts.add(g1);
+			conj.add(g2);
+			tag = g3;
+			m1 = StringUtility.createMatcher(tag, "(^.*?)[_ ](and|or|nor|plus)[_ ](.*)");
+		}
+		
+		parts.add(tag);
+		
+		// at least one m in a part
+//		for (String part : parts) {
+		for (int i = 0; i < parts.size(); i++) {
+			String part = parts.get(i);
+			String[] words = part.split("\\s+");
+			boolean isFoundM = false;
+			String r = "";
+			for (String word : words) {
+				String escapedW = escapePerlRegexp(word);
+				if ((this.checkedModifiers.containsKey(word) && this.checkedModifiers
+						.get(word))
+						|| StringUtility.isMatchedNullSafe(sentence, "<N>"
+								+ escapedW)) {
+					isFoundM = true;
+					r = r + " " + word;
+				}
+			}
+			String regex = "\\b(" + Constant.CHARACTER + "|" + Constant.STOP
+					+ "|" + Constant.NUMBER + "|" + Constant.CLUSTERSTRING
+					+ ")\\b";
+			r = r.replaceAll(regex, "");
+			r = StringUtility.trimString(r);
+			
+			if (StringUtility.isMatchedNullSafe(r, "\\w")) {
+				result = result + " " + conj.get(i) +" "+r;
+			}
+		}
+		
+		result = result.replaceAll("\\s+", " ");
+		result = StringUtility.trimString(result);
+		
+		return result;
+	}
+
+	private String escapePerlRegexp(String word) {
+		// TODO Auto-generated method stub
+		return word;
+	}
+
+	public String finalizeModifier(DataHolder dataholderHandler, String modifier, String tag, String sentence) {
+		String fModifier = "";
+		modifier = modifier.replaceAll("\\[.*?\\]", "");
+		modifier = StringUtility.trimString(modifier);
+		if (StringUtility.isMatchedNullSafe(modifier, "\\w")) {
+			List<String> mWords = new ArrayList<String>(Arrays.asList(modifier.split("\\s+")));
+			Collections.reverse(mWords);
+			
+			for (String mWord : mWords) {
+				boolean isModifier = this.isModifier(dataholderHandler, mWord, modifier, tag);
+				if (isModifier) {
+					fModifier = mWord + " " + fModifier;
+				}
+				else {
+					break;
+				}
+			}
+			
+			fModifier = fModifier.replaceAll("\\s+", "");
+		}
+		
+		return fModifier;
+	}
+
+	public boolean isModifier(DataHolder dataholderHandler, String word, String modifier, String tag) {
+		if (this.checkedModifiers.containsKey(word)) {
+			if (this.checkedModifiers.get(word)) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		// if word is a "s", return 1
+		Set<String> nouns = new HashSet<String>(Arrays.asList("s p n"
+				.split(" ")));
+		List<Entry<WordPOSKey, WordPOSValue>> entries = dataholderHandler
+				.getWordPOSEntriesByWordPOS(word, nouns);
+		if (entries.size() > 0) {
+
+			this.checkedModifiers.put(word, true);
+			return true;
+
+		}
+		
+		// if word is a "b", and not a "m", return 0
+		Set<String> bPOS = new HashSet<String>();
+		bPOS.add("b");
+		List<Entry<WordPOSKey, WordPOSValue>> boundaries = dataholderHandler
+				.getWordPOSEntriesByWordPOS(word, bPOS);
+		boolean c1 = (boundaries.size() > 0);		
+		boolean c2 = dataholderHandler.getModifierHolder().containsKey(word);
+		if (c1 && !c2) {
+			// the word is a boundary word, but not a modifier
+			this.checkedModifiers.put(word, false);
+			return false;
+		}
+		
+		if (!c1 && c2) {
+			this.checkedModifiers.put(word, true);
+			return true;
+		}
+		
+		// when word has been used as "b" and "m" or neither "b" nor "m" and is not a "s"
+		int mCount = this.getMCount(dataholderHandler, word);
+		String wCopy = ""+word;
+		if (StringUtility.isMatchedNullSafe(word, "_")) {
+			wCopy = wCopy.replaceAll("_", " - ");
+		}
+		
+		int tCount = 0;
+		String pattern = "(^| )"+wCopy+" ";
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String oSentence = sentenceItem.getOriginalSentence();
+			if (StringUtility.isMatchedNullSafe(oSentence, pattern)) {
+				tCount++;
+			}
+		}
+		
+		if (tCount == 0 || tCount > 0.25 * mCount) {
+			this.checkedModifiers.put(word, false);
+			return false;
+		}
+		else {
+			this.checkedModifiers.put(word, true);
+			return true;			
+		}
 	}
 	
+	public int getMCount(DataHolder dataholderHandler, String word) {
+		int count = 0;
+		String pattern = "(>| )"+word+"(</B></M>)? <N";
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String sentence = sentenceItem.getSentence();
+			if (StringUtility.isMatchedNullSafe(sentence, pattern)) {
+				count++;
+			}
+		}
+		
+		return count;
+	}
+	
+	public void normalizeTags(DataHolder dataholderHandler) {
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			int sentenceID = sentenceItem.getID();
+			String modifier = sentenceItem.getModifier();
+			String tag = sentenceItem.getTag();
+			if (tag != null && StringUtils.equals(tag, "ignore")) {				
+				tag = this.normalizeItem(tag);
+				modifier = this.normalizeItem(modifier);
+			}
+			
+			String sentence = sentenceItem.getSentence();
+			sentence = sentence.replaceAll("</?[NBM]>", "");
+			dataholderHandler.getSentence(sentenceID).setSentence(sentence);
+			if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "normalizetags");
+			}
+			else {
+				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, null, "normalizetags");
+			}
+		}
+	}
+	
+	
+
+	public String normalizeItem(String tag) {
+		tag = tag.replaceAll("\\s*NUM\\s*", " ");
+		tag = StringUtility.trimString(tag);
+
+		if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
+			tag = tag.replaceAll("\\[", "[*");
+			tag = tag.replaceAll("\\]", "*]");
+
+			String[] twSegs = tag.split("[\\]\\[]");
+
+			StringBuilder tagSB = new StringBuilder();
+
+			for (int j = 0; j < twSegs.length; j++) {
+				StringBuilder outSB = new StringBuilder();
+				// case 1
+				if (StringUtility.isMatchedNullSafe(twSegs[j], "\\*")) {
+					twSegs[j] = twSegs[j].replaceAll("\\*", "");
+					String[] tagWords = twSegs[j].split("\\s+");
+					outSB.append('[');
+					for (int i = 0; i < tagWords.length; i++) {
+						tagWords[i] = this.myLearnerUtility
+								.getWordFormUtility().getSingular(tagWords[i]);
+						outSB.append(tagWords[i]);
+						outSB.append(" ");
+					}
+					outSB.deleteCharAt(outSB.length() - 1);
+					outSB.append(']');
+				} 
+				// case 2
+				else if (StringUtility.isMatchedNullSafe(twSegs[j], "\\w")) {
+					String[] tagWords = twSegs[j].split("\\s+");
+					for (int i = 0; i < tagWords.length; i++) {
+						tagWords[i] = this.myLearnerUtility
+								.getWordFormUtility().getSingular(tagWords[i]);
+						outSB.append(tagWords[i]);
+						outSB.append(" ");
+					}
+					outSB.deleteCharAt(outSB.length() - 1);
+				}
+				String out = outSB.toString();
+				if (StringUtility.isMatchedNullSafe(out, "\\w")) {
+					tagSB.append(out.toString());
+					tagSB.append(' ');
+				}
+			}
+
+			tagSB.deleteCharAt(tagSB.length() - 1);
+			tag = tagSB.toString();
+			tag = tag.replaceAll("\\s+", " ");
+		}
+
+		return tag;
+	}
+
 	// some unused variables in perl
 	// directory of /descriptions folder
 	private String desDir = "";
@@ -4158,7 +4968,7 @@ public class Learner {
 	// prefix for all tables generated by this program
 	private String prefix = "";
 	// default general tag
-	
+
 	// knowledge base
 	private String knlgBase = "phenoscape";
 
@@ -4185,22 +4995,22 @@ public class Learner {
 	private String SEGANDORPTN = "(?:" + mptn + nptn + ")";
 	private String ANDORPTN = "^(?:" + SEGANDORPTN + "[,&]+)*" + SEGANDORPTN
 			+ bptn;
-	
+
 	// utility method
 	public LearnerUtility getLearnerUtility() {
 		return this.myLearnerUtility;
 	}
-	
-	public ITokenizer getTokenizer(){
+
+	public ITokenizer getTokenizer() {
 		return this.myTokenizer;
 	}
-	
-	public Configuration getConfiguration(){
+
+	public Configuration getConfiguration() {
 		return this.myConfiguration;
 	}
-	
-	public static void main(String[] args){
-		assertEquals("tagAllSentenceHelper", 1, 12);		
+
+	public static void main(String[] args) {
+		assertEquals("tagAllSentenceHelper", 1, 12);
 	}
-	
+
 }

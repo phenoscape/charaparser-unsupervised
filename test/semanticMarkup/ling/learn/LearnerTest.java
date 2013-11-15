@@ -888,7 +888,7 @@ public class LearnerTest {
 		
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"margins", "p", "role", "0", "0", null, null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"often", "b", "role", "0", "0", null, null}));
-		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"¡À", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"??", "b", "role", "0", "0", null, null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"deeply", "b", "role", "0", "0", null, null}));
 		
 		List<String> nouns = new ArrayList<String>();
@@ -898,7 +898,7 @@ public class LearnerTest {
 		String bWord = "often";
 		GetNounsAfterPtnReturnValue target = new GetNounsAfterPtnReturnValue(nouns, nounPtn, bWord);
 		
-		assertEquals("getNounsAfterPtn", target, myTester.getNounsAfterPtn("proximal blade margins often ¡À deeply lobed , ( spiny in c . benedicta ) , distal ?smaller , often entire , faces glabrous or ?tomentose , sometimes also villous , strigose , or puberulent , often glandular_punctate .", 2));
+		assertEquals("getNounsAfterPtn", target, myTester.getNounsAfterPtn("proximal blade margins often ?? deeply lobed , ( spiny in c . benedicta ) , distal ?smaller , often entire , faces glabrous or ?tomentose , sometimes also villous , strigose , or puberulent , often glandular_punctate .", 2));
 		
 	}
 	
@@ -1252,11 +1252,54 @@ public class LearnerTest {
 		update1.clear();
 		update2.clear();
 		
-		assertEquals("andOrTagCase1Helper", target, myTester.andOrTagCase1Helper(pattern, wPattern, words, token));
+		assertEquals("andOrTagCase1Helper", target, myTester.andOrTagCase1Helper(pattern, wPattern, words, token));	
+	}
+	
+	@Test
+	public void testFinalizeCompoundModifier() {
+		Learner myTester = learnerFactory();	
 		
-		
+		// case 1
+		String modifier = "maxillary and [dentary] tooth_ bearing";
+		String tag = "elements";
+		String sentence = "maxillary and dentary <B>tooth_</B> bearing <N>elements</N>";
+				
+		assertEquals("finalizeCompoundModifier case 1", modifier,
+				myTester.finalizeCompoundModifier(myTester.getDataHolder(), modifier, tag, sentence));
 		
 	}
+	
+	@Test
+	public void testGetMCount(){
+		Learner myTester = learnerFactory();
+		DataHolder myDataHolder = myTester.getDataHolder();
+		
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<B>number</B> <B>of</B> <M><B>marginal</B></M> <N>bones</N> <B>alongside</B> postparietal", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "through <M><B>marginal</B></M> <N>bones</N> <B>alongside</B> postparietal", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<M><B>marginal</B></M> <N>teeth</N> <B>on</B> dentary", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<B>broad</B> <M><B>marginal</B></M> <N>tooth</N> <B>field</B>", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<B>narrow</B> <M><B>marginal</B></M> <N>tooth</N> <N>row</N>", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "anterodorsal <B>peg_</B> like <N>process</N> <B>on</B> <N>scale</N>", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		
+		assertEquals("getMCount", 5, myTester.getMCount(myDataHolder, "marginal"));
+	}
+	
+	@Test
+	public void testNormalizeItem() {
+		Learner myTester = learnerFactory();
+		DataHolder myDataHolder = myTester.getDataHolder();
+		assertEquals("normalizeItem case 2", "general", myTester.normalizeItem("general"));
+		assertEquals("normalizeItem case 2", "fin", myTester.normalizeItem("fins"));
+		assertEquals("normalizeItem case 2", "squamosal and quadratojugal and bone",
+				myTester.normalizeItem("squamosal and quadratojugal and bones"));
+	}
+	
 	
 	private Learner learnerFactory() {
 		Learner tester;
@@ -1279,7 +1322,4 @@ public class LearnerTest {
 
 		return tester;
 	}
-	
-	
-
 }
