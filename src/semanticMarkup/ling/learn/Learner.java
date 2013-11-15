@@ -3311,8 +3311,50 @@ public class Learner {
 		myLogger.trace("Case 3");
 		return false;
 	}
+	
+	public void AdjectiveSubjectBootstrapping(DataHolder dataholderHandler) {
+		int flag = 0;
+		int count = 0;
+		
+		do {
+			this.myLearnerUtility.tagAllSentences(dataholderHandler, "singletag", "sentence");
+			int res1 = this.adjectiveSubjects(dataholderHandler);
+			flag += res1;
+			
+			int res2 = discoverNewModifiers(dataholderHandler);
+			flag += res2;
+			
+			int res3 = this.handleAndOr(dataholderHandler);
+			flag += res3;
+			
+			
+			
+		} while (flag > 0);
+		
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String tag = sentenceItem.getTag();
+			if (StringUtils.equals(tag, "andor")) {
+				sentenceItem.setTag(null);
+			}
+		}
+		
+		this.myLearnerUtility.tagAllSentences(dataholderHandler, "singletag", "sentence");
+		this.adjectiveSubjects(dataholderHandler);
+	}
+	
+	public int adjectiveSubjects(DataHolder dataholderHandler) {
+		return 0;
+		// TODO Auto-generated method stub
+		
+	}
+	
 
-	public void handleAndOr(DataHolder dataholderHandler) {
+	public int discoverNewModifiers(DataHolder dataholderHandler) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public int handleAndOr(DataHolder dataholderHandler) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.handleAndOr");
 
@@ -3331,7 +3373,8 @@ public class Learner {
 					Constant.SEGANDORPTN, Constant.ANDORPTN);
 			sign = sign + result;
 		}
-
+		
+		return sign;
 	}
 
 	public int andOrTag(DataHolder dataholderHandler, int sentenceID,
