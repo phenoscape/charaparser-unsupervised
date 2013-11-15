@@ -2094,6 +2094,21 @@ public class DataHolder {
 		return tags;
 	}
 	
+	public void untagSentences(){
+		for (SentenceStructure sentenceItem : this.sentenceTable) {
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			boolean c1 = StringUtils.equals(tag, "ignore");
+			boolean c2 = (tag == null);
+			boolean c3 = StringUtility.isMatchedNullSafe(sentence, "<");
+			if ((c1||c2)&&c3) {
+				sentence = sentence.replaceAll("<\\S+?>", "");
+				sentence = sentence.replaceAll("'", "\\'");
+				sentenceItem.setSentence(sentence);				
+			}
+		}
+	}
+	
 	// add2Holder
 	public void addWords2WordPOSHolder(Set<String> words, String POS) {
 		Iterator<String> iter = words.iterator();
