@@ -3317,10 +3317,14 @@ public class Learner {
 		int count = 0;
 		
 		do {
+			// tag all sentences
 			this.myLearnerUtility.tagAllSentences(dataholderHandler, "singletag", "sentence");
+			
+			// adjective subject markup: may discover new modifier, new boundary, and new nouns
 			int res1 = this.adjectiveSubjects(dataholderHandler);
 			flag += res1;
 			
+			// work on tag='andor' clauses, move to the main bootstrapping
 			int res2 = discoverNewModifiers(dataholderHandler);
 			flag += res2;
 			
@@ -3332,6 +3336,7 @@ public class Learner {
 			
 		} while (flag > 0);
 		
+		// reset unsolvable andor to NULL
 		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
 			String tag = sentenceItem.getTag();
 			if (StringUtils.equals(tag, "andor")) {
@@ -3339,14 +3344,27 @@ public class Learner {
 			}
 		}
 		
+		// cases releazed from andor[m&mn] may be marked by adjectivesubjects
 		this.myLearnerUtility.tagAllSentences(dataholderHandler, "singletag", "sentence");
 		this.adjectiveSubjects(dataholderHandler);
 	}
 	
+	/**
+	 * works on annotated sentences that starts with a M in all non-ignored
+	 * sentences, find sentences that starts with a modifer <m> followed by a
+	 * boundary word <b>. (note, if the <B> is a punct mark, this sentence
+	 * should be tagged as ditto) Use the context to find the tag, use the
+	 * modifier as the modifie (markup process, no new discovery). for
+	 * "modifier unknown" pattern, check WNPOS of the "unknown" to decide if
+	 * "unknown" is a structure name (if it is a pl) or a boundary word (may
+	 * have new discoveries). Works on sentences, not leads
+	 * 
+	 * @param dataholderHandler
+	 * @return # of updates
+	 */
 	public int adjectiveSubjects(DataHolder dataholderHandler) {
-		return 0;
-		// TODO Auto-generated method stub
-		
+	
+		return 0;		
 	}
 	
 
@@ -4335,6 +4353,7 @@ public class Learner {
 	// find tags with more than one different structure modifiers
 	public Set<String> collectCommonStructures(DataHolder dataholderHandler) {
 
+		// get words from WordPOS holder, who are P/S but not B
 		Set<String> PSTags = new HashSet<String>(
 				Arrays.asList("s p".split(" ")));
 		Set<String> BTags = new HashSet<String>();
