@@ -3325,9 +3325,10 @@ public class Learner {
 			flag += res2;
 			
 			int res3 = this.handleAndOr(dataholderHandler);
-			flag += res3;
+			flag += res3;			
+			dataholderHandler.untagSentences();
 			
-			
+			int res4 = this.doItMarkup();
 			
 		} while (flag > 0);
 		
