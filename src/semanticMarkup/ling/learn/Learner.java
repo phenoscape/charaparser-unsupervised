@@ -3436,8 +3436,7 @@ public class Learner {
 			System.out.println();
 		}
 
-		List<List<String>> res = this.andOrTagCase1Helper(pattern, wPattern,
-				words, token);
+		List<List<String>> res = this.andOrTagCase1Helper(pattern, wPattern, words, token);
 		if (res != null) {
 			mPatterns = res.get(0);
 			mSegments = res.get(1);
@@ -3500,7 +3499,6 @@ public class Learner {
 			myLogger.trace("[andortag]Andor can not determine a tag or modifier for "
 					+ sentenceID + ": " + sentence);
 		}
-
 		myLogger.trace("Return " + sign + "\n");
 		return sign;
 	}
@@ -3527,7 +3525,6 @@ public class Learner {
 
 		if (m1.find()) {
 			myLogger.trace("Case 1");
-
 			if (pattern.equals("n&qqnbq")) {
 				// System.out.println();
 			}
@@ -3546,6 +3543,7 @@ public class Learner {
 
 			int start5 = m1.start(5);
 			int end5 = m1.end(5);
+
 
 			// System.out.println(pattern);
 			// System.out.println(start1);
