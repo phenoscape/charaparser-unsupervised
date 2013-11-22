@@ -3317,10 +3317,14 @@ public class Learner {
 		int count = 0;
 		
 		do {
+			// tag all sentences
 			this.myLearnerUtility.tagAllSentences(dataholderHandler, "singletag", "sentence");
+			
+			// adjective subject markup: may discover new modifier, new boundary, and new nouns
 			int res1 = this.adjectiveSubjects(dataholderHandler);
 			flag += res1;
 			
+			// work on tag='andor' clauses, move to the main bootstrapping
 			int res2 = discoverNewModifiers(dataholderHandler);
 			flag += res2;
 			
@@ -3332,6 +3336,7 @@ public class Learner {
 			
 		} while (flag > 0);
 		
+		// reset unsolvable andor to NULL
 		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
 			String tag = sentenceItem.getTag();
 			if (StringUtils.equals(tag, "andor")) {
@@ -3339,14 +3344,193 @@ public class Learner {
 			}
 		}
 		
+		// cases releazed from andor[m&mn] may be marked by adjectivesubjects
 		this.myLearnerUtility.tagAllSentences(dataholderHandler, "singletag", "sentence");
 		this.adjectiveSubjects(dataholderHandler);
 	}
 	
+	/**
+	 * works on annotated sentences that starts with a M in all non-ignored
+	 * sentences, find sentences that starts with a modifer <m> followed by a
+	 * boundary word <b>. (note, if the <B> is a punct mark, this sentence
+	 * should be tagged as ditto) Use the context to find the tag, use the
+	 * modifier as the modifie (markup process, no new discovery). for
+	 * "modifier unknown" pattern, check WNPOS of the "unknown" to decide if
+	 * "unknown" is a structure name (if it is a pl) or a boundary word (may
+	 * have new discoveries). Works on sentences, not leads
+	 * 
+	 * @param dataholderHandler
+	 * @return # of updates
+	 */
 	public int adjectiveSubjects(DataHolder dataholderHandler) {
-		return 0;
-		// TODO Auto-generated method stub
+		Set<String> typeModifiers = new HashSet<String>();
 		
+		// Part 1: collect evidence for the usage of "modifier boundry":
+		typeModifiers = adjectiveSubjectsPart1(dataholderHandler, typeModifiers);
+		
+		for (String typeModifier : typeModifiers) {
+			if (dataholderHandler.getModifierHolder().containsKey(typeModifier)) {
+				dataholderHandler.getModifierHolder().get(typeModifier)
+						.setIsTypeModifier(true);
+			}
+		}
+		
+		// Part 2: process "typemodifier unknown" patterns
+		
+		
+		return 0;		
+	}
+	
+	public Set<String> adjectiveSubjectsPart1(DataHolder dataholderHandler, Set<String> typeModifiers) {
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String sentenceCopy = ""+sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			
+			if (!StringUtils.equals(tag, "ignore") || tag == null) {
+				Pattern p = Pattern.compile(".*?<M>(\\S+)</M> <B>[^,.]+</B> (.*)");
+				Matcher m = p.matcher(sentenceCopy);
+				while (m.find()) {
+					sentenceCopy = m.group(2);
+					String temp = m.group(1);
+					temp = temp.replaceAll("<\\S+?>", "");
+					if (!typeModifiers.contains(temp)) {
+						typeModifiers.add(temp);
+					}
+				}
+			}
+					
+		}
+		
+		return typeModifiers;
+
+	}
+	
+	public void adjectiveSubjectsPart2(DataHolder dataholderHandler,
+			Set<String> typeModifiers) {
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			String pattern = "<M>\\S*(" + StringUtils.join(typeModifiers, "|")
+					+ ")\\S*</M> .*";
+			if (((tag == null) || StringUtils.equals(tag, "") || StringUtils
+					.equals(tag, "unknown"))
+					&& adjectiveSubjectsPart2Helper1(sentence, typeModifiers)) {
+				int sentenceID = sentenceItem.getID();
+				int count = 0;
+				int flag = 0;
+				if (sentence != null) {
+					String sentenceCopy = sentence + "";
+					String regex = "(.*?)((?:(\\S+)\\s*(?:and|or|nor|and / or|or / and)\\s*)*(?:<M>\\S+</M>\\s*)+) (\\S+)\\s*(.*)";
+					Pattern p = Pattern.compile(regex);
+					Matcher m = p.matcher(sentenceCopy);
+					while (m.find()) {
+						int knownPOS = 0;
+						String start = m.group(1);
+						String modifier = m.group(2);
+						String newModifier = m.group(3);
+						String word = m.group(4);
+						sentenceCopy = m.group(5);
+
+						if (!this.myLearnerUtility.getConstant().forbiddenWords
+								.contains(word)) {
+							count++;
+							continue;
+						}
+
+						if (StringUtility.isMatchedNullSafe(
+								newModifier.toUpperCase(), "<N>")
+								|| StringUtility.isMatchedNullSafe(
+										start.toUpperCase(), "<N>")) {
+							count++;
+						continue;
+						}
+						
+						boolean c3 = this.myLearnerUtility.getConstant().prepositionWords.contains(word);
+						if (count == 0
+								&& ((StringUtility.isMatchedNullSafe(word,
+										"[;,]") || c3) || (StringUtility
+										.isMatchedNullSafe(word, "[.;,]") && !StringUtility
+										.isMatchedNullSafe(sentence, "\\w")))) {
+							if ((StringUtility.isMatchedNullSafe(word,
+									"\\b(with|without|of)\\b"))
+									&& ((StringUtility
+											.isMatchedNullSafe(
+													modifier,
+													"^(<M>)?<B>(<M>)?\\w+(</M)?</B>(</M>)? (?:and|or|nor|and / or|or / and)?\\s*(<[BM]>)+\\w+(</[BM]>)+\\s*$")) || (StringUtility
+											.isMatchedNullSafe(modifier,
+													"^(<[BM]>)+\\w+(</[BM]>)+$")))) { // start
+																						// with
+																						// a
+																						// <[BM]>,
+																						// followed
+																						// by
+																						// a
+																						// <[BM]>
+								dataholderHandler.tagSentenceWithMT(sentenceID,
+										sentenceCopy, "", "ditto",
+										"adjectivesubject[ditto]");
+								count++;
+								continue;
+							} else {
+								if (modifier != null) {
+									Pattern p2 = Pattern
+											.compile("^(.*) (\\S+)$");
+									Matcher m2 = p2.matcher(modifier);
+									if (m2.find()) {
+										modifier = m2.group(1);
+										String b = m2.group(2);
+										String bCopy = "" + b;
+										b = b.replaceAll("<\\S+?>", "");
+										dataholderHandler.updateDataHolder(b,
+												"b", "", "wordpos", 1);
+										tag = dataholderHandler
+												.getParentSentenceTag(sentenceID);
+										List<String> modifierAndTag = dataholderHandler
+												.getMTFromParentTag(tag);
+										String modifier2 = modifierAndTag
+												.get(0);
+										tag = modifierAndTag.get(1);
+										modifier = modifier.replaceAll(
+												"<\\S+?>", "");
+										if (StringUtility.isMatchedNullSafe(
+												modifier2, "\\w")) {
+											modifier = modifier + " "
+													+ modifier2;
+										}
+										dataholderHandler.tagSentenceWithMT(
+												sentenceID, sentence, modifier,
+												tag, "adjectivesubject[M-B,]");
+										count++;
+										continue;
+									}
+								}
+							}
+							
+							// get new modifier from modifiers like
+							// "mid and/or <m>distal</m>"
+							if (!StringUtility.isMatchedNullSafe(newModifier,
+									"<")
+									&& StringUtility.isMatchedNullSafe(
+											newModifier, "\\w")
+									&& StringUtility.isMatchedNullSafe(start,
+											",(?:</B>)?\\s*$")) {
+
+							}
+							flag += dataholderHandler.updateDataHolder(newModifier, "m", "", "modifiers", 1);
+							
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	public boolean adjectiveSubjectsPart2Helper1(String sentence,
+			Set<String> typeModifiers) {
+		String pattern = "<M>\\S*(" + StringUtils.join(typeModifiers, "|")
+				+ ")\\S*</M> .*";
+		return StringUtility.isMatchedNullSafe(sentence, pattern);
 	}
 	
 
@@ -4230,7 +4414,7 @@ public class Learner {
 	// margins need to be modified with its parent structure
 	public void commonSubstructure(DataHolder dataholderHandler) {
 		Set<String> commonTags = this
-				.collectCommonStructures(dataholderHandler);
+				.getCommonStructures(dataholderHandler);
 
 		String pattern = StringUtils.join(commonTags, "|");
 		pattern = "\\\\[?(" + pattern + ")\\\\]?";
@@ -4330,9 +4514,16 @@ public class Learner {
 		return res;
 	}
 
-	// find tags with more than one different structure modifiers
-	public Set<String> collectCommonStructures(DataHolder dataholderHandler) {
+	/**
+	 * find tags with more than one different structure modifiers
+	 * 
+	 * @param dataholderHandler
+	 * @return
+	 */
+	public Set<String> getCommonStructures(DataHolder dataholderHandler) {
 
+		// Get structures.
+		// Structures are just words from WordPOS holder that are P/S but not B
 		Set<String> PSTags = new HashSet<String>(
 				Arrays.asList("s p".split(" ")));
 		Set<String> BTags = new HashSet<String>();
@@ -4341,11 +4532,47 @@ public class Learner {
 				.getWordsFromWordPOSByPOSs(PSTags);
 		Set<String> BWords = dataholderHandler.getWordsFromWordPOSByPOSs(BTags);
 
-		Set<String> structures = StringUtility.setSubtraction(PSWords, BWords);
+		Set<String> allStructures = StringUtility.setSubtraction(PSWords,
+				BWords);
 
 		Set<String> commonTags = new HashSet<String>();
 
-		// ...
+		// Get a map maps tags to their structures
+		Map<String, Set<String>> tagToModifiers = new HashMap<String, Set<String>>();
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
+			String tag = sentenceItem.getTag();
+			String modifier = sentenceItem.getModifier();
+
+			boolean c1 = StringUtils.equals(tag, "ignore");
+			boolean c2 = (tag == null);
+			boolean c3 = StringUtility.isMatchedNullSafe(tag, " ");
+			boolean c4 = StringUtility.isMatchedNullSafe(tag, "\\[");
+			if ((!c1 || c2) && !c3 && !c4) {
+				if (allStructures.contains(modifier)) {
+					if (tagToModifiers.containsKey(tag)) {
+						tagToModifiers.get(tag).add(modifier);
+					} else {
+						HashSet<String> modifiers = new HashSet<String>();
+						modifiers.add(modifier);
+						tagToModifiers.put(tag, modifiers);
+					}
+				}
+			}
+		}
+
+		// Added all tags with more than 1 structures into the common tags
+		// collection
+		Iterator<String> iter = tagToModifiers.keySet().iterator();
+		while (iter.hasNext()) {
+			String key = iter.next();
+			if (tagToModifiers.get(key).size() > 1) {
+				String commonTag = new String(key);
+				commonTag = commonTag.replaceAll("\\|+", "\\|");
+				commonTag = commonTag.replaceAll("\\|+$", "");
+				commonTags.add(key);
+			}
+		}
 
 		return commonTags;
 	}

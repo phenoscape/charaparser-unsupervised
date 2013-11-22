@@ -1257,9 +1257,11 @@ public class DataHolder {
 	}
 	
 	/**
+	 * Get modifier and tag from the parent tag
 	 * 
 	 * @param tag
-	 * @return
+	 * @return a list with two elements. The first element is modifier. The
+	 *         second element is tag
 	 */
 	public List<String> getMTFromParentTag(String tag) {
 		String modifier = "";
