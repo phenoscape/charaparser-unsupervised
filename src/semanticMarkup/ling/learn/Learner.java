@@ -3458,25 +3458,53 @@ public class Learner {
 													modifier,
 													"^(<M>)?<B>(<M>)?\\w+(</M)?</B>(</M>)? (?:and|or|nor|and / or|or / and)?\\s*(<[BM]>)+\\w+(</[BM]>)+\\s*$")) || (StringUtility
 											.isMatchedNullSafe(modifier,
-													"^(<[BM]>)+\\w+(</[BM]>)+$")))) { // start with a <[BM]>, followed by a <[BM]>
-								dataholderHandler.tagSentenceWithMT(sentenceID, sentenceCopy, "", "ditto", "adjectivesubject[ditto]");
+													"^(<[BM]>)+\\w+(</[BM]>)+$")))) { // start
+																						// with
+																						// a
+																						// <[BM]>,
+																						// followed
+																						// by
+																						// a
+																						// <[BM]>
+								dataholderHandler.tagSentenceWithMT(sentenceID,
+										sentenceCopy, "", "ditto",
+										"adjectivesubject[ditto]");
 								count++;
 								continue;
-							}
-							else {
+							} else {
 								if (modifier != null) {
-									Pattern p2 = Pattern.compile("^(.*) (\\S+)$");
+									Pattern p2 = Pattern
+											.compile("^(.*) (\\S+)$");
 									Matcher m2 = p2.matcher(modifier);
-								if(m2.find()) {
-									modifier = m2.group(1);
-									String b = m2.group(2);
-								}
+									if (m2.find()) {
+										modifier = m2.group(1);
+										String b = m2.group(2);
+										String bCopy = "" + b;
+										b = b.replaceAll("<\\S+?>", "");
+										dataholderHandler.updateDataHolder(b,
+												"b", "", "wordpos", 1);
+										tag = dataholderHandler
+												.getParentSentenceTag(sentenceID);
+										List<String> modifierAndTag = dataholderHandler
+												.getMTFromParentTag(tag);
+										String modifier2 = modifierAndTag
+												.get(0);
+										tag = modifierAndTag.get(1);
+										modifier = modifier.replaceAll(
+												"<\\S+?>", "");
+										if (StringUtility.isMatchedNullSafe(
+												modifier2, "\\w")) {
+											modifier = modifier + " "
+													+ modifier2;
+										}
+										dataholderHandler.tagSentenceWithMT(
+												sentenceID, sentence, modifier,
+												tag, "adjectivesubject[M-B,]");
+										count++;
+										continue;
+									}
 								}
 							}
-								
-							}
-							
-							
 						}
 					}
 				}
