@@ -3418,6 +3418,7 @@ public class Learner {
 					&& adjectiveSubjectsPart2Helper1(sentence, typeModifiers)) {
 				int sentenceID = sentenceItem.getID();
 				int count = 0;
+				int flag = 0;
 				if (sentence != null) {
 					String sentenceCopy = sentence + "";
 					String regex = "(.*?)((?:(\\S+)\\s*(?:and|or|nor|and / or|or / and)\\s*)*(?:<M>\\S+</M>\\s*)+) (\\S+)\\s*(.*)";
@@ -3505,6 +3506,19 @@ public class Learner {
 									}
 								}
 							}
+							
+							// get new modifier from modifiers like
+							// "mid and/or <m>distal</m>"
+							if (!StringUtility.isMatchedNullSafe(newModifier,
+									"<")
+									&& StringUtility.isMatchedNullSafe(
+											newModifier, "\\w")
+									&& StringUtility.isMatchedNullSafe(start,
+											",(?:</B>)?\\s*$")) {
+
+							}
+							flag += dataholderHandler.updateDataHolder(newModifier, "m", "", "modifiers", 1);
+							
 						}
 					}
 				}
