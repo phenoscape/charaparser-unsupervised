@@ -3366,11 +3366,7 @@ public class Learner {
 		Set<String> typeModifiers = new HashSet<String>();
 		
 		// collect evidence for the usage of "modifier boundry":
-		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
-			String sentenceCopy = ""+sentenceItem.getSentence();
-			String tag = sentenceItem.getTag();
-			adjectiveSubjectsHelper(sentenceCopy, tag, typeModifiers);			
-		}
+		typeModifiers = adjectiveSubjectsHelper(dataholderHandler, typeModifiers);
 		
 		for (String typeModifier : typeModifiers) {
 			if (dataholderHandler.getModifierHolder().containsKey(typeModifier)) {
@@ -3382,20 +3378,28 @@ public class Learner {
 		return 0;		
 	}
 	
-	public void adjectiveSubjectsHelper(String sentenceCopy, String tag, Set<String> typeModifiers) {
-		boolean c1 = StringUtility.isMatchedNullSafe(sentenceCopy, "<M>[^[:space:]]+</M> <B>[^,\\.].*");
-		if (c1 && (!StringUtils.equals(tag, "ignore") || tag == null)) {
-			Pattern p = Pattern.compile(".*?<M>(\\S+)</M> <B>[^,.]+</B> (.*)");
-			Matcher m = p.matcher(sentenceCopy);
-			while (m.find()) {
-				sentenceCopy = m.group(2);
-				String temp = m.group(1);
-				temp = temp.replaceAll("<\\S+?>", "");
-				if (!typeModifiers.contains(temp)) {
-					typeModifiers.add(temp);
+	public Set<String> adjectiveSubjectsHelper(DataHolder dataholderHandler, Set<String> typeModifiers) {
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String sentenceCopy = ""+sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			
+			if (!StringUtils.equals(tag, "ignore") || tag == null) {
+				Pattern p = Pattern.compile(".*?<M>(\\S+)</M> <B>[^,.]+</B> (.*)");
+				Matcher m = p.matcher(sentenceCopy);
+				while (m.find()) {
+					sentenceCopy = m.group(2);
+					String temp = m.group(1);
+					temp = temp.replaceAll("<\\S+?>", "");
+					if (!typeModifiers.contains(temp)) {
+						typeModifiers.add(temp);
+					}
 				}
 			}
+					
 		}
+		
+		return typeModifiers;
+
 	}
 	
 

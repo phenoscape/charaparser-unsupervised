@@ -1342,6 +1342,29 @@ public class LearnerTest {
 				myTester.normalizeItem("squamosal and quadratojugal and bones"));
 	}
 	
+	@Test
+	public void testAdjectiveSubjectsHelper(){
+		Learner myTester = learnerFactory();
+		DataHolder myDataHolder = myTester.getDataHolder();
+
+		Set<String> typeModifiers = new HashSet<String>();
+		Set<String> target = new HashSet<String>();
+		target.addAll(Arrays.asList("open anterior".split(" ")));
+		
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "endolymphatic <N>ducts</N> <M><B>open</B></M> <B>in</B> <M>dermal</M> <N>skull</N> roof", "osent", "lead",
+						"status", "", "structure3", "type" }));
+		
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "restricted to <B>the</B> <M>anterior</M> <B>third</B> <B>of</B> <B>the</B> <N>jaw</N>", "osent", "lead",
+						"status", "", "structure3", "type" }));
+		
+		assertEquals("adjectiveSubjectsHelper", target,
+				myTester.adjectiveSubjectsHelper(myDataHolder, typeModifiers));
+	}
+	
 	
 	private Learner learnerFactory() {
 		Learner tester;
