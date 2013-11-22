@@ -1349,7 +1349,7 @@ public class LearnerTest {
 
 		Set<String> typeModifiers = new HashSet<String>();
 		Set<String> target = new HashSet<String>();
-		target.addAll(Arrays.asList("open anterior".split(" ")));
+		target.addAll(Arrays.asList("open anterior paired".split(" ")));
 		
 		myDataHolder.add2Holder(
 				DataHolder.SENTENCE,
@@ -1359,6 +1359,11 @@ public class LearnerTest {
 		myDataHolder.add2Holder(
 				DataHolder.SENTENCE,
 				Arrays.asList(new String[] { "src", "restricted to <B>the</B> <M>anterior</M> <B>third</B> <B>of</B> <B>the</B> <N>jaw</N>", "osent", "lead",
+						"status", "", "structure3", "type" }));
+		
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "<B>series</B> <B>of</B> <M>paired</M> <B>median</B> <N>skull</N> roofng <N>bones</N> <B>that</B> meet <B>at</B> <B>the</B> <M>dorsal</M> midline <B>of</B> <B>the</B> <N>skull</N>", "osent", "lead",
 						"status", "", "structure3", "type" }));
 		
 		assertEquals("adjectiveSubjectsHelper", target,
