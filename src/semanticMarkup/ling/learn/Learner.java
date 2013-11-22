@@ -3440,10 +3440,44 @@ public class Learner {
 						if (StringUtility.isMatchedNullSafe(
 								newModifier.toUpperCase(), "<N>")
 								|| StringUtility.isMatchedNullSafe(
-										start.toUpperCase(), "<N>"))
+										start.toUpperCase(), "<N>")) {
 							count++;
 						continue;
-						// ...
+						}
+						
+						boolean c3 = this.myLearnerUtility.getConstant().prepositionWords.contains(word);
+						if (count == 0
+								&& ((StringUtility.isMatchedNullSafe(word,
+										"[;,]") || c3) || (StringUtility
+										.isMatchedNullSafe(word, "[.;,]") && !StringUtility
+										.isMatchedNullSafe(sentence, "\\w")))) {
+							if ((StringUtility.isMatchedNullSafe(word,
+									"\\b(with|without|of)\\b"))
+									&& ((StringUtility
+											.isMatchedNullSafe(
+													modifier,
+													"^(<M>)?<B>(<M>)?\\w+(</M)?</B>(</M>)? (?:and|or|nor|and / or|or / and)?\\s*(<[BM]>)+\\w+(</[BM]>)+\\s*$")) || (StringUtility
+											.isMatchedNullSafe(modifier,
+													"^(<[BM]>)+\\w+(</[BM]>)+$")))) { // start with a <[BM]>, followed by a <[BM]>
+								dataholderHandler.tagSentenceWithMT(sentenceID, sentenceCopy, "", "ditto", "adjectivesubject[ditto]");
+								count++;
+								continue;
+							}
+							else {
+								if (modifier != null) {
+									Pattern p2 = Pattern.compile("^(.*) (\\S+)$");
+									Matcher m2 = p2.matcher(modifier);
+								if(m2.find()) {
+									modifier = m2.group(1);
+									String b = m2.group(2);
+								}
+								}
+							}
+								
+							}
+							
+							
+						}
 					}
 				}
 			}
