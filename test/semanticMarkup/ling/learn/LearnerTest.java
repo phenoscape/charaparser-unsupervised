@@ -1291,6 +1291,48 @@ public class LearnerTest {
 	}
 	
 	@Test
+	public void testGetCommonStructures() {
+		Learner myTester = learnerFactory();
+		DataHolder myDataHolder = myTester.getDataHolder();
+
+		// "structure2" and "structure3" are common structures, "structure1" is
+		// not
+		myTester.getDataHolder().add2Holder(
+				DataHolder.WORDPOS,
+				Arrays.asList(new String[] { "structure1", "b", "role", "1",
+						"1", "", "" }));
+		myTester.getDataHolder().add2Holder(
+				DataHolder.WORDPOS,
+				Arrays.asList(new String[] { "structure2", "p", "role", "1",
+						"1", "", "" }));
+		myTester.getDataHolder().add2Holder(
+				DataHolder.WORDPOS,
+				Arrays.asList(new String[] { "structure3", "s", "role", "1",
+						"1", "", "" }));
+
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
+						"status", "tag1", "structure1", "type" }));
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
+						"status", "tag2", "structure2", "type" }));
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
+						"status", "tag3", "structure2", "type" }));
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
+						"status", "tag3", "structure3", "type" }));
+
+		Set<String> target = new HashSet<String>(Arrays.asList("tag3"));
+		assertEquals("getCommonStructures", target,
+				myTester.getCommonStructures(myDataHolder));
+	}
+	
+	@Test
 	public void testNormalizeItem() {
 		Learner myTester = learnerFactory();
 		DataHolder myDataHolder = myTester.getDataHolder();

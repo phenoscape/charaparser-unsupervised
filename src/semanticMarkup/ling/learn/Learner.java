@@ -4248,7 +4248,7 @@ public class Learner {
 	// margins need to be modified with its parent structure
 	public void commonSubstructure(DataHolder dataholderHandler) {
 		Set<String> commonTags = this
-				.collectCommonStructures(dataholderHandler);
+				.getCommonStructures(dataholderHandler);
 
 		String pattern = StringUtils.join(commonTags, "|");
 		pattern = "\\\\[?(" + pattern + ")\\\\]?";
@@ -4354,7 +4354,7 @@ public class Learner {
 	 * @param dataholderHandler
 	 * @return
 	 */
-	public Set<String> collectCommonStructures(DataHolder dataholderHandler) {
+	public Set<String> getCommonStructures(DataHolder dataholderHandler) {
 
 		// Get structures.
 		// Structures are just words from WordPOS holder that are P/S but not B
