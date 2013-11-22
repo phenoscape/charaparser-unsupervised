@@ -3405,18 +3405,49 @@ public class Learner {
 
 	}
 	
-	public void adjectiveSubjectsPart2(DataHolder dataholderHandler, Set<String> typeModifiers) {
-		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+	public void adjectiveSubjectsPart2(DataHolder dataholderHandler,
+			Set<String> typeModifiers) {
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
 			String sentence = sentenceItem.getSentence();
 			String tag = sentenceItem.getTag();
-			String pattern = "<M>\\S*("+StringUtils.join(typeModifiers, "|")+")\\S*</M> .*";
-			if (((tag == null) || StringUtils.equals(tag, "")
-						|| StringUtils.equals(tag, "unknown"))
-					&& adjectiveSubjectsPart2Helper1(sentence, typeModifiers)){
-				
+			String pattern = "<M>\\S*(" + StringUtils.join(typeModifiers, "|")
+					+ ")\\S*</M> .*";
+			if (((tag == null) || StringUtils.equals(tag, "") || StringUtils
+					.equals(tag, "unknown"))
+					&& adjectiveSubjectsPart2Helper1(sentence, typeModifiers)) {
+				int sentenceID = sentenceItem.getID();
+				int count = 0;
+				if (sentence != null) {
+					String sentenceCopy = sentence + "";
+					String regex = "(.*?)((?:(\\S+)\\s*(?:and|or|nor|and / or|or / and)\\s*)*(?:<M>\\S+</M>\\s*)+) (\\S+)\\s*(.*)";
+					Pattern p = Pattern.compile(regex);
+					Matcher m = p.matcher(sentenceCopy);
+					while (m.find()) {
+						int knownPOS = 0;
+						String start = m.group(1);
+						String modifier = m.group(2);
+						String newModifier = m.group(3);
+						String word = m.group(4);
+						sentenceCopy = m.group(5);
+
+						if (!this.myLearnerUtility.getConstant().forbiddenWords
+								.contains(word)) {
+							count++;
+							continue;
+						}
+
+						if (StringUtility.isMatchedNullSafe(
+								newModifier.toUpperCase(), "<N>")
+								|| StringUtility.isMatchedNullSafe(
+										start.toUpperCase(), "<N>"))
+							count++;
+						continue;
+						// ...
+					}
+				}
 			}
 		}
-//		<M>\\S*($typemodifiers)\\S*</M> .*
 	}
 	
 	public boolean adjectiveSubjectsPart2Helper1(String sentence,
