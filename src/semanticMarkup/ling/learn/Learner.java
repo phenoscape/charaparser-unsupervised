@@ -3365,8 +3365,8 @@ public class Learner {
 	public int adjectiveSubjects(DataHolder dataholderHandler) {
 		Set<String> typeModifiers = new HashSet<String>();
 		
-		// collect evidence for the usage of "modifier boundry":
-		typeModifiers = adjectiveSubjectsHelper(dataholderHandler, typeModifiers);
+		// Part 1: collect evidence for the usage of "modifier boundry":
+		typeModifiers = adjectiveSubjectsPart1(dataholderHandler, typeModifiers);
 		
 		for (String typeModifier : typeModifiers) {
 			if (dataholderHandler.getModifierHolder().containsKey(typeModifier)) {
@@ -3375,10 +3375,13 @@ public class Learner {
 			}
 		}
 		
+		// Part 2: process "typemodifier unknown" patterns
+		
+		
 		return 0;		
 	}
 	
-	public Set<String> adjectiveSubjectsHelper(DataHolder dataholderHandler, Set<String> typeModifiers) {
+	public Set<String> adjectiveSubjectsPart1(DataHolder dataholderHandler, Set<String> typeModifiers) {
 		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
 			String sentenceCopy = ""+sentenceItem.getSentence();
 			String tag = sentenceItem.getTag();
@@ -3400,6 +3403,27 @@ public class Learner {
 		
 		return typeModifiers;
 
+	}
+	
+	public void adjectiveSubjectsPart2(DataHolder dataholderHandler, Set<String> typeModifiers) {
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			String pattern = "<M>\\S*("+StringUtils.join(typeModifiers, "|")+")\\S*</M> .*";
+			if (((tag == null) || StringUtils.equals(tag, "")
+						|| StringUtils.equals(tag, "unknown"))
+					&& adjectiveSubjectsPart2Helper1(sentence, typeModifiers)){
+				
+			}
+		}
+//		<M>\\S*($typemodifiers)\\S*</M> .*
+	}
+	
+	public boolean adjectiveSubjectsPart2Helper1(String sentence,
+			Set<String> typeModifiers) {
+		String pattern = "<M>\\S*(" + StringUtils.join(typeModifiers, "|")
+				+ ")\\S*</M> .*";
+		return StringUtility.isMatchedNullSafe(sentence, pattern);
 	}
 	
 
