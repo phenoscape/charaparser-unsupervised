@@ -4348,10 +4348,16 @@ public class Learner {
 		return res;
 	}
 
-	// find tags with more than one different structure modifiers
+	/**
+	 * find tags with more than one different structure modifiers
+	 * 
+	 * @param dataholderHandler
+	 * @return
+	 */
 	public Set<String> collectCommonStructures(DataHolder dataholderHandler) {
 
-		// get words from WordPOS holder, who are P/S but not B
+		// Get structures.
+		// Structures are just words from WordPOS holder that are P/S but not B
 		Set<String> PSTags = new HashSet<String>(
 				Arrays.asList("s p".split(" ")));
 		Set<String> BTags = new HashSet<String>();
@@ -4360,11 +4366,47 @@ public class Learner {
 				.getWordsFromWordPOSByPOSs(PSTags);
 		Set<String> BWords = dataholderHandler.getWordsFromWordPOSByPOSs(BTags);
 
-		Set<String> structures = StringUtility.setSubtraction(PSWords, BWords);
+		Set<String> allStructures = StringUtility.setSubtraction(PSWords,
+				BWords);
 
 		Set<String> commonTags = new HashSet<String>();
 
-		// ...
+		// Get a map maps tags to their structures
+		Map<String, Set<String>> tagToModifiers = new HashMap<String, Set<String>>();
+		for (SentenceStructure sentenceItem : dataholderHandler
+				.getSentenceHolder()) {
+			String tag = sentenceItem.getTag();
+			String modifier = sentenceItem.getModifier();
+
+			boolean c1 = StringUtils.equals(tag, "ignore");
+			boolean c2 = (tag == null);
+			boolean c3 = StringUtility.isMatchedNullSafe(tag, " ");
+			boolean c4 = StringUtility.isMatchedNullSafe(tag, "\\[");
+			if ((!c1 || c2) && !c3 && !c4) {
+				if (allStructures.contains(modifier)) {
+					if (tagToModifiers.containsKey(tag)) {
+						tagToModifiers.get(tag).add(modifier);
+					} else {
+						HashSet<String> modifiers = new HashSet<String>();
+						modifiers.add(modifier);
+						tagToModifiers.put(tag, modifiers);
+					}
+				}
+			}
+		}
+
+		// Added all tags with more than 1 structures into the common tags
+		// collection
+		Iterator<String> iter = tagToModifiers.keySet().iterator();
+		while (iter.hasNext()) {
+			String key = iter.next();
+			if (tagToModifiers.get(key).size() > 1) {
+				String commonTag = new String(key);
+				commonTag = commonTag.replaceAll("\\|+", "\\|");
+				commonTag = commonTag.replaceAll("\\|+$", "");
+				commonTags.add(key);
+			}
+		}
 
 		return commonTags;
 	}
