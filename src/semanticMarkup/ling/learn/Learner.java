@@ -4679,7 +4679,7 @@ public class Learner {
 			}
 		}
 	}
-
+	
 	public void normalizeModifiers(DataHolder dataholderHandler) {
 		Comparator<SentenceStructure> stringLengthComparator = new Comparator<SentenceStructure>() {
 			@Override
@@ -5185,6 +5185,59 @@ public class Learner {
 		}
 
 		return tag;
+	}
+	
+	/**
+	 * set saved_flag to red for the following terms in preparation to run the Parser
+	 * 1. words that are not in allwords table 
+	 * 2. special words added
+	 */
+	public void prepareTables4Parser(DataHolder dataholderHandler) {
+		Set<String> toRemove = new HashSet<String>();
+		toRemove.addAll(this.myLearnerUtility.getConstant().pronounWords);
+		toRemove.addAll(this.myLearnerUtility.getConstant().characterWords);
+		toRemove.addAll(this.myLearnerUtility.getConstant().numberWords);
+		toRemove.addAll(this.myLearnerUtility.getConstant().clusterStringWords);
+		toRemove.addAll(this.myLearnerUtility.getConstant().pronounWords);
+		toRemove.addAll(this.myLearnerUtility.getConstant().stopWords);	
+		
+		Set<String> unknownWords =dataholderHandler.getUnknownWordHolder().keySet(); 
+		
+		// set saved_flag to red in WordPOS collection
+		Iterator<Entry<WordPOSKey, WordPOSValue>> iter = dataholderHandler.getWordPOSHolderIterator();
+		while (iter.hasNext()) {
+			Entry<WordPOSKey, WordPOSValue> entry = iter.next();
+			WordPOSKey key = entry.getKey();
+			WordPOSValue value = entry.getValue();
+			String word = key.getWord();
+//			boolean c1 = toRemove.contains(word);
+//			boolean c2 = StringUtility.isMatchedNullSafe(word, "[a-z]");
+//			boolean c3 = unknownWords.contains(word);
+			
+			if (toRemove.contains(word)
+					|| !StringUtility.isMatchedNullSafe(word, "[a-z]")
+					|| !unknownWords.contains(word)) {
+				value.setSavedFlag("red");
+			}
+		}
+		
+		// handle -ly words
+		// If a word in WordPOS collection, has ending of -ly, and after
+		// removing the -ly ending, it appears in the UnknownWords collections,
+		// then set the savedFlag to "red"
+		Iterator<Entry<WordPOSKey, WordPOSValue>> iter2 = dataholderHandler.getWordPOSHolderIterator();
+		while (iter2.hasNext()) {
+			Entry<WordPOSKey, WordPOSValue> entry = iter2.next();
+			WordPOSKey key = entry.getKey();
+			WordPOSValue value = entry.getValue();
+			String lyWord = key.getWord();
+			if (StringUtility.isMatchedNullSafe(lyWord, "ly$")) {
+				String nWord = lyWord.replaceAll("ly$", "");
+				if (unknownWords.contains(nWord)) {
+					value.setSavedFlag("red");
+				}
+			}
+		}
 	}
 
 	// some unused variables in perl
