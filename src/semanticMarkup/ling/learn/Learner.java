@@ -3518,6 +3518,7 @@ public class Learner {
 
 							}
 							flag += dataholderHandler.updateDataHolder(newModifier, "m", "", "modifiers", 1);
+//							print "find a modifier [E0]: $newm\n" if $debug;
 							
 						}
 					}

@@ -180,7 +180,7 @@ public class DataHolder {
 		}
 		
 		if (holderID == DataHolder.MODIFIER) {
-			this.modifierTable = this.add2ModifierHolder(this.modifierTable, args);
+			this.add2ModifierHolder(args);
 		}
 		
 		if (holderID == DataHolder.SENTENCE) {
@@ -196,7 +196,7 @@ public class DataHolder {
 		}
 		
 		if (holderID == DataHolder.WORDPOS) {
-			this.wordPOSTable = this.add2WordPOSHolder(this.wordPOSTable, args);
+			this.add2WordPOSHolder(args);
 		}
 		
 	}
@@ -233,7 +233,7 @@ public class DataHolder {
 		return isAHolder;
 	}
 	
-	public Map<String, ModifierTableValue> add2ModifierHolder(Map<String, ModifierTableValue> modifierTable, List<String> args) {
+	public void add2ModifierHolder(List<String> args) {
 		int index = 0;
 		
 		String word = args.get(index++);
@@ -244,10 +244,11 @@ public class DataHolder {
 			isTypeModifier = true;
 		}
 
-		
-		modifierTable.put(word, new ModifierTableValue(count, isTypeModifier));
-		
-		return modifierTable;
+		this.modifierTable.put(word, new ModifierTableValue(count, isTypeModifier));
+	}
+	
+	public void addToModifierHolder(String word, int count, boolean isTypeModifier) {
+		this.modifierTable.put(word, new ModifierTableValue(count, isTypeModifier));
 	}
 
 	public Map<String, String> add2UnknowWordHolder(Map<String, String> unknownWordHolder, List<String> args){
@@ -260,7 +261,7 @@ public class DataHolder {
 		return unknownWordHolder;
 	}
 	
-	public Map<WordPOSKey, WordPOSValue> add2WordPOSHolder(Map<WordPOSKey, WordPOSValue> wordPOSHolder, List<String> args){
+	public void add2WordPOSHolder(List<String> args){
 		int index = 0;
 		
 		String word = args.get(index++);
@@ -270,11 +271,15 @@ public class DataHolder {
 		int certaintyL = new Integer(args.get(index++));
 		String savedFlag = args.get(index++);
 		String savedID = args.get(index++);
-		wordPOSHolder.put(
+		this.wordPOSTable.put(
 				new WordPOSKey(word, POS), 
 				new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID));
-		
-		return wordPOSHolder; 
+	}
+	
+	public void addToWordPOSHolder(String word, String POS, String role, int certaintyU, int certaintyL, String savedFlag, String savedID) {
+		this.wordPOSTable.put(
+				new WordPOSKey(word, POS), 
+				new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID));
 	}
 	
 	public Set<SingularPluralPair> add2SingularPluralHolder(Set<SingularPluralPair> singularPluralHolder, List<String> args){
