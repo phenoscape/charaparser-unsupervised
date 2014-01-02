@@ -78,35 +78,35 @@ public class Constant {
 	
 	public Constant() {
 		Set<String> characterWordsTemp = new HashSet<String>();
-		characterWordsTemp.addAll(Arrays.asList(Constant.CHARACTER.split("|")));
+		characterWordsTemp.addAll(Arrays.asList(Constant.CHARACTER.split("\\|")));
 		this.characterWords = Collections.unmodifiableSet(characterWordsTemp);
 		
 		Set<String> clusterStringWordsTemp = new HashSet<String>();
-		clusterStringWordsTemp.addAll(Arrays.asList(Constant.CLUSTERSTRING.split("|")));
-		this.characterWords = Collections.unmodifiableSet(characterWordsTemp);
+		clusterStringWordsTemp.addAll(Arrays.asList(Constant.CLUSTERSTRING.split("\\|")));
+		this.clusterStringWords = Collections.unmodifiableSet(clusterStringWordsTemp);
 		
 		Set<String> forbiddenWordsTemp = new HashSet<String>();
-		forbiddenWordsTemp.addAll(Arrays.asList(Constant.FORBIDDEN.split("|")));
+		forbiddenWordsTemp.addAll(Arrays.asList(Constant.FORBIDDEN.split("\\|")));
 		this.forbiddenWords = Collections.unmodifiableSet(forbiddenWordsTemp);
 		
 		Set<String> numberWordsTemp = new HashSet<String>();
-		numberWordsTemp.addAll(Arrays.asList(Constant.NUMBER.split("|")));
+		numberWordsTemp.addAll(Arrays.asList(Constant.NUMBER.split("\\|")));
 		this.numberWords = Collections.unmodifiableSet(numberWordsTemp);
 		
 		Set<String> prepositionWordsTemp = new HashSet<String>();
-		prepositionWordsTemp.addAll(Arrays.asList(Constant.PREPOSITION.split("|")));
+		prepositionWordsTemp.addAll(Arrays.asList(Constant.PREPOSITION.split("\\|")));
 		this.prepositionWords = Collections.unmodifiableSet(prepositionWordsTemp);
 		
 		Set<String> pronounWordsTemp = new HashSet<String>();
-		pronounWordsTemp.addAll(Arrays.asList(Constant.PRONOUN.split("|")));
+		pronounWordsTemp.addAll(Arrays.asList(Constant.PRONOUN.split("\\|")));
 		this.pronounWords = Collections.unmodifiableSet(pronounWordsTemp);
 		
 		Set<String> singularExceptionsTemp = new HashSet<String>();
-		singularExceptionsTemp.addAll(Arrays.asList(this.singularExceptionList.split("|")));
+		singularExceptionsTemp.addAll(Arrays.asList(this.singularExceptionList.split("\\|")));
 		this.singularExceptions = Collections.unmodifiableSet(singularExceptionsTemp);	
 		
 		Set<String> stopWordsTemp = new HashSet<String>();
-		stopWordsTemp.addAll(Arrays.asList(Constant.STOP.split("|")));
+		stopWordsTemp.addAll(Arrays.asList(Constant.STOP.split("\\|")));
 		this.stopWords = Collections.unmodifiableSet(stopWordsTemp);	
 	}
 
