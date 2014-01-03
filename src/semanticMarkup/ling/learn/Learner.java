@@ -217,7 +217,7 @@ public class Learner {
 			// this.commonSubstructure(myDataHolder);
 		}
 
-		myDataHolder.write2File("");
+		myDataHolder.writeToFile("dataholder", "");
 
 		myLogger.info("Learning done!");
 

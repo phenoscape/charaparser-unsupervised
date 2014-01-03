@@ -2147,11 +2147,21 @@ public class DataHolder {
 		return isUpdated;
 	}
 	
-	public void write2File(String fileNamePrefix) {
+	public void writeToFile(String dir, String fileNamePrefix) {
+		if (fileNamePrefix == null) {
+			fileNamePrefix = "";
+		}
+
+		if (!StringUtils.equals(fileNamePrefix, "")) {
+			fileNamePrefix = fileNamePrefix + "_";
+		}
+
 		PrintWriter writer = null;
 		try {
-			writer = new PrintWriter(fileNamePrefix
-					+ "_Sentence.csv", "UTF-8");
+			String fullPath = dir + "/" + fileNamePrefix + "Sentence.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
 
 			for (SentenceStructure sentenceItem : this.sentenceTable) {
 				writer.println(String.format("%d, %s, %s",
@@ -2168,8 +2178,10 @@ public class DataHolder {
 		}
 
 		try {
-			writer = new PrintWriter(fileNamePrefix
-					+ "_WordPOS.csv", "UTF-8");
+			String fullPath = dir + "/" + fileNamePrefix + "WordPOS.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
 
 			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this
 					.getWordPOSHolderIterator();
@@ -2186,7 +2198,6 @@ public class DataHolder {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 
 }
