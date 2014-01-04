@@ -39,13 +39,14 @@ public class DataHolder {
 	private Set<String> BMSWords;
 	
 	// Data holders
-	// Table heuristicnoun
-	private Map<String, String> heuristicNounTable;
-	public static final byte HEURISTICNOUN = 1;
 
 	// Table discounted
 	private Map<DiscountedKey, String> discountedTable;
 	public static final byte DISCOUNTED = 2;
+	
+	// Table heuristicnoun
+	private Map<String, String> heuristicNounTable;
+	public static final byte HEURISTICNOUN = 1;
 	
 	// Table isATable
 	private Map<Integer, IsAValue> isATable;
@@ -2155,18 +2156,233 @@ public class DataHolder {
 		if (!StringUtils.equals(fileNamePrefix, "")) {
 			fileNamePrefix = fileNamePrefix + "_";
 		}
-
+		
+		// writer
 		PrintWriter writer = null;
+
+		// Discounted Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "Discounted.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("word, discounted POS, possible new POS");
+
+			// write content
+			Iterator<Entry<DiscountedKey, String>> iter = this.discountedTable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<DiscountedKey, String> discountedEntry = iter.next();
+
+				writer.println(String.format("%s, %s, %s",
+						discountedEntry.getKey().getWord(),
+						discountedEntry.getKey().getPOS(),
+						discountedEntry.getValue()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// HeuristicNouns Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "HeuristicNouns.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("word, type");
+
+			// write content
+			Iterator<Entry<String, String>> iter = this.heuristicNounTable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<String, String> heuristicNounEntry = iter.next();
+
+				writer.println(String.format("%s, %s",
+						heuristicNounEntry.getKey(),						
+						heuristicNounEntry.getValue()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// IsA Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "IsA.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("ID, instance, class");
+
+			// write content
+			Iterator<Entry<Integer, IsAValue>> iter = this.isATable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<Integer, IsAValue> isAEntry = iter.next();
+
+				writer.println(String.format("%d, %s, %s",
+						isAEntry.getKey(),						
+						isAEntry.getValue().getInstance(),
+						isAEntry.getValue().getCls()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Modifiers Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "Modifiers.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("word, count, is type modifier");
+
+			// write content
+			Iterator<Entry<String, ModifierTableValue>> iter = this.modifierTable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<String, ModifierTableValue> modifierEntry = iter.next();
+
+				writer.println(String.format("%s, %d, %b",
+						modifierEntry.getKey(),						
+						modifierEntry.getValue().getCount(),
+						modifierEntry.getValue().getIsTypeModifier()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Sentence Holder
 		try {
 			String fullPath = dir + "/" + fileNamePrefix + "Sentence.csv";
 			File file = new File(fullPath);
 			file.getParentFile().mkdirs();
 			writer = new PrintWriter(fullPath, "UTF-8");
 
+			// write header
+			writer.println("sentence ID, source, sentence, original sentence, lead, status, tag, modifier, type");
+			
+			// write content
 			for (SentenceStructure sentenceItem : this.sentenceTable) {
-				writer.println(String.format("%d, %s, %s",
-						sentenceItem.getID(), sentenceItem.getSentence(),
-						sentenceItem.getTag()));
+				writer.println(String.format("%d, %s, %s, %s, %s, %s, %s, %s, %s",
+						sentenceItem.getID(),
+						sentenceItem.getSource(),
+						sentenceItem.getSentence(),
+						sentenceItem.getOriginalSentence(),
+						sentenceItem.getLead(),
+						sentenceItem.getStatus(),
+						sentenceItem.getTag(),
+						sentenceItem.getModifier(),
+						sentenceItem.getType()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// SingularPlural Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "SingularPlural.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("singular, plural");
+			
+			// write content
+			for (SingularPluralPair pair : this.singularPluralTable) {
+				writer.println(String.format("%s, %s",
+						pair.getSingular(),
+						pair.getPlural()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// TermCategory Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "TermCategory.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("term, category");
+			
+			// write content
+			for (StringPair pair : this.termCategoryTable) {
+				writer.println(String.format("%s, %s",
+						pair.getHead(),
+						pair.getTail()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// UnknownWord Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "UnknownWords.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("word, flag");
+
+			// write content
+			Iterator<Entry<String, String>> iter = this.unknownWordTable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<String, String> unknownWordEntry = iter.next();
+
+				writer.println(String.format("%s, %s",
+						unknownWordEntry.getKey(),						
+						unknownWordEntry.getValue()
+						));
 			}
 			writer.close();
 		} catch (FileNotFoundException e) {
@@ -2177,18 +2393,61 @@ public class DataHolder {
 			e.printStackTrace();
 		}
 
+		// WordPOS holder
 		try {
 			String fullPath = dir + "/" + fileNamePrefix + "WordPOS.csv";
 			File file = new File(fullPath);
 			file.getParentFile().mkdirs();
 			writer = new PrintWriter(fullPath, "UTF-8");
 
+			// write header
+			writer.println("word, POS, role, certaintyU, certiantyL, saved_flag, saveedID");
+			
+			// write content
 			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this
 					.getWordPOSHolderIterator();
 			while (iter.hasNext()) {
-				Entry<WordPOSKey, WordPOSValue> wordPOSItem = iter.next();
-				writer.println(String.format("%s, %s", wordPOSItem.getKey()
-						.getWord(), wordPOSItem.getKey().getPOS()));
+				Entry<WordPOSKey, WordPOSValue> wordPOSItem = iter.next();				
+				
+				writer.println(String.format("%s, %s, %s, %d, %d, %s, %s", 
+						wordPOSItem.getKey().getWord(), 
+						wordPOSItem.getKey().getPOS(),
+						wordPOSItem.getValue().getRole(),
+						wordPOSItem.getValue().getCertaintyU(),
+						wordPOSItem.getValue().getCertaintyL(),
+						wordPOSItem.getValue().getSavedFlag(),
+						wordPOSItem.getValue().getSavedID()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// WordRole holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "WordRole.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("word, semantic role, saved ID");
+			
+			// write content
+			Iterator<Entry<StringPair, String>> iter = this.wordRoleTable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<StringPair, String> wordRoleItem = iter.next();				
+				
+				writer.println(String.format("%s, %s, %s", 
+						wordRoleItem.getKey().getHead(), 
+						wordRoleItem.getKey().getTail(),
+						wordRoleItem.getValue()
+						));
 			}
 			writer.close();
 		} catch (FileNotFoundException e) {
