@@ -108,7 +108,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 
 	// learn
 	public void learn(List<Treatment> treatments, IGlossary glossary) {
-		this.myDataHolder = this.myLearner.Learn(treatments, glossary, this.markupMode);
+		this.myDataHolder = this.myLearner.learn(treatments, glossary, this.markupMode);
 		readResults(treatments);
 	}
 	

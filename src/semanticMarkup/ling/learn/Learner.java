@@ -114,7 +114,7 @@ public class Learner {
 		this.checkedModifiers = new HashMap<String, Boolean>();
 	}
 
-	public DataHolder Learn(List<Treatment> treatments, IGlossary glossary,
+	public DataHolder learn(List<Treatment> treatments, IGlossary glossary,
 			String markupMode) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("Learn");
@@ -3407,8 +3407,12 @@ public class Learner {
 	
 	public void adjectiveSubjectsPart2(DataHolder dataholderHandler,
 			Set<String> typeModifiers) {
+		String pos = null;
+		
+		
 		for (SentenceStructure sentenceItem : dataholderHandler
 				.getSentenceHolder()) {
+			int sentenceID = sentenceItem.getID();
 			String sentence = sentenceItem.getSentence();
 			String tag = sentenceItem.getTag();
 			String pattern = "<M>\\S*(" + StringUtils.join(typeModifiers, "|")
@@ -3416,7 +3420,6 @@ public class Learner {
 			if (((tag == null) || StringUtils.equals(tag, "") || StringUtils
 					.equals(tag, "unknown"))
 					&& adjectiveSubjectsPart2Helper1(sentence, typeModifiers)) {
-				int sentenceID = sentenceItem.getID();
 				int count = 0;
 				int flag = 0;
 				if (sentence != null) {
@@ -3432,12 +3435,14 @@ public class Learner {
 						String word = m.group(4);
 						sentenceCopy = m.group(5);
 
+						// case 1
 						if (!this.myLearnerUtility.getConstant().forbiddenWords
 								.contains(word)) {
 							count++;
 							continue;
 						}
 
+						// case 2
 						if (StringUtility.isMatchedNullSafe(
 								newModifier.toUpperCase(), "<N>")
 								|| StringUtility.isMatchedNullSafe(
@@ -3446,33 +3451,29 @@ public class Learner {
 						continue;
 						}
 						
+						// case 3
 						boolean c3 = this.myLearnerUtility.getConstant().prepositionWords.contains(word);
-						if (count == 0
-								&& ((StringUtility.isMatchedNullSafe(word,
-										"[;,]") || c3) || (StringUtility
-										.isMatchedNullSafe(word, "[.;,]") && !StringUtility
-										.isMatchedNullSafe(sentence, "\\w")))) {
+						if (count == 0 
+								&& ((StringUtility.isMatchedNullSafe(word, "[;,]") || c3) 
+										|| (StringUtility.isMatchedNullSafe(word, "[.;,]") 
+												&& !StringUtility.isMatchedNullSafe(sentence, "\\w")))) {
+							// case 3.1
+							// start with a <[BM]>, followed by a <[BM]>
 							if ((StringUtility.isMatchedNullSafe(word,
 									"\\b(with|without|of)\\b"))
-									&& ((StringUtility
-											.isMatchedNullSafe(
-													modifier,
-													"^(<M>)?<B>(<M>)?\\w+(</M)?</B>(</M>)? (?:and|or|nor|and / or|or / and)?\\s*(<[BM]>)+\\w+(</[BM]>)+\\s*$")) || (StringUtility
-											.isMatchedNullSafe(modifier,
-													"^(<[BM]>)+\\w+(</[BM]>)+$")))) { // start
-																						// with
-																						// a
-																						// <[BM]>,
-																						// followed
-																						// by
-																						// a
-																						// <[BM]>
+									&& ((StringUtility.isMatchedNullSafe(modifier,
+													"^(<M>)?<B>(<M>)?\\w+(</M)?</B>(</M>)? (?:and|or|nor|and / or|or / and)?\\s*(<[BM]>)+\\w+(</[BM]>)+\\s*$")) 
+									|| (StringUtility.isMatchedNullSafe(modifier, "^(<[BM]>)+\\w+(</[BM]>)+$")))) { 
 								dataholderHandler.tagSentenceWithMT(sentenceID,
 										sentenceCopy, "", "ditto",
 										"adjectivesubject[ditto]");
 								count++;
 								continue;
-							} else {
+							} 
+							// case 3.2
+							// modifier={<M>outer</M> <M><B>pistillate</B></M>} word= <B>,</B> sentence= <N>corollas</N>....
+							// make the last modifier b
+							else {
 								if (modifier != null) {
 									Pattern p2 = Pattern
 											.compile("^(.*) (\\S+)$");
@@ -3482,21 +3483,16 @@ public class Learner {
 										String b = m2.group(2);
 										String bCopy = "" + b;
 										b = b.replaceAll("<\\S+?>", "");
-										dataholderHandler.updateDataHolder(b,
-												"b", "", "wordpos", 1);
-										tag = dataholderHandler
-												.getParentSentenceTag(sentenceID);
-										List<String> modifierAndTag = dataholderHandler
-												.getMTFromParentTag(tag);
-										String modifier2 = modifierAndTag
-												.get(0);
+										dataholderHandler.updateDataHolder(b,"b", "", "wordpos", 1);
+										tag = dataholderHandler.getParentSentenceTag(sentenceID);
+										List<String> modifierAndTag = 
+												dataholderHandler.getMTFromParentTag(tag);
+										String modifier2 = modifierAndTag.get(0);
 										tag = modifierAndTag.get(1);
 										modifier = modifier.replaceAll(
 												"<\\S+?>", "");
-										if (StringUtility.isMatchedNullSafe(
-												modifier2, "\\w")) {
-											modifier = modifier + " "
-													+ modifier2;
+										if (StringUtility.isMatchedNullSafe(modifier2, "\\w")) {
+											modifier = modifier + " " + modifier2;
 										}
 										dataholderHandler.tagSentenceWithMT(
 												sentenceID, sentence, modifier,
@@ -3506,21 +3502,67 @@ public class Learner {
 									}
 								}
 							}
-							
-							// get new modifier from modifiers like
-							// "mid and/or <m>distal</m>"
-							if (!StringUtility.isMatchedNullSafe(newModifier,
-									"<")
-									&& StringUtility.isMatchedNullSafe(
-											newModifier, "\\w")
-									&& StringUtility.isMatchedNullSafe(start,
-											",(?:</B>)?\\s*$")) {
+						}
+						
+						// case 4
+						// get new modifier from modifiers like
+						// "mid and/or <m>distal</m>"
+						if (!StringUtility.isMatchedNullSafe(newModifier,"<")
+								&& StringUtility.isMatchedNullSafe(newModifier, "\\w")
+								&& StringUtility.isMatchedNullSafe(start,",(?:</B>)?\\s*$")) {
 
-							}
+						
 							flag += dataholderHandler.updateDataHolder(newModifier, "m", "", "modifiers", 1);
 //							print "find a modifier [E0]: $newm\n" if $debug;
+						}
+						
+						// case 5
+						// pos = "N"/"B"
+						if (word != null) {
+							Pattern p5 = Pattern.compile("([A-Z])>(<([A-Z])>)?(.*?)<");
+							Matcher m5 = p5.matcher(word);
+							if (m5.find()) {
+								String g1 = m5.group(1);
+								String g2 = m5.group(2);
+								String g3 = m5.group(3);
+								String g4 = m5.group(4);
+								
+								String t1 = g1;
+								String t2 = g3;
+								
+								word = g4;
+								pos = t1 + t2;
+								
+								// if <N><B>, decide on one tag
+								if (pos.length() > 1) {
+									if (StringUtility.isMatchedNullSafe(sentence, "^\\s*<B>[,;:]<\\/B>\\s*<N>")
+											||StringUtility.isMatchedNullSafe(sentence, "^\\s*<B>\\.<\\/B>\\s*$")){
+										pos = "B";
+									}
+									else {
+										pos = "N";
+									}
+								}
+								knownPOS = 1;
+							}
+							else {
+								List<POSInfo> POSs = dataholderHandler.checkPOSInfo(word);
+								pos = POSs.get(0).getPOS();
+							}
+						}
+						
+						pos = StringUtils.equals(pos, "?") ? this.myLearnerUtility.getWordFormUtility().getNumber(word) : pos;
+						
+						// part 6
+						// markup sentid, update pos for word, new modifier
+						if (StringUtils.equals(pos, "p") || StringUtils.equals(pos, "N")) {
 							
 						}
+						
+								
+						
+						
+						
 					}
 				}
 			}
