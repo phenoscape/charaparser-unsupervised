@@ -3376,9 +3376,9 @@ public class Learner {
 		}
 		
 		// Part 2: process "typemodifier unknown" patterns
+		int flag = adjectiveSubjectsPart2(dataholderHandler, typeModifiers);
 		
-		
-		return 0;		
+		return flag;		
 	}
 	
 	public Set<String> adjectiveSubjectsPart1(DataHolder dataholderHandler, Set<String> typeModifiers) {
@@ -3405,9 +3405,10 @@ public class Learner {
 
 	}
 	
-	public void adjectiveSubjectsPart2(DataHolder dataholderHandler,
+	public int adjectiveSubjectsPart2(DataHolder dataholderHandler,
 			Set<String> typeModifiers) {
 		String pos = null;
+		int flag = 0;
 		
 		
 		for (SentenceStructure sentenceItem : dataholderHandler
@@ -3417,11 +3418,13 @@ public class Learner {
 			String tag = sentenceItem.getTag();
 			String pattern = "<M>\\S*(" + StringUtils.join(typeModifiers, "|")
 					+ ")\\S*</M> .*";
+			int count = 0;
+			
 			if (((tag == null) || StringUtils.equals(tag, "") || StringUtils
 					.equals(tag, "unknown"))
 					&& adjectiveSubjectsPart2Helper1(sentence, typeModifiers)) {
-				int count = 0;
-				int flag = 0;
+				
+				
 				if (sentence != null) {
 					String sentenceCopy = sentence + "";
 					String regex = "(.*?)((?:(\\S+)\\s*(?:and|or|nor|and / or|or / and)\\s*)*(?:<M>\\S+</M>\\s*)+) (\\S+)\\s*(.*)";
@@ -3583,15 +3586,52 @@ public class Learner {
 								}
 							}
 						}
-						
+						// not p
+						else {
+							if (knownPOS != 0) {
+								// update pos for word, markup sentid (get tag
+								// from context), new modifier
+								flag += dataholderHandler.updateDataHolder(word, "b", "", "wordpos", 1);
+								// print "update [$word] pos: b\n" if $debug;
+							}
+							
+							if (count == 0 
+									&& (StringUtility.isMatchedNullSafe(start, "^\\S+\\s?(?:and |or |and \\/ or |or \\/ and )?$")
+											||start.length() == 0)) {
+								while (StringUtility.isMatchedNullSafe(start, "^("+Constant.STOP+"|"+Constant.FORBIDDEN+"|\\w+ly)\\b")) {
+									start = start.replaceAll("^("+Constant.STOP+"|"+Constant.FORBIDDEN+"|\\w+ly)\\b\\s*", "");									
+								}
 								
-						
-						
-						
+								modifier = start + modifier;
+								modifier = modifier.replaceAll("<\\S+?>", "");
+								tag = dataholderHandler.getParentSentenceTag(sentenceID);
+								List<String> modifierAndTag = dataholderHandler.getMTFromParentTag(tag);
+								String newM = modifierAndTag.get(0);
+								tag = modifierAndTag.get(1);
+								if (StringUtility.isMatchedNullSafe(newM, "\\w")) {
+									modifier = modifier + " " + newM;
+								}
+								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "adjectivesubject[M-B]");
+								// new modifier
+								start = start.replaceAll("\\s*(and |or |and \\/ or |or \\/ and )\\s*", "");
+								start = start.replaceAll("<\\S+?>", "");
+								if (start.length() > 0) {
+									if (!StringUtility.isMatchedNullSafe(start, "ly\\s*$") 
+											&& !StringUtility.isMatchedNullSafe(start, "\\b(" + Constant.STOP + "|" + Constant.FORBIDDEN + ")\\b")) {
+										flag += dataholderHandler.updateDataHolder(word, "m", "", "modifiers", 1);
+										// print "find a modifier [F]: $start\n" if $debug;
+									}
+								}	
+							}
+						}
+
+						count++;
 					}
 				}
 			}
 		}
+		
+		return flag;
 	}
 	
 	public boolean adjectiveSubjectsPart2Helper1(String sentence,
