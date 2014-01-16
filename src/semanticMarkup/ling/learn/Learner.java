@@ -3556,7 +3556,32 @@ public class Learner {
 						// part 6
 						// markup sentid, update pos for word, new modifier
 						if (StringUtils.equals(pos, "p") || StringUtils.equals(pos, "N")) {
+							if (knownPOS != 0) {
+								flag += dataholderHandler.updateDataHolder(word, "p", "-", "wordpos", 1);
+//								/print "update [$word] pos: p\n" if (!$knownpos) && $debug;
+							}
 							
+							if (count == 0 
+									&& (StringUtility.isMatchedNullSafe(start, "^\\S+\\s?(?:and |or |and \\/ or |or \\/ and )?$")
+											||start.length() == 0)) {
+								modifier = start + modifier;
+								modifier = modifier.replaceAll("<\\S+?>", "");
+								word = word.replaceAll("<\\S+?>", "");
+								dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "adjectivesubject[M-N]");
+								// new modifier
+								start = start.replaceAll("\\s*(and |or |and \\/ or |or \\/ and )\\s*", "");
+								start = start.replaceAll("<\\S+?>", "");
+								
+								while (StringUtility.isMatchedNullSafe(start, "^("+Constant.STOP+")\\b")) {
+									start = start.replaceAll("^("+Constant.STOP+")\\b\\s*", "");
+								}
+								
+								if (start.length() > 0) {
+									flag += dataholderHandler.updateDataHolder(start, "m", "", "modifiers", 1);
+									//print "find a modifier [E]: $start\n" if $debug;
+											
+								}
+							}
 						}
 						
 								
