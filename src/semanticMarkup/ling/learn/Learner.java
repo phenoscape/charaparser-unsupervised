@@ -3719,9 +3719,68 @@ public class Learner {
 		}
 		
 		// "unknown and/or modifier boundary"
+		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
+			String sentence = sentenceItem.getSentence();
+			String sentenceTag = sentenceItem.getTag();
+			if ((!StringUtility.isMatchedNullSafe(sentenceTag, "ignore") || sentenceTag == null) 
+					&& StringUtility.isMatchedNullSafe(sentence, "[^\\w]+ (and|or|nor|and / or|or / and) <M>[^\\w]+</M> .*")) {
+				int sentenceID = sentenceItem.getID();
+				
+				String POS = "";
+				// if "xxx (and|or|nor) <m>yyy</m> (<b>|\d)" pattern appear at the beginning or is right after the 1st word of the sentence, mark up the sentence, add yyy as a modifier
+				if (sentence != null) {
+					Pattern p3 = Pattern.compile("^(?:\\w+\\s)?((?:<[^M]>)*[^<]+(?:<\\/[^M]>)*) (and|or|nor|and \\/ or|or \\/ and) <M>(\\S+)<\\/M> <B>[^:;,\\.]");
+					Matcher m3 = p3.matcher(sentence);
+					if (m3.find()) {
+						String g1 = m3.group(1);
+						String g2 = m3.group(2);
+						String g3 = m3.group(3);
+						
+						String modifier = g1 + " " + g2 + " " + g3; 
+						String newM = g1;
+						modifier = modifier.replaceAll("<\\S+?>", "");
+						if (newM != null) {
+							Pattern p31 = Pattern.compile("(.*?>)(\\w+)<\\/");							
+							Matcher m31 = p31.matcher(newM);
+							if (m31.find()) { // N or B
+								newM = m31.group(2);
+								POS = m31.group(1);
+							}
+						}
+						
+						if (StringUtility.isMatchedNullSafe(POS, "<N>")) { // update N to M
+							sign += dataholderHandler.changePOS(newM, "s", "m", "", 1); // update $newm to m
+						}
+						else { // B
+							sign += dataholderHandler.updateDataHolder(newM, "m", "", "modifiers", 1);
+						}
+						// print "find a modifier [C]: $newm\n" if $debug;
+						String tag = dataholderHandler.getParentSentenceTag(sentenceID);
+						List<String> modifierAndTag = dataholderHandler.getMTFromParentTag(tag);
+						String m = modifierAndTag.get(0);
+						tag = modifierAndTag.get(1);
+						
+						if (StringUtility.isMatchedNullSafe(m, "\\w")) {
+							modifier = modifier +" "+m;
+						}
+						
+						dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "discovernewmodifiers");
+					}
+					else {
+						Pattern p32 = Pattern.compile("(\\w+) (and|or|nor|and \\/ or|or \\/ and) <M>(\\S+)<\\/M> <B>[^,:;\\.]");
+						Matcher m32 = p32.matcher(sentence);
+						// if the pattern appear in the middle of the sentence, add yyy as modifier
+						if (m32.find()) {
+							String newM = m32.group(1);
+							sign += dataholderHandler.updateDataHolder(newM, "m", "", "modifiers", 1);
+						}
+						//print "find a modifier [D]: $newm\n" if $debug;
+					}
+				}
+			}
+		}
 		
-		
-		return 0;
+		return sign;
 	}
 
 	public int handleAndOr(DataHolder dataholderHandler) {
