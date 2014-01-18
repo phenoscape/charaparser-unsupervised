@@ -1870,8 +1870,10 @@ public class DataHolder {
 			modifier = StringUtility.removeAll(modifier, "(^\\s*|\\s*$)");
 		}
 		
-		tag = this.tagSentWithMTPreProcessing(tag);
-		tag = StringUtility.removeAll(tag, "(^\\s*|\\s*$)");
+		if (tag != null) {
+			tag = this.tagSentWithMTPreProcessing(tag);
+			tag = StringUtility.removeAll(tag, "(^\\s*|\\s*$)");
+		}
 
 		if (tag == null) {
 			this.getSentenceHolder().get(sentID).setTag(null);

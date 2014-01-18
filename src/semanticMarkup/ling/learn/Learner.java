@@ -5374,10 +5374,6 @@ public class Learner {
 				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "normalizetags");
 			}
 			else {
-				System.out.println(sentenceID);
-				System.out.println(sentence);
-				System.out.println(modifier);
-				
 				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, null, "normalizetags");
 			}
 		}
