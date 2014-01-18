@@ -167,12 +167,10 @@ public class Learner {
 		// bootstrapping rules
 		myLogger.info("Bootstrapping rules:");
 		this.discover("normal");
-		// myDataHolder.write2File("");here!!!
 		myLogger.info("Additional bootstrappings:");
 		this.additionalBootstrapping();
 
 		myLogger.info("Unknownword bootstrappings:");
-		// this.unknownWordBootstrapping();
 		this.unknownWordBootstrappingModule.run(myDataHolder);
 
 		myLogger.info("Adjectives Verification:");
@@ -185,9 +183,8 @@ public class Learner {
 		this.setAndOr(myDataHolder);
 
 		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
-			// print STDOUT
-			// "::::::::::::::::::::::::Bootstrapping on adjective subjects: \n";
-			// adjectivesubjectbootstrapping()
+			myLogger.info("Bootstrapping on adjective subjects");
+			 adjectiveSubjectBootstrapping(myDataHolder);
 		} else {
 			int v = 0;
 			do {
@@ -214,17 +211,24 @@ public class Learner {
 		this.remainNullTag(myDataHolder);
 
 		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
-			// this.commonSubstructure(myDataHolder);
+			 this.commonSubstructure(myDataHolder);
 		}
+		
+		myLogger.info("Comma used for 'and'");
+		this.commaAnd(myDataHolder);
+		
+		if (StringUtils.equals(this.getConfiguration().getLearningMode(), "plain")) {
+			myLogger.info("Normalize modifiers");
+			this.normalizeModifiers(myDataHolder);
+		}
+		
+		myLogger.info("Final step: normalize tag and modifiers");
+		this.normalizeTags(myDataHolder);
+		this.prepareTables4Parser(myDataHolder);
 
 		myDataHolder.writeToFile("dataholder", "");
 
 		myLogger.info("Learning done!");
-
-		// myLogger.info(myDataHolder.toString());
-		// myLogger.info(myDataHolder.getSentenceHolder().toString());
-		// myLogger.info(this.myDataHolder.getHeuristicNounHolder().toString());
-		// myLogger.info(myDataHolder.getSentenceHolder().get(0).toString());
 
 		return myDataHolder;
 	}
@@ -3312,7 +3316,7 @@ public class Learner {
 		return false;
 	}
 	
-	public void AdjectiveSubjectBootstrapping(DataHolder dataholderHandler) {
+	public void adjectiveSubjectBootstrapping(DataHolder dataholderHandler) {
 		int flag = 0;
 		int count = 0;
 		
@@ -4830,7 +4834,7 @@ public class Learner {
 	 * 
 	 * @param dataholderHandler
 	 */
-	public void CommaAnd(DataHolder dataholderHandler) {
+	public void commaAnd(DataHolder dataholderHandler) {
 		// cover m,mn
 
 		// last + =>*
@@ -5370,6 +5374,10 @@ public class Learner {
 				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, tag, "normalizetags");
 			}
 			else {
+				System.out.println(sentenceID);
+				System.out.println(sentence);
+				System.out.println(modifier);
+				
 				dataholderHandler.tagSentenceWithMT(sentenceID, sentence, modifier, null, "normalizetags");
 			}
 		}
