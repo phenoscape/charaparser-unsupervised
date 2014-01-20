@@ -5224,7 +5224,8 @@ public class Learner {
 			boolean isFoundM = false;
 			String r = "";
 			for (String word : words) {
-				String escapedW = escapePerlRegexp(word);
+				String escapedW = StringUtility.escapePerlRegex(word);
+				System.out.println("Wrod: "+word);
 				if ((this.checkedModifiers.containsKey(word) && this.checkedModifiers
 						.get(word))
 						|| StringUtility.isMatchedNullSafe(sentence, "<N>"
@@ -5248,11 +5249,6 @@ public class Learner {
 		result = StringUtility.trimString(result);
 		
 		return result;
-	}
-
-	private String escapePerlRegexp(String word) {
-		// TODO Auto-generated method stub
-		return word;
 	}
 
 	public String finalizeModifier(DataHolder dataholderHandler, String modifier, String tag, String sentence) {
