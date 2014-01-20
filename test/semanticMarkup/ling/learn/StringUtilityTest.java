@@ -221,4 +221,13 @@ public class StringUtilityTest {
 		assertEquals("setSub", null, StringUtility.setSubtraction(null, b));
 	}
 	
+	@Test
+	public void testEscapePerlRegex() {
+		assertEquals("escapePerlRegex - null case", null, StringUtility.escapePerlRegex(null));
+		assertEquals("escapePerlRegex - + case", "word \\\\+ word", StringUtility.escapePerlRegex("word \\+ word"));
+		assertEquals("escapePerlRegex - ? case", "word \\\\? word", StringUtility.escapePerlRegex("word \\? word"));
+		assertEquals("escapePerlRegex - * case", "word \\\\* word", StringUtility.escapePerlRegex("word \\* word"));
+		assertEquals("escapePerlRegex - ( case", "word \\\\( word", StringUtility.escapePerlRegex("word \\( word"));
+		assertEquals("escapePerlRegex - | case", "word \\\\| word", StringUtility.escapePerlRegex("word \\| word"));
+	}
 }

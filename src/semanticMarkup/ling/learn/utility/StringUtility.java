@@ -328,4 +328,19 @@ public class StringUtility {
 	public static String chop(String str) {
 		return str.substring(0, str.length() - 1);
 	}
+	
+	/**
+	 * Escapes special characters in perl regular expression
+	 * 
+	 * @param str
+	 *            the string to escape
+	 * @return escaped string
+	 */
+	public static String escapePerlRegex(String str) {
+		if (str != null) {
+			str = str.replaceAll("([\\(\\)\\[\\]\\{\\}\\.\\|\\-\\+\\?\\*])",
+					"\\\\$1");
+		}
+		return str;
+	}
 }
