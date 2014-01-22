@@ -348,8 +348,25 @@ public class Initiation implements IModule {
 	}
 	
 	public void recordProperNouns(String sentence) {
+		if (sentence == null) {
+			return;
+		}
 		
+		sentence = sentence.replaceAll("[(\\[{]\\s*[A-Z]", " ");
 		
+		Pattern p = Pattern.compile("(.+)\\b([A-Z][a-z]*)\\b");
+		Matcher m = p.matcher(sentence);
+		while (m.find()) {
+			String pattern = m.group(2);
+			pattern = pattern.toLowerCase();
+			// print "find a pn [$pn] in [$sent]\n\n" if $debug;
+			sentence = m.group(1);
+			if (pattern.length() > 1) {
+				// add pattern into proper nouns
+			}
+			
+			m = p.matcher(sentence);
+		}
 	}
 
 	/**
