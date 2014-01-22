@@ -339,12 +339,19 @@ public class Initiation implements IModule {
 		sentence = sentence.replaceAll("^\\s*", "");
 		sentence = sentence.replaceAll("\\s*$", "");
 
+		recordProperNouns(sentence);
+		
 		// all to lower case
 		sentence = sentence.toLowerCase();
 
 		return sentence;
 	}
 	
+	public void recordProperNouns(String sentence) {
+		
+		
+	}
+
 	/**
 	 * Insert all words in WORDS into getUnknownWordHolder(). Insert those formed by
 	 * non words characters into getWordPOSHolder()
