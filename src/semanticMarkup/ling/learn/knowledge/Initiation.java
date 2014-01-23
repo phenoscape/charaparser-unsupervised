@@ -363,6 +363,8 @@ public class Initiation implements IModule {
 			sentence = m.group(1);
 			if (pattern.length() > 1) {
 				// add pattern into proper nouns
+				this.myLearnerUtility.getConstant().pronounWords.add(pattern);
+				this.myLearnerUtility.getConstant().updatePronoun();
 			}
 			
 			m = p.matcher(sentence);
