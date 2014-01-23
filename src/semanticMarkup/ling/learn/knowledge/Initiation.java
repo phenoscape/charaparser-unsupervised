@@ -367,6 +367,10 @@ public class Initiation implements IModule {
 			
 			m = p.matcher(sentence);
 		}
+		
+		// test case:
+		//[recordpropernouns] enter (Pronounced dorsal process on Meckelian element)
+		// [recordpropernouns] add to PROPERNOUNS: (meckelian)
 	}
 
 	/**

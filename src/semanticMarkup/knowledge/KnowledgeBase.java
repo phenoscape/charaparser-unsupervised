@@ -153,7 +153,8 @@ public class KnowledgeBase {
 
 		WordFormUtility wordFormUtility = new WordFormUtility(
 				wordNetPOSKnowledgeBase);
-		tester = new DataHolder(myConfiguration, wordFormUtility);
+		Constant myConstant = new Constant();
+		tester = new DataHolder(myConfiguration, myConstant, wordFormUtility);
 
 		Constant myConts = new Constant();
 		KnowledgeBase myKB = new KnowledgeBase();

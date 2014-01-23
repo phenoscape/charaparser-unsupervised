@@ -76,7 +76,7 @@ public class UnknownWordBootstrapping implements IModule {
 					}
 				}
 				else {
-					boolean c1 = dataholderHandler.isExistSentence(true, "(^| )"+word+" (<B>|" + Constant.FORBIDDEN + ")");
+					boolean c1 = dataholderHandler.isExistSentence(true, "(^| )"+word+" (<B>|" + this.myLearnerUtility.getConstant().FORBIDDEN + ")");
 					boolean c2 = StringUtils.equals(this.myLearnerUtility.getWordFormUtility().getNumber(word), "p");
 					boolean c3 = isVerbEnding(dataholderHandler, word);
 					if (c1 && c2 && (!c3)) {
@@ -137,7 +137,7 @@ public class UnknownWordBootstrapping implements IModule {
 //							if (!this.myLearnerUtility.getConstant().forbiddenWords
 //									.contains(tempWords)) {
 							if (!(StringUtility.isMatchedNullSafe(tempWords,
-									"\\b(" + Constant.FORBIDDEN + ")\\b"))) {
+									"\\b(" + this.myLearnerUtility.getConstant().FORBIDDEN + ")\\b"))) {
 								String[] tempWordsArray = tempWords
 										.split("\\s+");
 								if (tempWordsArray.length <= 2) {
@@ -244,7 +244,7 @@ public class UnknownWordBootstrapping implements IModule {
 			Matcher m2 = p2.matcher(word);
 			if (m1.matches() && (!m2.matches())) {
 				if (!StringUtility.createMatcher(word,
-						"\\b(" + Constant.FORBIDDEN + ")\\b").find()) {
+						"\\b(" + this.myLearnerUtility.getConstant().FORBIDDEN + ")\\b").find()) {
 					boundaries.add(word);
 				}
 				dataholderHandler.updateDataHolder(word, "b", "", "wordpos", 1);

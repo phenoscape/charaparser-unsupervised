@@ -83,11 +83,14 @@ public class DataHolder {
 	public static final byte WORDROLE = 10;
 
 	private Configuration myConfiguration;
+	private Constant myConstant;
 	private WordFormUtility myWordFormUtility;
 	
-	public DataHolder(Configuration myConfiguration, WordFormUtility myWordFormUtility) {
+	public DataHolder(Configuration myConfiguration, Constant myConstant, WordFormUtility myWordFormUtility) {
 		this.myConfiguration = myConfiguration;
+		this.myConstant = myConstant;
 		this.myWordFormUtility = myWordFormUtility;
+		
 		
 		this.allWords = new HashMap<String, Integer>();
 		this.BMSWords = new HashSet<String>();
@@ -1020,7 +1023,7 @@ public class DataHolder {
 	public int addModifier(String newWord, int increment) {
 		int isUpdate = 0;
 
-		if ((newWord.matches("(" + Constant.STOP + "|^.*\\w+ly$)"))
+		if ((newWord.matches("(" + myConstant.STOP + "|^.*\\w+ly$)"))
 				|| (!(newWord.matches("^.*\\w.*$")))) {
 			return isUpdate;
 		}
@@ -1061,7 +1064,7 @@ public class DataHolder {
 			flag = sentence.getTag() == null ? 
 					true : (!sentence.getTag().equals("ignore"));
 			if (flag) {
-				String regex = "^.*?([a-z]+(" + Constant.PLENDINGS + ")) ("
+				String regex = "^.*?([a-z]+(" + myConstant.PLENDINGS + ")) ("
 						+ newWord + ").*$";
 				Pattern p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
 				String originalSentence = sentence.getOriginalSentence();
@@ -1346,7 +1349,7 @@ public class DataHolder {
 		}
 
 		// forbidden word
-		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
+		if (word.matches("\\b(?:" + myConstant.FORBIDDEN + ")\\b")) {
 			return 0;
 		}
 
@@ -1435,12 +1438,12 @@ public class DataHolder {
 		String spWords = "";
 
 		// forbidden word
-		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
+		if (word.matches("\\b(?:" + myConstant.FORBIDDEN + ")\\b")) {
 			return 0;
 		}
 
 		// stop words
-		if (word.matches("^(" + Constant.STOP + ")$")) {
+		if (word.matches("^(" + myConstant.STOP + ")$")) {
 			sign = sign
 					+ processNewWord(word, pos, role, table, word, increment);
 			return sign;
@@ -1450,14 +1453,14 @@ public class DataHolder {
 		sign = sign + processNewWord(word, pos, role, table, word, increment);
 		
 		// Case 1: we try to learn those new words based on this one
-		Pattern p = Pattern.compile("^(" + Constant.PREFIX + ")(\\S+).*$");
+		Pattern p = Pattern.compile("^(" + myConstant.PREFIX + ")(\\S+).*$");
 		Matcher m = p.matcher(word);
 		if (m.lookingAt()) {
 			myLogger.trace("Case 1");
 			String g1 = m.group(1); // the prefix
 			String g2 = m.group(2); // the remaining
 
-			otherPrefix = StringUtility.removeFromWordList(g1, Constant.PREFIX);
+			otherPrefix = StringUtility.removeFromWordList(g1, myConstant.PREFIX);
 
 			spWords = "("
 					+ StringUtility.escape(this.singularPluralVariations(g2,
@@ -1491,7 +1494,7 @@ public class DataHolder {
 					+ StringUtility.escape(this.singularPluralVariations(word,
 							this.getSingularPluralHolder())) + ")";
 			// word=shrubs, pattern = (pre|sub)shrubs
-			pattern = "^(" + Constant.PREFIX + ")" + spWords + "$";
+			pattern = "^(" + myConstant.PREFIX + ")" + spWords + "$";
 
 			Iterator<Map.Entry<String, String>> iter2 = this.getUnknownWordHolder()
 					.entrySet().iterator();
@@ -1585,8 +1588,8 @@ public class DataHolder {
 		
 		int n = 0;
 				
-		String regex = "^.*(\\b|_)(NUM|" + Constant.NUMBER + "|"
-				+ Constant.CLUSTERSTRING + "|" + Constant.CHARACTER + ")\\b.*$";
+		String regex = "^.*(\\b|_)(NUM|" + myConstant.NUMBER + "|"
+				+ myConstant.CLUSTERSTRING + "|" + myConstant.CHARACTER + ")\\b.*$";
 		//regex = "(NUM|" + "rows" + ")";
 		boolean case1 = newWord.matches(regex);
 		boolean case2 = newPOS.matches("[nsp]"); 
@@ -1903,15 +1906,15 @@ public class DataHolder {
 		
 		text = text.replaceAll("<\\S+?>", "");
 
-		text = StringUtility.removeAllRecursive(text, "^(" + Constant.STOP
-				+ "|" + Constant.FORBIDDEN+")\\b\\s*");
+		text = StringUtility.removeAllRecursive(text, "^(" + myConstant.STOP
+				+ "|" + myConstant.FORBIDDEN+")\\b\\s*");
 
 		// remove stop and forbidden words from ending
-		text = StringUtility.removeAllRecursive(text, "\\s*\\b(" + Constant.STOP
-				+ "|" + Constant.FORBIDDEN + "|\\w+ly)$");
+		text = StringUtility.removeAllRecursive(text, "\\s*\\b(" + myConstant.STOP
+				+ "|" + myConstant.FORBIDDEN + "|\\w+ly)$");
 
 		// remove all pronoun words
-		text = StringUtility.removeAllRecursive(text, "\\b(" + Constant.PRONOUN
+		text = StringUtility.removeAllRecursive(text, "\\b(" + myConstant.PRONOUN
 				+ ")\\b");
 		
 		return text;
@@ -2004,9 +2007,9 @@ public class DataHolder {
 	public boolean updateDataHolderNNConditionHelper(String word) {
 		boolean flag = false;
 		
-		flag = (   (!word.matches("^.*\\b("+Constant.STOP+")\\b.*$"))
+		flag = (   (!word.matches("^.*\\b("+myConstant.STOP+")\\b.*$"))
 				&& (!word.matches("^.*ly\\s*$"))
-				&& (!word.matches("^.*\\b("+Constant.FORBIDDEN+")\\b.*$"))
+				&& (!word.matches("^.*\\b("+myConstant.FORBIDDEN+")\\b.*$"))
 				);
 		
 		return flag;

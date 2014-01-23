@@ -86,7 +86,7 @@ public class Learner {
 
 		// Data holder
 		this.myDataHolder = new DataHolder(myConfiguration,
-				myLearnerUtility.getWordFormUtility());
+				myLearnerUtility.getConstant(), myLearnerUtility.getWordFormUtility());
 
 		// Class variables
 		NUM_LEAD_WORDS = this.myConfiguration.getNumLeadWords(); // Set the
@@ -292,9 +292,9 @@ public class Learner {
 
 			if ((e.matches("^.*\\w.*$"))
 					&& (!StringUtility.isMatchedWords(e, "NUM|"
-							+ Constant.NUMBER + "|" + Constant.CLUSTERSTRING
-							+ "|" + Constant.CHARACTER + "|"
-							+ Constant.PROPERNOUN))) {
+							+ this.myLearnerUtility.getConstant().NUMBER + "|" + this.myLearnerUtility.getConstant().CLUSTERSTRING
+							+ "|" + this.myLearnerUtility.getConstant().CHARACTER + "|"
+							+ this.myLearnerUtility.getConstant().PROPERNOUN))) {
 				myLogger.trace("Pass");
 
 				// same word may have two different pos tags
@@ -354,7 +354,7 @@ public class Learner {
 		while (iter.hasNext()) {
 			String descriptor = iter.next();
 
-			if (!StringUtility.isMatchedWords(descriptor, Constant.FORBIDDEN)) {
+			if (!StringUtility.isMatchedWords(descriptor, this.myLearnerUtility.getConstant().FORBIDDEN)) {
 				this.myDataHolder.updateDataHolder(descriptor, "b", "",
 						"wordpos", 1);
 			}
@@ -370,7 +370,7 @@ public class Learner {
 		Iterator<String> iter = rnouns.iterator();
 		while (iter.hasNext()) {
 			String noun = iter.next();
-			if (!StringUtility.isMatchedWords(noun, Constant.FORBIDDEN)) {
+			if (!StringUtility.isMatchedWords(noun, this.myLearnerUtility.getConstant().FORBIDDEN)) {
 				this.myDataHolder.updateDataHolder(noun, "n", "", "wordpos", 1);
 			}
 		}
@@ -576,7 +576,7 @@ public class Learner {
 		if (matcher.lookingAt()) {
 			String word = matcher.group(1);
 			if ((!word.matches("\\b(" + pachecked + ")\\b"))
-					&& (!word.matches("\\b(" + Constant.STOP + ")\\b"))
+					&& (!word.matches("\\b(" + this.myLearnerUtility.getConstant().STOP + ")\\b"))
 					&& (!word
 							.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
 
@@ -739,8 +739,8 @@ public class Learner {
 			String noun = iter.next();
 			noun = noun.toLowerCase();
 
-			Pattern p = Pattern.compile("\\b(" + Constant.PREPOSITION + "|"
-					+ Constant.STOP + ")\\b", Pattern.CASE_INSENSITIVE);
+			Pattern p = Pattern.compile("\\b(" + this.myLearnerUtility.getConstant().PREPOSITION + "|"
+					+ this.myLearnerUtility.getConstant().STOP + ")\\b", Pattern.CASE_INSENSITIVE);
 			Matcher m = p.matcher(noun);
 
 			if ((!m.lookingAt()) && (!rDescriptors.contains(noun))) {
@@ -840,7 +840,7 @@ public class Learner {
 	public Set<String> getNounsRule2(String oSent) {
 		String copy = oSent;
 		String regex = "(.*?)\\b(a|an|the|some|any|this|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) +(\\w+)\\s*($|\\(|\\[|\\{|\\b"
-				+ Constant.PREPOSITION + "\\b)(.*)";
+				+ this.myLearnerUtility.getConstant().PREPOSITION + "\\b)(.*)";
 		Set<String> nouns = new HashSet<String>();
 
 		while (true) {
@@ -916,8 +916,8 @@ public class Learner {
 			if (m.lookingAt()) {
 				String t = m.group(2);
 				copy = m.group(3);
-				String regex2 = "\\b(" + Constant.PREPOSITION + "|"
-						+ Constant.STOP + ")\\b";
+				String regex2 = "\\b(" + this.myLearnerUtility.getConstant().PREPOSITION + "|"
+						+ this.myLearnerUtility.getConstant().STOP + ")\\b";
 				if (!t.matches(regex2)) {
 					t = t.toLowerCase();
 					nouns.add(t);
@@ -1042,14 +1042,14 @@ public class Learner {
 		myLogger.trace("Add stop words");
 
 		List<String> stops = new ArrayList<String>();
-		stops.addAll(Arrays.asList(Constant.STOP.split("\\|")));
+		stops.addAll(Arrays.asList(this.myLearnerUtility.getConstant().STOP.split("\\|")));
 		stops.addAll(Arrays.asList(new String[] { "NUM", "(", "[", "{", ")",
 				"]", "}", "d+" }));
 
 		myLogger.trace("Stop Words: " + stops);
 		for (int i = 0; i < stops.size(); i++) {
 			String word = stops.get(i);
-			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + this.myLearnerUtility.getConstant().FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.myDataHolder.updateDataHolder(word, "b", "*", "wordpos", 0);
@@ -1068,16 +1068,16 @@ public class Learner {
 		myLogger.trace("Add characters");
 
 		List<String> chars = new ArrayList<String>();
-		chars.addAll(Arrays.asList(Constant.CHARACTER.split("\\|")));
+		chars.addAll(Arrays.asList(this.myLearnerUtility.getConstant().CHARACTER.split("\\|")));
 		//
 		// System.out.println(chars);
-		// System.out.println(Constant.CHARACTER);
+		// System.out.println(this.myLearnerUtility.getConstant().CHARACTER);
 
 		for (int i = 0; i < chars.size(); i++) {
 			String word = chars.get(i);
-			// String reg="\\b("+Constant.FORBIDDEN+")\\b";
+			// String reg="\\b("+this.myLearnerUtility.getConstant().FORBIDDEN+")\\b";
 			// boolean f = word.matches(reg);
-			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + this.myLearnerUtility.getConstant().FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.myDataHolder.updateDataHolder(word, "b", "*", "wordpos", 0);
@@ -1093,16 +1093,16 @@ public class Learner {
 		myLogger.trace("Add numbers");
 
 		List<String> nums = new ArrayList<String>();
-		nums.addAll(Arrays.asList(Constant.NUMBER.split("\\|")));
+		nums.addAll(Arrays.asList(this.myLearnerUtility.getConstant().NUMBER.split("\\|")));
 
 		// System.out.println(nums);
-		// System.out.println(Constant.NUMBER);
+		// System.out.println(this.myLearnerUtility.getConstant().NUMBER);
 
 		for (int i = 0; i < nums.size(); i++) {
 			String word = nums.get(i);
-			// String reg="\\b("+Constant.FORBIDDEN+")\\b";
+			// String reg="\\b("+this.myLearnerUtility.getConstant().FORBIDDEN+")\\b";
 			// boolean f = word.matches(reg);
-			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + this.myLearnerUtility.getConstant().FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.myDataHolder.updateDataHolder(word, "b", "*", "wordpos", 0);
@@ -1121,14 +1121,14 @@ public class Learner {
 		myLogger.trace("Add clusterstrings");
 
 		List<String> cltstrs = new ArrayList<String>();
-		cltstrs.addAll(Arrays.asList(Constant.CLUSTERSTRING.split("\\|")));
+		cltstrs.addAll(Arrays.asList(this.myLearnerUtility.getConstant().CLUSTERSTRING.split("\\|")));
 
 		// System.out.println(cltstrs);
-		// System.out.println(Constant.CLUSTERSTRING);
+		// System.out.println(this.myLearnerUtility.getConstant().CLUSTERSTRING);
 
 		for (int i = 0; i < cltstrs.size(); i++) {
 			String word = cltstrs.get(i);
-			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + this.myLearnerUtility.getConstant().FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.myDataHolder.updateDataHolder(word, "b", "*", "wordpos", 0);
@@ -1148,7 +1148,7 @@ public class Learner {
 
 		for (int i = 0; i < ppnouns.size(); i++) {
 			String word = ppnouns.get(i);
-			if (word.matches("\\b(" + Constant.FORBIDDEN + ")\\b")) {
+			if (word.matches("\\b(" + this.myLearnerUtility.getConstant().FORBIDDEN + ")\\b")) {
 				continue;
 			}
 			this.myDataHolder.updateDataHolder(word, "b", "*", "wordpos", 0);
@@ -2366,7 +2366,7 @@ public class Learner {
 		if (m1.find()) {
 			inBetweenPart = m1.group(1);
 
-			String pattern2 = "\\b(" + Constant.PREPOSITION + ")\\b";
+			String pattern2 = "\\b(" + this.myLearnerUtility.getConstant().PREPOSITION + ")\\b";
 			Pattern p2 = Pattern.compile(pattern2);
 			Matcher m2 = p2.matcher(inBetweenPart);
 			if (!m2.find()) {
@@ -2820,7 +2820,7 @@ public class Learner {
 	public boolean doItMarkupCase2Helper(String lead) {
 		boolean flag = false;
 		flag = StringUtility.createMatcher(lead,
-				"\\b(" + Constant.STOP + ")\\b").find();
+				"\\b(" + this.myLearnerUtility.getConstant().STOP + ")\\b").find();
 
 		return flag;
 	}
@@ -2874,7 +2874,7 @@ public class Learner {
 			Matcher m2 = p2.matcher(word);
 			if (m1.matches() && (!m2.matches())) {
 				if (!StringUtility.createMatcher(word,
-						"\\b(" + Constant.FORBIDDEN + ")\\b").find()) {
+						"\\b(" + this.myLearnerUtility.getConstant().FORBIDDEN + ")\\b").find()) {
 					boundaries.add(word);
 				}
 				this.getDataHolder().updateDataHolder(word, "b", "", "wordpos",
@@ -2932,7 +2932,7 @@ public class Learner {
 			return false;
 		} else {
 			// case 2
-			if (StringUtility.createMatcher(tag, "^(" + Constant.STOP + ")\\b")
+			if (StringUtility.createMatcher(tag, "^(" + this.myLearnerUtility.getConstant().STOP + ")\\b")
 					.find()) {
 				myLogger.trace(String
 						.format("\t:tag %s starts with a stop word, ignore tagging requrest",
@@ -3087,7 +3087,7 @@ public class Learner {
 			if (StringUtility.isMatchedNullSafe(tagBackup, "\\w+")) {
 				myLogger.trace("Case 1");
 				if (!StringUtility.isMatchedNullSafe(tagBackup,
-						String.format("\\b(%s)\\b", Constant.STOP))) {
+						String.format("\\b(%s)\\b", this.myLearnerUtility.getConstant().STOP))) {
 
 					List<String> words = new LinkedList<String>();
 					words.addAll(Arrays.asList(tagBackup.split("\\s+")));
@@ -3304,7 +3304,7 @@ public class Learner {
 
 		if (case1 || case2) {
 			String matchedWords = StringUtils.join(words.subList(0, end), " ");
-			String regex = String.format("\\b(%s)\\b", Constant.PREPOSITION);
+			String regex = String.format("\\b(%s)\\b", this.myLearnerUtility.getConstant().PREPOSITION);
 			if (StringUtility.isMatchedNullSafe(matchedWords, regex)) {
 				myLogger.trace("Case 1");
 				return false;
@@ -3579,8 +3579,8 @@ public class Learner {
 								start = start.replaceAll("\\s*(and |or |and \\/ or |or \\/ and )\\s*", "");
 								start = start.replaceAll("<\\S+?>", "");
 								
-								while (StringUtility.isMatchedNullSafe(start, "^("+Constant.STOP+")\\b")) {
-									start = start.replaceAll("^("+Constant.STOP+")\\b\\s*", "");
+								while (StringUtility.isMatchedNullSafe(start, "^("+this.myLearnerUtility.getConstant().STOP+")\\b")) {
+									start = start.replaceAll("^("+this.myLearnerUtility.getConstant().STOP+")\\b\\s*", "");
 								}
 								
 								if (start.length() > 0) {
@@ -3602,8 +3602,8 @@ public class Learner {
 							if (count == 0 
 									&& (StringUtility.isMatchedNullSafe(start, "^\\S+\\s?(?:and |or |and \\/ or |or \\/ and )?$")
 											||start.length() == 0)) {
-								while (StringUtility.isMatchedNullSafe(start, "^("+Constant.STOP+"|"+Constant.FORBIDDEN+"|\\w+ly)\\b")) {
-									start = start.replaceAll("^("+Constant.STOP+"|"+Constant.FORBIDDEN+"|\\w+ly)\\b\\s*", "");									
+								while (StringUtility.isMatchedNullSafe(start, "^("+this.myLearnerUtility.getConstant().STOP+"|"+this.myLearnerUtility.getConstant().FORBIDDEN+"|\\w+ly)\\b")) {
+									start = start.replaceAll("^("+this.myLearnerUtility.getConstant().STOP+"|"+this.myLearnerUtility.getConstant().FORBIDDEN+"|\\w+ly)\\b\\s*", "");									
 								}
 								
 								modifier = start + modifier;
@@ -3621,7 +3621,7 @@ public class Learner {
 								start = start.replaceAll("<\\S+?>", "");
 								if (start.length() > 0) {
 									if (!StringUtility.isMatchedNullSafe(start, "ly\\s*$") 
-											&& !StringUtility.isMatchedNullSafe(start, "\\b(" + Constant.STOP + "|" + Constant.FORBIDDEN + ")\\b")) {
+											&& !StringUtility.isMatchedNullSafe(start, "\\b(" + this.myLearnerUtility.getConstant().STOP + "|" + this.myLearnerUtility.getConstant().FORBIDDEN + ")\\b")) {
 										flag += dataholderHandler.updateDataHolder(word, "m", "", "modifiers", 1);
 										// print "find a modifier [F]: $start\n" if $debug;
 									}
@@ -3677,7 +3677,7 @@ public class Learner {
 						String modifier = g1 +" "+ g2+" "+ g3;
 						String newM = g3;
 						
-						if (!StringUtility.isMatchedNullSafe(newM, "\\b("+Constant.STOP+")\\b")) {
+						if (!StringUtility.isMatchedNullSafe(newM, "\\b("+this.myLearnerUtility.getConstant().STOP+")\\b")) {
 							modifier = modifier.replaceAll("<\\S+?>", "");
 							if (newM != null) {
 								Pattern p11 = Pattern.compile("(.*?>)(\\w+)<\\/");
@@ -4093,7 +4093,7 @@ public class Learner {
 					tag = StringUtility.trimString(tag);
 					modifier = StringUtility.trimString(modifier);
 
-					String myStop = Constant.STOP;
+					String myStop = this.myLearnerUtility.getConstant().STOP;
 					myStop = myStop.replaceAll(
 							String.format("\\b%s\\b", token), "");
 					myStop = myStop.replaceAll("\\s+$", "");
@@ -4233,7 +4233,7 @@ public class Learner {
 		} else if (m2.find()) {
 			String head = m2.group(1);
 			String pattern21 = String
-					.format("\\b(%s)\\b", Constant.PREPOSITION);
+					.format("\\b(%s)\\b", this.myLearnerUtility.getConstant().PREPOSITION);
 			if (StringUtility.isMatchedNullSafe(head, pattern21)) {
 				String tag = "ditto";
 				dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
@@ -4284,7 +4284,7 @@ public class Learner {
 			String tag = m.group(3);
 
 			String prepositionPattern = String.format("\\b(%s)\\b",
-					Constant.PREPOSITION);
+					this.myLearnerUtility.getConstant().PREPOSITION);
 			if (!StringUtility.isMatchedNullSafe(head, prepositionPattern)
 					&& !StringUtility.isMatchedNullSafe(head, "<\\/N>")
 					&& !StringUtility.isMatchedNullSafe(modifier,
@@ -4332,7 +4332,7 @@ public class Learner {
 
 		// preposition cases
 		String prepositionPattern = String
-				.format("^(%s)", Constant.PREPOSITION);
+				.format("^(%s)", this.myLearnerUtility.getConstant().PREPOSITION);
 		for (SentenceStructure sentenceItem : dataholderHandler
 				.getSentenceHolder()) {
 			int sentenceID = sentenceItem.getID();
@@ -4351,7 +4351,7 @@ public class Learner {
 		}
 
 		// pronoun cases
-		String pronounPattern = String.format("(%s)", Constant.PRONOUN);
+		String pronounPattern = String.format("(%s)", this.myLearnerUtility.getConstant().PRONOUN);
 		for (SentenceStructure sentenceItem : dataholderHandler
 				.getSentenceHolder()) {
 			int sentenceID = sentenceItem.getID();
@@ -4365,9 +4365,9 @@ public class Learner {
 			boolean case2 = StringUtility.isMatchedNullSafe(modifier,
 					String.format("(^| )%s( |\\$)", pronounPattern));
 			if (case1 || case2) {
-				modifier = modifier.replaceAll("\\b(" + Constant.PRONOUN
+				modifier = modifier.replaceAll("\\b(" + this.myLearnerUtility.getConstant().PRONOUN
 						+ ")\\b", "");
-				tag = tag.replaceAll("\\b(" + Constant.PRONOUN + ")\\b", "");
+				tag = tag.replaceAll("\\b(" + this.myLearnerUtility.getConstant().PRONOUN + ")\\b", "");
 				modifier = modifier.replaceAll("\\s+", " ");
 				tag = tag.replaceAll("\\s+", " ");
 
@@ -4463,20 +4463,20 @@ public class Learner {
 		boolean b1 = !StringUtils.equals(tag, "ignore");
 		boolean b2 = (tag == null);
 		boolean b3 = StringUtility.isMatchedNullSafe(lead, "(^| )("
-				+ Constant.CHARACTER + ")( |$)");
+				+ this.myLearnerUtility.getConstant().CHARACTER + ")( |$)");
 		boolean b4 = StringUtility.isMatchedNullSafe(tag, "(^| )("
-				+ Constant.CHARACTER + ")( |$)");
+				+ this.myLearnerUtility.getConstant().CHARACTER + ")( |$)");
 		if (((b1 || b2) && b3) || b4) {
 			sentence = sentence.replaceAll("></?", "");
 			if (sentence != null) {
 				String pattern1 = String
 						.format("^.*?%s\\b(%s)\\b%s %s(?:of)%s (.*?)(<[NO]>([^<]*?)<\\/[NO]> ?)+ ",
-								t, Constant.CHARACTER, t, t, t);
+								t, this.myLearnerUtility.getConstant().CHARACTER, t, t, t);
 				Matcher m1 = StringUtility.createMatcher(sentence, pattern1);
 
 				String pattern2 = String
 						.format("^(.*?)((?:<\\/?[BM]+>\\w+?<\\/?[BM]+>\\s*)*)%s\\b(%s)\\b%s",
-								t, Constant.CHARACTER, t);
+								t, this.myLearnerUtility.getConstant().CHARACTER, t);
 				Matcher m2 = StringUtility.createMatcher(sentence, pattern2);
 
 				// case 1.1
@@ -4487,9 +4487,9 @@ public class Learner {
 					String s3 = m1.group(3);
 
 					if ((!StringUtility.isMatchedNullSafe(s2,
-							String.format("\\b(%s)\\b", Constant.PREPOSITION)))
+							String.format("\\b(%s)\\b", this.myLearnerUtility.getConstant().PREPOSITION)))
 							&& (!StringUtility.isMatchedNullSafe(s3, String
-									.format("\\b(%s|\\d)\\b", Constant.STOP)))) {
+									.format("\\b(%s|\\d)\\b", this.myLearnerUtility.getConstant().STOP)))) {
 						modifier = modifier.replaceAll("<\\S+?>", "");
 						modifier = modifier.replaceAll("(^\\s*|\\s*$)", "");
 						tag = tag.replaceAll("<\\S+?>", "");
@@ -4505,7 +4505,7 @@ public class Learner {
 					String text = m2.group(1);
 
 					if ((!StringUtility.isMatchedNullSafe(text, "\\b("
-							+ Constant.STOP + "|\\d+)\\b"))
+							+ this.myLearnerUtility.getConstant().STOP + "|\\d+)\\b"))
 							&& (StringUtility.isMatchedNullSafe(text, "\\w"))
 							&& (!StringUtility
 									.isMatchedNullSafe(text, "[,:;.]"))) {
@@ -4541,7 +4541,7 @@ public class Learner {
 
 				// case 1.3
 				else if (StringUtility.isMatchedNullSafe(sentence, "\\b("
-						+ Constant.CHARACTER + ")\\b")) {
+						+ this.myLearnerUtility.getConstant().CHARACTER + ")\\b")) {
 					modifier = "";
 					tag = "ditto";
 				}
@@ -4626,7 +4626,7 @@ public class Learner {
 						String tagPhrase = m2.group(2);
 						tagPhrase = StringUtility.trimString(tagPhrase);
 						if (StringUtility.isMatchedNullSafe(head, "\\b("
-								+ Constant.PREPOSITION + ")\\b")) {
+								+ this.myLearnerUtility.getConstant().PREPOSITION + ")\\b")) {
 							dataholderHandler.tagSentenceWithMT(sentenceID,
 									sentence, "", "ditto",
 									"remainnulltag-[R3:ditto]");
@@ -4889,7 +4889,7 @@ public class Learner {
 				String g1 = m2.group(1);
 				String tag = m2.group(2);
 				if (!StringUtility.isMatchedNullSafe(g1, "\\b("
-						+ Constant.PREPOSITION + ")\\b")
+						+ this.myLearnerUtility.getConstant().PREPOSITION + ")\\b")
 						&& !StringUtility.isMatchedNullSafe(g1, "<N>")) {
 					tag = tag.replaceAll(",", "and");
 					tag = tag.replaceAll("</?\\S+?>", "");
@@ -4908,7 +4908,7 @@ public class Learner {
 				String g1 = m3.group(1);
 				// case 3.1
 				if (!StringUtility.isMatchedNullSafe(g1, "\\b("
-						+ Constant.PREPOSITION + ")\\b")) {
+						+ this.myLearnerUtility.getConstant().PREPOSITION + ")\\b")) {
 					tag = tag.replaceAll(",", "and");
 					tag = tag.replaceAll("</?\\S+?>", "");
 					tag = StringUtility.trimString(tag);
@@ -5172,8 +5172,8 @@ public class Learner {
 			r = StringUtility.trimString(r);
 			
 			result = result + " " + conj.get(i)+ " "+r;
-			String regex2 = "\\b(" + Constant.CHARACTER + "|" + Constant.STOP
-					+ "|" + Constant.NUMBER + "|" + Constant.CLUSTERSTRING
+			String regex2 = "\\b(" + this.myLearnerUtility.getConstant().CHARACTER + "|" + this.myLearnerUtility.getConstant().STOP
+					+ "|" + this.myLearnerUtility.getConstant().NUMBER + "|" + this.myLearnerUtility.getConstant().CLUSTERSTRING
 					+ ")\\b";
 			if (!StringUtility.isMatchedNullSafe(r, "\\w")
 					|| StringUtility.isMatchedNullSafe(r, regex2)) {
@@ -5234,8 +5234,8 @@ public class Learner {
 					r = r + " " + word;
 				}
 			}
-			String regex = "\\b(" + Constant.CHARACTER + "|" + Constant.STOP
-					+ "|" + Constant.NUMBER + "|" + Constant.CLUSTERSTRING
+			String regex = "\\b(" + this.myLearnerUtility.getConstant().CHARACTER + "|" + this.myLearnerUtility.getConstant().STOP
+					+ "|" + this.myLearnerUtility.getConstant().NUMBER + "|" + this.myLearnerUtility.getConstant().CLUSTERSTRING
 					+ ")\\b";
 			r = r.replaceAll(regex, "");
 			r = StringUtility.trimString(r);

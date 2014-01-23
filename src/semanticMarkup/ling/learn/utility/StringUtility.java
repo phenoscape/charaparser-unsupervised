@@ -91,7 +91,8 @@ public class StringUtility {
 	
 	// if($t !~ /\b(?:$STOP)\b/ && $t =~/\w/ && $t !~ /\d/ && length $t > 1){
 	public static boolean isWord(String token) {
-		String regex = "\\b(" + Constant.STOP + ")\\b";
+		Constant myConstant = new Constant();
+		String regex = "\\b(" + myConstant.STOP + ")\\b";
 		if (token.matches(regex)) {
 			return false;
 		}

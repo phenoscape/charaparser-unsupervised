@@ -110,7 +110,8 @@ public class UnknownWordBootstrappingTest {
 		} 
 		
 		WordFormUtility wordFormUtility = new WordFormUtility(wordNetPOSKnowledgeBase);
-		tester = new DataHolder(myConfiguration, wordFormUtility);
+		Constant myConstant = new Constant();
+		tester = new DataHolder(myConfiguration, myConstant, wordFormUtility);
 
 		return tester;
 	}

@@ -58,6 +58,8 @@ public class StringUtilityTest {
 
 	@Test
 	public void testRemoveAll() {
+		Constant myConstant = new Constant();
+		
 		// Method removeAll
 		assertEquals("removeAll - begin", "word word ",
 				StringUtility.removeAll("   word word ", "^\\s+"));
@@ -66,13 +68,13 @@ public class StringUtilityTest {
 		assertEquals("removeAll - all", "wordword", 
 				StringUtility.removeAll("|word|word|", "\\|"));
 		assertEquals("removeAll - remove beginning", "word", 
-				StringUtility.removeAll("above word","^("+Constant.STOP+"|"+Constant.FORBIDDEN+")\\b\\s*"));
+				StringUtility.removeAll("above word","^("+myConstant.STOP+"|"+myConstant.FORBIDDEN+")\\b\\s*"));
 		assertEquals("removeAll - remove ending 1", "word1 word2", 
-				StringUtility.removeAll("word1 word2 or","\\s*\\b("+Constant.STOP+"|"+Constant.FORBIDDEN+"|\\w+ly)$"));
+				StringUtility.removeAll("word1 word2 or","\\s*\\b("+myConstant.STOP+"|"+myConstant.FORBIDDEN+"|\\w+ly)$"));
 		assertEquals("removeAll - remove ending 2", "word1 word2", 
-				StringUtility.removeAll("word1 word2 usually","\\s*\\b("+Constant.STOP+"|"+Constant.FORBIDDEN+"|\\w+ly)$"));
+				StringUtility.removeAll("word1 word2 usually","\\s*\\b("+myConstant.STOP+"|"+myConstant.FORBIDDEN+"|\\w+ly)$"));
 		assertEquals("removeAll - remove middle pronouns", "word1  word2", 
-				StringUtility.removeAll("word1 each word2","\\b("+Constant.PRONOUN+")\\b"));
+				StringUtility.removeAll("word1 each word2","\\b("+myConstant.PRONOUN+")\\b"));
 		assertEquals("removeAll - remove beginning and ending", "word", 
 				StringUtility.removeAll(" 	word	 	","(^\\s*|\\s*$)"));
 	}
@@ -90,10 +92,12 @@ public class StringUtilityTest {
 	
 	@Test
 	public void testIsMatchedWords() {
+		Constant myConstant = new Constant();
+		
 		assertEquals("isMatchedWords", true,
-				StringUtility.isMatchedWords("and", Constant.FORBIDDEN));
+				StringUtility.isMatchedWords("and", myConstant.FORBIDDEN));
 		assertEquals("isMatchedWords", false,
-				StringUtility.isMatchedWords("kahgds", Constant.FORBIDDEN));
+				StringUtility.isMatchedWords("kahgds", myConstant.FORBIDDEN));
 	}
 	
 	@Test
