@@ -5225,7 +5225,6 @@ public class Learner {
 			String r = "";
 			for (String word : words) {
 				String escapedW = StringUtility.escapePerlRegex(word);
-				System.out.println("Wrod: "+word);
 				if ((this.checkedModifiers.containsKey(word) && this.checkedModifiers
 						.get(word))
 						|| StringUtility.isMatchedNullSafe(sentence, "<N>"
