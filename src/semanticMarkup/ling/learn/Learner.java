@@ -249,13 +249,13 @@ public class Learner {
 		}
 	}
 
-	private void addPredefinedWords() {
-		this.addStopWords();
-		this.addCharacters();
-		this.addNumbers();
-		this.addClusterStrings();
-		this.addProperNouns();
-	}
+//	private void addPredefinedWords() {
+//		this.addStopWords();
+//		this.addCharacters();
+//		this.addNumbers();
+//		this.addClusterStrings();
+//		this.addProperNouns();
+//	}
 
 	/**
 	 * 
@@ -1040,6 +1040,7 @@ public class Learner {
 		}
 	}
 
+	/**
 	public void addStopWords() {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.addStopWords");
@@ -1161,6 +1162,7 @@ public class Learner {
 			// System.out.println("Add ProperNoun: " + word);
 		}
 	}
+	**/
 
 	// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// suffix: -fid(adj), -form (adj), -ish(adj), -less(adj), -like (adj)),

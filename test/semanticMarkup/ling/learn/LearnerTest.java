@@ -834,7 +834,7 @@ public class LearnerTest {
                     "foramina on"));
         // case 10.1.2
 		Learner myTester10_1_2 = learnerFactory();
-		myTester10_1_2.addStopWords();
+		myTester10_1_2.finiteSetsLoader.run(myTester10_1_2.getDataHolder());
 		
         assertEquals("CaseHandle - case 10.1.1", new StringAndInt("stems",2), 
                 myTester10_1_2.doItCaseHandle("stems 1 ?several , erect or ascending , densely gray_tomentose ", 
