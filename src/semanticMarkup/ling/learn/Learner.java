@@ -37,6 +37,7 @@ import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
 import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.learn.knowledge.FiniteSetsLoader;
+import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
 import semanticMarkup.ling.learn.knowledge.Initiation;
 import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
 import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrapping;
@@ -66,8 +67,10 @@ public class Learner {
 
 	// modules
 	Initiation initiationModule;
+	
+	HeuristicNounsLearner heuristicNounsLearner;
 
-	FiniteSetsLoader finiteSetsLoader; 
+	FiniteSetsLoader finiteSetsLoader;
 	
 	UnknownWordBootstrapping unknownWordBootstrappingModule;
 
@@ -108,7 +111,11 @@ public class Learner {
 
 		this.initiationModule = new Initiation(this.myLearnerUtility,
 				this.NUM_LEAD_WORDS);
+		this.heuristicNounsLearner = new HeuristicNounsLearner(this.myLearnerUtility);
 		this.finiteSetsLoader = new FiniteSetsLoader(this.myLearnerUtility);
+		
+		
+		
 		this.unknownWordBootstrappingModule = new UnknownWordBootstrapping(
 				this.myLearnerUtility);
 		this.markupByPOS = new MarkupByPOS(this.myLearnerUtility);
@@ -152,6 +159,7 @@ public class Learner {
 
 		// pre load words
 		this.addHeuristicsNouns();
+		this.heuristicNounsLearner.run(this.myDataHolder);
 //		this.addPredefinedWords();
 		this.finiteSetsLoader.run(this.myDataHolder);
 
