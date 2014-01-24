@@ -25,7 +25,6 @@ import org.apache.log4j.PropertyConfigurator;
 import semanticMarkup.core.Treatment;
 import semanticMarkup.know.IGlossary;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
-import semanticMarkup.ling.Token;
 import semanticMarkup.ling.learn.auxiliary.GetNounsAfterPtnReturnValue;
 import semanticMarkup.ling.learn.auxiliary.KnownTagCollection;
 import semanticMarkup.ling.learn.auxiliary.POSInfo;
@@ -37,6 +36,7 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
 import semanticMarkup.ling.learn.knowledge.Constant;
+import semanticMarkup.ling.learn.knowledge.FiniteSetsLoader;
 import semanticMarkup.ling.learn.knowledge.Initiation;
 import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
 import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrapping;
@@ -67,6 +67,8 @@ public class Learner {
 	// modules
 	Initiation initiationModule;
 
+	FiniteSetsLoader finiteSetsLoader; 
+	
 	UnknownWordBootstrapping unknownWordBootstrappingModule;
 
 	MarkupByPOS markupByPOS;
@@ -104,11 +106,12 @@ public class Learner {
 		myLogger.info("\tMax Tag Lengthr: " + myConfiguration.getMaxTagLength());
 		myLogger.info("\n");
 
-		initiationModule = new Initiation(this.myLearnerUtility,
+		this.initiationModule = new Initiation(this.myLearnerUtility,
 				this.NUM_LEAD_WORDS);
-		unknownWordBootstrappingModule = new UnknownWordBootstrapping(
+		this.finiteSetsLoader = new FiniteSetsLoader(this.myLearnerUtility);
+		this.unknownWordBootstrappingModule = new UnknownWordBootstrapping(
 				this.myLearnerUtility);
-		markupByPOS = new MarkupByPOS(this.myLearnerUtility);
+		this.markupByPOS = new MarkupByPOS(this.myLearnerUtility);
 		
 		
 		this.checkedModifiers = new HashMap<String, Boolean>();
@@ -149,7 +152,8 @@ public class Learner {
 
 		// pre load words
 		this.addHeuristicsNouns();
-		this.addPredefinedWords();
+//		this.addPredefinedWords();
+		this.finiteSetsLoader.run(this.myDataHolder);
 
 		// ???
 		this.posBySuffix();

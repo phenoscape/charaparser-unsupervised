@@ -3,57 +3,7 @@ charaparser-unsupervised
 
 Java implementation of unsupervised CharaParser code
 
-* Read Treatment
-    * Preprocess
-        * First replace all dot marks after abbreviation by "[DOT]". After sentence segmentation, restore them.
-    * Sentence segmentation
-        * Handle abbreviation. 
-    * Get Lead of Sentence
-    In most cases, the lead of a sentence is just the first NUM_LEAD_WORDS words in the sentence, where NUM_LEAD_WORDS has been pre-define as 3. However, there are two expections:
-    1) When there is any :;.[(] in the sentence, only the words before any ,:;\.\[(] are counted. For example, for the sentence
-        word1 word2 . word3
-    only
-        word1 word2
-    are kept.
-    2) Whene there is any preposition word in the sentence, only the words before the preposition word and the preposition word are counted. For example, for the sentence
-        lepidotrichia of fin webs
-    only the word before the preposition word "of" and the preposition word "of"
-        lepidotrichia of
-    are kept.
-    
-* Get Unique Words
-Get all unique words in the treatments, and insert them into the unknown word collection.
 
-Since this is the first stage of the learning, all the words are "unknown" now, so mark all of them as "unknown".
-
-For any word which does not contain a word character, or ends with "ous", take is as a boundary word, and insert it into the word-POS collection.
-
-
-
-
-The regular expression like "blv?d" would match both "blvd" and "bld". The question mark makes the previous letter optional.
-
-
-* Add Heuristics Nouns
-** Learn Heuristics Nouns
-
-
-
-** Character Heuristics
-
-For each noun, if it is a singular, try to find the plural form; if it is a plural, try to find its singular form. Add any singular-plural pair learned in this way into SingularPlural holder.
-
-* Add Stop Words
-
-* Add Characters
-
-Sort all words according to their root. That is, put words with same root together. For each group of words share same root, find any word in the group having a noun ending, then it must be a singular, put it into the noun list with a [s] tag. If there is another word within the same group ends with -s or -es, it is very likely that it is the plural form of the singular word. Put it into the noun list with a [p] tag. Put this singular-plural pair into SingularPlural holder.
-
-* Add Numbers
-
-* Add Cluster Strings
-
-* Add Proper Nouns
 
 * Learn POS By Suffix
 For each word that is unknown in the Unknown Word Holder,trying to learn if it is a "b" word, by checking its suffix.
