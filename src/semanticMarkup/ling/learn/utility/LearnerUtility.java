@@ -308,7 +308,7 @@ public class LearnerUtility {
 			int end = sentence.length();
 
 			String pattern1 = " [,:;.\\[(]";
-			String pattern2 = "\\b" + "(" + Constant.PREPOSITION + ")" + "\\s";
+			String pattern2 = "\\b" + "(" + this.myConstant.PREPOSITION + ")" + "\\s";
 
 			myLogger.trace("Pattern1: " + pattern1);
 			myLogger.trace("Pattern2: " + pattern2);
@@ -755,7 +755,7 @@ public class LearnerUtility {
 		}
 		
 		sentence = StringUtility.replaceAllBackreference(sentence, 
-				"(?:<[^<]+>)+("+Constant.FORBIDDEN+")(?:</[^<]+>)+", "$1");
+				"(?:<[^<]+>)+("+this.myConstant.FORBIDDEN+")(?:</[^<]+>)+", "$1");
 		
 		return sentence;
 	}

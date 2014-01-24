@@ -39,13 +39,14 @@ public class DataHolder {
 	private Set<String> BMSWords;
 	
 	// Data holders
-	// Table heuristicnoun
-	private Map<String, String> heuristicNounTable;
-	public static final byte HEURISTICNOUN = 1;
 
 	// Table discounted
 	private Map<DiscountedKey, String> discountedTable;
 	public static final byte DISCOUNTED = 2;
+	
+	// Table heuristicnoun
+	private Map<String, String> heuristicNounTable;
+	public static final byte HEURISTICNOUN = 1;
 	
 	// Table isATable
 	private Map<Integer, IsAValue> isATable;
@@ -82,11 +83,14 @@ public class DataHolder {
 	public static final byte WORDROLE = 10;
 
 	private Configuration myConfiguration;
+	private Constant myConstant;
 	private WordFormUtility myWordFormUtility;
 	
-	public DataHolder(Configuration myConfiguration, WordFormUtility myWordFormUtility) {
+	public DataHolder(Configuration myConfiguration, Constant myConstant, WordFormUtility myWordFormUtility) {
 		this.myConfiguration = myConfiguration;
+		this.myConstant = myConstant;
 		this.myWordFormUtility = myWordFormUtility;
+		
 		
 		this.allWords = new HashMap<String, Integer>();
 		this.BMSWords = new HashSet<String>();
@@ -103,8 +107,7 @@ public class DataHolder {
 		this.termCategoryTable = new HashSet<StringPair>();
 		this.unknownWordTable = new HashMap<String, String>();
 		this.wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
-		this.wordRoleTable = new HashMap<StringPair, String>();
-		
+		this.wordRoleTable = new HashMap<StringPair, String>();		
 	}
 
 	@Override
@@ -181,7 +184,7 @@ public class DataHolder {
 		}
 		
 		if (holderID == DataHolder.MODIFIER) {
-			this.modifierTable = this.add2ModifierHolder(this.modifierTable, args);
+			this.add2ModifierHolder(args);
 		}
 		
 		if (holderID == DataHolder.SENTENCE) {
@@ -197,7 +200,7 @@ public class DataHolder {
 		}
 		
 		if (holderID == DataHolder.WORDPOS) {
-			this.wordPOSTable = this.add2WordPOSHolder(this.wordPOSTable, args);
+			this.add2WordPOSHolder(args);
 		}
 		
 	}
@@ -234,7 +237,7 @@ public class DataHolder {
 		return isAHolder;
 	}
 	
-	public Map<String, ModifierTableValue> add2ModifierHolder(Map<String, ModifierTableValue> modifierTable, List<String> args) {
+	public void add2ModifierHolder(List<String> args) {
 		int index = 0;
 		
 		String word = args.get(index++);
@@ -245,10 +248,11 @@ public class DataHolder {
 			isTypeModifier = true;
 		}
 
-		
-		modifierTable.put(word, new ModifierTableValue(count, isTypeModifier));
-		
-		return modifierTable;
+		this.modifierTable.put(word, new ModifierTableValue(count, isTypeModifier));
+	}
+	
+	public void addToModifierHolder(String word, int count, boolean isTypeModifier) {
+		this.modifierTable.put(word, new ModifierTableValue(count, isTypeModifier));
 	}
 
 	public Map<String, String> add2UnknowWordHolder(Map<String, String> unknownWordHolder, List<String> args){
@@ -261,7 +265,7 @@ public class DataHolder {
 		return unknownWordHolder;
 	}
 	
-	public Map<WordPOSKey, WordPOSValue> add2WordPOSHolder(Map<WordPOSKey, WordPOSValue> wordPOSHolder, List<String> args){
+	public void add2WordPOSHolder(List<String> args){
 		int index = 0;
 		
 		String word = args.get(index++);
@@ -271,11 +275,15 @@ public class DataHolder {
 		int certaintyL = new Integer(args.get(index++));
 		String savedFlag = args.get(index++);
 		String savedID = args.get(index++);
-		wordPOSHolder.put(
+		this.wordPOSTable.put(
 				new WordPOSKey(word, POS), 
 				new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID));
-		
-		return wordPOSHolder; 
+	}
+	
+	public void addToWordPOSHolder(String word, String POS, String role, int certaintyU, int certaintyL, String savedFlag, String savedID) {
+		this.wordPOSTable.put(
+				new WordPOSKey(word, POS), 
+				new WordPOSValue(role, certaintyU, certaintyL, savedFlag, savedID));
 	}
 	
 	public Set<SingularPluralPair> add2SingularPluralHolder(Set<SingularPluralPair> singularPluralHolder, List<String> args){
@@ -615,6 +623,21 @@ public class DataHolder {
 		
 		return result;
     }
+    
+    public List<Entry<WordPOSKey,WordPOSValue>> getWordPOSEntriesByWordPOS(String word, Set<String> POSs) {
+		Iterator<Map.Entry<WordPOSKey, WordPOSValue>> iter = this.getWordPOSHolderIterator();
+		List<Entry<WordPOSKey, WordPOSValue>> result = new ArrayList<Entry<WordPOSKey, WordPOSValue>>();
+		
+		while (iter.hasNext()) {
+			Map.Entry<WordPOSKey, WordPOSValue> wordPOSEntry = iter.next();
+			if (StringUtils.equals(wordPOSEntry.getKey().getWord(), word)
+					&& POSs.contains(wordPOSEntry.getValue())) {
+				result.add(wordPOSEntry);
+			}
+		}		
+		
+		return result;
+    }
 
 
 	/**
@@ -926,6 +949,30 @@ public class DataHolder {
 		return sentences;
 	}
 	
+	public int getSentenceCount(boolean isModifierUsed, String mPattern,
+			boolean isTagUsed, String tPattern) {
+		int count = 0;
+		for (SentenceStructure sentenceItem : this.sentenceTable) {
+			boolean c1 = true;
+			if (isModifierUsed) {
+				c1 = StringUtility.isMatchedNullSafe(
+						sentenceItem.getModifier(), mPattern);
+			}
+
+			boolean c2 = true;
+			if (isTagUsed) {
+				c2 = StringUtility.isMatchedNullSafe(sentenceItem.getTag(),
+						tPattern);
+			}
+
+			if (c1 && c2) {
+				count++;
+			}
+		}
+
+		return count;
+	}
+	
 	
 	/**
 	 * add the singular form and the plural form of a word into the
@@ -976,7 +1023,7 @@ public class DataHolder {
 	public int addModifier(String newWord, int increment) {
 		int isUpdate = 0;
 
-		if ((newWord.matches("(" + Constant.STOP + "|^.*\\w+ly$)"))
+		if ((newWord.matches("(" + myConstant.STOP + "|^.*\\w+ly$)"))
 				|| (!(newWord.matches("^.*\\w.*$")))) {
 			return isUpdate;
 		}
@@ -1017,7 +1064,7 @@ public class DataHolder {
 			flag = sentence.getTag() == null ? 
 					true : (!sentence.getTag().equals("ignore"));
 			if (flag) {
-				String regex = "^.*?([a-z]+(" + Constant.PLENDINGS + ")) ("
+				String regex = "^.*?([a-z]+(" + myConstant.PLENDINGS + ")) ("
 						+ newWord + ").*$";
 				Pattern p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
 				String originalSentence = sentence.getOriginalSentence();
@@ -1219,9 +1266,11 @@ public class DataHolder {
 	}
 	
 	/**
+	 * Get modifier and tag from the parent tag
 	 * 
 	 * @param tag
-	 * @return
+	 * @return a list with two elements. The first element is modifier. The
+	 *         second element is tag
 	 */
 	public List<String> getMTFromParentTag(String tag) {
 		String modifier = "";
@@ -1300,7 +1349,7 @@ public class DataHolder {
 		}
 
 		// forbidden word
-		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
+		if (word.matches("\\b(?:" + myConstant.FORBIDDEN + ")\\b")) {
 			return 0;
 		}
 
@@ -1389,12 +1438,12 @@ public class DataHolder {
 		String spWords = "";
 
 		// forbidden word
-		if (word.matches("\\b(?:" + Constant.FORBIDDEN + ")\\b")) {
+		if (word.matches("\\b(?:" + myConstant.FORBIDDEN + ")\\b")) {
 			return 0;
 		}
 
 		// stop words
-		if (word.matches("^(" + Constant.STOP + ")$")) {
+		if (word.matches("^(" + myConstant.STOP + ")$")) {
 			sign = sign
 					+ processNewWord(word, pos, role, table, word, increment);
 			return sign;
@@ -1404,14 +1453,14 @@ public class DataHolder {
 		sign = sign + processNewWord(word, pos, role, table, word, increment);
 		
 		// Case 1: we try to learn those new words based on this one
-		Pattern p = Pattern.compile("^(" + Constant.PREFIX + ")(\\S+).*$");
+		Pattern p = Pattern.compile("^(" + myConstant.PREFIX + ")(\\S+).*$");
 		Matcher m = p.matcher(word);
 		if (m.lookingAt()) {
 			myLogger.trace("Case 1");
 			String g1 = m.group(1); // the prefix
 			String g2 = m.group(2); // the remaining
 
-			otherPrefix = StringUtility.removeFromWordList(g1, Constant.PREFIX);
+			otherPrefix = StringUtility.removeFromWordList(g1, myConstant.PREFIX);
 
 			spWords = "("
 					+ StringUtility.escape(this.singularPluralVariations(g2,
@@ -1445,7 +1494,7 @@ public class DataHolder {
 					+ StringUtility.escape(this.singularPluralVariations(word,
 							this.getSingularPluralHolder())) + ")";
 			// word=shrubs, pattern = (pre|sub)shrubs
-			pattern = "^(" + Constant.PREFIX + ")" + spWords + "$";
+			pattern = "^(" + myConstant.PREFIX + ")" + spWords + "$";
 
 			Iterator<Map.Entry<String, String>> iter2 = this.getUnknownWordHolder()
 					.entrySet().iterator();
@@ -1539,8 +1588,8 @@ public class DataHolder {
 		
 		int n = 0;
 				
-		String regex = "^.*(\\b|_)(NUM|" + Constant.NUMBER + "|"
-				+ Constant.CLUSTERSTRING + "|" + Constant.CHARACTER + ")\\b.*$";
+		String regex = "^.*(\\b|_)(NUM|" + myConstant.NUMBER + "|"
+				+ myConstant.CLUSTERSTRING + "|" + myConstant.CHARACTER + ")\\b.*$";
 		//regex = "(NUM|" + "rows" + ")";
 		boolean case1 = newWord.matches(regex);
 		boolean case2 = newPOS.matches("[nsp]"); 
@@ -1824,8 +1873,10 @@ public class DataHolder {
 			modifier = StringUtility.removeAll(modifier, "(^\\s*|\\s*$)");
 		}
 		
-		tag = this.tagSentWithMTPreProcessing(tag);
-		tag = StringUtility.removeAll(tag, "(^\\s*|\\s*$)");
+		if (tag != null) {
+			tag = this.tagSentWithMTPreProcessing(tag);
+			tag = StringUtility.removeAll(tag, "(^\\s*|\\s*$)");
+		}
 
 		if (tag == null) {
 			this.getSentenceHolder().get(sentID).setTag(null);
@@ -1855,15 +1906,15 @@ public class DataHolder {
 		
 		text = text.replaceAll("<\\S+?>", "");
 
-		text = StringUtility.removeAllRecursive(text, "^(" + Constant.STOP
-				+ "|" + Constant.FORBIDDEN+")\\b\\s*");
+		text = StringUtility.removeAllRecursive(text, "^(" + myConstant.STOP
+				+ "|" + myConstant.FORBIDDEN+")\\b\\s*");
 
 		// remove stop and forbidden words from ending
-		text = StringUtility.removeAllRecursive(text, "\\s*\\b(" + Constant.STOP
-				+ "|" + Constant.FORBIDDEN + "|\\w+ly)$");
+		text = StringUtility.removeAllRecursive(text, "\\s*\\b(" + myConstant.STOP
+				+ "|" + myConstant.FORBIDDEN + "|\\w+ly)$");
 
 		// remove all pronoun words
-		text = StringUtility.removeAllRecursive(text, "\\b(" + Constant.PRONOUN
+		text = StringUtility.removeAllRecursive(text, "\\b(" + myConstant.PRONOUN
 				+ ")\\b");
 		
 		return text;
@@ -1956,9 +2007,9 @@ public class DataHolder {
 	public boolean updateDataHolderNNConditionHelper(String word) {
 		boolean flag = false;
 		
-		flag = (   (!word.matches("^.*\\b("+Constant.STOP+")\\b.*$"))
+		flag = (   (!word.matches("^.*\\b("+myConstant.STOP+")\\b.*$"))
 				&& (!word.matches("^.*ly\\s*$"))
-				&& (!word.matches("^.*\\b("+Constant.FORBIDDEN+")\\b.*$"))
+				&& (!word.matches("^.*\\b("+myConstant.FORBIDDEN+")\\b.*$"))
 				);
 		
 		return flag;
@@ -2056,6 +2107,21 @@ public class DataHolder {
 		return tags;
 	}
 	
+	public void untagSentences(){
+		for (SentenceStructure sentenceItem : this.sentenceTable) {
+			String sentence = sentenceItem.getSentence();
+			String tag = sentenceItem.getTag();
+			boolean c1 = StringUtils.equals(tag, "ignore");
+			boolean c2 = (tag == null);
+			boolean c3 = StringUtility.isMatchedNullSafe(sentence, "<");
+			if ((c1||c2)&&c3) {
+				sentence = sentence.replaceAll("<\\S+?>", "");
+				sentence = sentence.replaceAll("'", "\\'");
+				sentenceItem.setSentence(sentence);				
+			}
+		}
+	}
+	
 	// add2Holder
 	public void addWords2WordPOSHolder(Set<String> words, String POS) {
 		Iterator<String> iter = words.iterator();
@@ -2087,16 +2153,241 @@ public class DataHolder {
 		return isUpdated;
 	}
 	
-	public void write2File(String fileNamePrefix) {
-		PrintWriter writer = null;
-		try {
-			writer = new PrintWriter(fileNamePrefix
-					+ "_Sentence.csv", "UTF-8");
+	public void writeToFile(String dir, String fileNamePrefix) {
+		if (fileNamePrefix == null) {
+			fileNamePrefix = "";
+		}
 
-			for (SentenceStructure sentenceItem : this.sentenceTable) {
+		if (!StringUtils.equals(fileNamePrefix, "")) {
+			fileNamePrefix = fileNamePrefix + "_";
+		}
+		
+		// writer
+		PrintWriter writer = null;
+
+		// Discounted Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "Discounted.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("word, discounted POS, possible new POS");
+
+			// write content
+			Iterator<Entry<DiscountedKey, String>> iter = this.discountedTable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<DiscountedKey, String> discountedEntry = iter.next();
+
+				writer.println(String.format("%s, %s, %s",
+						discountedEntry.getKey().getWord(),
+						discountedEntry.getKey().getPOS(),
+						discountedEntry.getValue()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// HeuristicNouns Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "HeuristicNouns.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("word, type");
+
+			// write content
+			Iterator<Entry<String, String>> iter = this.heuristicNounTable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<String, String> heuristicNounEntry = iter.next();
+
+				writer.println(String.format("%s, %s",
+						heuristicNounEntry.getKey(),						
+						heuristicNounEntry.getValue()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// IsA Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "IsA.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("ID, instance, class");
+
+			// write content
+			Iterator<Entry<Integer, IsAValue>> iter = this.isATable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<Integer, IsAValue> isAEntry = iter.next();
+
 				writer.println(String.format("%d, %s, %s",
-						sentenceItem.getID(), sentenceItem.getSentence(),
-						sentenceItem.getTag()));
+						isAEntry.getKey(),						
+						isAEntry.getValue().getInstance(),
+						isAEntry.getValue().getCls()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Modifiers Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "Modifiers.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("word, count, is type modifier");
+
+			// write content
+			Iterator<Entry<String, ModifierTableValue>> iter = this.modifierTable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<String, ModifierTableValue> modifierEntry = iter.next();
+
+				writer.println(String.format("%s, %d, %b",
+						modifierEntry.getKey(),						
+						modifierEntry.getValue().getCount(),
+						modifierEntry.getValue().getIsTypeModifier()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Sentence Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "Sentence.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("sentence ID, source, sentence, original sentence, lead, status, tag, modifier, type");
+			
+			// write content
+			for (SentenceStructure sentenceItem : this.sentenceTable) {
+				writer.println(String.format("%d, %s, %s, %s, %s, %s, %s, %s, %s",
+						sentenceItem.getID(),
+						sentenceItem.getSource(),
+						sentenceItem.getSentence(),
+						sentenceItem.getOriginalSentence(),
+						sentenceItem.getLead(),
+						sentenceItem.getStatus(),
+						sentenceItem.getTag(),
+						sentenceItem.getModifier(),
+						sentenceItem.getType()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// SingularPlural Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "SingularPlural.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("singular, plural");
+			
+			// write content
+			for (SingularPluralPair pair : this.singularPluralTable) {
+				writer.println(String.format("%s, %s",
+						pair.getSingular(),
+						pair.getPlural()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// TermCategory Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "TermCategory.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("term, category");
+			
+			// write content
+			for (StringPair pair : this.termCategoryTable) {
+				writer.println(String.format("%s, %s",
+						pair.getHead(),
+						pair.getTail()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// UnknownWord Holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "UnknownWords.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
+
+			// write header
+			writer.println("word, flag");
+
+			// write content
+			Iterator<Entry<String, String>> iter = this.unknownWordTable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<String, String> unknownWordEntry = iter.next();
+
+				writer.println(String.format("%s, %s",
+						unknownWordEntry.getKey(),						
+						unknownWordEntry.getValue()
+						));
 			}
 			writer.close();
 		} catch (FileNotFoundException e) {
@@ -2107,16 +2398,31 @@ public class DataHolder {
 			e.printStackTrace();
 		}
 
+		// WordPOS holder
 		try {
-			writer = new PrintWriter(fileNamePrefix
-					+ "_WordPOS.csv", "UTF-8");
+			String fullPath = dir + "/" + fileNamePrefix + "WordPOS.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
 
+			// write header
+			writer.println("word, POS, role, certaintyU, certiantyL, saved_flag, saveedID");
+			
+			// write content
 			Iterator<Entry<WordPOSKey, WordPOSValue>> iter = this
 					.getWordPOSHolderIterator();
 			while (iter.hasNext()) {
-				Entry<WordPOSKey, WordPOSValue> wordPOSItem = iter.next();
-				writer.println(String.format("%s, %s", wordPOSItem.getKey()
-						.getWord(), wordPOSItem.getKey().getPOS()));
+				Entry<WordPOSKey, WordPOSValue> wordPOSItem = iter.next();				
+				
+				writer.println(String.format("%s, %s, %s, %d, %d, %s, %s", 
+						wordPOSItem.getKey().getWord(), 
+						wordPOSItem.getKey().getPOS(),
+						wordPOSItem.getValue().getRole(),
+						wordPOSItem.getValue().getCertaintyU(),
+						wordPOSItem.getValue().getCertaintyL(),
+						wordPOSItem.getValue().getSavedFlag(),
+						wordPOSItem.getValue().getSavedID()
+						));
 			}
 			writer.close();
 		} catch (FileNotFoundException e) {
@@ -2126,7 +2432,36 @@ public class DataHolder {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		// WordRole holder
+		try {
+			String fullPath = dir + "/" + fileNamePrefix + "WordRole.csv";
+			File file = new File(fullPath);
+			file.getParentFile().mkdirs();
+			writer = new PrintWriter(fullPath, "UTF-8");
 
+			// write header
+			writer.println("word, semantic role, saved ID");
+			
+			// write content
+			Iterator<Entry<StringPair, String>> iter = this.wordRoleTable.entrySet().iterator();
+			while (iter.hasNext()) {
+				Entry<StringPair, String> wordRoleItem = iter.next();				
+				
+				writer.println(String.format("%s, %s, %s", 
+						wordRoleItem.getKey().getHead(), 
+						wordRoleItem.getKey().getTail(),
+						wordRoleItem.getValue()
+						));
+			}
+			writer.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

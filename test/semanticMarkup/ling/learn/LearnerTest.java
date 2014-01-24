@@ -834,7 +834,7 @@ public class LearnerTest {
                     "foramina on"));
         // case 10.1.2
 		Learner myTester10_1_2 = learnerFactory();
-		myTester10_1_2.addStopWords();
+		myTester10_1_2.finiteSetsLoader.run(myTester10_1_2.getDataHolder());
 		
         assertEquals("CaseHandle - case 10.1.1", new StringAndInt("stems",2), 
                 myTester10_1_2.doItCaseHandle("stems 1 ?several , erect or ascending , densely gray_tomentose ", 
@@ -888,7 +888,7 @@ public class LearnerTest {
 		
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"margins", "p", "role", "0", "0", null, null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"often", "b", "role", "0", "0", null, null}));
-		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"¡À", "b", "role", "0", "0", null, null}));
+		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"??", "b", "role", "0", "0", null, null}));
 		myTester.getDataHolder().add2Holder(DataHolder.WORDPOS, Arrays.asList(new String[] {"deeply", "b", "role", "0", "0", null, null}));
 		
 		List<String> nouns = new ArrayList<String>();
@@ -898,7 +898,7 @@ public class LearnerTest {
 		String bWord = "often";
 		GetNounsAfterPtnReturnValue target = new GetNounsAfterPtnReturnValue(nouns, nounPtn, bWord);
 		
-		assertEquals("getNounsAfterPtn", target, myTester.getNounsAfterPtn("proximal blade margins often ¡À deeply lobed , ( spiny in c . benedicta ) , distal ?smaller , often entire , faces glabrous or ?tomentose , sometimes also villous , strigose , or puberulent , often glandular_punctate .", 2));
+		assertEquals("getNounsAfterPtn", target, myTester.getNounsAfterPtn("proximal blade margins often ?? deeply lobed , ( spiny in c . benedicta ) , distal ?smaller , often entire , faces glabrous or ?tomentose , sometimes also villous , strigose , or puberulent , often glandular_punctate .", 2));
 		
 	}
 	
@@ -1252,11 +1252,140 @@ public class LearnerTest {
 		update1.clear();
 		update2.clear();
 		
-		assertEquals("andOrTagCase1Helper", target, myTester.andOrTagCase1Helper(pattern, wPattern, words, token));
+		assertEquals("andOrTagCase1Helper", target, myTester.andOrTagCase1Helper(pattern, wPattern, words, token));	
+	}
+	
+	@Test
+	public void testFinalizeCompoundModifier() {
+		Learner myTester = learnerFactory();	
 		
-		
+		// case 1
+		String modifier = "maxillary and [dentary] tooth_ bearing";
+		String tag = "elements";
+		String sentence = "maxillary and dentary <B>tooth_</B> bearing <N>elements</N>";
+				
+		assertEquals("finalizeCompoundModifier case 1", modifier,
+				myTester.finalizeCompoundModifier(myTester.getDataHolder(), modifier, tag, sentence));
 		
 	}
+	
+	@Test
+	public void testGetMCount(){
+		Learner myTester = learnerFactory();
+		DataHolder myDataHolder = myTester.getDataHolder();
+		
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<B>number</B> <B>of</B> <M><B>marginal</B></M> <N>bones</N> <B>alongside</B> postparietal", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "through <M><B>marginal</B></M> <N>bones</N> <B>alongside</B> postparietal", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<M><B>marginal</B></M> <N>teeth</N> <B>on</B> dentary", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<B>broad</B> <M><B>marginal</B></M> <N>tooth</N> <B>field</B>", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "<B>narrow</B> <M><B>marginal</B></M> <N>tooth</N> <N>row</N>", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		myDataHolder.add2Holder(DataHolder.SENTENCE, 
+				Arrays.asList(new String[] {"source1", "anterodorsal <B>peg_</B> like <N>process</N> <B>on</B> <N>scale</N>", "o1", "lead1", "status1", "tag1", "modifier1", "type1"}));
+		
+		assertEquals("getMCount", 5, myTester.getMCount(myDataHolder, "marginal"));
+	}
+	
+	@Test
+	public void testGetCommonStructures() {
+		Learner myTester = learnerFactory();
+		DataHolder myDataHolder = myTester.getDataHolder();
+
+		// "structure2" and "structure3" are common structures, "structure1" is
+		// not
+		myTester.getDataHolder().add2Holder(
+				DataHolder.WORDPOS,
+				Arrays.asList(new String[] { "structure1", "b", "role", "1",
+						"1", "", "" }));
+		myTester.getDataHolder().add2Holder(
+				DataHolder.WORDPOS,
+				Arrays.asList(new String[] { "structure2", "p", "role", "1",
+						"1", "", "" }));
+		myTester.getDataHolder().add2Holder(
+				DataHolder.WORDPOS,
+				Arrays.asList(new String[] { "structure3", "s", "role", "1",
+						"1", "", "" }));
+
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
+						"status", "tag1", "structure1", "type" }));
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
+						"status", "tag2", "structure2", "type" }));
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
+						"status", "tag3", "structure2", "type" }));
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
+						"status", "tag3", "structure3", "type" }));
+
+		Set<String> target = new HashSet<String>(Arrays.asList("tag3"));
+		assertEquals("getCommonStructures", target,
+				myTester.getCommonStructures(myDataHolder));
+	}
+	
+	@Test
+	public void testNormalizeItem() {
+		Learner myTester = learnerFactory();
+		DataHolder myDataHolder = myTester.getDataHolder();
+		assertEquals("normalizeItem case 2", "general", myTester.normalizeItem("general"));
+		assertEquals("normalizeItem case 2", "fin", myTester.normalizeItem("fins"));
+		assertEquals("normalizeItem case 2", "squamosal and quadratojugal and bone",
+				myTester.normalizeItem("squamosal and quadratojugal and bones"));
+	}
+	
+	@Test
+	public void testAdjectiveSubjectsHelper(){
+		Learner myTester = learnerFactory();
+		DataHolder myDataHolder = myTester.getDataHolder();
+
+		Set<String> typeModifiers = new HashSet<String>();
+		Set<String> target = new HashSet<String>();
+		target.addAll(Arrays.asList("open anterior paired".split(" ")));
+		
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "endolymphatic <N>ducts</N> <M><B>open</B></M> <B>in</B> <M>dermal</M> <N>skull</N> roof", "osent", "lead",
+						"status", "", "structure3", "type" }));
+		
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "restricted to <B>the</B> <M>anterior</M> <B>third</B> <B>of</B> <B>the</B> <N>jaw</N>", "osent", "lead",
+						"status", "", "structure3", "type" }));
+		
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "<B>series</B> <B>of</B> <M>paired</M> <B>median</B> <N>skull</N> roofng <N>bones</N> <B>that</B> meet <B>at</B> <B>the</B> <M>dorsal</M> midline <B>of</B> <B>the</B> <N>skull</N>", "osent", "lead",
+						"status", "", "structure3", "type" }));
+		myDataHolder.add2Holder(
+				DataHolder.SENTENCE,
+				Arrays.asList(new String[] { "src", "anterior dorsal fontanelle", "osent", "lead",
+						"status", "", "structure3", "type" }));
+		
+		assertEquals("adjectiveSubjectsHelper", target,
+				myTester.adjectiveSubjectsPart1(myDataHolder, typeModifiers));
+	}
+	
+	@Test
+	public void testAdjectiveSubjectsPart2Helper1(){
+		Learner myTester = learnerFactory();
+		DataHolder myDataHolder = myTester.getDataHolder();
+		Set<String> typeModifiers = new HashSet<String>();
+		typeModifiers.addAll(Arrays.asList("open|paired|anterior|through".split("\\|")));
+		assertEquals("AdjectiveSubjectsPart2Helper1", true, myTester.adjectiveSubjectsPart2Helper1("restricted to <B>the</B> <M>anterior</M> <B>third</B> <B>of</B> <B>the</B> <N>jaw</N>", typeModifiers));
+		assertEquals("AdjectiveSubjectsPart2Helper1", false, myTester.adjectiveSubjectsPart2Helper1("restricted to <B>the</B> <B>third</B> <B>of</B> <B>the</B> <N>jaw</N>", typeModifiers));
+		assertEquals("AdjectiveSubjectsPart2Helper1", true, myTester.adjectiveSubjectsPart2Helper1("<B>series</B> <B>of</B> <M>paired</M> <B>median</B> <N>skull</N> roofng <N>bones</N> <B>that</B> meet <B>at</B> <B>the</B> <M>dorsal</M> midline <B>of</B> <B>the</B> <N>skull</N>", typeModifiers));
+		assertEquals("AdjectiveSubjectsPart2Helper1", false, myTester.adjectiveSubjectsPart2Helper1("<B>series</B> <B>of paired median</B> <N>skull</N> roofng <N>bones</N> <B>that</B> meet <B>at</B> <B>the</B> <M>dorsal</M> midline <B>of</B> <B>the</B> <N>skull</N>", typeModifiers));
+	}
+	
 	
 	private Learner learnerFactory() {
 		Learner tester;
@@ -1279,7 +1408,4 @@ public class LearnerTest {
 
 		return tester;
 	}
-	
-	
-
 }

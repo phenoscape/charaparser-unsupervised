@@ -36,7 +36,7 @@ public class SentenceLeadLengthComparatorTest {
 		
 		LearnerUtility myLearnerUtility = new LearnerUtility(sentenceDetector, tokenizer, wordNetPOSKnowledgeBase);
 		Learner myTester = new Learner(myConfiguration, tokenizer, myLearnerUtility);
-		DataHolder target = new DataHolder(myConfiguration, myLearnerUtility.getWordFormUtility());
+		DataHolder target = new DataHolder(myConfiguration, myLearnerUtility.getConstant(), myLearnerUtility.getWordFormUtility());
 		
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent nor", "osent","lead lead","status",null,"m","type"}));
 		myTester.getDataHolder().add2Holder(DataHolder.SENTENCE, Arrays.asList(new String[] {"src", "sent and", "osent","lea","status","","m","type"}));

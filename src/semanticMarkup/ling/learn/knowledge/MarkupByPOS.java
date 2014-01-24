@@ -160,8 +160,8 @@ public class MarkupByPOS implements IModule {
 			int start2 = m.start(2);
 			int end2 = m.end(2);
 			String lStr = StringUtils.join(words.subList(0, end1), " ");
-			String pattern1 = String.format("\\b(%s)", Constant.FORBIDDEN);
-			String pattern2 = String.format("\\b(%s)\\b", Constant.STOP);
+			String pattern1 = String.format("\\b(%s)", this.myLearnerUtility.getConstant().FORBIDDEN);
+			String pattern2 = String.format("\\b(%s)\\b", this.myLearnerUtility.getConstant().STOP);
 			if (!StringUtility.isMatchedNullSafe(lStr, pattern1)
 					&& !StringUtility.isMatchedNullSafe(lStr, pattern2)) {
 				List<String> tagWords = words.subList(start2, end2);
@@ -188,7 +188,7 @@ public class MarkupByPOS implements IModule {
 
 	public List<String> getModifierAndTagForCase2(String modifier, int start, int end, List<String> words) {
 		if (!StringUtility.isMatchedNullSafe(modifier,
-				String.format("\\b(%s)\\b", Constant.PREPOSITION))) {
+				String.format("\\b(%s)\\b", this.myLearnerUtility.getConstant().PREPOSITION))) {
 			List<String> modifierAndTag = new LinkedList<String>();
 			// get tag and modifier
 			List<String> tagWords = words.subList(start, end);

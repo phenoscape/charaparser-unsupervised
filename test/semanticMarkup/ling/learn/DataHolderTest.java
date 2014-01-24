@@ -47,7 +47,8 @@ public class DataHolderTest {
 		} 
 		
 		WordFormUtility wordFormUtility = new WordFormUtility(wordNetPOSKnowledgeBase);
-		tester = new DataHolder(myConfiguration, wordFormUtility);
+		Constant myConstant = new Constant();
+		tester = new DataHolder(myConfiguration, myConstant, wordFormUtility);
 
 		return tester;
 	}
@@ -190,8 +191,10 @@ public class DataHolderTest {
 		targetUnknownWordHolder = myTester.add2UnknowWordHolder(targetUnknownWordHolder, Arrays.asList(new String[] {"word4", "flag2"}));
 		targetUnknownWordHolder = myTester.add2UnknowWordHolder(targetUnknownWordHolder, Arrays.asList(new String[] {"word5", "flag1"}));
 		
-		Map<WordPOSKey, WordPOSValue> targetWordPOSHolder = new HashMap<WordPOSKey, WordPOSValue>();
-		targetWordPOSHolder = myTester.add2WordPOSHolder(targetWordPOSHolder, Arrays.asList(new String[] {"word2", "p", "role1", "1", "1", null, null}));
+		
+		DataHolder targetDataHolder = dataHolderFactory();
+		targetDataHolder.add2WordPOSHolder(Arrays.asList(new String[] {"word2", "p", "role1", "1", "1", null, null}));
+		Map<WordPOSKey, WordPOSValue> targetWordPOSHolder = targetDataHolder.getWordPOSHolder();
 		
 		Set<SingularPluralPair> targetSingularPluralHolder = new HashSet<SingularPluralPair>();
 		targetSingularPluralHolder = myTester.add2SingularPluralHolder(targetSingularPluralHolder, Arrays.asList(new String[] {"word2singular", "word2plural"}));

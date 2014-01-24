@@ -102,13 +102,13 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 			e.printStackTrace();
 		}
 		this.myLearnerUtility = new LearnerUtility(this.sentenceDetector, this.tokenizer, wordNetPOSKnowledgeBase);
-		this.myDataHolder = new DataHolder(this.myConfiguration, this.myLearnerUtility.getWordFormUtility());
+		this.myDataHolder = new DataHolder(this.myConfiguration, this.myLearnerUtility.getConstant(), this.myLearnerUtility.getWordFormUtility());
 		this.myLearner = new Learner(this.myConfiguration, this.tokenizer, this.myLearnerUtility);
 	}
 
 	// learn
 	public void learn(List<Treatment> treatments, IGlossary glossary) {
-		this.myDataHolder = this.myLearner.Learn(treatments, glossary, this.markupMode);
+		this.myDataHolder = this.myLearner.learn(treatments, glossary, this.markupMode);
 		readResults(treatments);
 	}
 	
@@ -330,7 +330,7 @@ public class UnsupervisedClauseMarkup implements ITerminologyLearner {
 						}
 
 						if (tag.indexOf("[") >= 0
-								|| tag.matches(".*?(\\d|" + Constant.STOP
+								|| tag.matches(".*?(\\d|" + this.myLearnerUtility.getConstant().STOP
 										+ ").*"))
 							continue;
 						tags.add(tag);
