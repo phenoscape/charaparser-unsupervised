@@ -158,7 +158,7 @@ public class Learner {
 		// this.populateSentences(treatments);
 
 		// pre load words
-		this.addHeuristicsNouns();
+//		this.addHeuristicsNouns();
 		this.heuristicNounsLearner.run(this.myDataHolder);
 //		this.addPredefinedWords();
 		this.finiteSetsLoader.run(this.myDataHolder);
