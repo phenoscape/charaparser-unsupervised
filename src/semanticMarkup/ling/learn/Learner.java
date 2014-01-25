@@ -25,6 +25,7 @@ import org.apache.log4j.PropertyConfigurator;
 import semanticMarkup.core.Treatment;
 import semanticMarkup.know.IGlossary;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
+import semanticMarkup.knowledge.KnowledgeBase;
 import semanticMarkup.ling.learn.auxiliary.GetNounsAfterPtnReturnValue;
 import semanticMarkup.ling.learn.auxiliary.KnownTagCollection;
 import semanticMarkup.ling.learn.auxiliary.POSInfo;
@@ -40,6 +41,7 @@ import semanticMarkup.ling.learn.knowledge.FiniteSetsLoader;
 import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
 import semanticMarkup.ling.learn.knowledge.Initiation;
 import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
+import semanticMarkup.ling.learn.knowledge.PatternBasedAnnotator;
 import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrapping;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
@@ -66,11 +68,14 @@ public class Learner {
 	private String defaultGeneralTag;
 
 	// modules
+	KnowledgeBase knowledgeBase;
 	Initiation initiationModule;
 	
 	HeuristicNounsLearner heuristicNounsLearner;
 
 	FiniteSetsLoader finiteSetsLoader;
+	
+	PatternBasedAnnotator patternBasedAnnotator; 
 	
 	UnknownWordBootstrapping unknownWordBootstrappingModule;
 
@@ -109,12 +114,14 @@ public class Learner {
 		myLogger.info("\tMax Tag Lengthr: " + myConfiguration.getMaxTagLength());
 		myLogger.info("\n");
 
+		this.knowledgeBase = new KnowledgeBase();
+		
 		this.initiationModule = new Initiation(this.myLearnerUtility,
 				this.NUM_LEAD_WORDS);
 		this.heuristicNounsLearner = new HeuristicNounsLearner(this.myLearnerUtility);
 		this.finiteSetsLoader = new FiniteSetsLoader(this.myLearnerUtility);
 		
-		
+		this.patternBasedAnnotator = new PatternBasedAnnotator();
 		
 		this.unknownWordBootstrappingModule = new UnknownWordBootstrapping(
 				this.myLearnerUtility);
@@ -135,8 +142,12 @@ public class Learner {
 		// this.populateSentence(treatments);
 		// this.populateUnknownWordsTable(this.myDataHolder.allWords);
 
+		this.knowledgeBase.importKnowledgeBase(this.myDataHolder, "kb", this.myLearnerUtility.getConstant());
+		
 		this.initiationModule.loadTreatments(treatments);
 		this.initiationModule.run(myDataHolder);
+		
+		
 
 		/*
 		 * Map<String, String> mygetHeuristicNounHolder() =
@@ -166,7 +177,8 @@ public class Learner {
 		// ???
 		this.posBySuffix();
 		this.resetCounts(myDataHolder);
-		this.markupByPattern();
+		
+		this.patternBasedAnnotator.run(myDataHolder);
 		this.markupIgnore();
 
 		// learning rules with high certainty
@@ -1182,7 +1194,7 @@ public class Learner {
 	// make the unknowword a "b" boundary
 
 	/**
-	 * for each unknownword in unknownwords table seperate root and suffix if
+	 * for each unknown word in unknownwords table seperate root and suffix if
 	 * root is a word in WN or in unknownwords table make the unknowword a "b"
 	 * boundary
 	 * 
