@@ -36,6 +36,7 @@ import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
+import semanticMarkup.ling.learn.knowledge.AnnotationNormalizer;
 import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.learn.knowledge.FiniteSetsLoader;
 import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
@@ -82,6 +83,10 @@ public class Learner {
 	MarkupByPOS markupByPOS;
 	
 	Map<String, Boolean> checkedModifiers;
+	
+	AnnotationNormalizer annotationNormalizer; 
+	
+
 
 	public Learner(Configuration configuration, ITokenizer tokenizer,
 			LearnerUtility learnerUtility) {
@@ -108,6 +113,7 @@ public class Learner {
 		checkedWordSet = new HashSet<String>();
 
 		this.defaultGeneralTag = "general";
+		this.checkedModifiers = new HashMap<String, Boolean>();
 
 		myLogger.info("Created Learner");
 		myLogger.info("\tLearning Mode: " + myConfiguration.getLearningMode());
@@ -127,8 +133,12 @@ public class Learner {
 				this.myLearnerUtility);
 		this.markupByPOS = new MarkupByPOS(this.myLearnerUtility);
 		
+		this.annotationNormalizer 
+			= new AnnotationNormalizer(this.getConfiguration().getLearningMode(), 
+					this.checkedModifiers, this.getLearnerUtility());
 		
-		this.checkedModifiers = new HashMap<String, Boolean>();
+		
+
 	}
 
 	public DataHolder learn(List<Treatment> treatments, IGlossary glossary,
@@ -176,6 +186,8 @@ public class Learner {
 
 		// ???
 		this.posBySuffix();
+	
+		// This method is not in any module
 		this.resetCounts(myDataHolder);
 		
 		this.patternBasedAnnotator.run(myDataHolder);
@@ -241,13 +253,15 @@ public class Learner {
 		myLogger.info("Comma used for 'and'");
 		this.commaAnd(myDataHolder);
 		
-		if (StringUtils.equals(this.getConfiguration().getLearningMode(), "plain")) {
-			myLogger.info("Normalize modifiers");
-			this.normalizeModifiers(myDataHolder);
-		}
+//		if (StringUtils.equals(this.getConfiguration().getLearningMode(), "plain")) {
+//			myLogger.info("Normalize modifiers");
+//			this.normalizeModifiers(myDataHolder);
+//		}
+//		
+//		myLogger.info("Final step: normalize tag and modifiers");
+//		this.normalizeTags(myDataHolder);
+		this.annotationNormalizer.run(myDataHolder);
 		
-		myLogger.info("Final step: normalize tag and modifiers");
-		this.normalizeTags(myDataHolder);
 		this.prepareTables4Parser(myDataHolder);
 
 		myDataHolder.writeToFile("dataholder", "");
