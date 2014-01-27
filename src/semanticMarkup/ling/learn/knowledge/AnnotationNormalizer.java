@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +21,15 @@ import semanticMarkup.ling.learn.dataholder.WordPOSValue;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 
+
+/**
+ * Convert plural forms of annotations of tag (and modifier depending on the
+ * learning mode) to singular form, to avoid count the same word of an organ
+ * twice.
+ * 
+ * @author Dongye
+ * 
+ */
 public class AnnotationNormalizer implements IModule {
 	private String learningMode;
 	Map<String, Boolean> checkedModifiers;
@@ -46,6 +54,11 @@ public class AnnotationNormalizer implements IModule {
 		
 	}
 	
+	/**
+	 * Remove <b> from modifiers
+	 * 
+	 * @param dataholderHandler
+	 */
 	public void normalizeModifiers(DataHolder dataholderHandler) {
 		Comparator<SentenceStructure> stringLengthComparator = new Comparator<SentenceStructure>() {
 			@Override
@@ -472,6 +485,13 @@ public class AnnotationNormalizer implements IModule {
 		return count;
 	}
 	
+	
+	/**
+	 * Turn all tags and modifiers to singular form; Remove <NBM> tags from the
+	 * sentences.
+	 * 
+	 * @param dataholderHandler
+	 */
 	public void normalizeTags(DataHolder dataholderHandler) {
 		for (SentenceStructure sentenceItem : dataholderHandler.getSentenceHolder()) {
 			int sentenceID = sentenceItem.getID();
