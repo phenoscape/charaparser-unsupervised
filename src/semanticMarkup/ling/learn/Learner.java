@@ -43,6 +43,7 @@ import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
 import semanticMarkup.ling.learn.knowledge.Initiation;
 import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
 import semanticMarkup.ling.learn.knowledge.PatternBasedAnnotator;
+import semanticMarkup.ling.learn.knowledge.PhraseClauseAnnotator;
 import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrapping;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
@@ -82,11 +83,11 @@ public class Learner {
 
 	MarkupByPOS markupByPOS;
 	
-	Map<String, Boolean> checkedModifiers;
+	PhraseClauseAnnotator phraseClauseAnnotator;
 	
 	AnnotationNormalizer annotationNormalizer; 
 	
-
+	Map<String, Boolean> checkedModifiers;
 
 	public Learner(Configuration configuration, ITokenizer tokenizer,
 			LearnerUtility learnerUtility) {
@@ -132,6 +133,8 @@ public class Learner {
 		this.unknownWordBootstrappingModule = new UnknownWordBootstrapping(
 				this.myLearnerUtility);
 		this.markupByPOS = new MarkupByPOS(this.myLearnerUtility);
+		
+		this.phraseClauseAnnotator = new PhraseClauseAnnotator(this.myLearnerUtility);
 		
 		this.annotationNormalizer 
 			= new AnnotationNormalizer(this.getConfiguration().getLearningMode(), 
@@ -236,7 +239,8 @@ public class Learner {
 
 		this.markupByPOS.run(myDataHolder);
 
-		this.phraseClause(myDataHolder);
+//		this.phraseClause(myDataHolder);
+		this.phraseClauseAnnotator.run(myDataHolder);
 
 		this.ditto(myDataHolder);
 
