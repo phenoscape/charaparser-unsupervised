@@ -40,7 +40,7 @@ import semanticMarkup.ling.learn.knowledge.AnnotationNormalizer;
 import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.learn.knowledge.FiniteSetsLoader;
 import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
-import semanticMarkup.ling.learn.knowledge.Initiation;
+import semanticMarkup.ling.learn.knowledge.Initializer;
 import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
 import semanticMarkup.ling.learn.knowledge.PatternBasedAnnotator;
 import semanticMarkup.ling.learn.knowledge.PhraseClauseAnnotator;
@@ -71,7 +71,7 @@ public class Learner {
 
 	// modules
 	KnowledgeBase knowledgeBase;
-	Initiation initiationModule;
+	Initializer initiationModule;
 	
 	HeuristicNounsLearner heuristicNounsLearner;
 
@@ -123,7 +123,7 @@ public class Learner {
 
 		this.knowledgeBase = new KnowledgeBase();
 		
-		this.initiationModule = new Initiation(this.myLearnerUtility,
+		this.initiationModule = new Initializer(this.myLearnerUtility,
 				this.NUM_LEAD_WORDS);
 		this.heuristicNounsLearner = new HeuristicNounsLearner(this.myLearnerUtility);
 		this.finiteSetsLoader = new FiniteSetsLoader(this.myLearnerUtility);
