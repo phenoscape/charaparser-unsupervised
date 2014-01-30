@@ -144,6 +144,8 @@ public class Learner {
 		
 		this.dittoAnnotator = new DittoAnnotator(this.myLearnerUtility);
 		
+		this.pronounCharactersAnnotator = new PronounCharactersAnnotator(this.myLearnerUtility);
+		
 		this.annotationNormalizer 
 			= new AnnotationNormalizer(this.getConfiguration().getLearningMode(), 
 					this.checkedModifiers, this.getLearnerUtility());

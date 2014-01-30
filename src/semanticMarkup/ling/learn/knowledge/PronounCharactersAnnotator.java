@@ -12,6 +12,13 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 
+/**
+ * Annotate any clause having a pronoun or a character instead of an organ name
+ * as its subject by "ditto".
+ * 
+ * @author Dongye
+ * 
+ */
 public class PronounCharactersAnnotator implements IModule {
 	private LearnerUtility myLearnerUtility;
 	
