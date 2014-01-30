@@ -45,6 +45,7 @@ import semanticMarkup.ling.learn.knowledge.Initializer;
 import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
 import semanticMarkup.ling.learn.knowledge.PatternBasedAnnotator;
 import semanticMarkup.ling.learn.knowledge.PhraseClauseAnnotator;
+import semanticMarkup.ling.learn.knowledge.PronounCharactersAnnotator;
 import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrapping;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
@@ -87,6 +88,8 @@ public class Learner {
 	PhraseClauseAnnotator phraseClauseAnnotator;
 	
 	DittoAnnotator dittoAnnotator;
+	
+	PronounCharactersAnnotator pronounCharactersAnnotator;
 	
 	AnnotationNormalizer annotationNormalizer; 
 	
@@ -250,7 +253,8 @@ public class Learner {
 //		this.ditto(myDataHolder);
 		this.dittoAnnotator.run(myDataHolder);
 
-		this.pronounCharacterSubject(myDataHolder);
+//		this.pronounCharacterSubject(myDataHolder);
+		this.pronounCharactersAnnotator.run(myDataHolder);
 
 		this.finalizeIgnored(myDataHolder);
 
