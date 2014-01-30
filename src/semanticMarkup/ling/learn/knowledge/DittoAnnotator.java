@@ -15,7 +15,7 @@ import semanticMarkup.ling.learn.utility.StringUtility;
  * 
  */
 public class DittoAnnotator implements IModule {
-	LearnerUtility myLearnerUtility;
+	private LearnerUtility myLearnerUtility;
 	
 	public DittoAnnotator(LearnerUtility learnerUtility) {
 		this.myLearnerUtility = learnerUtility;
