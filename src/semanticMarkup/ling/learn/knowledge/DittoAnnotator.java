@@ -23,8 +23,7 @@ public class DittoAnnotator implements IModule {
 
 	@Override
 	public void run(DataHolder dataholderHandler) {
-		// TODO Auto-generated method stub
-		
+		this.ditto(dataholderHandler);
 	}
 	
 	public void ditto(DataHolder dataholderHandler) {
