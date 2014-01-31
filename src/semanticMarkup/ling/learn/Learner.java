@@ -73,7 +73,7 @@ public class Learner {
 
 	// modules
 	KnowledgeBase knowledgeBase;
-	Initializer initiationModule;
+	Initializer initializer;
 	
 	HeuristicNounsLearner heuristicNounsLearner;
 
@@ -129,7 +129,7 @@ public class Learner {
 
 		this.knowledgeBase = new KnowledgeBase();
 		
-		this.initiationModule = new Initializer(this.myLearnerUtility,
+		this.initializer = new Initializer(this.myLearnerUtility,
 				this.NUM_LEAD_WORDS);
 		this.heuristicNounsLearner = new HeuristicNounsLearner(this.myLearnerUtility);
 		this.finiteSetsLoader = new FiniteSetsLoader(this.myLearnerUtility);
@@ -167,8 +167,8 @@ public class Learner {
 
 		this.knowledgeBase.importKnowledgeBase(this.myDataHolder, "kb", this.myLearnerUtility.getConstant());
 		
-		this.initiationModule.loadTreatments(treatments);
-		this.initiationModule.run(myDataHolder);
+		this.initializer.loadTreatments(treatments);
+		this.initializer.run(myDataHolder);
 		
 		
 
