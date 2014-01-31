@@ -63,15 +63,10 @@
 					<execution>
 						<phase>initialize</phase>
 						<configuration>
-							<target>
-								<available file="res/WordNet/WordNet-3.0" property="WordNet.found" />
-								<mkdir dir="res/WordNet" />
-								<get src="http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
-									dest="res/WordNet/WordNet-3.0.tar.gz" usetimestamp="true"
-									skipexisting="true" />
-								<gunzip src="res/WordNet/WordNet-3.0.tar.gz" />
-								<untar src="res/WordNet/WordNet-3.0.tar" dest="res/WordNet/" />
-							</target>
+							<tasks>
+								<ant target="install-wordnet">
+								</ant>
+							</tasks>
 						</configuration>
 						<goals>
 							<goal>run</goal>
@@ -88,6 +83,31 @@
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
 					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-antrun-plugin
+										</artifactId>
+										<versionRange>
+											[1.7,)
+										</versionRange>
+										<goals>
+											<goal>run</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
