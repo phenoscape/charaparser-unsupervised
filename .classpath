@@ -1,27 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="test"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/junit-4.5.jar"/>
-	<classpathentry kind="lib" path="lib/edu.mit.jwi_2.2.3_jdk.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/aopalliance.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/guice-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/guice-assistedinject-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/guice-grapher-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/guice-jmx-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/guice-jndi-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/guice-multibindings-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/guice-persist-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/guice-servlet-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/guice-spring-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/guice-struts2-plugin-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/guice-throwingproviders-3.0.jar"/>
-	<classpathentry kind="lib" path="lib/guice-3.0/javax.inject.jar"/>
-	<classpathentry kind="lib" path="lib/OpenNLP/opennlp-maxent-3.0.2-incubating.jar"/>
-	<classpathentry kind="lib" path="lib/OpenNLP/opennlp-tools-1.5.2-incubating.jar"/>
-	<classpathentry kind="lib" path="lib/OpenNLP/opennlp-uima-1.5.2-incubating.jar"/>
-	<classpathentry kind="lib" path="lib/log4j-1.2.17.jar"/>
-	<classpathentry kind="lib" path="lib/commons-lang3-3.1/commons-lang3-3.1.jar"/>
-	<classpathentry kind="output" path="bin"/>
+	<classpathentry kind="src" output="target/classes" path="src/main/java">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="target/test-classes" path="src/test/java">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="target/classes"/>
 </classpath>
