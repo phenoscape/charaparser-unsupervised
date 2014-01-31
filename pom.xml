@@ -56,6 +56,29 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<configuration>
+							<target>
+								<available file="res/WordNet/WordNet-3.0" property="WordNet.found" />
+								<mkdir dir="res/WordNet" />
+								<get src="http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
+									dest="res/WordNet/WordNet-3.0.tar.gz" usetimestamp="true"
+									skipexisting="true" />
+								<gunzip src="res/WordNet/WordNet-3.0.tar.gz" />
+								<untar src="res/WordNet/WordNet-3.0.tar" dest="res/WordNet/" />
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
