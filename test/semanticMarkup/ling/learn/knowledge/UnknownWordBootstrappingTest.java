@@ -22,7 +22,7 @@ import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
 
 public class UnknownWordBootstrappingTest {
-	private UnknownWordBootstrapping unknownWordBootstrappingModule;
+	private UnknownWordBootstrappingLearner unknownWordBootstrappingModule;
 	
 	@Before
 	public void initialize() {
@@ -40,7 +40,7 @@ public class UnknownWordBootstrappingTest {
 		} 
 		
 		LearnerUtility learnerUtility = new LearnerUtility(sentenceDetector, tokenizer, wordNetPOSKnowledgeBase);
-		this.unknownWordBootstrappingModule = new UnknownWordBootstrapping(learnerUtility);
+		this.unknownWordBootstrappingModule = new UnknownWordBootstrappingLearner(learnerUtility);
 	}
 	
 	@Test

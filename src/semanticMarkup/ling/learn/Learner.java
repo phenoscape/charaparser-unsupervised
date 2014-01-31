@@ -46,7 +46,7 @@ import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
 import semanticMarkup.ling.learn.knowledge.PatternBasedAnnotator;
 import semanticMarkup.ling.learn.knowledge.PhraseClauseAnnotator;
 import semanticMarkup.ling.learn.knowledge.PronounCharactersAnnotator;
-import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrapping;
+import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrappingLearner;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 import semanticMarkup.ling.transform.ITokenizer;
@@ -81,7 +81,7 @@ public class Learner {
 	
 	PatternBasedAnnotator patternBasedAnnotator; 
 	
-	UnknownWordBootstrapping unknownWordBootstrappingModule;
+	UnknownWordBootstrappingLearner unknownWordBootstrappingLearner;
 
 	MarkupByPOS markupByPOS;
 	
@@ -136,7 +136,7 @@ public class Learner {
 		
 		this.patternBasedAnnotator = new PatternBasedAnnotator();
 		
-		this.unknownWordBootstrappingModule = new UnknownWordBootstrapping(
+		this.unknownWordBootstrappingLearner = new UnknownWordBootstrappingLearner(
 				this.myLearnerUtility);
 		this.markupByPOS = new MarkupByPOS(this.myLearnerUtility);
 		
@@ -220,7 +220,7 @@ public class Learner {
 		this.additionalBootstrapping();
 
 		myLogger.info("Unknownword bootstrappings:");
-		this.unknownWordBootstrappingModule.run(myDataHolder);
+		this.unknownWordBootstrappingLearner.run(myDataHolder);
 
 		myLogger.info("Adjectives Verification:");
 		this.adjectivesVerification(myDataHolder);

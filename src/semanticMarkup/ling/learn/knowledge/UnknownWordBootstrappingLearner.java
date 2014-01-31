@@ -16,10 +16,10 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 
-public class UnknownWordBootstrapping implements IModule {
+public class UnknownWordBootstrappingLearner implements IModule {
 	private LearnerUtility myLearnerUtility;
 
-	public UnknownWordBootstrapping(LearnerUtility learnerUtility) {
+	public UnknownWordBootstrappingLearner(LearnerUtility learnerUtility) {
 		this.myLearnerUtility = learnerUtility;
 	}
 
