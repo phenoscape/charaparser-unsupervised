@@ -1,2 +1,5 @@
 bin
 res/WordNet
+charaparser-unsupervised.jar
+/target
+.DS_Store
