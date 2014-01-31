@@ -17,13 +17,13 @@ import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 
-public class Initiation implements IModule {
+public class Initializer implements IModule {
 	
 	private LearnerUtility myLearnerUtility;
 	private List<Treatment> treatments;
 	private int numLeadWords;
 
-	public Initiation(LearnerUtility learnerUtility, int num) {
+	public Initializer(LearnerUtility learnerUtility, int num) {
 		this.myLearnerUtility = learnerUtility;
 		this.numLeadWords = num;
 		treatments = new LinkedList<Treatment>();

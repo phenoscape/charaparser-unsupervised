@@ -15,17 +15,17 @@ import semanticMarkup.ling.transform.ITokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
 
-public class InitiationTest {
+public class InitializerTest {
 	
-	private Initiation tester;
+	private Initializer tester;
 
 	@Before
 	public void initialize() {
 		this.tester = InitiationFactory();
 	}
 
-	private Initiation InitiationFactory() {
-		Initiation tester;
+	private Initializer InitiationFactory() {
+		Initializer tester;
 
 		Configuration myConfiguration = new Configuration();
 		ITokenizer tokenizer = new OpenNLPTokenizer(
@@ -41,7 +41,7 @@ public class InitiationTest {
 		} 
 		LearnerUtility myLearnerUtility = new LearnerUtility(sentenceDetector,
 				tokenizer, wordNetPOSKnowledgeBase);
-		tester = new Initiation(myLearnerUtility, myConfiguration.getNumLeadWords()); 
+		tester = new Initializer(myLearnerUtility, myConfiguration.getNumLeadWords()); 
 				
 		return tester;
 	}

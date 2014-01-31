@@ -25,6 +25,7 @@ import org.apache.log4j.PropertyConfigurator;
 import semanticMarkup.core.Treatment;
 import semanticMarkup.know.IGlossary;
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
+import semanticMarkup.knowledge.KnowledgeBase;
 import semanticMarkup.ling.learn.auxiliary.GetNounsAfterPtnReturnValue;
 import semanticMarkup.ling.learn.auxiliary.KnownTagCollection;
 import semanticMarkup.ling.learn.auxiliary.POSInfo;
@@ -35,12 +36,17 @@ import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
+import semanticMarkup.ling.learn.knowledge.AnnotationNormalizer;
 import semanticMarkup.ling.learn.knowledge.Constant;
+import semanticMarkup.ling.learn.knowledge.DittoAnnotator;
 import semanticMarkup.ling.learn.knowledge.FiniteSetsLoader;
 import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
-import semanticMarkup.ling.learn.knowledge.Initiation;
+import semanticMarkup.ling.learn.knowledge.Initializer;
 import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
-import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrapping;
+import semanticMarkup.ling.learn.knowledge.PatternBasedAnnotator;
+import semanticMarkup.ling.learn.knowledge.PhraseClauseAnnotator;
+import semanticMarkup.ling.learn.knowledge.PronounCharactersAnnotator;
+import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrappingLearner;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 import semanticMarkup.ling.transform.ITokenizer;
@@ -66,15 +72,26 @@ public class Learner {
 	private String defaultGeneralTag;
 
 	// modules
-	Initiation initiationModule;
+	KnowledgeBase knowledgeBase;
+	Initializer initializer;
 	
 	HeuristicNounsLearner heuristicNounsLearner;
 
 	FiniteSetsLoader finiteSetsLoader;
 	
-	UnknownWordBootstrapping unknownWordBootstrappingModule;
+	PatternBasedAnnotator patternBasedAnnotator; 
+	
+	UnknownWordBootstrappingLearner unknownWordBootstrappingLearner;
 
 	MarkupByPOS markupByPOS;
+	
+	PhraseClauseAnnotator phraseClauseAnnotator;
+	
+	DittoAnnotator dittoAnnotator;
+	
+	PronounCharactersAnnotator pronounCharactersAnnotator;
+	
+	AnnotationNormalizer annotationNormalizer; 
 	
 	Map<String, Boolean> checkedModifiers;
 
@@ -103,25 +120,38 @@ public class Learner {
 		checkedWordSet = new HashSet<String>();
 
 		this.defaultGeneralTag = "general";
+		this.checkedModifiers = new HashMap<String, Boolean>();
 
 		myLogger.info("Created Learner");
 		myLogger.info("\tLearning Mode: " + myConfiguration.getLearningMode());
 		myLogger.info("\tMax Tag Lengthr: " + myConfiguration.getMaxTagLength());
 		myLogger.info("\n");
 
-		this.initiationModule = new Initiation(this.myLearnerUtility,
+		this.knowledgeBase = new KnowledgeBase();
+		
+		this.initializer = new Initializer(this.myLearnerUtility,
 				this.NUM_LEAD_WORDS);
 		this.heuristicNounsLearner = new HeuristicNounsLearner(this.myLearnerUtility);
 		this.finiteSetsLoader = new FiniteSetsLoader(this.myLearnerUtility);
 		
+		this.patternBasedAnnotator = new PatternBasedAnnotator();
 		
-		
-		this.unknownWordBootstrappingModule = new UnknownWordBootstrapping(
+		this.unknownWordBootstrappingLearner = new UnknownWordBootstrappingLearner(
 				this.myLearnerUtility);
 		this.markupByPOS = new MarkupByPOS(this.myLearnerUtility);
 		
+		this.phraseClauseAnnotator = new PhraseClauseAnnotator(this.myLearnerUtility);
 		
-		this.checkedModifiers = new HashMap<String, Boolean>();
+		this.dittoAnnotator = new DittoAnnotator(this.myLearnerUtility);
+		
+		this.pronounCharactersAnnotator = new PronounCharactersAnnotator(this.myLearnerUtility);
+		
+		this.annotationNormalizer 
+			= new AnnotationNormalizer(this.getConfiguration().getLearningMode(), 
+					this.checkedModifiers, this.getLearnerUtility());
+		
+		
+
 	}
 
 	public DataHolder learn(List<Treatment> treatments, IGlossary glossary,
@@ -135,8 +165,12 @@ public class Learner {
 		// this.populateSentence(treatments);
 		// this.populateUnknownWordsTable(this.myDataHolder.allWords);
 
-		this.initiationModule.loadTreatments(treatments);
-		this.initiationModule.run(myDataHolder);
+		this.knowledgeBase.importKnowledgeBase(this.myDataHolder, "kb", this.myLearnerUtility.getConstant());
+		
+		this.initializer.loadTreatments(treatments);
+		this.initializer.run(myDataHolder);
+		
+		
 
 		/*
 		 * Map<String, String> mygetHeuristicNounHolder() =
@@ -158,15 +192,18 @@ public class Learner {
 		// this.populateSentences(treatments);
 
 		// pre load words
-		this.addHeuristicsNouns();
+//		this.addHeuristicsNouns();
 		this.heuristicNounsLearner.run(this.myDataHolder);
 //		this.addPredefinedWords();
 		this.finiteSetsLoader.run(this.myDataHolder);
 
 		// ???
 		this.posBySuffix();
+	
+		// This method is not in any module
 		this.resetCounts(myDataHolder);
-		this.markupByPattern();
+		
+		this.patternBasedAnnotator.run(myDataHolder);
 		this.markupIgnore();
 
 		// learning rules with high certainty
@@ -183,7 +220,7 @@ public class Learner {
 		this.additionalBootstrapping();
 
 		myLogger.info("Unknownword bootstrappings:");
-		this.unknownWordBootstrappingModule.run(myDataHolder);
+		this.unknownWordBootstrappingLearner.run(myDataHolder);
 
 		myLogger.info("Adjectives Verification:");
 		this.adjectivesVerification(myDataHolder);
@@ -212,11 +249,14 @@ public class Learner {
 
 		this.markupByPOS.run(myDataHolder);
 
-		this.phraseClause(myDataHolder);
+//		this.phraseClause(myDataHolder);
+		this.phraseClauseAnnotator.run(myDataHolder);
 
-		this.ditto(myDataHolder);
+//		this.ditto(myDataHolder);
+		this.dittoAnnotator.run(myDataHolder);
 
-		this.pronounCharacterSubject(myDataHolder);
+//		this.pronounCharacterSubject(myDataHolder);
+		this.pronounCharactersAnnotator.run(myDataHolder);
 
 		this.finalizeIgnored(myDataHolder);
 
@@ -229,13 +269,15 @@ public class Learner {
 		myLogger.info("Comma used for 'and'");
 		this.commaAnd(myDataHolder);
 		
-		if (StringUtils.equals(this.getConfiguration().getLearningMode(), "plain")) {
-			myLogger.info("Normalize modifiers");
-			this.normalizeModifiers(myDataHolder);
-		}
+//		if (StringUtils.equals(this.getConfiguration().getLearningMode(), "plain")) {
+//			myLogger.info("Normalize modifiers");
+//			this.normalizeModifiers(myDataHolder);
+//		}
+//		
+//		myLogger.info("Final step: normalize tag and modifiers");
+//		this.normalizeTags(myDataHolder);
+		this.annotationNormalizer.run(myDataHolder);
 		
-		myLogger.info("Final step: normalize tag and modifiers");
-		this.normalizeTags(myDataHolder);
 		this.prepareTables4Parser(myDataHolder);
 
 		myDataHolder.writeToFile("dataholder", "");
@@ -1182,7 +1224,7 @@ public class Learner {
 	// make the unknowword a "b" boundary
 
 	/**
-	 * for each unknownword in unknownwords table seperate root and suffix if
+	 * for each unknown word in unknownwords table seperate root and suffix if
 	 * root is a word in WN or in unknownwords table make the unknowword a "b"
 	 * boundary
 	 * 

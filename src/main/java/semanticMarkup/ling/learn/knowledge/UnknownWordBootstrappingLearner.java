@@ -16,10 +16,17 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 
-public class UnknownWordBootstrapping implements IModule {
+/**
+ * Tag unknown words by infer any word before a plural noun as a modifier, and
+ * any word after a plural noun as a boundary word.
+ * 
+ * @author Dongye
+ * 
+ */
+public class UnknownWordBootstrappingLearner implements IModule {
 	private LearnerUtility myLearnerUtility;
 
-	public UnknownWordBootstrapping(LearnerUtility learnerUtility) {
+	public UnknownWordBootstrappingLearner(LearnerUtility learnerUtility) {
 		this.myLearnerUtility = learnerUtility;
 	}
 
