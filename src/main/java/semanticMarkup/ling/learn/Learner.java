@@ -37,6 +37,7 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
 import semanticMarkup.ling.learn.knowledge.AnnotationNormalizer;
+import semanticMarkup.ling.learn.knowledge.CommaAsAndAnnotator;
 import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.learn.knowledge.DittoAnnotator;
 import semanticMarkup.ling.learn.knowledge.FiniteSetsLoader;
@@ -90,6 +91,8 @@ public class Learner {
 	DittoAnnotator dittoAnnotator;
 	
 	PronounCharactersAnnotator pronounCharactersAnnotator;
+	
+	CommaAsAndAnnotator commaAsAndAnnotator;
 	
 	AnnotationNormalizer annotationNormalizer; 
 	
@@ -145,6 +148,8 @@ public class Learner {
 		this.dittoAnnotator = new DittoAnnotator(this.myLearnerUtility);
 		
 		this.pronounCharactersAnnotator = new PronounCharactersAnnotator(this.myLearnerUtility);
+		
+		this.commaAsAndAnnotator = new CommaAsAndAnnotator(this.myLearnerUtility);
 		
 		this.annotationNormalizer 
 			= new AnnotationNormalizer(this.getConfiguration().getLearningMode(), 
@@ -267,7 +272,8 @@ public class Learner {
 		}
 		
 		myLogger.info("Comma used for 'and'");
-		this.commaAnd(myDataHolder);
+//		this.commaAnd(myDataHolder);
+		this.commaAsAndAnnotator.run(myDataHolder);
 		
 //		if (StringUtils.equals(this.getConfiguration().getLearningMode(), "plain")) {
 //			myLogger.info("Normalize modifiers");
