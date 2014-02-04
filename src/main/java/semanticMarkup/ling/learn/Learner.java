@@ -47,6 +47,7 @@ import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
 import semanticMarkup.ling.learn.knowledge.PatternBasedAnnotator;
 import semanticMarkup.ling.learn.knowledge.PhraseClauseAnnotator;
 import semanticMarkup.ling.learn.knowledge.PronounCharactersAnnotator;
+import semanticMarkup.ling.learn.knowledge.SeedNounsLearner;
 import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrappingLearner;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
@@ -79,6 +80,8 @@ public class Learner {
 	HeuristicNounsLearner heuristicNounsLearner;
 
 	FiniteSetsLoader finiteSetsLoader;
+	
+	SeedNounsLearner seedNounsLearner;
 	
 	PatternBasedAnnotator patternBasedAnnotator; 
 	
@@ -135,7 +138,10 @@ public class Learner {
 		this.initializer = new Initializer(this.myLearnerUtility,
 				this.NUM_LEAD_WORDS);
 		this.heuristicNounsLearner = new HeuristicNounsLearner(this.myLearnerUtility);
+		
 		this.finiteSetsLoader = new FiniteSetsLoader(this.myLearnerUtility);
+		
+		this.seedNounsLearner = new SeedNounsLearner(this.myLearnerUtility);
 		
 		this.patternBasedAnnotator = new PatternBasedAnnotator();
 		
@@ -204,6 +210,7 @@ public class Learner {
 
 		// ???
 		this.posBySuffix();
+//		this.seedNounsLearner.run(myDataHolder);
 	
 		// This method is not in any module
 		this.resetCounts(myDataHolder);
