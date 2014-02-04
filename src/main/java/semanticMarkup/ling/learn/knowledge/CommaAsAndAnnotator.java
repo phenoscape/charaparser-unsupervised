@@ -12,6 +12,13 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 
+/**
+ * Identify and annotate clauses in which a comma is used to mean "and" by the
+ * compound subject
+ * 
+ * @author Dongye
+ * 
+ */
 public class CommaAsAndAnnotator implements IModule {
 	private LearnerUtility myLearnerUtility;
 	
