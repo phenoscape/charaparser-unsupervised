@@ -20,7 +20,7 @@ import semanticMarkup.ling.transform.ITokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPSentencesTokenizer;
 import semanticMarkup.ling.transform.lib.OpenNLPTokenizer;
 
-public class MarkupByPOSTest {
+public class POSBasedAnnotatorTest {
 
 	@Test
 	public void testCaseHandler() {
@@ -40,7 +40,7 @@ public class MarkupByPOSTest {
 	
 	@Test
 	public void testGetModifierAndTagForCase2() {
-		MarkupByPOS myTester = this.markupByPOSFactory();
+		POSBasedAnnotator myTester = this.markupByPOSFactory();
 
 		String modifier = "large interlocking";
 		int start = 2;
@@ -59,7 +59,7 @@ public class MarkupByPOSTest {
 	
 	@Test
 	public void testGetModifierAndTagForCase3() {
-		MarkupByPOS myTester = this.markupByPOSFactory();
+		POSBasedAnnotator myTester = this.markupByPOSFactory();
 		
 		String ptn = "ntqqq,qbbn";
 		List<String> words = new ArrayList<String>();
@@ -85,12 +85,12 @@ public class MarkupByPOSTest {
 		target.add("enlarged");		
 		target.add("postorbital");
 		
-		MarkupByPOS myTester = this.markupByPOSFactory();
+		POSBasedAnnotator myTester = this.markupByPOSFactory();
 		assertEquals("getModifiersForUntag", target, myTester.getModifiersForUntag(modifier));
 		assertEquals("getModifiersForUntag", "enlarged postorbital <N>tessera</N>", modifier);
 	}
 	
-	private MarkupByPOS markupByPOSFactory() {
+	private POSBasedAnnotator markupByPOSFactory() {
 		Configuration myConfiguration = new Configuration();
 		ITokenizer sentenceDetector = new OpenNLPSentencesTokenizer(
 				myConfiguration.getOpenNLPSentenceDetectorDir());
@@ -105,7 +105,7 @@ public class MarkupByPOSTest {
 		} 
 		
 		LearnerUtility myLearnerUtility = new LearnerUtility(sentenceDetector, tokenizer, wordNetPOSKnowledgeBase);
-		MarkupByPOS myMarkupByPOS = new MarkupByPOS(myLearnerUtility);
+		POSBasedAnnotator myMarkupByPOS = new POSBasedAnnotator(myLearnerUtility);
 		
 		return myMarkupByPOS;
 	}

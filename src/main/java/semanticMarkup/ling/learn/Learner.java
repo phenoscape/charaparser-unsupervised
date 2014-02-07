@@ -43,7 +43,7 @@ import semanticMarkup.ling.learn.knowledge.DittoAnnotator;
 import semanticMarkup.ling.learn.knowledge.FiniteSetsLoader;
 import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
 import semanticMarkup.ling.learn.knowledge.Initializer;
-import semanticMarkup.ling.learn.knowledge.MarkupByPOS;
+import semanticMarkup.ling.learn.knowledge.POSBasedAnnotator;
 import semanticMarkup.ling.learn.knowledge.PatternBasedAnnotator;
 import semanticMarkup.ling.learn.knowledge.PhraseClauseAnnotator;
 import semanticMarkup.ling.learn.knowledge.PronounCharactersAnnotator;
@@ -87,7 +87,7 @@ public class Learner {
 	
 	UnknownWordBootstrappingLearner unknownWordBootstrappingLearner;
 
-	MarkupByPOS markupByPOS;
+	POSBasedAnnotator posBasedAnnotator;
 	
 	PhraseClauseAnnotator phraseClauseAnnotator;
 	
@@ -147,7 +147,7 @@ public class Learner {
 		
 		this.unknownWordBootstrappingLearner = new UnknownWordBootstrappingLearner(
 				this.myLearnerUtility);
-		this.markupByPOS = new MarkupByPOS(this.myLearnerUtility);
+		this.posBasedAnnotator = new POSBasedAnnotator(this.myLearnerUtility);
 		
 		this.phraseClauseAnnotator = new PhraseClauseAnnotator(this.myLearnerUtility);
 		
@@ -213,53 +213,45 @@ public class Learner {
 		this.seedNounsLearner.run(myDataHolder);
 	
 		// This method is not in any module
-		this.resetCounts(myDataHolder);
+		this.resetCounts(myDataHolder); // !!!
 		
 		this.patternBasedAnnotator.run(myDataHolder);
-		this.markupIgnore();
+		this.markupIgnore(); // !!!
 
 		// learning rules with high certainty
 		// At the every beginning, only those sentence whose first word is a p,
 		// could have a tag of "start", see populateSentece - getFirstNWords
 		// section -Dongye
 		myLogger.info("Learning rules with high certainty:");
-		this.discover("start");
+		this.discover("start"); // !!!
 
 		// bootstrapping rules
 		myLogger.info("Bootstrapping rules:");
-		this.discover("normal");
+		this.discover("normal"); // !!!
 		myLogger.info("Additional bootstrappings:");
-		this.additionalBootstrapping();
+		this.additionalBootstrapping(); // !!!
 
 		myLogger.info("Unknownword bootstrappings:");
 		this.unknownWordBootstrappingLearner.run(myDataHolder);
 
 		myLogger.info("Adjectives Verification:");
-		this.adjectivesVerification(myDataHolder);
+		this.adjectivesVerification(myDataHolder); // !!!
 
-		this.separateModifierTag(myDataHolder);
+		this.separateModifierTag(myDataHolder); // !!!
 
-		this.resolveNMB(myDataHolder);
+		this.resolveNMB(myDataHolder); // !!!
 
-		this.setAndOr(myDataHolder);
+		this.setAndOr(myDataHolder); // !!!
 
-		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
-			myLogger.info("Bootstrapping on adjective subjects");
-			 adjectiveSubjectBootstrapping(myDataHolder);
-		} else {
-			int v = 0;
-			do {
-				v = 0;
-				this.handleAndOr(myDataHolder);
-			} while (v > 0);
-		}
+		this.adjectiveSubjectBootstrappingLearner(myDataHolder, this.myConfiguration.getLearningMode());
 
-		this.resetAndOrTags(myDataHolder);
+
+		this.resetAndOrTags(myDataHolder); // !!!
 
 		this.getLearnerUtility().tagAllSentences(myDataHolder, "singletag",
 				"sentence");
 
-		this.markupByPOS.run(myDataHolder);
+		this.posBasedAnnotator.run(myDataHolder);
 
 //		this.phraseClause(myDataHolder);
 		this.phraseClauseAnnotator.run(myDataHolder);
@@ -270,12 +262,12 @@ public class Learner {
 //		this.pronounCharacterSubject(myDataHolder);
 		this.pronounCharactersAnnotator.run(myDataHolder);
 
-		this.finalizeIgnored(myDataHolder);
+		this.finalizeIgnored(myDataHolder); // !!!
 
-		this.remainNullTag(myDataHolder);
+		this.remainNullTag(myDataHolder); // !!!
 
 		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
-			 this.commonSubstructure(myDataHolder);
+			 this.commonSubstructure(myDataHolder); // !!!
 		}
 		
 		myLogger.info("Comma used for 'and'");
@@ -298,6 +290,21 @@ public class Learner {
 		myLogger.info("Learning done!");
 
 		return myDataHolder;
+	}
+
+	private void adjectiveSubjectBootstrappingLearner(DataHolder dataholderHandler,
+			String learningMode) {
+		if (StringUtils.equals(learningMode, "adj")) {
+//			myLogger.info("Bootstrapping on adjective subjects");
+			 adjectiveSubjectBootstrapping(myDataHolder); // !!!
+		} else {
+			int v = 0;
+			do {
+				v = 0;
+				this.handleAndOr(myDataHolder); // !!!
+			} while (v > 0);
+		}
+		
 	}
 
 	public void addGlossary(IGlossary glossary) {
@@ -4647,7 +4654,7 @@ public class Learner {
 			}
 		}
 
-		this.markupByPOS.run(dataholderHandler);
+		this.posBasedAnnotator.run(dataholderHandler);
 	}
 
 	// tag remaining sentences whose tag is null

@@ -19,11 +19,11 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 
-public class MarkupByPOS implements IModule {
+public class POSBasedAnnotator implements IModule {
 	private LearnerUtility myLearnerUtility;
 	private Logger myLogger;
 
-	public MarkupByPOS(LearnerUtility learnerUtility) {
+	public POSBasedAnnotator(LearnerUtility learnerUtility) {
 		this.myLearnerUtility = learnerUtility;
 		PropertyConfigurator.configure("conf/log4j.properties");
 		myLogger = Logger.getLogger("learn.unknownWordBootstrapping");
