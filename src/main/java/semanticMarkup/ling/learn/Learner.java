@@ -209,8 +209,8 @@ public class Learner {
 		this.finiteSetsLoader.run(this.myDataHolder);
 
 		// ???
-		this.posBySuffix();
-//		this.seedNounsLearner.run(myDataHolder);
+//		this.posBySuffix();
+		this.seedNounsLearner.run(myDataHolder);
 	
 		// This method is not in any module
 		this.resetCounts(myDataHolder);
