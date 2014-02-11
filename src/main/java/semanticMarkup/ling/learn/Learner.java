@@ -36,6 +36,7 @@ import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
+import semanticMarkup.ling.learn.knowledge.AdjectiveSubjectBootstrappingLearner;
 import semanticMarkup.ling.learn.knowledge.AnnotationNormalizer;
 import semanticMarkup.ling.learn.knowledge.CommaAsAndAnnotator;
 import semanticMarkup.ling.learn.knowledge.Constant;
@@ -89,6 +90,7 @@ public class Learner {
 	IgnorePatternAnnotator ignorePatternAnnotator;
 	
 	UnknownWordBootstrappingLearner unknownWordBootstrappingLearner;
+	AdjectiveSubjectBootstrappingLearner adjectiveSubjectBootstrappingLearner;
 
 	POSBasedAnnotator posBasedAnnotator;
 	
@@ -152,6 +154,9 @@ public class Learner {
 		
 		this.unknownWordBootstrappingLearner = new UnknownWordBootstrappingLearner(
 				this.myLearnerUtility);
+		
+		this.adjectiveSubjectBootstrappingLearner = new AdjectiveSubjectBootstrappingLearner(this.myLearnerUtility, this.myConfiguration.getLearningMode(), this.myConfiguration.getMaxTagLength());
+		
 		this.posBasedAnnotator = new POSBasedAnnotator(this.myLearnerUtility);
 		
 		this.phraseClauseAnnotator = new PhraseClauseAnnotator(this.myLearnerUtility);
@@ -227,7 +232,8 @@ public class Learner {
 
 		this.setAndOr(myDataHolder); // !!!
 
-		this.adjectiveSubjectBootstrappingLearner(myDataHolder, this.myConfiguration.getLearningMode());
+//		this.adjectiveSubjectBootstrappingLearner(myDataHolder, this.myConfiguration.getLearningMode());
+		this.adjectiveSubjectBootstrappingLearner.run(myDataHolder);
 
 
 		this.resetAndOrTags(myDataHolder); // !!!
