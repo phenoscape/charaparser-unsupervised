@@ -40,6 +40,7 @@ import semanticMarkup.ling.learn.knowledge.AdjectiveSubjectBootstrappingLearner;
 import semanticMarkup.ling.learn.knowledge.AnnotationNormalizer;
 import semanticMarkup.ling.learn.knowledge.CommaAsAndAnnotator;
 import semanticMarkup.ling.learn.knowledge.Constant;
+import semanticMarkup.ling.learn.knowledge.CoreBootstrappingLearner;
 import semanticMarkup.ling.learn.knowledge.DittoAnnotator;
 import semanticMarkup.ling.learn.knowledge.FiniteSetsLoader;
 import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
@@ -89,7 +90,10 @@ public class Learner {
 	
 	IgnorePatternAnnotator ignorePatternAnnotator;
 	
+	CoreBootstrappingLearner coreBootstrappingLearner;
+	
 	UnknownWordBootstrappingLearner unknownWordBootstrappingLearner;
+	
 	AdjectiveSubjectBootstrappingLearner adjectiveSubjectBootstrappingLearner;
 
 	POSBasedAnnotator posBasedAnnotator;
@@ -152,6 +156,8 @@ public class Learner {
 		
 		this.ignorePatternAnnotator = new IgnorePatternAnnotator();
 		
+		this.coreBootstrappingLearner = new CoreBootstrappingLearner(this.myLearnerUtility, this.myConfiguration);
+		
 		this.unknownWordBootstrappingLearner = new UnknownWordBootstrappingLearner(
 				this.myLearnerUtility);
 		
@@ -183,42 +189,34 @@ public class Learner {
 		myLogger.trace(String.format("Learning Mode: %s",
 				this.myConfiguration.getLearningMode()));
 
-		// this.populateSentence(treatments);
-		// this.populateUnknownWordsTable(this.myDataHolder.allWords);
-
 		this.knowledgeBase.importKnowledgeBase(this.myDataHolder, "kb", this.myLearnerUtility.getConstant());
 		
 		this.initializer.loadTreatments(treatments);
 		this.initializer.run(myDataHolder);
 
-//		this.addHeuristicsNouns();
 		this.heuristicNounsLearner.run(this.myDataHolder);
-//		this.addPredefinedWords();
+
 		this.finiteSetsLoader.run(this.myDataHolder);
 
-		// ???
-//		this.posBySuffix();
 		this.seedNounsLearner.run(myDataHolder);
 	
-		// This method is not in any module
 		this.resetCounts(myDataHolder); // !!!
 		
 		this.patternBasedAnnotator.run(myDataHolder);
-//		this.markupIgnore(); // !!!
+
 		this.ignorePatternAnnotator.run(myDataHolder);
 
-		// learning rules with high certainty
-		// At the every beginning, only those sentence whose first word is a p,
-		// could have a tag of "start", see populateSentece - getFirstNWords
-		// section -Dongye
-		myLogger.info("Learning rules with high certainty:");
-		this.discover("start"); // !!!
+		
+		this.coreBootstrappingLearner.setStatus("start");
+		this.coreBootstrappingLearner.run(myDataHolder);
+		
+		this.coreBootstrappingLearner.setStatus("normal");
+		this.coreBootstrappingLearner.run(myDataHolder);
 
-		// bootstrapping rules
-		myLogger.info("Bootstrapping rules:");
-		this.discover("normal"); // !!!
-		myLogger.info("Additional bootstrappings:");
 		this.additionalBootstrapping(); // !!!
+
+		
+		
 
 		myLogger.info("Unknownword bootstrappings:");
 		this.unknownWordBootstrappingLearner.run(myDataHolder);
@@ -232,9 +230,8 @@ public class Learner {
 
 		this.setAndOr(myDataHolder); // !!!
 
-//		this.adjectiveSubjectBootstrappingLearner(myDataHolder, this.myConfiguration.getLearningMode());
-		this.adjectiveSubjectBootstrappingLearner.run(myDataHolder);
 
+		this.adjectiveSubjectBootstrappingLearner.run(myDataHolder);
 
 		this.resetAndOrTags(myDataHolder); // !!!
 
@@ -243,13 +240,10 @@ public class Learner {
 
 		this.posBasedAnnotator.run(myDataHolder);
 
-//		this.phraseClause(myDataHolder);
 		this.phraseClauseAnnotator.run(myDataHolder);
 
-//		this.ditto(myDataHolder);
 		this.dittoAnnotator.run(myDataHolder);
 
-//		this.pronounCharacterSubject(myDataHolder);
 		this.pronounCharactersAnnotator.run(myDataHolder);
 
 		this.finalizeIgnored(myDataHolder); // !!!
@@ -260,17 +254,8 @@ public class Learner {
 			 this.commonSubstructure(myDataHolder); // !!!
 		}
 		
-		myLogger.info("Comma used for 'and'");
-//		this.commaAnd(myDataHolder);
 		this.commaAsAndAnnotator.run(myDataHolder);
 		
-//		if (StringUtils.equals(this.getConfiguration().getLearningMode(), "plain")) {
-//			myLogger.info("Normalize modifiers");
-//			this.normalizeModifiers(myDataHolder);
-//		}
-//		
-//		myLogger.info("Final step: normalize tag and modifiers");
-//		this.normalizeTags(myDataHolder);
 		this.annotationNormalizer.run(myDataHolder);
 		
 		this.prepareTables4Parser(myDataHolder);
