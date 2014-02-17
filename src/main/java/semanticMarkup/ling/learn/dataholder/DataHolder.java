@@ -81,6 +81,9 @@ public class DataHolder {
 	// Table wordrole
 	private Map<StringPair, String> wordRoleTable;
 	public static final byte WORDROLE = 10;
+	
+	// Other data
+	public Set<String> checkedWordSet;
 
 	private Configuration myConfiguration;
 	private Constant myConstant;
@@ -107,7 +110,9 @@ public class DataHolder {
 		this.termCategoryTable = new HashSet<StringPair>();
 		this.unknownWordTable = new HashMap<String, String>();
 		this.wordPOSTable = new HashMap<WordPOSKey, WordPOSValue>();
-		this.wordRoleTable = new HashMap<StringPair, String>();		
+		this.wordRoleTable = new HashMap<StringPair, String>();	
+		
+		this.checkedWordSet = new HashSet<String>();
 	}
 
 	@Override
