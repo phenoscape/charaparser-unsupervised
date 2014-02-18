@@ -36,6 +36,7 @@ import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.dataholder.WordPOSKey;
 import semanticMarkup.ling.learn.dataholder.WordPOSValue;
+import semanticMarkup.ling.learn.knowledge.AdditionalBootstrappingLearner;
 import semanticMarkup.ling.learn.knowledge.AdjectiveSubjectBootstrappingLearner;
 import semanticMarkup.ling.learn.knowledge.AnnotationNormalizer;
 import semanticMarkup.ling.learn.knowledge.CommaAsAndAnnotator;
@@ -91,6 +92,8 @@ public class Learner {
 	IgnorePatternAnnotator ignorePatternAnnotator;
 	
 	CoreBootstrappingLearner coreBootstrappingLearner;
+	
+	AdditionalBootstrappingLearner additionalBootstrappingLearner;
 	
 	UnknownWordBootstrappingLearner unknownWordBootstrappingLearner;
 	
@@ -158,6 +161,8 @@ public class Learner {
 		
 		this.coreBootstrappingLearner = new CoreBootstrappingLearner(this.myLearnerUtility, this.myConfiguration);
 		
+		this.additionalBootstrappingLearner = new AdditionalBootstrappingLearner(this.myLearnerUtility, this.myConfiguration);
+		
 		this.unknownWordBootstrappingLearner = new UnknownWordBootstrappingLearner(
 				this.myLearnerUtility);
 		
@@ -212,11 +217,8 @@ public class Learner {
 		
 		this.coreBootstrappingLearner.setStatus("normal");
 		this.coreBootstrappingLearner.run(myDataHolder);
-
-		this.additionalBootstrapping(); // !!!
-
 		
-		
+		this.additionalBootstrappingLearner.run(myDataHolder);
 
 		myLogger.info("Unknownword bootstrappings:");
 		this.unknownWordBootstrappingLearner.run(myDataHolder);
@@ -229,7 +231,6 @@ public class Learner {
 		this.resolveNMB(myDataHolder); // !!!
 
 		this.setAndOr(myDataHolder); // !!!
-
 
 		this.adjectiveSubjectBootstrappingLearner.run(myDataHolder);
 
