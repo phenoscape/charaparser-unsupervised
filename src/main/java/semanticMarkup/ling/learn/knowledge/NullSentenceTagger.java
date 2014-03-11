@@ -24,7 +24,8 @@ public class NullSentenceTagger implements IModule {
 	private LearnerUtility myLearnerUtility;
 	private String defaultGeneralTag;
 
-	public NullSentenceTagger(String dGTag) {
+	public NullSentenceTagger(LearnerUtility learnerUtility, String dGTag) {
+		this.myLearnerUtility = learnerUtility;
 		this.defaultGeneralTag = dGTag;
 	}
 

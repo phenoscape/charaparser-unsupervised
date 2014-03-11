@@ -189,7 +189,7 @@ public class Learner {
 		
 		this.commaAsAndAnnotator = new CommaAsAndAnnotator(this.myLearnerUtility);
 		
-		this.nullSentenceTagger = new NullSentenceTagger(this.myConfiguration.getDefaultGeneralTag());
+		this.nullSentenceTagger = new NullSentenceTagger(this.myLearnerUtility, this.myConfiguration.getDefaultGeneralTag());
 		
 		this.annotationNormalizer 
 			= new AnnotationNormalizer(this.getConfiguration().getLearningMode(), 
