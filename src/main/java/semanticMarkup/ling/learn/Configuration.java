@@ -1,15 +1,15 @@
 package semanticMarkup.ling.learn;
 
 public class Configuration {
-	
-	private String learningMode = null;
 	private String wordNetDictDir = null;
 	private String openNLPModelDir = null;
 	private String openNLPSentenceDetectorDir = null;
 	private String openNLPTokenizerDir = null;
 	
+	private String learningMode = null;
 	private int maxTagLength;
 	private int numLeadWords; 
+	private String defaultGeneralTag;
 	
 	private static final String defaultWordNetDictDir = "res/WordNet/WordNet-3.0/dict";
 	private static final String defaultOpenNLPModelDir = "res";
@@ -22,6 +22,11 @@ public class Configuration {
 		this.learningMode = System.getProperty("charaparser.learningmode");
 		if (this.learningMode == null){
 			this.learningMode = Configuration.defaultLearningMode;
+		}
+		
+		this.defaultGeneralTag = System.getProperty("charaparser.defaultgeneraltag");
+		if (this.defaultGeneralTag == null) {
+			this.defaultGeneralTag = "general";
 		}
 		
 		this.wordNetDictDir = System.getProperty("charaparser.wordnet.dict.dir");
@@ -119,6 +124,10 @@ public class Configuration {
 	
 	public void setMaxTagLength(int maxTL){
 		this.maxTagLength = maxTL;
+	}
+
+	public String getDefaultGeneralTag() {
+		return this.defaultGeneralTag;
 	}
 
 }
