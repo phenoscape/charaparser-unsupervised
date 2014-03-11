@@ -47,6 +47,7 @@ import semanticMarkup.ling.learn.knowledge.DittoAnnotator;
 import semanticMarkup.ling.learn.knowledge.FiniteSetsLoader;
 import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
 import semanticMarkup.ling.learn.knowledge.IgnorePatternAnnotator;
+import semanticMarkup.ling.learn.knowledge.IgnoredFinalizer;
 import semanticMarkup.ling.learn.knowledge.Initializer;
 import semanticMarkup.ling.learn.knowledge.POSBasedAnnotator;
 import semanticMarkup.ling.learn.knowledge.PatternBasedAnnotator;
@@ -109,6 +110,8 @@ public class Learner {
 	DittoAnnotator dittoAnnotator;
 	
 	PronounCharactersAnnotator pronounCharactersAnnotator;
+	
+	IgnoredFinalizer ignoredFinalizer; 
 	
 	CommaAsAndAnnotator commaAsAndAnnotator;
 	
@@ -181,6 +184,8 @@ public class Learner {
 		
 		this.pronounCharactersAnnotator = new PronounCharactersAnnotator(this.myLearnerUtility);
 		
+		this.ignoredFinalizer = new IgnoredFinalizer();
+		
 		this.commaAsAndAnnotator = new CommaAsAndAnnotator(this.myLearnerUtility);
 		
 		this.annotationNormalizer 
@@ -210,7 +215,8 @@ public class Learner {
 
 		this.seedNounsLearner.run(myDataHolder);
 	
-		this.resetCounts(myDataHolder); // !!!
+		// Set the certaintyU and certaintyL value of every entry in WordPOS collection to be 0
+		this.resetCounts(myDataHolder);
 		
 		this.patternBasedAnnotator.run(myDataHolder);
 
@@ -239,7 +245,8 @@ public class Learner {
 
 		this.adjectiveSubjectBootstrappingLearner.run(myDataHolder);
 
-		this.resetAndOrTags(myDataHolder); // !!!
+		// set tags of sentences with "andor" tag to null
+		this.resetAndOrTags(myDataHolder);
 
 		this.getLearnerUtility().tagAllSentences(myDataHolder, "singletag",
 				"sentence");
@@ -251,8 +258,10 @@ public class Learner {
 		this.dittoAnnotator.run(myDataHolder);
 
 		this.pronounCharactersAnnotator.run(myDataHolder);
-
-		this.finalizeIgnored(myDataHolder); // !!!
+		
+		this.ignoredFinalizer.run(myDataHolder);
+		
+		this.posBasedAnnotator.run(myDataHolder);
 
 		this.remainNullTag(myDataHolder); // !!!
 
@@ -1257,9 +1266,11 @@ public class Learner {
 	}
 
 	/**
+	 * Set the certaintyU and certaintyL value of every entry in WordPOS
+	 * collection to be 0
 	 * 
 	 * @param dh
-	 *            DataHolder handle to update the dataholder and return the
+	 *            DataHolder handler to update the dataholder and return the
 	 *            updated dataholder
 	 * @return Number of records that have been changed
 	 */
@@ -3688,30 +3699,6 @@ public class Learner {
 			return null;
 		}
 
-	}
-
-	public void finalizeIgnored(DataHolder dataholderHandler) {
-		List<SentenceStructure> sentences = dataholderHandler
-				.getSentencesByTagPattern("^ignore$");
-
-		for (SentenceStructure sentenceItem : sentences) {
-			String sentence = sentenceItem.getSentence();
-			if (sentence != null) {
-				Matcher m = StringUtility.createMatcher(sentence,
-						Constant.IGNOREPTN);
-				if (m.find()) {
-					String g1 = m.group(1);
-					if (StringUtility.isMatchedNullSafe(g1, "<N>")) {
-						int sentenceID = sentenceItem.getID();
-						SentenceStructure sentenceItemX = dataholderHandler
-								.getSentence(sentenceID);
-						sentenceItemX.setTag(null);
-					}
-				}
-			}
-		}
-
-		this.posBasedAnnotator.run(dataholderHandler);
 	}
 
 	// tag remaining sentences whose tag is null
