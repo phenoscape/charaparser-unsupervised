@@ -41,6 +41,7 @@ import semanticMarkup.ling.learn.knowledge.AdjectiveSubjectBootstrappingLearner;
 import semanticMarkup.ling.learn.knowledge.AdjectiveVerifier;
 import semanticMarkup.ling.learn.knowledge.AnnotationNormalizer;
 import semanticMarkup.ling.learn.knowledge.CommaAsAndAnnotator;
+import semanticMarkup.ling.learn.knowledge.CommonSubstructureAnnotator;
 import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.learn.knowledge.CoreBootstrappingLearner;
 import semanticMarkup.ling.learn.knowledge.DittoAnnotator;
@@ -112,6 +113,8 @@ public class Learner {
 	PronounCharactersAnnotator pronounCharactersAnnotator;
 	
 	IgnoredFinalizer ignoredFinalizer; 
+	
+	CommonSubstructureAnnotator commonSubstructureAnnotator;
 	
 	CommaAsAndAnnotator commaAsAndAnnotator;
 	
@@ -186,6 +189,8 @@ public class Learner {
 		this.pronounCharactersAnnotator = new PronounCharactersAnnotator(this.myLearnerUtility);
 		
 		this.ignoredFinalizer = new IgnoredFinalizer();
+		
+		this.commonSubstructureAnnotator = new CommonSubstructureAnnotator();
 		
 		this.commaAsAndAnnotator = new CommaAsAndAnnotator(this.myLearnerUtility);
 		
@@ -270,7 +275,9 @@ public class Learner {
 		this.nullSentenceTagger.run(myDataHolder);
 
 		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
-			 this.commonSubstructure(myDataHolder); // !!!
+			// modifiy the sentences which are tagged with commons substructure
+			this.commonSubstructureAnnotator.run(myDataHolder);
+
 		}
 		
 		this.commaAsAndAnnotator.run(myDataHolder);
