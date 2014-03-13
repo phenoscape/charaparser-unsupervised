@@ -51,6 +51,7 @@ import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
 import semanticMarkup.ling.learn.knowledge.IgnorePatternAnnotator;
 import semanticMarkup.ling.learn.knowledge.IgnoredFinalizer;
 import semanticMarkup.ling.learn.knowledge.Initializer;
+import semanticMarkup.ling.learn.knowledge.ModifierTagSeparator;
 import semanticMarkup.ling.learn.knowledge.NMBResolver;
 import semanticMarkup.ling.learn.knowledge.NullSentenceTagger;
 import semanticMarkup.ling.learn.knowledge.POSBasedAnnotator;
@@ -103,6 +104,8 @@ public class Learner {
 	UnknownWordBootstrappingLearner unknownWordBootstrappingLearner;
 	
 	AdjectiveVerifier adjectiveVerifier;
+	
+	ModifierTagSeparator modifierTagSeparator;
 	
 	NMBResolver nMBResolver;
 	
@@ -181,6 +184,8 @@ public class Learner {
 		
 		this.adjectiveVerifier = new AdjectiveVerifier(this.myLearnerUtility);
 		
+		this.modifierTagSeparator = new ModifierTagSeparator(this.myLearnerUtility);
+		
 		this.nMBResolver = new NMBResolver();
 		
 		this.andOrTagSetter = new AndOrTagSetter(this.myLearnerUtility);
@@ -206,9 +211,6 @@ public class Learner {
 		this.annotationNormalizer 
 			= new AnnotationNormalizer(this.getConfiguration().getLearningMode(), 
 					this.checkedModifiers, this.getLearnerUtility());
-		
-		
-
 	}
 
 	public DataHolder learn(List<Treatment> treatments, IGlossary glossary,
@@ -252,7 +254,8 @@ public class Learner {
 		myLogger.info("Adjectives Verification:");
 		this.adjectiveVerifier.run(myDataHolder);
 
-		this.separateModifierTag(myDataHolder); // !!!
+		// For those sentences whose tag has a space between words, separate modifier and update the tag
+		this.modifierTagSeparator.run(myDataHolder);
 		
 		// deal with words that plays N, and B roles
 		this.nMBResolver.run(myDataHolder);
@@ -2230,104 +2233,7 @@ public class Learner {
 
 
 
-	public void separateModifierTag(DataHolder dataholderHandler) {
-		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.separateModifierTag");
 
-		List<SentenceStructure> sentences = dataholderHandler
-				.getSentencesByTagPattern("^.* .*$");
-
-		for (SentenceStructure sentenceItem : sentences) {
-			int sentenceID = sentenceItem.getID();
-			String sentence = sentenceItem.getSentence();
-			String tag = sentenceItem.getTag();
-			myLogger.trace("ID: " + sentenceID);
-			myLogger.trace("Sentence: " + sentence);
-			myLogger.trace("Tag: " + tag);
-
-			// case 1
-			String tagBackup = "" + tag;
-			// if (StringUtility.isMatchedNullSafe("\\w+", tagBackup)) {
-			if (StringUtility.isMatchedNullSafe(tagBackup, "\\w+")) {
-				myLogger.trace("Case 1");
-				if (!StringUtility.isMatchedNullSafe(tagBackup,
-						String.format("\\b(%s)\\b", this.myLearnerUtility.getConstant().STOP))) {
-
-					List<String> words = new LinkedList<String>();
-					words.addAll(Arrays.asList(tagBackup.split("\\s+")));
-					tag = words.get(words.size() - 1);
-
-					String modifier = "";
-					if (words.size() > 1) {
-						modifier = StringUtils.join(
-								StringUtility.stringArraySplice(words, 0,
-										words.size() - 1), " ");
-					}
-
-					if (sentenceID == 22) {
-						System.out.println();
-					}
-					if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
-						// case 1.1
-						myLogger.trace("Case 1.1");
-						dataholderHandler.tagSentenceWithMT(sentenceID,
-								sentence, modifier, tag, "separatemodifiertag");
-					} else {
-						// case 1.2
-						myLogger.trace("Case 1.2");
-						myLogger.trace(sentenceID);
-						dataholderHandler.tagSentenceWithMT(sentenceID,
-								sentence, null, tag, "separatemodifiertag");
-					}
-				}
-
-			}
-			// case 2
-			else {
-				// treat them case by case
-				// case 2: in some species, abaxially with =>NULL
-				myLogger.trace("Case 2");
-				if ((StringUtility.isMatchedNullSafe(tagBackup, "^in"))
-						&& (StringUtility.isMatchedNullSafe(tagBackup,
-								"\\b(with|without)\\b"))) {
-					myLogger.trace("Case 2.1");
-					dataholderHandler.tagSentenceWithMT(sentenceID, sentence,
-							"", null, "separtemodifiertag");
-				} else {
-					myLogger.trace("Case 2.2");
-					String tagWithStopWordsReplaced = "" + tagBackup;
-					if (tagWithStopWordsReplaced != null) {
-						Pattern p = Pattern.compile("@ ([^@]+)$");
-						Matcher m = p.matcher(tagWithStopWordsReplaced);
-						if (m.find()) {
-							String tg = m.group(1);
-							ArrayList<String> tagWords = new ArrayList<String>();
-							tagWords.addAll(Arrays.asList(tg.split("\\s+")));
-							tag = tagWords.get(tagWords.size() - 1);
-							String modifier = "";
-							if (tagWords.size() > 1) {
-								modifier = StringUtils.join(StringUtility
-										.stringArraySplice(tagWords, 0,
-												tagWords.size()), " ");
-							}
-
-							if (StringUtility.isMatchedNullSafe(tag, "\\w")) {
-								myLogger.trace("Case 2.2.1");
-								dataholderHandler.tagSentenceWithMT(sentenceID,
-										sentence, modifier, tag,
-										"separatemodifiertag");
-							} else {
-								myLogger.trace("Case 2.2.2");
-								dataholderHandler.tagSentenceWithMT(sentenceID,
-										sentence, "", null,
-										"separatemodifiertag");
-							}
-						}
-					}
-				}
-			}
-		}
-	}
 
 
 
