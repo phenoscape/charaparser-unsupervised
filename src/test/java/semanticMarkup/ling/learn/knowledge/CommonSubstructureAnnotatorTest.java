@@ -44,10 +44,9 @@ public class CommonSubstructureAnnotatorTest {
 	
 	@Test
 	public void testGetCommonStructures() {
-		DataHolder myDataHolder =
-		
-		new DataHolder(this.configuration,
-				myLearnerUtility.getConstant(), myLearnerUtility.getWordFormUtility());
+		DataHolder myDataHolder = new DataHolder(this.configuration,
+				myLearnerUtility.getConstant(),
+				myLearnerUtility.getWordFormUtility());
 
 		// "structure2" and "structure3" are common structures, "structure1" is
 		// not

@@ -76,15 +76,14 @@ public class Learner {
 	private LearnerUtility myLearnerUtility;
 
 	// Class variables
-	private int NUM_LEAD_WORDS; // Number of leading words
+	// Leading three words of sentences
 
-	// leading three words of sentences
-	private Set<String> checkedWordSet;
+	
+	Map<String, Boolean> checkedModifiers;
 
-
-
-	// modules
+	// Modules
 	KnowledgeBase knowledgeBase;
+	
 	Initializer initializer;
 	
 	HeuristicNounsLearner heuristicNounsLearner;
@@ -131,7 +130,7 @@ public class Learner {
 	
 	AnnotationNormalizer annotationNormalizer; 
 	
-	Map<String, Boolean> checkedModifiers;
+
 
 	public Learner(Configuration configuration, ITokenizer tokenizer,
 			LearnerUtility learnerUtility) {
@@ -149,10 +148,6 @@ public class Learner {
 				myLearnerUtility.getConstant(), myLearnerUtility.getWordFormUtility());
 
 		// Class variables
-		// Set the number of leading words be 3
-		NUM_LEAD_WORDS = this.myConfiguration.getNumLeadWords(); 
-
-		checkedWordSet = new HashSet<String>();
 
 		this.checkedModifiers = new HashMap<String, Boolean>();
 
@@ -164,7 +159,7 @@ public class Learner {
 		this.knowledgeBase = new KnowledgeBase();
 		
 		this.initializer = new Initializer(this.myLearnerUtility,
-				this.NUM_LEAD_WORDS);
+				this.myConfiguration.getNumLeadWords());
 		this.heuristicNounsLearner = new HeuristicNounsLearner(this.myLearnerUtility);
 		
 		this.finiteSetsLoader = new FiniteSetsLoader(this.myLearnerUtility);
@@ -287,7 +282,7 @@ public class Learner {
 		this.nullSentenceTagger.run(myDataHolder);
 
 		if (StringUtils.equals(this.myConfiguration.getLearningMode(), "adj")) {
-			// modifiy the sentences which are tagged with commons substructure
+			// Modify the sentences which are tagged with commons substructure
 			this.commonSubstructureAnnotator.run(myDataHolder);
 
 		}
@@ -1556,83 +1551,7 @@ public class Learner {
 		return false;
 	}
 
-	/**
-	 * 
-	 * @param status
-	 *            "start" or "normal"
-	 * @return
-	 */
-	public int discover(String status) {
-		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.discover");
 
-		myLogger.trace("Enter Discover - Status: " + status);
-
-		int newDisc = 0;
-
-		// this.myDataHolder.printHolder(DataHolder.SENTENCE);
-
-		for (int i = 0; i < this.myDataHolder.getSentenceHolder().size(); i++) {
-			SentenceStructure sentEntry = this.myDataHolder.getSentenceHolder()
-					.get(i);
-			// sentid
-			String thisSentence = sentEntry.getSentence();
-			String thisLead = sentEntry.getLead();
-			String thisTag = sentEntry.getTag();
-			String thisStatus = sentEntry.getStatus();
-			// if (!(thisTag == null || !thisTag.equals("ignore")
-
-			// myLogger.debug("Tag: "+thisTag);
-
-			if ((!StringUtils.equals(thisTag, "ignore") || (thisTag == null))
-					&& thisStatus.equals(status)) {
-
-				myLogger.debug("Sentence #: " + i);
-				myLogger.debug("Lead: " + thisLead);
-
-				myLogger.debug("Tag: " + thisTag);
-
-				myLogger.debug("Sentence: " + thisSentence);
-				// tag is not null
-				if (isMarked(this.myDataHolder.getSentenceHolder().get(i))) {
-					myLogger.debug("Not Pass");
-					continue;
-				}
-				// tag is null
-				else {
-					myLogger.debug("Pass");
-				}
-
-				String[] startWords = thisLead.split("\\s+");
-				myLogger.debug("startWords: " + startWords.toString());
-
-				String pattern = buildPattern(startWords);
-
-				if (pattern != null) {
-					myLogger.debug("Build pattern [" + pattern
-							+ "] from starting words [" + thisLead + "]");
-					// IDs of untagged sentences that match the pattern
-					Set<Integer> matched = matchPattern(pattern, status, false);
-					int round = 0;
-					int numNew = 0;
-
-					do {
-						numNew = ruleBasedLearn(matched);
-						newDisc = newDisc + numNew;
-						myLogger.trace("Round: " + round);
-						round++;
-					} while (numNew > 0);
-				} else {
-					myLogger.debug("Build no pattern from starting words ["
-							+ thisLead + "]");
-				}
-			}
-		}
-
-		myLogger.trace("Return " + newDisc);
-		myLogger.trace("Quite discover");
-		return newDisc;
-	}
 
 	/**
 	 * A helper of method discover(). Check if the tag of the i-th sentence is
@@ -1653,70 +1572,7 @@ public class Learner {
 		}
 	}
 
-	/**
-	 * build a pattern based on existing checked word set, and the start words
-	 * 
-	 * @param startWords
-	 * @return a pattern. If no pattern is generated, return null
-	 */
-	public String buildPattern(String[] startWords) {
-		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.discover.buildPattern");
 
-		myLogger.trace("Enter buildPattern");
-		myLogger.trace("Start Words: " + startWords);
-
-		Set<String> newWords = new HashSet<String>();
-		String temp = "";
-		String prefix = "\\w+\\s";
-		String pattern = "";
-
-		Set<String> checkedWords = this.checkedWordSet;
-		myLogger.trace("checkedWords: " + checkedWords);
-
-		for (int i = 0; i < startWords.length; i++) {
-			String word = startWords[i];
-			// This is not very sure, need to make sure - Dongye
-			if ((!word.matches("[\\p{Punct}0-9]"))
-					&& (!checkedWords.contains(word))) {
-				temp = temp + word + "|";
-				newWords.add(word);
-			}
-		}
-		myLogger.trace("temp: " + temp);
-
-		// no new words
-		if (temp.length() == 0) {
-			myLogger.trace("No new words");
-			myLogger.trace("Return null");
-			myLogger.trace("Quite buildPattern");
-			myLogger.trace("\n");
-			return null;
-		} else {
-
-			// remove the last char, which is a '|'
-			temp = temp.substring(0, temp.length() - 1);
-		}
-
-		temp = "\\b(?:" + temp + ")\\b";
-		pattern = "^" + temp + "|";
-
-		for (int j = 0; j < this.NUM_LEAD_WORDS - 1; j++) {
-			temp = prefix + temp;
-			pattern = pattern + "^" + temp + "|";
-		}
-		myLogger.trace("Pattern: " + pattern);
-
-		pattern = pattern.substring(0, pattern.length() - 1);
-		pattern = "(?:" + pattern + ").*$";
-		checkedWords.addAll(newWords);
-		this.checkedWordSet = checkedWords;
-
-		myLogger.trace("Return Pattern: " + pattern);
-		myLogger.trace("Quite buildPattern");
-		myLogger.trace("\n");
-		return pattern;
-	}
 
 	/**
 	 * Find the IDs of the sentences that matches the pattern
@@ -2219,13 +2075,7 @@ public class Learner {
 	 * 
 	 * @return
 	 */
-	public Set<String> getCheckedWordSet() {
-		return this.checkedWordSet;
-	}
 
-	public void setCheckedWordSet(Set<String> wordSet) {
-		this.checkedWordSet = wordSet;
-	}
 
 
 

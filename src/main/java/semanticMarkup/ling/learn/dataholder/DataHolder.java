@@ -83,6 +83,7 @@ public class DataHolder {
 	public static final byte WORDROLE = 10;
 	
 	// Other data
+	// Leading three words of sentences
 	public Set<String> checkedWordSet;
 
 	private Configuration myConfiguration;
@@ -2469,4 +2470,12 @@ public class DataHolder {
 		}
 	}
 
+	
+	public Set<String> getCheckedWordSet() {
+		return this.checkedWordSet;
+	}
+
+	public void setCheckedWordSet(Set<String> wordSet) {
+		this.checkedWordSet = wordSet;
+	}
 }
