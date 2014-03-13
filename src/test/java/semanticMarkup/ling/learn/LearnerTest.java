@@ -357,46 +357,7 @@ public class LearnerTest {
 		assertEquals("isMatched", true, descriptorMap.get("term1"));
 	}
 	
-	@Test
-	public void testIsIsAndOrSentence(){
-		String sentencePtn = null;
-		String ptn1 = null;
-		String ptn2 = null;
-		List<String> words = new ArrayList<String>();
-		
-//		// case 1
-//		words.clear();
-//		words.addAll(Arrays.asList("posterior and <M>dorsal</M> to foramen <B>for</B> nerve <N>ii</N>".split(" ")));
-//		sentencePtn = "q&mqqbqn";
-//		ptn1="^(?:[mbq,]{0,10}[onp]+(?:,|(?=&)))+&(?:[mbq,]{0,10}[onp]+)"; // n,n,n&n
-//		ptn2="^(?:[mbq,]{0,10}(?:,|(?=&)))+&(?:[mbq,]{0,10})[onp]+"; // m,m,&mn
-//		
-//		assertEquals("isIsAndOrSentence case 1", false,
-//				tester.isIsAndOrSentenceHelper(words, sentencePtn, ptn1, ptn2));
-		
-		// case 2
-		words.clear();
-		words.addAll(Arrays.asList("elongate and <O>passes</O> <B>anterolaterally</B> through orbital <B>?</B> oor".split(" ")));
-		sentencePtn = "q&obqqbq";
-		ptn1="^(?:[mbq,]{0,10}[onp]+(?:,|(?=&)))+&(?:[mbq,]{0,10}[onp]+)"; // n,n,n&n
-		ptn2="^(?:[mbq,]{0,10}(?:,|(?=&)))+&(?:[mbq,]{0,10})[onp]+"; // m,m,&mn
-		
-		assertEquals("isIsAndOrSentence case 2", true,
-				tester.isIsAndOrSentenceHelper(words, sentencePtn, ptn1, ptn2));
-		
-		// case 3
-		words.clear();
-		words.addAll(Arrays.asList("<O>divides</O> <B>within</B> otic <N>capsule</N> <B>at</B> <B>the</B> <N>level</N> <B>of</B> <B>the</B> postorbital process".split(" ")));
-		sentencePtn = "q,obqnbbnbbqq";
-		ptn1="^(?:[mbq,]{0,10}[onp]+(?:,|(?=&)))+&(?:[mbq,]{0,10}[onp]+)"; // n,n,n&n
-		ptn2="^(?:[mbq,]{0,10}(?:,|(?=&)))+&(?:[mbq,]{0,10})[onp]+"; // m,m,&mn
-		
-		assertEquals("isIsAndOrSentence case 3", false,
-				tester.isIsAndOrSentenceHelper(words, sentencePtn, ptn1, ptn2));
-		
-		
-		
-	}
+
 
 //	@Test
 //	public void testAddStopWords() {
@@ -1004,47 +965,7 @@ public class LearnerTest {
 		assertEquals("getMCount", 5, myTester.getMCount(myDataHolder, "marginal"));
 	}
 	
-	@Test
-	public void testGetCommonStructures() {
-		Learner myTester = learnerFactory();
-		DataHolder myDataHolder = myTester.getDataHolder();
 
-		// "structure2" and "structure3" are common structures, "structure1" is
-		// not
-		myTester.getDataHolder().add2Holder(
-				DataHolder.WORDPOS,
-				Arrays.asList(new String[] { "structure1", "b", "role", "1",
-						"1", "", "" }));
-		myTester.getDataHolder().add2Holder(
-				DataHolder.WORDPOS,
-				Arrays.asList(new String[] { "structure2", "p", "role", "1",
-						"1", "", "" }));
-		myTester.getDataHolder().add2Holder(
-				DataHolder.WORDPOS,
-				Arrays.asList(new String[] { "structure3", "s", "role", "1",
-						"1", "", "" }));
-
-		myDataHolder.add2Holder(
-				DataHolder.SENTENCE,
-				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
-						"status", "tag1", "structure1", "type" }));
-		myDataHolder.add2Holder(
-				DataHolder.SENTENCE,
-				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
-						"status", "tag2", "structure2", "type" }));
-		myDataHolder.add2Holder(
-				DataHolder.SENTENCE,
-				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
-						"status", "tag3", "structure2", "type" }));
-		myDataHolder.add2Holder(
-				DataHolder.SENTENCE,
-				Arrays.asList(new String[] { "src", "sent", "osent", "lead",
-						"status", "tag3", "structure3", "type" }));
-
-		Set<String> target = new HashSet<String>(Arrays.asList("tag3"));
-		assertEquals("getCommonStructures", target,
-				myTester.getCommonStructures(myDataHolder));
-	}
 	
 	@Test
 	public void testNormalizeItem() {

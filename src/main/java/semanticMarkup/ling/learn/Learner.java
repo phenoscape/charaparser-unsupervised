@@ -39,6 +39,7 @@ import semanticMarkup.ling.learn.dataholder.WordPOSValue;
 import semanticMarkup.ling.learn.knowledge.AdditionalBootstrappingLearner;
 import semanticMarkup.ling.learn.knowledge.AdjectiveSubjectBootstrappingLearner;
 import semanticMarkup.ling.learn.knowledge.AdjectiveVerifier;
+import semanticMarkup.ling.learn.knowledge.AndOrTagSetter;
 import semanticMarkup.ling.learn.knowledge.AnnotationNormalizer;
 import semanticMarkup.ling.learn.knowledge.CommaAsAndAnnotator;
 import semanticMarkup.ling.learn.knowledge.CommonSubstructureAnnotator;
@@ -101,6 +102,8 @@ public class Learner {
 	UnknownWordBootstrappingLearner unknownWordBootstrappingLearner;
 	
 	AdjectiveVerifier adjectiveVerifier;
+	
+	AndOrTagSetter andOrTagSetter;
 	
 	AdjectiveSubjectBootstrappingLearner adjectiveSubjectBootstrappingLearner;
 
@@ -178,6 +181,8 @@ public class Learner {
 		
 		this.adjectiveVerifier = new AdjectiveVerifier(this.myLearnerUtility);
 		
+		this.andOrTagSetter = new AndOrTagSetter(this.myLearnerUtility);
+		
 		this.adjectiveSubjectBootstrappingLearner = new AdjectiveSubjectBootstrappingLearner(this.myLearnerUtility, this.myConfiguration.getLearningMode(), this.myConfiguration.getMaxTagLength());
 		
 		this.posBasedAnnotator = new POSBasedAnnotator(this.myLearnerUtility);
@@ -249,7 +254,8 @@ public class Learner {
 
 		this.resolveNMB(myDataHolder); // !!!
 
-		this.setAndOr(myDataHolder); // !!!
+		// set and/or tags
+		this.andOrTagSetter.run(myDataHolder);
 
 		this.adjectiveSubjectBootstrappingLearner.run(myDataHolder);
 
@@ -2382,94 +2388,7 @@ public class Learner {
 
 	}
 
-	public void setAndOr(DataHolder dataholderHandler) {
-		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.separateModifierTag");
-		myLogger.debug("Tag and/or sentences andor");
 
-		String ptn1 = "^(?:[mbq,]{0,10}[onp]+(?:,|(?=&)))+&(?:[mbq,]{0,10}[onp]+)"; // n,n,n&n
-		String ptn2 = "^(?:[mbq,]{0,10}(?:,|(?=&)))+&(?:[mbq,]{0,10})[onp]+"; // m,m,&mn
-
-		Iterator<SentenceStructure> sentenceIter = dataholderHandler
-				.getSentenceHolderIterator();
-		while (sentenceIter.hasNext()) {
-			SentenceStructure sentenceItem = sentenceIter.next();
-			int sentenceID = sentenceItem.getID();
-			String sentence = sentenceItem.getSentence();
-			String lead = sentenceItem.getLead();
-			if (isIsAndOrSentence(sentenceID, sentence, lead, ptn1, ptn2)) {
-				sentenceItem.setTag("andor");
-			}
-		}
-	}
-
-	public boolean isIsAndOrSentence(int sentenceID, String sentence,
-			String lead, String ptn1, String ptn2) {
-
-		Set<String> token = new HashSet<String>();
-		token.addAll(Arrays.asList("and or nor".split(" ")));
-		token.add("\\");
-		token.add("and / or");
-
-		int limit = 80;
-
-		List<String> words = new ArrayList<String>();
-		words.addAll(Arrays.asList(sentence.split(" ")));
-
-		String sentencePtn = this.getLearnerUtility().getSentencePtn(
-				myDataHolder, token, limit, words);
-
-		if (sentencePtn == null) {
-			return false;
-		}
-
-		boolean result = isIsAndOrSentenceHelper(words, sentencePtn, ptn1, ptn2);
-
-		return result;
-	}
-
-	public boolean isIsAndOrSentenceHelper(List<String> words,
-			String sentencePtn, String ptn1, String ptn2) {
-		PropertyConfigurator.configure("conf/log4j.properties");
-		Logger myLogger = Logger.getLogger("learn.isIsAndOrSentence");
-
-		sentencePtn = sentencePtn.toLowerCase();
-		// ignore the distinction between type modifiers and modifiers
-		sentencePtn = sentencePtn.replaceAll("t", "m");
-
-		Pattern p1 = Pattern.compile(ptn1);
-		Matcher m1 = p1.matcher(sentencePtn);
-
-		Pattern p2 = Pattern.compile(ptn2);
-		Matcher m2 = p2.matcher(sentencePtn);
-
-		int end = -1;
-		boolean case1 = false;
-		boolean case2 = false;
-
-		if (m1.find()) {
-			end = m1.end();
-			case1 = true;
-		}
-
-		if (m2.find()) {
-			end = m2.end();
-			case2 = true;
-		}
-
-		if (case1 || case2) {
-			String matchedWords = StringUtils.join(words.subList(0, end), " ");
-			String regex = String.format("\\b(%s)\\b", this.myLearnerUtility.getConstant().PREPOSITION);
-			if (StringUtility.isMatchedNullSafe(matchedWords, regex)) {
-				myLogger.trace("Case 1");
-				return false;
-			}
-			myLogger.trace("Case 2");
-			return true;
-		}
-		myLogger.trace("Case 3");
-		return false;
-	}
 	
 	public void adjectiveSubjectBootstrapping(DataHolder dataholderHandler) {
 		int flag = 0;
@@ -3712,172 +3631,6 @@ public class Learner {
 
 	}
 
-	// sentences that are tagged with a commons substructure, such as blades,
-	// margins need to be modified with its parent structure
-	public void commonSubstructure(DataHolder dataholderHandler) {
-		Set<String> commonTags = this
-				.getCommonStructures(dataholderHandler);
-
-		String pattern = StringUtils.join(commonTags, "|");
-		pattern = "\\\\[?(" + pattern + ")\\\\]?";
-
-		for (SentenceStructure sentenceItem : dataholderHandler
-				.getSentenceHolder()) {
-			String tag = sentenceItem.getTag();
-			boolean c1 = StringUtils.equals(tag, "ignore");
-			boolean c2 = (tag == null);
-			boolean c3 = (StringUtility.isMatchedNullSafe(tag, "^" + pattern
-					+ "$"));
-
-			if ((c1 || c2) && c3) {
-				int sentenceID = sentenceItem.getID();
-				String modifier = sentenceItem.getModifier();
-				String sentence = sentenceItem.getSentence();
-
-				if (!isModifierContainsStructure(dataholderHandler, modifier)
-						&& !StringUtility.isMatchedNullSafe(tag, "\\[")) {
-					// when the common substructure is not already modified by a
-					// structure, and
-					// when the tag is not already inferred from parent tag:
-					// mid/[phyllaries]
-
-					String parentStructure = dataholderHandler
-							.getParentSentenceTag(sentenceID);
-
-					String pTag = "" + parentStructure;
-					parentStructure = parentStructure.replaceAll("([\\[\\]])",
-							"");
-					if (!StringUtils.equals(parentStructure, "[parenttag]")
-							&& !StringUtility.isMatchedNullSafe(modifier,
-									parentStructure)
-							&& !StringUtility.isMatchedNullSafe(tag,
-									parentStructure)) {
-						// remove any overlapped words btw parentStructure and
-						// tag
-						pTag = pTag.replaceAll("\\b" + tag + "\\b", "");
-						String modifierCopy = "" + modifier;
-						modifier = StringUtility.trimString(modifier);
-						pTag = StringUtility.trimString(pTag);
-						pTag = pTag.replaceAll("\\s+", " ");
-						if (isTypeModifier(dataholderHandler, modifier)) {
-							// cauline/base => cauline [leaf] / base
-							modifier = modifier + " " + pTag;
-						} else {
-							// main marginal/spine => [leaf blade] main
-							// marginal/spine
-							modifier = pTag + " " + modifier;
-						}
-
-						// tagsentwmt($sentid, $sentence, $modifier, $tag,
-						// "commonsubstructure");
-						dataholderHandler.tagSentenceWithMT(sentenceID,
-								sentence, modifier, tag, "commonsubstructure");
-					}
-				}
-			}
-		}
-	}
-
-	public boolean isTypeModifier(DataHolder dataholderHandler, String modifier) {
-		boolean res = false;
-
-		String[] words = modifier.split("\\s+");
-		String word = words[words.length - 1];
-
-		if (dataholderHandler.getModifierHolder().containsKey(word)) {
-			ModifierTableValue modifierItem = dataholderHandler
-					.getModifierHolder().get(modifier);
-			if (modifierItem.getIsTypeModifier()) {
-				res = true;
-			}
-		}
-
-		return res;
-	}
-
-	public boolean isModifierContainsStructure(DataHolder dataholderHandler,
-			String modifier) {
-		boolean res = false;
-
-		String[] words = modifier.split("\\s+");
-
-		for (String word : words) {
-			Set<String> POSTags = new HashSet<String>();
-			POSTags.add("p");
-			POSTags.add("s");
-			Set<String> PSWords = dataholderHandler
-					.getWordsFromWordPOSByPOSs(POSTags);
-			if (PSWords.contains(word)) {
-				res = true;
-				break;
-			}
-		}
-
-		return res;
-	}
-
-	/**
-	 * find tags with more than one different structure modifiers
-	 * 
-	 * @param dataholderHandler
-	 * @return
-	 */
-	public Set<String> getCommonStructures(DataHolder dataholderHandler) {
-
-		// Get structures.
-		// Structures are just words from WordPOS holder that are P/S but not B
-		Set<String> PSTags = new HashSet<String>(
-				Arrays.asList("s p".split(" ")));
-		Set<String> BTags = new HashSet<String>();
-		BTags.add("b");
-		Set<String> PSWords = dataholderHandler
-				.getWordsFromWordPOSByPOSs(PSTags);
-		Set<String> BWords = dataholderHandler.getWordsFromWordPOSByPOSs(BTags);
-
-		Set<String> allStructures = StringUtility.setSubtraction(PSWords,
-				BWords);
-
-		Set<String> commonTags = new HashSet<String>();
-
-		// Get a map maps tags to their structures
-		Map<String, Set<String>> tagToModifiers = new HashMap<String, Set<String>>();
-		for (SentenceStructure sentenceItem : dataholderHandler
-				.getSentenceHolder()) {
-			String tag = sentenceItem.getTag();
-			String modifier = sentenceItem.getModifier();
-
-			boolean c1 = StringUtils.equals(tag, "ignore");
-			boolean c2 = (tag == null);
-			boolean c3 = StringUtility.isMatchedNullSafe(tag, " ");
-			boolean c4 = StringUtility.isMatchedNullSafe(tag, "\\[");
-			if ((!c1 || c2) && !c3 && !c4) {
-				if (allStructures.contains(modifier)) {
-					if (tagToModifiers.containsKey(tag)) {
-						tagToModifiers.get(tag).add(modifier);
-					} else {
-						HashSet<String> modifiers = new HashSet<String>();
-						modifiers.add(modifier);
-						tagToModifiers.put(tag, modifiers);
-					}
-				}
-			}
-		}
-
-		// Added all tags with more than 1 structures into the common tags
-		// collection
-		Iterator<String> iter = tagToModifiers.keySet().iterator();
-		while (iter.hasNext()) {
-			String key = iter.next();
-			if (tagToModifiers.get(key).size() > 1) {
-				String commonTag = new String(key);
-				commonTag = commonTag.replaceAll("\\|+", "\\|");
-				commonTag = commonTag.replaceAll("\\|+$", "");
-				commonTags.add(key);
-			}
-		}
-
-		return commonTags;
-	}
 
 	/**
 	 * comma used for 'and': seen in TreatiseH, using comma for 'and' as in
