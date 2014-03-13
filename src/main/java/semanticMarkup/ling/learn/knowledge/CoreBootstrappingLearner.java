@@ -16,6 +16,15 @@ import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 
+/**
+ * This module does rule based learning first for easy cases, then does instance
+ * based learning for the remaining unsolved cases.
+ * 
+ * This module can run in two different modes: 1) start; 2) normal.
+ * 
+ * @author Dongye
+ * 
+ */
 public class CoreBootstrappingLearner implements IModule {
 	private LearnerUtility myLearnerUtility;
 	private String status;

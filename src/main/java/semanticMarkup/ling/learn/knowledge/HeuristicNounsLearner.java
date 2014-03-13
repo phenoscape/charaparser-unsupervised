@@ -18,6 +18,12 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 
+/**
+ * Learns nouns based on some heuristics.
+ * 
+ * @author Dongye
+ * 
+ */
 public class HeuristicNounsLearner implements IModule {
 	private LearnerUtility myLearnerUtility;
 
@@ -54,8 +60,11 @@ public class HeuristicNounsLearner implements IModule {
 
 			if ((e.matches("^.*\\w.*$"))
 					&& (!StringUtility.isMatchedWords(e, "NUM|"
-							+ this.myLearnerUtility.getConstant().NUMBER + "|" + this.myLearnerUtility.getConstant().CLUSTERSTRING
-							+ "|" + this.myLearnerUtility.getConstant().CHARACTER + "|"
+							+ this.myLearnerUtility.getConstant().NUMBER + "|"
+							+ this.myLearnerUtility.getConstant().CLUSTERSTRING
+							+ "|"
+							+ this.myLearnerUtility.getConstant().CHARACTER
+							+ "|"
 							+ this.myLearnerUtility.getConstant().PROPERNOUN))) {
 				myLogger.trace("Pass");
 
@@ -111,12 +120,14 @@ public class HeuristicNounsLearner implements IModule {
 	 * 
 	 * @param descriptors
 	 */
-	public void addDescriptors(DataHolder dataholderHandler, Set<String> descriptors) {
+	public void addDescriptors(DataHolder dataholderHandler,
+			Set<String> descriptors) {
 		Iterator<String> iter = descriptors.iterator();
 		while (iter.hasNext()) {
 			String descriptor = iter.next();
 
-			if (!StringUtility.isMatchedWords(descriptor, this.myLearnerUtility.getConstant().FORBIDDEN)) {
+			if (!StringUtility.isMatchedWords(descriptor,
+					this.myLearnerUtility.getConstant().FORBIDDEN)) {
 				dataholderHandler.updateDataHolder(descriptor, "b", "",
 						"wordpos", 1);
 			}
@@ -132,7 +143,8 @@ public class HeuristicNounsLearner implements IModule {
 		Iterator<String> iter = rnouns.iterator();
 		while (iter.hasNext()) {
 			String noun = iter.next();
-			if (!StringUtility.isMatchedWords(noun, this.myLearnerUtility.getConstant().FORBIDDEN)) {
+			if (!StringUtility.isMatchedWords(noun,
+					this.myLearnerUtility.getConstant().FORBIDDEN)) {
 				dataholderHandler.updateDataHolder(noun, "n", "", "wordpos", 1);
 			}
 		}
@@ -338,7 +350,10 @@ public class HeuristicNounsLearner implements IModule {
 		if (matcher.lookingAt()) {
 			String word = matcher.group(1);
 			if ((!word.matches("\\b(" + pachecked + ")\\b"))
-					&& (!word.matches("\\b(" + this.myLearnerUtility.getConstant().STOP + ")\\b"))
+					&& (!word
+							.matches("\\b("
+									+ this.myLearnerUtility.getConstant().STOP
+									+ ")\\b"))
 					&& (!word
 							.matches("\\b(always|often|seldom|sometimes|[a-z]+ly)\\b"))) {
 
@@ -439,8 +454,8 @@ public class HeuristicNounsLearner implements IModule {
 
 			// noun rule 1: sources with 1 _ are character statements, 2 _ are
 			// descriptions
-			Set<String> nouns1 = getNounsRule1(dataholderHandler, source, originalSentence,
-					descriptorMap);
+			Set<String> nouns1 = getNounsRule1(dataholderHandler, source,
+					originalSentence, descriptorMap);
 			nouns.addAll(nouns1);
 
 			// noun rule 4: non-stop/prep followed by a number: epibranchial 4
@@ -459,8 +474,8 @@ public class HeuristicNounsLearner implements IModule {
 					originalSentence, nouns));
 
 			// Descriptor rule 2: (is|are) red: isDescriptor
-			descriptors.addAll(this.getDescriptorsRule2(dataholderHandler, originalSentence,
-					descriptorMap));
+			descriptors.addAll(this.getDescriptorsRule2(dataholderHandler,
+					originalSentence, descriptorMap));
 		}
 
 		nouns = this.filterOutDescriptors(nouns, descriptors);
@@ -483,7 +498,6 @@ public class HeuristicNounsLearner implements IModule {
 		return results;
 	}
 
-
 	/**
 	 * filter out descriptors from nouns, and return remaining nouns
 	 * 
@@ -502,8 +516,10 @@ public class HeuristicNounsLearner implements IModule {
 			String noun = iter.next();
 			noun = noun.toLowerCase();
 
-			Pattern p = Pattern.compile("\\b(" + this.myLearnerUtility.getConstant().PREPOSITION + "|"
-					+ this.myLearnerUtility.getConstant().STOP + ")\\b", Pattern.CASE_INSENSITIVE);
+			Pattern p = Pattern.compile(
+					"\\b(" + this.myLearnerUtility.getConstant().PREPOSITION
+							+ "|" + this.myLearnerUtility.getConstant().STOP
+							+ ")\\b", Pattern.CASE_INSENSITIVE);
 			Matcher m = p.matcher(noun);
 
 			if ((!m.lookingAt()) && (!rDescriptors.contains(noun))) {
@@ -580,13 +596,15 @@ public class HeuristicNounsLearner implements IModule {
 	 * @param descriptorMap
 	 * @return
 	 */
-	public Set<String> getNounsRule1(DataHolder dataholderHandler, String source, String originalSentence,
+	public Set<String> getNounsRule1(DataHolder dataholderHandler,
+			String source, String originalSentence,
 			Map<String, Boolean> descriptorMap) {
 		Set<String> nouns = new HashSet<String>();
 
 		if ((!(source.matches("^.*\\.xml_\\S+_.*$")))
 				&& (!(originalSentence.matches("^.*\\s.*$")))) {
-			if (!this.isDescriptor(dataholderHandler, originalSentence, descriptorMap)) {
+			if (!this.isDescriptor(dataholderHandler, originalSentence,
+					descriptorMap)) {
 				originalSentence = originalSentence.toLowerCase();
 				nouns.add(originalSentence);
 			}
@@ -679,7 +697,8 @@ public class HeuristicNounsLearner implements IModule {
 			if (m.lookingAt()) {
 				String t = m.group(2);
 				copy = m.group(3);
-				String regex2 = "\\b(" + this.myLearnerUtility.getConstant().PREPOSITION + "|"
+				String regex2 = "\\b("
+						+ this.myLearnerUtility.getConstant().PREPOSITION + "|"
 						+ this.myLearnerUtility.getConstant().STOP + ")\\b";
 				if (!t.matches(regex2)) {
 					t = t.toLowerCase();
@@ -730,8 +749,8 @@ public class HeuristicNounsLearner implements IModule {
 	 * @param oSent
 	 * @return
 	 */
-	public Set<String> getDescriptorsRule2(DataHolder dataholderHandler, String sentence,
-			Map<String, Boolean> descriptorMap) {
+	public Set<String> getDescriptorsRule2(DataHolder dataholderHandler,
+			String sentence, Map<String, Boolean> descriptorMap) {
 		Set<String> descriptors = new HashSet<String>();
 
 		String[] tokens = sentence.split("\\s+");
@@ -757,7 +776,8 @@ public class HeuristicNounsLearner implements IModule {
 	 * @return a boolean value indicating whether the term is a descriptor. This
 	 *         result will be stored in the descriptorMap for future use
 	 */
-	public boolean isDescriptor(DataHolder dataholderHandler, String term, Map<String, Boolean> descriptorMap) {
+	public boolean isDescriptor(DataHolder dataholderHandler, String term,
+			Map<String, Boolean> descriptorMap) {
 		if (descriptorMap.containsKey(term)) {
 			if (descriptorMap.get(term).booleanValue()) {
 				return true;
@@ -778,7 +798,6 @@ public class HeuristicNounsLearner implements IModule {
 		}
 
 	}
-	
 
 	/**
 	 * Check if the term matches the sentence

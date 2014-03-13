@@ -6,6 +6,11 @@ import org.apache.log4j.PropertyConfigurator;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 
+/**
+ * Annotate sentences based on ignore patterns
+ * @author Dongye
+ *
+ */
 public class IgnorePatternAnnotator implements IModule {
 
 	public IgnorePatternAnnotator() {
@@ -38,7 +43,7 @@ public class IgnorePatternAnnotator implements IModule {
 		Logger myLogger = Logger.getLogger("markupIgnore");
 
 		String thisOriginalSentence = sentence.getOriginalSentence();
-		String pattern = "(^|^ )" + Constant.IGNOREPTN + ".*$";
+		String pattern = "(^|^ )" + Constant.IGNORE_PATTERN + ".*$";
 		if (thisOriginalSentence.matches(pattern)) {
 			sentence.setTag("ignore");
 			sentence.setModifier("");

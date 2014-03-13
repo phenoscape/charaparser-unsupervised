@@ -22,7 +22,7 @@ public class IgnoredFinalizer implements IModule {
 			String sentence = sentenceItem.getSentence();
 			if (sentence != null) {
 				Matcher m = StringUtility.createMatcher(sentence,
-						Constant.IGNOREPTN);
+						Constant.IGNORE_PATTERN);
 				if (m.find()) {
 					String g1 = m.group(1);
 					if (StringUtility.isMatchedNullSafe(g1, "<N>")) {

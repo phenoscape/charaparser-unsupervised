@@ -1539,7 +1539,7 @@ public class Learner {
 		Logger myLogger = Logger.getLogger("markupIgnore");
 
 		String thisOriginalSentence = sentence.getOriginalSentence();
-		String pattern = "(^|^ )" + Constant.IGNOREPTN + ".*$";
+		String pattern = "(^|^ )" + Constant.IGNORE_PATTERN + ".*$";
 		if (thisOriginalSentence.matches(pattern)) {
 			sentence.setTag("ignore");
 			sentence.setModifier("");
@@ -2070,25 +2070,7 @@ public class Learner {
 		}
 	}
 
-	/**
-	 * Utilities
-	 * 
-	 * @return
-	 */
 
-
-
-
-
-
-
-
-
-
-
-
-
-	
 	public void adjectiveSubjectBootstrapping(DataHolder dataholderHandler) {
 		int flag = 0;
 		int count = 0;

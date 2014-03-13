@@ -31,8 +31,7 @@ public class AdditionalBootstrappingLearner implements IModule {
 
 	@Override
 	public void run(DataHolder dataholderHandler) {
-		// TODO Auto-generated method stub
-
+		this.additionalBootstrapping(dataholderHandler);
 	}
 	
 	/**
