@@ -51,6 +51,7 @@ import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
 import semanticMarkup.ling.learn.knowledge.IgnorePatternAnnotator;
 import semanticMarkup.ling.learn.knowledge.IgnoredFinalizer;
 import semanticMarkup.ling.learn.knowledge.Initializer;
+import semanticMarkup.ling.learn.knowledge.NMBResolver;
 import semanticMarkup.ling.learn.knowledge.NullSentenceTagger;
 import semanticMarkup.ling.learn.knowledge.POSBasedAnnotator;
 import semanticMarkup.ling.learn.knowledge.PatternBasedAnnotator;
@@ -103,6 +104,8 @@ public class Learner {
 	
 	AdjectiveVerifier adjectiveVerifier;
 	
+	NMBResolver nMBResolver;
+	
 	AndOrTagSetter andOrTagSetter;
 	
 	AdjectiveSubjectBootstrappingLearner adjectiveSubjectBootstrappingLearner;
@@ -143,11 +146,8 @@ public class Learner {
 				myLearnerUtility.getConstant(), myLearnerUtility.getWordFormUtility());
 
 		// Class variables
-		NUM_LEAD_WORDS = this.myConfiguration.getNumLeadWords(); // Set the
-																	// number of
-																	// leading
-																	// words be
-																	// 3
+		// Set the number of leading words be 3
+		NUM_LEAD_WORDS = this.myConfiguration.getNumLeadWords(); 
 
 		checkedWordSet = new HashSet<String>();
 
@@ -180,6 +180,8 @@ public class Learner {
 				this.myLearnerUtility);
 		
 		this.adjectiveVerifier = new AdjectiveVerifier(this.myLearnerUtility);
+		
+		this.nMBResolver = new NMBResolver();
 		
 		this.andOrTagSetter = new AndOrTagSetter(this.myLearnerUtility);
 		
@@ -251,8 +253,9 @@ public class Learner {
 		this.adjectiveVerifier.run(myDataHolder);
 
 		this.separateModifierTag(myDataHolder); // !!!
-
-		this.resolveNMB(myDataHolder); // !!!
+		
+		// deal with words that plays N, and B roles
+		this.nMBResolver.run(myDataHolder);
 
 		// set and/or tags
 		this.andOrTagSetter.run(myDataHolder);
@@ -2326,67 +2329,7 @@ public class Learner {
 		}
 	}
 
-	public void resolveNMB(DataHolder dataholderHandler) {
-		Set<String> tags = dataholderHandler.getSentenceTags();
-		Iterator<Entry<WordPOSKey, WordPOSValue>> wordPOSIter = dataholderHandler
-				.getWordPOSHolderIterator();
 
-		// get words
-		Set<String> words = new HashSet<String>();
-		while (wordPOSIter.hasNext()) {
-			Entry<WordPOSKey, WordPOSValue> wordPOSEntry = wordPOSIter.next();
-			if (StringUtils.equals(wordPOSEntry.getKey().getPOS(), "b")) {
-				String word = wordPOSEntry.getKey().getWord();
-				boolean case1 = dataholderHandler.getWordPOSHolder()
-						.containsKey(new WordPOSKey(word, "s"));
-				boolean case2 = tags.contains(word);
-				if (case1 || case2) {
-					words.add(word);
-				}
-			}
-		}
-
-		// update wordPOS holder and / or sentence holder
-		Iterator<String> wordIter = words.iterator();
-		while (wordIter.hasNext()) {
-			String word = wordIter.next();
-
-			if (dataholderHandler.getModifierHolder().containsKey(word)) {
-				// remove N role
-				dataholderHandler.getWordPOSHolder().remove(
-						new WordPOSKey(word, "s"));
-
-				// reset sentence tags
-				Iterator<SentenceStructure> sentenceIter = dataholderHandler
-						.getSentenceHolderIterator();
-				while (sentenceIter.hasNext()) {
-					SentenceStructure sentenceItem = sentenceIter.next();
-					String tag = sentenceItem.getSentence();
-					boolean case1 = StringUtils.equals(tag, word);
-					boolean case2 = StringUtility.isMatchedNullSafe(tag, " "
-							+ word);
-					if (case1 || case2) {
-						sentenceItem.setModifier("");
-						sentenceItem.setTag(null);
-					}
-				}
-
-				dataholderHandler.getBMSWords().add(word);
-			}
-		}
-
-		// retag clauses with <N><M><B> tags
-		Iterator<SentenceStructure> sentenceIter = dataholderHandler
-				.getSentenceHolderIterator();
-		while (sentenceIter.hasNext()) {
-			SentenceStructure sentenceItem = sentenceIter.next();
-			String sentence = sentenceItem.getSentence();
-			sentence = sentence.replaceAll("<[ON]><M><B>", "<M><B>");
-			sentence = sentence.replaceAll("</B></M></[ON]>", "</B></M>");
-			sentenceItem.setSentence(sentence);
-		}
-
-	}
 
 
 	
