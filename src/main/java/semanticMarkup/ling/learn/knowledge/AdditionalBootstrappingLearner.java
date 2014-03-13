@@ -20,6 +20,13 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 
+/**
+ * Do bootstrapping learning using clues such as shared subject different
+ * boundary and one lead word.
+ * 
+ * @author Dongye
+ * 
+ */
 public class AdditionalBootstrappingLearner implements IModule {
 	private LearnerUtility myLearnerUtility;
 	private Configuration myConfiguration;
@@ -34,9 +41,6 @@ public class AdditionalBootstrappingLearner implements IModule {
 		this.additionalBootstrapping(dataholderHandler);
 	}
 	
-	/**
-	 * 
-	 */
 	public void additionalBootstrapping(DataHolder dataholderHandler) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger.getLogger("learn.additionalBootStrapping");

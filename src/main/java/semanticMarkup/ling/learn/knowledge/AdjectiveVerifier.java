@@ -16,6 +16,11 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 
+/**
+ * Correct markups that used an adj as a singular, e.g lateral, adult, juvenile
+ * 
+ * @author Dongye
+ */
 public class AdjectiveVerifier implements IModule {
 	private LearnerUtility myLearnerUtility;
 
