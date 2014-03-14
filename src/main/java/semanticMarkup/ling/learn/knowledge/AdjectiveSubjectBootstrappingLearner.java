@@ -18,6 +18,17 @@ import semanticMarkup.ling.learn.dataholder.SentenceStructure;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
 
+/**
+ * Find Modifier/Organ for the same Ox: M1 Ox, M2 Ox Example: inner phyllaries, middle phyllaries
+#Find Mx/Oy where Ox != Oy Example: inner florets
+# ==>inner/middle = type modifier
+# Find TM C (character) patterns => TM = adjective nouns
+# outer and middle => outer is adject noun
+# outer and mid => mid is adject noun
+#===> infer more boundary words/structure: outer [ligules], inner [fertile]
+ * @author Dongye
+ *
+ */
 public class AdjectiveSubjectBootstrappingLearner implements IModule {
 	private LearnerUtility myLearnerUtility;
 	private String learningMode;

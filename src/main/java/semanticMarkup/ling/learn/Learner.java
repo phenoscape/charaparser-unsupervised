@@ -197,11 +197,11 @@ public class Learner {
 		
 		this.ignoredFinalizer = new IgnoredFinalizer();
 		
+		this.nullSentenceTagger = new NullSentenceTagger(this.myLearnerUtility, this.myConfiguration.getDefaultGeneralTag());
+		
 		this.commonSubstructureAnnotator = new CommonSubstructureAnnotator();
 		
 		this.commaAsAndAnnotator = new CommaAsAndAnnotator(this.myLearnerUtility);
-		
-		this.nullSentenceTagger = new NullSentenceTagger(this.myLearnerUtility, this.myConfiguration.getDefaultGeneralTag());
 		
 		this.annotationNormalizer 
 			= new AnnotationNormalizer(this.getConfiguration().getLearningMode(), 
