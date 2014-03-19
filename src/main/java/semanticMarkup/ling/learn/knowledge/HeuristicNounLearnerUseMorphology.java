@@ -24,10 +24,10 @@ import semanticMarkup.ling.learn.utility.StringUtility;
  * @author Dongye
  * 
  */
-public class HeuristicNounsLearner implements IModule {
+public class HeuristicNounLearnerUseMorphology implements IModule {
 	private LearnerUtility myLearnerUtility;
 
-	public HeuristicNounsLearner(LearnerUtility learnerUtility) {
+	public HeuristicNounLearnerUseMorphology(LearnerUtility learnerUtility) {
 		this.myLearnerUtility = learnerUtility;
 	}
 

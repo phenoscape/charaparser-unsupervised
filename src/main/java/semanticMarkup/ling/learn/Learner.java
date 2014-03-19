@@ -47,7 +47,7 @@ import semanticMarkup.ling.learn.knowledge.Constant;
 import semanticMarkup.ling.learn.knowledge.CoreBootstrappingLearner;
 import semanticMarkup.ling.learn.knowledge.DittoAnnotator;
 import semanticMarkup.ling.learn.knowledge.FiniteSetsLoader;
-import semanticMarkup.ling.learn.knowledge.HeuristicNounsLearner;
+import semanticMarkup.ling.learn.knowledge.HeuristicNounLearnerUseMorphology;
 import semanticMarkup.ling.learn.knowledge.IgnorePatternAnnotator;
 import semanticMarkup.ling.learn.knowledge.IgnoredFinalizer;
 import semanticMarkup.ling.learn.knowledge.Initializer;
@@ -58,7 +58,7 @@ import semanticMarkup.ling.learn.knowledge.POSBasedAnnotator;
 import semanticMarkup.ling.learn.knowledge.PatternBasedAnnotator;
 import semanticMarkup.ling.learn.knowledge.PhraseClauseAnnotator;
 import semanticMarkup.ling.learn.knowledge.PronounCharactersAnnotator;
-import semanticMarkup.ling.learn.knowledge.SeedNounsLearner;
+import semanticMarkup.ling.learn.knowledge.HeuristicNounLearnerUseSuffix;
 import semanticMarkup.ling.learn.knowledge.UnknownWordBootstrappingLearner;
 import semanticMarkup.ling.learn.utility.LearnerUtility;
 import semanticMarkup.ling.learn.utility.StringUtility;
@@ -86,11 +86,11 @@ public class Learner {
 	
 	Initializer initializer;
 	
-	HeuristicNounsLearner heuristicNounsLearner;
+	HeuristicNounLearnerUseMorphology heuristicNounLearnerUseMorphology;
 
 	FiniteSetsLoader finiteSetsLoader;
 	
-	SeedNounsLearner seedNounsLearner;
+	HeuristicNounLearnerUseSuffix heuristicNounLearnerUseSuffix;
 	
 	PatternBasedAnnotator patternBasedAnnotator; 
 	
@@ -160,11 +160,11 @@ public class Learner {
 		
 		this.initializer = new Initializer(this.myLearnerUtility,
 				this.myConfiguration.getNumLeadWords());
-		this.heuristicNounsLearner = new HeuristicNounsLearner(this.myLearnerUtility);
+		this.heuristicNounLearnerUseMorphology = new HeuristicNounLearnerUseMorphology(this.myLearnerUtility);
 		
 		this.finiteSetsLoader = new FiniteSetsLoader(this.myLearnerUtility);
 		
-		this.seedNounsLearner = new SeedNounsLearner(this.myLearnerUtility);
+		this.heuristicNounLearnerUseSuffix = new HeuristicNounLearnerUseSuffix(this.myLearnerUtility);
 		
 		this.patternBasedAnnotator = new PatternBasedAnnotator();
 		
@@ -221,11 +221,11 @@ public class Learner {
 		this.initializer.loadTreatments(treatments);
 		this.initializer.run(myDataHolder);
 
-		this.heuristicNounsLearner.run(this.myDataHolder);
+		this.heuristicNounLearnerUseMorphology.run(this.myDataHolder);
 
 		this.finiteSetsLoader.run(this.myDataHolder);
 
-		this.seedNounsLearner.run(myDataHolder);
+		this.heuristicNounLearnerUseSuffix.run(myDataHolder);
 	
 		// Set the certaintyU and certaintyL value of every entry in WordPOS collection to be 0
 		this.resetCounts(myDataHolder);

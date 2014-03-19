@@ -21,17 +21,16 @@ import semanticMarkup.ling.learn.utility.LearnerUtility;
  * @author Dongye
  * 
  */
-public class SeedNounsLearner implements IModule {
+public class HeuristicNounLearnerUseSuffix implements IModule {
 	private LearnerUtility myLearnerUtility;
 	
-	public SeedNounsLearner(LearnerUtility learnerUtility) {
+	public HeuristicNounLearnerUseSuffix(LearnerUtility learnerUtility) {
 		this.myLearnerUtility = learnerUtility;
 	}	
 
 	@Override
 	public void run(DataHolder dataholderHandler) {
-		// TODO Auto-generated method stub
-
+		this.posBySuffix(dataholderHandler);
 	}
 	
 	/**
