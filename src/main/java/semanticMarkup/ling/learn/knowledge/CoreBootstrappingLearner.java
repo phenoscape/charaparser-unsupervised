@@ -267,7 +267,7 @@ public class CoreBootstrappingLearner implements IModule {
 				String tag = null;
 				int numNew = 0;
 
-				tagAndNew = this.myLearnerUtility.doIt(dataholderHandler, sentID);
+				tagAndNew = this.myLearnerUtility.learnTerms(dataholderHandler, sentID);
 				tag = tagAndNew.getString();
 				numNew = tagAndNew.getInt();
 

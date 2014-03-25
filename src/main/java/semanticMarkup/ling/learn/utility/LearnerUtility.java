@@ -1137,7 +1137,7 @@ public class LearnerUtility {
 					continue;
 				}
 
-				StringAndInt tagAndSign = doIt(dataholderHandler, ID);
+				StringAndInt tagAndSign = learnTerms(dataholderHandler, ID);
 				String doItTag = tagAndSign.getString();
 				int doItSign = tagAndSign.getInt();
 				sign = doItSign;
@@ -1213,9 +1213,9 @@ public class LearnerUtility {
 	}
 	
 	/**
-	 * update wordpos table (on certainty) when a sentence is tagged for the
-	 * first time. Note: 1) this update should not be done when a pos is looked
-	 * up, because we may lookup a pos for the same example multiple times. 2)
+	 * Update wordpos table (on certainty) when a sentence is tagged for the
+	 * first time. Note: 1) this update should not be done when a POS is looked
+	 * up, because we may lookup a POS for the same example multiple times. 2)
 	 * if the tag need to be adjusted (not by doit function), also need to
 	 * adjust certainty counts.
 	 * 
@@ -1223,7 +1223,7 @@ public class LearnerUtility {
 	 *            the ID of the sentence
 	 * @return a pair of (tag, sign)
 	 */
-	public StringAndInt doIt(DataHolder dataholderHandler, int sentID) {
+	public StringAndInt learnTerms(DataHolder dataholderHandler, int sentID) {
 		PropertyConfigurator.configure("conf/log4j.properties");
 		Logger myLogger = Logger
 				.getLogger("learn.discover.ruleBasedLearn.doIt");

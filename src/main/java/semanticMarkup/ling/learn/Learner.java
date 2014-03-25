@@ -1652,7 +1652,7 @@ public class Learner {
 				String tag = null;
 				int numNew = 0;
 
-				tagAndNew = this.myLearnerUtility.doIt(this.myDataHolder, sentID);
+				tagAndNew = this.myLearnerUtility.learnTerms(this.myDataHolder, sentID);
 				tag = tagAndNew.getString();
 				numNew = tagAndNew.getInt();
 
