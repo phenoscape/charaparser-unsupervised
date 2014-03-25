@@ -3919,7 +3919,7 @@ public class Learner {
 	}
 	
 	/**
-	 * set saved_flag to red for the following terms in preparation to run the Parser
+	 * Set saved_flag to red for the following terms in preparation to run the Parser
 	 * 1. words that are not in allwords table 
 	 * 2. special words added
 	 */
