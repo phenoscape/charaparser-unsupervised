@@ -44,12 +44,12 @@ public class AdjectiveSubjectBootstrappingLearner implements IModule {
 	public void run(DataHolder dataholderHandler) {
 		if (StringUtils.equals(this.learningMode, "adj")) {
 //			myLogger.info("Bootstrapping on adjective subjects");
-			 adjectiveSubjectBootstrapping(dataholderHandler, this.maxTagLength); // !!!
+			 adjectiveSubjectBootstrapping(dataholderHandler, this.maxTagLength);
 		} else {
 			int v = 0;
 			do {
 				v = 0;
-				this.handleAndOr(dataholderHandler); // !!!
+				this.handleAndOr(dataholderHandler);
 			} while (v > 0);
 		}
 	}
