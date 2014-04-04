@@ -19,7 +19,9 @@ import org.apache.log4j.PropertyConfigurator;
 
 import semanticMarkup.know.lib.WordNetPOSKnowledgeBase;
 import semanticMarkup.ling.Token;
+import semanticMarkup.ling.learn.auxiliary.GetNounsAfterPtnReturnValue;
 import semanticMarkup.ling.learn.auxiliary.KnownTagCollection;
+import semanticMarkup.ling.learn.auxiliary.POSInfo;
 import semanticMarkup.ling.learn.auxiliary.StringAndInt;
 import semanticMarkup.ling.learn.dataholder.DataHolder;
 import semanticMarkup.ling.learn.dataholder.ModifierTableValue;
@@ -1099,4 +1101,829 @@ public class LearnerUtility {
 		return null;
 	}
 	
+	
+	// doItMarkup
+	/**
+	 * skip and/or cases skip leads with $stop words
+	 * 
+	 * @return number of updates
+	 */
+	public int doItMarkup(DataHolder dataholderHandler, int maxLength) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.additionalBootStrapping.doItMarkup");
+		myLogger.trace("Enter");
+
+		int sign = 0;
+		// for (int i=0;i<myDataHolder.getSentenceHolder().size();i++) {
+		Iterator<SentenceStructure> iter = dataholderHandler.getSentenceHolder().iterator();
+		while (iter.hasNext()) {
+			SentenceStructure sentenceObject = iter.next();
+			String tag = sentenceObject.getTag();
+			if (doItMarkupHelper(tag)) {
+				int ID = sentenceObject.getID();
+				String lead = sentenceObject.getLead();
+				String sentence = sentenceObject.getSentence();
+
+				// case 1
+				if (doItMarkupCase1Helper(sentence)) {
+					myLogger.trace(String.format("sent #%d: case 1", ID));
+					continue;
+				}
+
+				// case 2
+				if (doItMarkupCase2Helper(lead)) {
+					myLogger.trace(String.format("sent #%d: case 2", ID));
+					continue;
+				}
+
+				StringAndInt tagAndSign = learnTerms(dataholderHandler, ID);
+				String doItTag = tagAndSign.getString();
+				int doItSign = tagAndSign.getInt();
+				sign = doItSign;
+
+				// case 3
+				if (StringUtility.createMatcher(doItTag, "\\w").find()) {
+					myLogger.trace(String.format("sent #%d: case 3", ID));
+					this.tagSentence(dataholderHandler, maxLength, ID, doItTag);
+				}
+			}
+		}
+
+		myLogger.trace("Return: " + sign);
+		return sign;
+	}
+
+	public boolean doItMarkupHelper(String tag) {
+		boolean flag = false;
+		flag = (tag == null) || (StringUtils.equals(tag, ""))
+				|| (StringUtils.equals(tag, "unknown"));
+
+		return flag;
+	}
+
+	public boolean doItMarkupCase1Helper(String sentence) {
+		boolean flag = false;
+		flag = StringUtility.createMatcher(sentence,
+				"^.{0,40} (nor|or|and|\\/)").find();
+		return flag;
+	}
+
+	public boolean doItMarkupCase2Helper(String lead) {
+		boolean flag = false;
+		flag = StringUtility.createMatcher(lead,
+				"\\b(" + getConstant().STOP + ")\\b").find();
+
+		return flag;
+	}
+	
+	public boolean tagSentence(DataHolder dataholderHandler, int maxLength, int sentenceID, String tag) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.tagSentence");
+		myLogger.trace(String.format("Enter (%d, %s)", sentenceID, tag));
+
+		// case 1
+		if (!StringUtility.createMatcher(tag, "\\w+").find()) {
+			myLogger.trace("\t:tag is not a word. Return");
+			return false;
+		} else {
+			// case 2
+			if (StringUtility.createMatcher(tag, "^(" + getConstant().STOP + ")\\b")
+					.find()) {
+				myLogger.trace(String
+						.format("\t:tag %s starts with a stop word, ignore tagging requrest",
+								tag));
+				return false;
+			} else {
+				// case 3
+				if (tag.length() > maxLength) {
+					tag = tag.substring(0, maxLength);
+					myLogger.debug(String.format("\ttag: %s longer than %d)",
+							tag, maxLength));
+				} else {
+					;
+				}
+				SentenceStructure sentence = dataholderHandler.getSentence(sentenceID);
+				sentence.setTag(tag);
+				myLogger.debug(String.format(
+						"\t:mark up sentence #%d with tag %s", sentenceID, tag));
+				return true;
+			}
+		}
+	}
+	
+	/**
+	 * Update wordpos table (on certainty) when a sentence is tagged for the
+	 * first time. Note: 1) this update should not be done when a POS is looked
+	 * up, because we may lookup a POS for the same example multiple times. 2)
+	 * if the tag need to be adjusted (not by doit function), also need to
+	 * adjust certainty counts.
+	 * 
+	 * @param sentID
+	 *            the ID of the sentence
+	 * @return a pair of (tag, sign)
+	 */
+	public StringAndInt learnTerms(DataHolder dataholderHandler, int sentID) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.discover.ruleBasedLearn.doIt");
+
+		myLogger.trace("Enter doIt");
+		myLogger.trace("sentence ID: " + sentID);
+
+		SentenceStructure sentEntry = dataholderHandler.getSentenceHolder()
+				.get(sentID);
+		String thisSentence = sentEntry.getSentence();
+		String thisLead = sentEntry.getLead();
+
+		StringAndInt returnValue = this.doItCaseHandle(dataholderHandler, thisSentence, thisLead);
+
+		myLogger.trace("Return Tag: " + returnValue.getString() + ", sign: "
+				+ returnValue.getInt());
+		myLogger.trace("Quit doIt");
+		myLogger.trace("\n");
+
+		return returnValue;
+	}
+	
+	/**
+	 * 
+	 * @param thisSentence
+	 * @param thisLead
+	 * @return
+	 */
+	public StringAndInt doItCaseHandle(DataHolder dataholderHandler, String thisSentence, String thisLead) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.discover.ruleBasedLearn.doIt.doItCaseHandle");
+
+		myLogger.trace("Enter doItCaseHandle");
+		myLogger.trace("Sentence: " + thisSentence);
+		myLogger.trace("Lead: " + thisLead);
+
+		if (thisSentence == null || thisLead == null) {
+			return null;
+		}
+
+		int sign = 0;
+		String tag = "";
+
+		List<String> words = Arrays.asList(thisLead.split("\\s+"));
+		String ptn = this.getPOSptn(dataholderHandler, words);
+		myLogger.trace("ptn: " + ptn);
+
+		Pattern p2 = Pattern.compile("ps");
+		Matcher m2 = p2.matcher(ptn);
+
+		Pattern p3 = Pattern.compile("p(\\?)");
+		Matcher m3 = p3.matcher(ptn);
+
+		Pattern p4 = Pattern.compile("[psn](b)");
+		Matcher m4 = p4.matcher(ptn);
+
+		Pattern p5 = Pattern.compile("([psn][psn]+)");
+		Matcher m5 = p5.matcher(ptn);
+
+		Pattern p6A = Pattern.compile("b[?b]([psn])$");
+		Matcher m6A = p6A.matcher(ptn);
+
+		Pattern p6B = Pattern.compile("[?b]b([psn])$");
+		Matcher m6B = p6B.matcher(ptn);
+
+		boolean case6A = m6A.find();
+		boolean case6B = m6B.find();
+
+		Pattern p7 = Pattern.compile("^s(\\?)$");
+		Matcher m7 = p7.matcher(ptn);
+
+		Pattern p10 = Pattern.compile("^\\?(b)");
+		Matcher m10 = p10.matcher(ptn);
+
+		// Case 1: single word case
+		if (ptn.matches("^[pns]$")) {
+			myLogger.trace("Case 1");
+			tag = words.get(0);
+			sign = sign
+					+ dataholderHandler.updateDataHolder(tag, ptn, "-",
+							"wordpos", 1);
+			myLogger.debug("Directly markup with tag: " + tag + "\n");
+		}
+
+		// Case 2: "ps"
+		else if (m2.find()) {
+			myLogger.trace("Case 2");
+			myLogger.debug("Found [ps] pattern\n");
+			int start = m2.start();
+			int end = m2.end();
+			String pWord = words.get(start);
+			String sWord = words.get(end - 1);
+			List<String> tempWords = StringUtility.stringArraySplice(words, 0,
+					start + 1);
+			tag = StringUtility.joinList(" ", tempWords);
+
+			myLogger.debug("\tdetermine the tag: " + tag);
+
+			int returnedSign = 0;
+			returnedSign = dataholderHandler.updateDataHolder(pWord, "p", "-",
+					"wordpos", 1);
+			sign += returnedSign;
+			myLogger.trace(String.format(
+					"updateDataHolder(%s, p, -, wordpos, 1), returned: %d",
+					pWord, returnedSign));
+
+			returnedSign = dataholderHandler.updateDataHolderNN(0,
+					tempWords.size(), tempWords);
+			sign += returnedSign;
+			myLogger.trace(String.format(
+					"updateDataHolderNN(0, %d, %s), returned: %d",
+					tempWords.size(), tempWords.toString(), returnedSign));
+
+			returnedSign = dataholderHandler.updateDataHolder(sWord, "b", "",
+					"wordpos", 1);
+			sign += returnedSign;
+			myLogger.trace(String.format(
+					"updateDataHolder(%s, b, , wordpos, 1), returned: %d",
+					sWord, returnedSign));
+		}
+
+		// Case 3: "p(\\?)"
+		else if (m3.find()) {
+			myLogger.trace("Case 3");
+			myLogger.debug("Found [p?] pattern");
+
+			// int start = m3.start(1);
+			int end = m3.end(1);
+
+			String secondMatchedWord = words.get(end - 1);
+
+			// case 3.1
+			if (StringUtils.equals(this.myWordFormUtility.getNumber(secondMatchedWord), "p")) {
+				myLogger.trace("Case 3.1");
+				tag = secondMatchedWord;
+				sign = sign
+						+ dataholderHandler.updateDataHolder(tag, "p", "-",
+								"wordpos", 1);
+				dataholderHandler
+						.add2Holder(
+								DataHolder.ISA,
+								Arrays.asList(new String[] { tag,
+										words.get(end - 2) }));
+				myLogger.debug("\t:[p p] pattern: determine the tag: " + tag);
+			}
+			// case 3.2
+			else {
+				myLogger.trace("Case 3.2");
+
+				List<String> wordsCopy = new ArrayList<String>(words);
+				// $i is just end-1
+				List<String> tempWords = StringUtility.stringArraySplice(words,
+						0, end - 1);
+				tag = StringUtility.joinList(" ", tempWords);
+
+				myLogger.debug("\t:determine the tag: " + tag);
+				myLogger.debug("\t:updates on POSs");
+
+				int temp = 0;
+				temp = dataholderHandler.updateDataHolder(
+						wordsCopy.get(end - 1), "b", "", "wordpos", 1);
+				sign += temp;
+				myLogger.debug("\t:updateDataHolder1 returns " + temp);
+
+				temp = dataholderHandler.updateDataHolder(
+						wordsCopy.get(end - 2), "p", "-", "wordpos", 1);
+				sign += temp;
+				myLogger.debug("\t:updateDataHolder2 returns " + temp);
+
+				temp = dataholderHandler.updateDataHolderNN(0,
+						tempWords.size(), tempWords);
+				sign += temp;
+				myLogger.debug("\t:updateDataHolder returns " + temp);
+			}
+		}
+
+		// case 4: "[psn](b)"
+		else if (m4.find()) {
+			myLogger.trace("Case 4");
+			Pattern p41 = Pattern.compile("^sbp");
+			Matcher m41 = p41.matcher(ptn);
+
+			if (m41.find()) {
+				myLogger.trace("\tCase 4.1");
+				myLogger.debug("Found [sbp] pattern");
+				List<String> wordsCopy = new ArrayList<String>(words);
+				tag = StringUtility.joinList(" ",
+						StringUtility.stringArraySplice(wordsCopy, 0, 3));
+				myLogger.trace("\t:determine the tag: " + tag);
+			} else {
+				myLogger.trace("\tCase 4.2");
+				myLogger.debug("Found [[psn](b)] pattern");
+
+				int index = m4.start(1);
+
+				// get tag, which is the words prior to the b word (exclusive)
+				List<String> wordsTemp = StringUtility.stringArraySplice(words,
+						0, index);
+				tag = StringUtility.joinList(" ", wordsTemp);
+				myLogger.trace("Tag: " + tag);
+
+				// update the b word
+				sign += dataholderHandler.updateDataHolder(words.get(index),
+						"b", "", "wordpos", 1);
+				myLogger.trace(String.format(
+						"updateDataHolder (%s, b, , wordpos, 1)",
+						words.get(index)));
+
+				sign += dataholderHandler.updateDataHolder(
+						words.get(index - 1), ptn.substring(index - 1, index),
+						"-", "wordpos", 1);
+
+				myLogger.trace(String.format(
+						"updateDataHolder (%s, %s, -, wordpos, 1)",
+						words.get(index - 1), ptn.substring(index - 1, index)));
+
+				sign += dataholderHandler.updateDataHolderNN(0,
+						wordsTemp.size(), wordsTemp);
+				myLogger.trace(String.format("updateDataHolderNN (0, %d, %s)",
+						wordsTemp.size(), wordsTemp.toString()));
+
+				myLogger.debug("\t:determine the tag: " + tag);
+				myLogger.debug("\t:updates on POSs");
+			}
+		}
+
+		// case 5: "pp"
+		else if (m5.find()) {
+			myLogger.debug("Case 5: Found [[psn][psn]+] pattern");
+			int start = m5.start(1);
+			int end = m5.end(1);
+			List<String> copyWords = new ArrayList<String>();
+			copyWords.addAll(words);
+			GetNounsAfterPtnReturnValue returnedValue = this.getNounsAfterPtn(dataholderHandler,
+					thisSentence, end);
+			List<String> moreNoun = new LinkedList<String>();
+			List<String> morePtn = new LinkedList<String>();
+			String bWord = "";
+
+			moreNoun.addAll(returnedValue.getNouns());
+			morePtn.addAll(returnedValue.getNounPtn());
+			bWord = returnedValue.getBoundaryWord();
+			List<POSInfo> t;
+
+			if (StringUtility.createMatcher(ptn, "pp").find()) {
+				myLogger.trace("Case 5.1");
+
+				String morePtnStr = StringUtility.joinList("", morePtn);
+				Pattern p511 = Pattern.compile("/^p*(s)");
+				Matcher m511 = p511.matcher(morePtnStr);
+				Pattern p512 = Pattern.compile("^(p+)");
+				Matcher m512 = p512.matcher(morePtnStr);
+
+				if (m511.find()) {
+					myLogger.trace("Case 5.1.1");
+					// find last p word, and reset it to "b"
+					int sAfterPIndex = m511.start(1);
+					int lastPIndex = sAfterPIndex - 1;
+					String sWord = moreNoun.get(sAfterPIndex);
+					String lastPWord = lastPIndex >= 0 ? moreNoun
+							.get(lastPIndex) : "";
+					bWord = lastPWord;
+					if (StringUtils.equals(lastPWord, "")) {
+						tag = words.get(ptn.lastIndexOf("p"));
+					} else {
+						tag = lastPWord;
+					}
+					sign += dataholderHandler.updateDataHolder(sWord, "b",
+							"", "wordpos", 1);
+				} else if (m512.find()) {
+					myLogger.trace("Case 5.1.2");
+					tag = moreNoun.get(m512.end(1) - 1);
+				} else {
+					myLogger.trace("Case 5.1.3");
+					int lastPIndex = ptn.lastIndexOf("p");
+					tag = words.get(lastPIndex);
+				}
+				t = dataholderHandler.checkPOSInfo(tag);
+			} else {
+				myLogger.trace("Case 5.2");
+				List<String> tempWords = new LinkedList<String>();
+				tempWords
+						.addAll(StringUtility.stringArraySplice(words, 0, end));
+				tag = StringUtility.joinList(" ", tempWords);
+				if (moreNoun.size() > 0) {
+					tag = tag + " " + StringUtility.joinList(" ", moreNoun);
+				}
+
+				t = dataholderHandler.checkPOSInfo(
+						tag.substring(tag.lastIndexOf(" ") + 1, tag.length()));
+			}
+
+			if (t.size() > 0) {
+				String pos = t.get(0).getPOS();
+				// String role = t.get(0).getRole();
+				// int certiantyU = t.get(0).getCertaintyU();
+				// int certiantyL = t.get(0).getCertaintyL();
+
+				if (StringUtility.createMatcher(pos, "[psn]").find()) {
+					// case 5.x
+					myLogger.debug("Case 5.x: relax this condition");
+					List<String> tWords = new LinkedList<String>();
+					tWords.addAll(Arrays.asList(thisSentence.split(" ")));
+					sign += dataholderHandler.updateDataHolder(bWord, "b",
+							"", "wordpos", 1);
+					ptn = ptn.substring(start, end);
+					String tempPtn = ptn + StringUtility.joinList("", morePtn);
+					for (int k = start; k < tempPtn.length(); k++) {
+						if (k != tempPtn.length() - 1) {
+							sign += dataholderHandler.updateDataHolder(
+									tWords.get(k), tempPtn.substring(k, k + 1),
+									"_", "wordpos", 1);
+						} else {
+							sign += dataholderHandler.updateDataHolder(
+									tWords.get(k), tempPtn.substring(k, k + 1),
+									"-", "wordpos", 1);
+						}
+					}
+					if (tWords.size() > 1) {
+						sign += dataholderHandler.updateDataHolderNN(0,
+								tempPtn.length(), tWords);
+					}
+				}
+			}
+			myLogger.debug("\t:determine the tag: " + tag);
+
+		}
+
+		// case 6: "b[?b]([psn])$" or "[?b]b([psn])$"
+		else if (case6A || case6B) {
+			myLogger.debug("Case 6: Found [b?[psn]$] or [[?b]b([psn])$] pattern");
+			int end = -1;
+			// the index of noun
+			if (case6A) {
+				end = m6A.end(1) - 1;
+			} else {
+				end = m6B.end(1) - 1;
+			}
+			GetNounsAfterPtnReturnValue tempReturnValue = this
+					.getNounsAfterPtn(dataholderHandler, thisSentence, end + 1);
+			// List<String> moreNouns = tempReturnValue.getNouns();
+			List<String> morePtn = tempReturnValue.getNounPtn();
+			String bWord = tempReturnValue.getBoundaryWord();
+
+			List<String> sentenceHeadWords = tokenizeText(thisSentence, "firstseg");
+			end += morePtn.size();
+			List<String> tempWords = StringUtility.stringArraySplice(
+					sentenceHeadWords, 0, end + 1);
+			tag = StringUtility.joinList(" ", tempWords);
+			myLogger.debug("\t:updates on POSs");
+			if (StringUtility.createMatcher(bWord, "\\w").find()) {
+				sign += dataholderHandler.updateDataHolder(bWord, "b", "",
+						"wordpos", 1);
+			}
+			String allPtn = "" + ptn;
+			allPtn = allPtn + StringUtility.joinList("", morePtn);
+			// from the index of noun
+			for (int i = 2; i < allPtn.length(); i++) {
+				// case 6.1: last ptn
+				if (i != allPtn.length() - 1) {
+					myLogger.trace("Case 6.1");
+					sign += dataholderHandler.updateDataHolder(
+							sentenceHeadWords.get(i),
+							allPtn.substring(i, i + 1), "_", "wordpos", 1);
+				}
+				// case 6.2: not last ptn
+				else {
+					myLogger.trace("Case 6.2");
+					sign += dataholderHandler.updateDataHolder(
+							sentenceHeadWords.get(i),
+							allPtn.substring(i, i + 1), "-", "wordpos", 1);
+				}
+			}
+			myLogger.debug("\t:determine the tag: " + tag);
+		}
+
+		// case 7: "^s(\\?)$"
+		else if (m7.find()) {
+			myLogger.trace("Case 7");
+			String singularWord = words.get(0);
+			String questionedWord = words.get(1);
+			String wnPOS = this.myWordFormUtility.checkWN(
+					questionedWord, "pos");
+
+			if (StringUtility.createMatcher(wnPOS, "p").find()) {
+				myLogger.trace("Case 7.1");
+				tag = singularWord + " " + questionedWord;
+				myLogger.debug("\t:determine the tag: " + tag);
+				myLogger.debug("\t:updates on POSs");
+				String questionedPOS = this.myWordFormUtility.getNumber(singularWord);
+				sign += dataholderHandler.updateDataHolder(questionedWord,
+						questionedPOS, "-", "wordpos", 1);
+			} else {
+				myLogger.trace("Case 7.2");
+				tag = words.get(0);
+				myLogger.debug("\t:determine the tag: " + tag);
+				myLogger.debug("\t:updates on POSs");
+				sign += dataholderHandler.updateDataHolder(questionedWord,
+						"b", "", "wordpos", 1);
+				sign += dataholderHandler.updateDataHolder(singularWord,
+						"s", "-", "wordpos", 1);
+			}
+		}
+
+		// case 8: "^bs$"
+		else if (StringUtility.createMatcher(ptn, "^bs$").find()) {
+			myLogger.trace("Case 8");
+			tag = StringUtility.joinList(" ", words);
+			sign += dataholderHandler.updateDataHolder(words.get(0), "b",
+					"", "wordpos", 1);
+			sign += dataholderHandler.updateDataHolder(words.get(1), "s",
+					"-", "wordpos", 1);
+		}
+
+		// case 9: ^bp$
+		else if (StringUtility.createMatcher(ptn, "^bp$").find()) {
+			myLogger.trace("Case 9");
+			tag = StringUtility.joinList(" ", words);
+			sign += dataholderHandler.updateDataHolder(words.get(0), "b",
+					"", "wordpos", 1);
+			sign += dataholderHandler.updateDataHolder(words.get(1), "p",
+					"-", "wordpos", 1);
+		}
+
+		// case 10: "^\\?(b)"
+		else if (m10.find()) {
+			myLogger.trace("Case 10");
+			myLogger.trace("Found [?(b)] pattern");
+
+			int index = m10.start(1);
+
+			sign += dataholderHandler.updateDataHolder(words.get(index), "b",
+					"", "wordpos", 1);
+			myLogger.trace(String.format(
+					"updateDataHolder (%s, b, , wordpos, 1)", words.get(index)));
+
+			List<String> wordsTemp = StringUtility.stringArraySplice(words, 0,
+					index);
+			tag = StringUtility.joinList(" ", wordsTemp);
+			String word = words.get(index - 1); // the "?" word
+
+			myLogger.trace("Tag: " + tag);
+			myLogger.trace("Word: " + word);
+
+			if (!isFollowedByNoun(dataholderHandler, thisSentence, thisLead)) {
+				myLogger.trace("Case 10.1");
+				String wnP1 = this.myWordFormUtility.checkWN(word, "pos");
+				myLogger.trace("wnP1: " + wnP1);
+				String wnP2 = "";
+
+				if (!StringUtility.createMatcher(wnP1, "\\w").find()) {
+					wnP2 = this.myWordFormUtility.getNumber(word);
+				}
+				myLogger.trace("wnP2: " + wnP2);
+
+				if (StringUtility.createMatcher(wnP1, "[ar]").find()) {
+					wnP1 = "";
+				}
+
+				if ((StringUtility.createMatcher(wnP1, "[psn]").find())
+						|| (StringUtility.createMatcher(wnP2, "[ps]").find())) {
+					myLogger.trace("Case 10.1.1");
+					myLogger.debug("\t:determine the tag: " + tag);
+					myLogger.debug("\t:updates on POSs");
+					sign += dataholderHandler.updateDataHolder(word, "n", "-",
+							"wordpos", 1);
+					myLogger.trace(String.format(
+							"updateDataHolder(%s, n, -, wordpos, 1)", word));
+					sign += dataholderHandler.updateDataHolderNN(0,
+							wordsTemp.size() - 1, wordsTemp);
+					myLogger.trace(String.format(
+							"updateDataHolderNN(%d, %d, %s)", 0,
+							wordsTemp.size() - 1, wordsTemp));
+
+				} else {
+					myLogger.trace("Case 10.1.2");
+					myLogger.debug("\t:" + tag
+							+ " is adv/adj or modifier. skip.");
+					tag = "";
+				}
+			} else {
+				myLogger.trace("Case 10.2");
+				myLogger.debug(String.format(
+						"\t:%s is adv/adj or modifier. skip.", tag));
+				tag = "";
+			}
+		} else {
+			myLogger.trace("\tCase 0");
+			myLogger.trace(String.format("Pattern [%s] is not processed", ptn));
+		}
+
+		StringAndInt returnValue = new StringAndInt(tag, sign);
+
+		myLogger.trace("Return: " + returnValue.toString());
+		return returnValue;
+	}
+
+	public int doItCase7Helper(String regex, String ptn) {
+		Matcher m = StringUtility.createMatcher(ptn, regex);
+		if (m.find()) {
+			int start = m.start();
+			return start + 1;
+		} else {
+			return -1;
+		}
+	}
+	
+	/**
+	 * The length of the ptn must be the same as the number of words in words.
+	 * If certainty is < 50%, replace POS with ?.
+	 * 
+	 * @param words
+	 * @return
+	 */
+	public String getPOSptn(DataHolder dataholderHandler, List<String> words) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.discover.ruleBasedLearn.doIt.getPOSptn");
+
+		myLogger.trace("Enter getPOSptn");
+		myLogger.trace("Words: " + words.toString());
+
+		String ptn = "";
+		String POS = "";
+		double certainty;
+		for (int i = 0; i < words.size(); i++) {
+
+			String word = words.get(i);
+			myLogger.trace("\tCheck word: " + word);
+			List<POSInfo> POSInfoList = dataholderHandler.checkPOSInfo(word);
+			if (POSInfoList.size() >= 0) {
+				if (POSInfoList.size() == 0) {
+					myLogger.trace("\t\tThe word is not in WordPOS holder");
+					POS = "?";
+				} else {
+					POSInfo p = POSInfoList.get(0);
+					POS = p.getPOS();
+
+					if (p.getCertaintyU() == 0) {
+						certainty = 1.0;
+					} else {
+						double certaintyU = (double) p.getCertaintyU();
+						double certaintyL = (double) p.getCertaintyL();
+						certainty = certaintyU / certaintyL;
+					}
+
+					myLogger.trace(String.format("\t\tCertaintyU: %d",
+							p.getCertaintyU()));
+					myLogger.trace(String.format("\t\tCertaintyL: %d",
+							p.getCertaintyL()));
+					myLogger.trace(String
+							.format("\t\tCertainty: %f", certainty));
+					if ((!StringUtils.equals(POS, "?")) && (certainty <= 0.5)) {
+						myLogger.info("\t\tThis POS has a certainty less than 0.5. It is ignored.");
+						POS = "?";
+					}
+
+				}
+				ptn = ptn + POS;
+				myLogger.trace("\t\tAdd pos: " + POS);
+			} else {
+				myLogger.error("Error: checkPOSInfo gave invalid return value");
+			}
+		}
+
+		myLogger.trace("Return ptn: " + ptn);
+		myLogger.trace("Quite getPOSptn");
+
+		return ptn;
+	}
+	
+	public GetNounsAfterPtnReturnValue getNounsAfterPtn(DataHolder dataholderHandler, String sentence,
+			int startWordIndex) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger.getLogger("learn.getNounsAfterPattern");
+		myLogger.trace(String
+				.format("enter (%s, %d)", sentence, startWordIndex));
+
+		String bWord = "";
+		List<String> nouns = new ArrayList<String>();
+		List<String> nounPtn = new ArrayList<String>();
+
+		List<String> tempWords = new ArrayList<String>();
+		tempWords.addAll(tokenizeText(sentence,
+				"firstseg"));
+		List<String> words = StringUtility.stringArraySplice(tempWords,
+				startWordIndex, tempWords.size());
+		myLogger.trace("words: " + words);
+		String ptn = this.getPOSptn(dataholderHandler, words);
+		myLogger.trace("ptn: " + ptn);
+
+		if (ptn != null) {
+			Matcher m1 = StringUtility.createMatcher(ptn, "^([psn]+)");
+			Matcher m2 = StringUtility.createMatcher(ptn, "^(\\?+)");
+			boolean case1 = false;
+			boolean case2 = false;
+			int end = -1;
+			if (m1.find()) {
+				case1 = true;
+				end = m1.end(1);
+			}
+			if (m2.find()) {
+				case2 = true;
+				end = m2.end(1);
+			}
+			if (case1 || case2) {
+				myLogger.trace("end: " + end);
+				if (end < words.size()) {
+					bWord = words.get(end);
+				}
+				List<String> nWords = new ArrayList<String>();
+				nWords.addAll(StringUtility.stringArraySplice(words, 0, end));
+				for (int i = 0; i < nWords.size(); i++) {
+					String p = ptn.substring(i, i + 1);
+					p = StringUtils.equals(p, "?") ? this.myWordFormUtility.checkWN(nWords.get(i), "pos")
+							: p;
+					if (StringUtility.createMatcher(p, "^[psn]+$").find()) {
+						nouns.add(nWords.get(i));
+						nounPtn.add(p);
+					} else {
+						bWord = nWords.get(i);
+						break;
+					}
+				}
+			}
+		}
+
+		GetNounsAfterPtnReturnValue returnValue = new GetNounsAfterPtnReturnValue(
+				nouns, nounPtn, bWord);
+		myLogger.trace("return " + returnValue);
+		return (returnValue);
+	}
+
+	/**
+	 * Check if a lead is followed by a noun without any proposition in between
+	 * in the sentence
+	 * 
+	 * @param thisSentence
+	 *            the sentence
+	 * @param thisLead
+	 *            the lead
+	 * @return true if lead is followed by a N without any proposition in
+	 *         between
+	 */
+	public boolean isFollowedByNoun(DataHolder dataholderHandler, String sentence, String lead) {
+		PropertyConfigurator.configure("conf/log4j.properties");
+		Logger myLogger = Logger
+				.getLogger("learn.discover.ruleBasedLearn.doIt.isFollowedByNoun");
+		myLogger.trace(String.format("(%s, %s)", sentence, lead));
+
+		// null case
+		if (sentence == null || lead == null) {
+			myLogger.trace("Return false");
+			return false;
+		}
+
+		if (StringUtils.equals(sentence, "")) {
+			myLogger.trace("Return false");
+			return false;
+		}
+
+		// remove lead from sentence
+		sentence = sentence.replaceFirst("^" + lead, "");
+		myLogger.trace("Sentence after remove lead: " + sentence);
+
+		// List<String> nouns = this.myDataHolder.getWordByPOS("ps");
+		Set<String> POSTags = new HashSet<String>();
+		POSTags.add("p");
+		POSTags.add("s");
+		Set<String> nouns = dataholderHandler.getWordsFromWordPOSByPOSs(POSTags);
+
+		if (nouns.size() == 0) {
+			myLogger.trace("Return false");
+			return false;
+		}
+
+		// String pattern1 = StringUtility.joinList("|", nouns);
+		String pattern1 = StringUtils.join(nouns, "|");
+
+		pattern1 = "(.*?)\\b(" + pattern1 + ")" + "\\b";
+		myLogger.trace("Pattern: " + pattern1);
+
+		Pattern p1 = Pattern.compile(pattern1);
+		Matcher m1 = p1.matcher(sentence);
+
+		String inBetweenPart = "";
+		if (m1.find()) {
+			inBetweenPart = m1.group(1);
+
+			String pattern2 = "\\b(" + this.myConstant.PREPOSITION + ")\\b";
+			Pattern p2 = Pattern.compile(pattern2);
+			Matcher m2 = p2.matcher(inBetweenPart);
+			if (!m2.find()) {
+				myLogger.trace("Return true");
+				return true;
+			}
+		}
+		myLogger.trace("Return false");
+		return false;
+	}
+
 }

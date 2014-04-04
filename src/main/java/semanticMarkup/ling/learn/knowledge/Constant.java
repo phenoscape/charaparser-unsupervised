@@ -29,7 +29,7 @@ public class Constant {
 	
 	public static final String PROPERNOUN = "propernouns"; // EOL
 	
-	public static final String IGNOREPTN = "(IGNOREPTN)"; // disabled
+	public static final String IGNORE_PATTERN = "(IGNOREPTN)"; // disabled
 
 	
 	
